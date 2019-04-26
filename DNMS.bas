@@ -5,11 +5,17 @@ dim num_trials
 dim num_correct
 dim elapsed_trials
 
+' Store per trial information
+dim trial_sides
+dim responses
+dim delay_times
+'TODO could be expanded to have other timings
+
 'timing delays
 dim match_delay
 dim trial_delay
 dim wrong_delay
-dim food_delay
+dim reward_delay
 
 'input pins
 dim left_lever_inpin
@@ -47,10 +53,11 @@ dim start_time
 dim elapsed_time
 dim back_time
 
-'''Assign variables'''
 
-'setup variables to pins
+'''Varable init routines'''
+
 sub setup_pins()
+    'setup variables to pins
     left_lever_inpin = 1
     right_lever_inpin = 2
     back_lever_inpin = 3 'TODO find actual value
@@ -67,9 +74,8 @@ sub setup_pins()
     food_outpin = 16
 end sub
 
-'''Sub Functions'''
-
 sub init_vars()
+    'init variables such as trials and times
     elapsed_trials = 0
     num_correct = 0
     print_value = "Empty"
@@ -78,8 +84,30 @@ sub init_vars()
     back_time = 0
 end sub
 
+sub init_arrays()
+    ' Setup arrays which hold info for each trial
+    dim indices
+    indices = [0, num_trials-1]
+    trial_sides = vararraycreate(indices, 12)
+    responses = vararraycreate(indices, 12)
+    delay_times = vararraycreate(indices, 12)
+    
+    dim half_point
+    half_point = trunc(num_trials / 2)
+
+    dim i
+    for i = 0 to half_point - 1
+        trial_sides[i] = 1 'Left is 1
+    next
+    for i = half_point to num_trials - 1
+        trial_sides[i] = 0 'Right is 0
+    next
+end sub
+
+'''Signal Output related routines'''
+
 sub reset()
-    ' Reset all digital outputs to 0
+    'Reset all digital outputs to 0
     SignalOut(all) = 0
     left_lever_active = 0
     right_lever_active = 0
@@ -112,10 +140,54 @@ sub set_back_side(state)
     back_lever_active = state
 end sub
 
-' TODO print value is not necessary if file 1 is accessible outside of main
+sub deliver_reward()
+    ' Drop a food pellet
+    SignalOut(food_outpin) = on
+    DelayMS(15)
+    SignalOut(food_outpin) = off
+end sub
+
+
+'''Maths related subroutines'''
+
+sub swap(byref a, byref b)
+    dim temp
+    temp = a
+    a = b
+    b = temp
+end sub
+
+function generate_random_float(max)
+    ' Generate a random number in the range of 0 to max
+    generate_random_float = trunc(Rnd(1) * (max + 1))
+end function
+
+sub knuth_shuffle(byref in_array, array_len)
+    'Randomly shuffle an array - see 
+    'https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+    dim i
+    dim j
+    for i = array_len - 1 to 1 step -1
+        j = generate_random_float(i)
+        swap(in_array[j], in_array[i])
+    next
+end sub
+
+sub generate_delays()
+    ' Generate a delay for each trial before the back lever extends
+    dim i
+    for i = 0 to num_trials - 1
+        delay_times[i] = generate_random_float(match_delay)
+    next
+end sub
+
+'''Experiment Control Routines'''
+
 sub init_experiment()
+    ' TODO print value is not necessary if file 1 is accessible outside of main
+    ' TODO might need fixed ratio between random samples
     ' Do the initial setup
-    if (Rnd(1) < 0.5) then
+    if (trial_sides[elapsed_trials]) then
         set_left_side(on)
         print_value = "Trial started with left lever set"
     else
@@ -129,20 +201,10 @@ sub init_experiment()
     experiment_state = "Start"
 end sub
 
-sub drop_food()
-    ' Drop a food pellet
-    SignalOut(food_outpin) = on
-    DelayMS(15)
-    SignalOut(food_outpin) = off
-end sub
-
-function generate_back_delay(max)
-    ' Generate a random number in the range of 0 to max
-    generate_back_delay = trunc(Rnd(1) * (max + 1))
-
 sub show_back_lever()
+    ' Delay for a while and then show the back lever
     dim delay
-    delay = generate_back_delay(match_delay)
+    delay = generate_random_float(match_delay)
     DelayMS(delay * 1000)
     set_back_side(on)
     back_time = TrialTime
@@ -150,6 +212,8 @@ sub show_back_lever()
 end sub
 
 sub incorrect_response()
+    ' Turn off the house light before starting next trial
+    responses[elapsed_trials] = 0
     set_right_side(off)
     set_left_side(off)
     SignalOut(house_light_outpin) = off
@@ -159,46 +223,60 @@ sub incorrect_response()
 end sub
 
 sub correct_response()
+    ' Give the primate some reward for being smart
+    responses[elapsed_trials] = 1
     num_correct = num_correct + 1
     set_right_side(off)
     set_left_side(off)
-    DelayMS(food_delay)
-    drop_food()
-    DelayMS(trial_delay - food_delay)
+    DelayMS(reward_delay)
+    deliver_reward()
+    DelayMS(trial_delay - reward_delay)
 end sub
 
 sub new_experiment()
+    ' Begin a new trial
     elapsed_trials = elapsed_trials + 1
     if (elapsed_trials <= num_trials) then
         init_experiment()
     end if
 end sub
 
+sub full_init_before_record()
+    'Perform script init before recording
+
+    'convert delays to ms
+    trial_delay = trial_delay * 1000
+    wrong_delay = wrong_delay * 1000
+    Randomize 'Seed the rng based on the system clock
+    setup_pins()
+    reset()
+    init_vars()
+    init_arrays()
+    knuth_shuffle(trial_sides)
+    generate_delays()
+    SignalOut(house_light_outpin) = on
+end sub
+
+''' Main subroutine follows this'''
+
 sub main()
     ' Run the experiments and record the data
+
+    '''NB Change important variables here'''
     num_trials = 60 'How long to run the experiment for in seconds
     match_delay = 30 'Max time before the back lever comes out
     trial_delay = 10 'How long between trials in seconds
     wrong_delay = 5 'How long to time out on incorrect response 
     'The wrong delay is usually the trial delay/2
-    food_delay = 200 'A small delay before dropping the food in ms
+    reward_delay = 200 'A small delay before dropping the reward in ms
 
-    'convert delays to ms
-    trial_delay = trial_delay * 1000
-    wrong_delay = wrong_delay * 1000
-
-    Randomize 'Seed the rng based on the system clock
-
+    full_init_before_record()
     'this should output in the same name format as other axona files
     open "data.log" for output as #1
     StartUnitRecording
 
-    setup_pins()
-    reset()
-    init_vars()
-    init_experiment() ' TODO might need fixed ratio between random samples
+    init_experiment()
     print #1, print_value
-    SignalOut(house_light_outpin) = on
 
     ' Loop the recording for the desired period of time
     while (elapsed_trials <= num_trials)
@@ -268,6 +346,7 @@ sub main()
                         correct_response()
                     end if
                     new_experiment()
+                    print #1, print_value
                 end if
             end if
         end if
@@ -277,8 +356,11 @@ sub main()
     wend
     StopUnitRecording
 
-    'Print the number of correct responses
+    'Print summary stats
     print #1, "Number of trials;", elapsed_trials, ";Number correct;", num_correct
+    print #1, "Lever order (Left is 1);", trial_sides
+    print #1, "Trial responses (Correct is 1);", responses
+    print #1, "Non Match Delay (Seconds);", delay_times
 
-    close #1
+    close #1 'Close the file
 end sub
