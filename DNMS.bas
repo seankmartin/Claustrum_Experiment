@@ -1,3 +1,7 @@
+'''Created by Sean Martin on 26/04/2019 for Matheus Oliveira'''
+'''Contact martins7@tcd.ie'''
+'''Please note that lever input signals are inverted'''
+
 '''Declare global variables'''
 
 ' Number of trials
@@ -12,7 +16,7 @@ dim delay_times
 'TODO could be expanded to have other timings
 
 'timing delays
-dim match_delay
+dim max_match_delay
 dim trial_delay
 dim wrong_delay
 dim reward_delay
@@ -41,8 +45,6 @@ dim back_lever_value
 dim left_lever_active
 dim right_lever_active
 dim back_lever_active
-dim left_completed
-dim right_completed
 dim experiment_state
 
 'store a string to print
@@ -65,12 +67,10 @@ sub setup_pins()
     left_lever_outpin = 1
     right_lever_outpin = 2
     back_lever_outpin = 3 'TODO find actual value
-
     left_light_outpin = 9
     right_light_outpin = 10
     back_lever_outpin = 5 'TODO find actual value
     house_light_outpin = 4 'TODO find actual value
-
     food_outpin = 16
 end sub
 
@@ -82,6 +82,9 @@ sub init_vars()
     start_time = 0
     elapsed_time = 0
     back_time = 0
+    left_lever_active = 0
+    right_lever_active = 0
+    back_lever_active = 0
 end sub
 
 sub init_arrays()
@@ -91,7 +94,7 @@ sub init_arrays()
     trial_sides = vararraycreate(indices, 12)
     responses = vararraycreate(indices, 12)
     delay_times = vararraycreate(indices, 12)
-    
+
     dim half_point
     half_point = trunc(num_trials / 2)
 
@@ -109,9 +112,6 @@ end sub
 sub reset()
     'Reset all digital outputs to 0
     SignalOut(all) = 0
-    left_lever_active = 0
-    right_lever_active = 0
-    back_lever_active = 0
 end sub
 
 sub reset_left_right()
@@ -163,7 +163,7 @@ function generate_random_float(max)
 end function
 
 sub knuth_shuffle(byref in_array, array_len)
-    'Randomly shuffle an array - see 
+    'Randomly shuffle an array - see
     'https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
     dim i
     dim j
@@ -175,9 +175,10 @@ end sub
 
 sub generate_delays()
     ' Generate a delay for each trial before the back lever extends
+    ' In the range 1 to max_match_delay
     dim i
     for i = 0 to num_trials - 1
-        delay_times[i] = generate_random_float(match_delay)
+        delay_times[i] = 1 + generate_random_float(max_match_delay-1)
     next
 end sub
 
@@ -187,7 +188,7 @@ sub init_experiment()
     ' TODO print value is not necessary if file 1 is accessible outside of main
     ' TODO might need fixed ratio between random samples
     ' Do the initial setup
-    if (trial_sides[elapsed_trials]) then
+    if (trial_sides[elapsed_trials] = 1) then
         set_left_side(on)
         print_value = "Trial started with left lever set"
     else
@@ -204,7 +205,7 @@ end sub
 sub show_back_lever()
     ' Delay for a while and then show the back lever
     dim delay
-    delay = generate_random_float(match_delay)
+    delay = generate_random_float(max_match_delay)
     DelayMS(delay * 1000)
     set_back_side(on)
     back_time = TrialTime
@@ -252,8 +253,8 @@ sub full_init_before_record()
     reset()
     init_vars()
     init_arrays()
-    knuth_shuffle(trial_sides)
     generate_delays()
+    knuth_shuffle(trial_sides, num_trials)
     SignalOut(house_light_outpin) = on
 end sub
 
@@ -263,10 +264,10 @@ sub main()
     ' Run the experiments and record the data
 
     '''NB Change important variables here'''
-    num_trials = 60 'How long to run the experiment for in seconds
-    match_delay = 30 'Max time before the back lever comes out
+    num_trials = 60 'Number of trials should be divisible by 2
+    max_match_delay = 30 'Max time before the back lever comes out
     trial_delay = 10 'How long between trials in seconds
-    wrong_delay = 5 'How long to time out on incorrect response 
+    wrong_delay = 5 'How long to time out on incorrect response
     'The wrong delay is usually the trial delay/2
     reward_delay = 200 'A small delay before dropping the reward in ms
 
@@ -274,43 +275,36 @@ sub main()
     'this should output in the same name format as other axona files
     open "data.log" for output as #1
     StartUnitRecording
-
     init_experiment()
     print #1, print_value
 
-    ' Loop the recording for the desired period of time
+    ' Loop the recording for the number of trials
     while (elapsed_trials <= num_trials)
 
         ' Wait for the primate to start by hitting a lever
         if (experiment_state = "Start") then
 
-            if (left_lever_active = 1) then 
+            if (left_lever_active = 1) then
                 left_lever_value = SignalIn(left_lever_inpin)
-                if (left_lever_value = off) 'lever input signal is inverted
+                if (left_lever_value = off) then
                     elapsed_time = TrialTime - start_time
                     print #1, "Pressed left start lever after;", elapsed_time
                     set_left_side(off)
-                    left_completed = 1
                     show_back_lever() ' Delay the back lever protrusion
                 end if
-            end if
-            
-            if (right_lever_active = 1) then
+            elseif (right_lever_active = 1) then
                 right_lever_value = SignalIn(right_lever_inpin)
-                if (right_lever_value = off) 'lever input signal is inverted
+                if (right_lever_value = off) then
                     elapsed_time = TrialTime - start_time
                     print #1, "Pressed right start lever after;", elapsed_time
                     set_right_side(off)
-                    right_completed = 1
                     show_back_lever() ' Delay the back lever protrusion
                 end if
             end if
-        end if
-
-        if (experiment_state = "Match") 'TODO could make else if being clever
+        elseif (experiment_state = "Match")
             if (back_lever_active = 1) then
                 back_lever_value = SignalIn(back_lever_inpin)
-                if (back_lever_value = off) 'lever input signal is inverted
+                if (back_lever_value = off) then
                     elapsed_time = TrialTime - back_time
                     print #1, "Pressed back lever after;", elapsed_time
                     set_back_side(off)
@@ -323,10 +317,10 @@ sub main()
                 right_lever_value = SignalIn(right_lever_inpin)
                 left_lever_value = SignalIn(left_lever_inpin)
 
-                if (right_lever_value = off) 'lever input signal is inverted
+                if (right_lever_value = off) then
                     elapsed_time = TrialTime - back_time
                     reset_left_right()
-                    if (right_completed = 1) 'Incorrect response
+                    if (trial_sides[elapsed_trials] = 0) then
                         print #1, "Incorrect response after;", elapsed_time
                         incorrect_response()
                     else 'Correct response
@@ -334,11 +328,11 @@ sub main()
                         correct_response()
                     end if
                     new_experiment()
-
-                if (left_lever_value = off) 'lever input signal is inverted
+                    print #1, print_value
+                elseif (left_lever_value = off) then
                     elapsed_time = TrialTime - back_time
                     reset_left_right()
-                    if (left_completed = 1) 'Incorrect response
+                    if (trial_sides[elapsed_trials] = 1) then
                         print #1, "Incorrect response after;", elapsed_time
                         incorrect_response()
                     else 'Correct response
