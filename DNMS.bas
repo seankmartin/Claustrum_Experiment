@@ -186,7 +186,6 @@ end sub
 
 sub init_experiment()
     ' TODO print value is not necessary if file 1 is accessible outside of main
-    ' TODO might need fixed ratio between random samples
     ' Do the initial setup
     if (trial_sides[elapsed_trials] = 1) then
         set_left_side(on)
