@@ -170,6 +170,7 @@ end sub
 sub new_experiment(first)
     ' Begin a new trial
     dim side
+    dim side_nice
     if (first = 0) then
         elapsed_trials = elapsed_trials + 1
     end if
@@ -178,10 +179,14 @@ sub new_experiment(first)
         if (trial_sides[elapsed_trials] = 1) then
             set_left_side(on)
             side = ";Left;"
+            side_nice = "left lever"
         else
             set_right_side(on)
             side = ";Right;"
+            side_nice = "right lever"
         end if
+        print, "Starting Trial number ", elapsed_trials+1, " Out of ", num_trials
+        print, "Showing the subject ", side_nice, ", will delay ", delay_times[elapsed_trials], " seconds before the matching"
         print #1, "Details for trial;", elapsed_trials+1
         print #1, "Begin;" TrialTime, side, delay_times[elapsed_trials]
 
@@ -256,6 +261,7 @@ sub end_experiment(correct)
         incorrect_response()
     end if
 
+    print "Ending trial, was the subject correct in this trial? (1/0): ", correct
     print #1, "End;", TrialTime, ";", correct, ";", elapsed_time
     print #1, ";"
     new_experiment(0)
