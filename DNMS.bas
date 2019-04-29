@@ -51,7 +51,8 @@ dim start_time
 dim elapsed_time
 dim back_time
 
-
+' Optional experimenter tag
+dim tag
 '''Varable init routines'''
 
 sub setup_pins()
@@ -305,7 +306,7 @@ sub main()
     reward_delay = 200 'A small delay before dropping the reward in ms
     show_front_delay = 1000 'Measured in ms
     'A small delay before showing the front levers after the back in ms
-
+    tag = "Optional tag" ' You may tag this experiment if you wish
     'this should output in the same name format as other axona files
     open "data.log" for output as #1
     full_init_before_record()
