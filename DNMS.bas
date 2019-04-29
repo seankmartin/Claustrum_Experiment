@@ -11,9 +11,7 @@ dim elapsed_trials
 
 ' Store per trial information
 dim trial_sides
-dim responses
 dim delay_times
-'TODO could be expanded to have other timings
 
 'timing delays
 dim max_match_delay
@@ -89,7 +87,6 @@ sub init_arrays()
     dim indices
     indices = [0, num_trials-1]
     trial_sides = vararraycreate(indices, 12)
-    responses = vararraycreate(indices, 12)
     delay_times = vararraycreate(indices, 12)
 
     dim half_point
@@ -103,6 +100,7 @@ sub init_arrays()
         trial_sides[i] = 0 'Right is 0
     next
 end sub
+
 
 '''Signal Output related routines'''
 
@@ -147,13 +145,6 @@ end sub
 
 '''Maths related subroutines'''
 
-sub swap(byref a, byref b)
-    dim temp
-    temp = a
-    a = b
-    b = temp
-end sub
-
 function generate_random_float(max)
     ' Generate a random number in the range of 0 to max
     generate_random_float = trunc(Rnd(1) * (max + 1))
@@ -173,47 +164,36 @@ sub knuth_shuffle(byref in_array, array_len)
     next
 end sub
 
-sub generate_delays()
-    ' Generate a delay for each trial before the back lever extends
-    ' In the range 1 to max_match_delay
-    dim i
-    for i = 0 to num_trials - 1
-        delay_times[i] = 1 + generate_random_float(max_match_delay-1)
-    next
-end sub
 
 '''Experiment Control Routines'''
 
-sub init_experiment()
-    ' TODO print value is not necessary if file 1 is accessible outside of main
-    ' Do the initial setup
-    if (trial_sides[elapsed_trials] = 1) then
-        set_left_side(on)
-        print #1, "Trial started with left lever set"
-    else
-        set_right_side(on)
-        print #1, "Trial started with right lever set"
+sub new_experiment(first)
+    ' Begin a new trial
+    dim side
+    if (first = 0) then
+        elapsed_trials = elapsed_trials + 1
     end if
 
-    left_completed = 0
-    right_completed = 0
-    start_time = TrialTime
-    experiment_state = "Start"
-end sub
+    if (elapsed_trials < num_trials) then
+        if (trial_sides[elapsed_trials] = 1) then
+            set_left_side(on)
+            side = ";Left;"
+        else
+            set_right_side(on)
+            side = ";Right;"
+        end if
+        print #1, "Details for trial;", elapsed_trials+1
+        print #1, "Begin;" TrialTime, side, delay_times[elapsed_trials]
 
-sub show_back_lever()
-    ' Delay for a while and then show the back lever
-    dim delay
-    delay = generate_random_float(max_match_delay)
-    DelayMS(delay * 1000)
-    set_back_side(on)
-    back_time = TrialTime
-    experiment_state = "Match"
+        left_completed = 0
+        right_completed = 0
+        start_time = TrialTime
+        experiment_state = "Start"
+    end if
 end sub
 
 sub incorrect_response()
     ' Turn off the house light before starting next trial
-    responses[elapsed_trials] = 0
     set_right_side(off)
     set_left_side(off)
     SignalOut(house_light_outpin) = off
@@ -223,8 +203,7 @@ sub incorrect_response()
 end sub
 
 sub correct_response()
-    ' Give the primate some reward for being smart
-    responses[elapsed_trials] = 1
+    ' Give the subject some reward for being smart
     num_correct = num_correct + 1
     set_right_side(off)
     set_left_side(off)
@@ -233,18 +212,59 @@ sub correct_response()
     DelayMS(trial_delay - reward_delay)
 end sub
 
-sub new_experiment()
-    ' Begin a new trial
-    elapsed_trials = elapsed_trials + 1
-    if (elapsed_trials < num_trials) then
-        init_experiment()
+sub show_back_lever()
+    ' Delay for a while and then show the back lever
+    dim delay
+    delay = generate_random_float(max_match_delay)
+    DelayMS(delay * 1000)
+    set_back_side(on)
+    back_time = TrialTime
+    experiment_state = "Back"
+end sub
+
+sub start_lever_pressed(side)
+    ' Call after the start lever is pressed, side = 1 denotes left
+    elapsed_time = TrialTime - start_time
+    print #1, "Front", TrialTime, ";", elapsed_time
+
+    if (side = 1) then
+        set_left_side(off)
+    else
+        set_right_side(off)
     end if
+
+    show_back_lever() ' Delay the back lever protrusion
+end sub
+
+sub back_lever_pressed()
+    ' Call after the back lever is pressed
+    elapsed_time = TrialTime - back_time
+    print #1, "Back;", TrialTime, ";", elapsed_time
+    set_back_side(off)
+    DelayMS(show_front_delay)
+    set_left_side(on)
+    set_right_side(on)
+    back_time = TrialTime
+end sub
+
+sub end_experiment(correct)
+    elapsed_time = TrialTime - back_time
+    reset_left_right()
+    if (correct = 1) then
+        correct_response()
+    else
+        incorrect_response()
+    end if
+
+    print #1, "End;", TrialTime, ";", correct, ";", elapsed_time
+    print #1, ";"
+    new_experiment(0)
 end sub
 
 sub full_init_before_record()
     'Perform script init before recording
-
-    'convert delays to ms
+    dim i
+    'convert some delays to ms
     trial_delay = trial_delay * 1000
     wrong_delay = wrong_delay * 1000
     Randomize 'Seed the rng based on the system clock
@@ -252,16 +272,24 @@ sub full_init_before_record()
     reset()
     init_vars()
     init_arrays()
-    generate_delays()
     knuth_shuffle(trial_sides, num_trials)
     SignalOut(house_light_outpin) = on
+
+    ' Generate time delays before showing lever
+    for i = 0 to num_trials - 1
+        delay_times[i] = 1 + generate_random_float(max_match_delay-1)
+    next
+
+    ' Print the csv file header
+    print #1, tag, ";", num_trials, ";", max_match_delay, ";", trial_delay, ";", wrong_delay
+    print #1, ";"
 end sub
 
 ''' Main subroutine follows this'''
 
 sub main()
     ' Run the experiments and record the data
-
+    dim correct
     '''NB Change important variables here'''
     num_trials = 60 'Number of trials should be divisible by 2
     max_match_delay = 30 'Max time before the back lever comes out
@@ -272,75 +300,33 @@ sub main()
     show_front_delay = 1000 'Measured in ms
     'A small delay before showing the front levers after the back in ms
 
-    full_init_before_record()
     'this should output in the same name format as other axona files
     open "data.log" for output as #1
+    full_init_before_record()
     StartUnitRecording
-    init_experiment()
+    new_experiment(1)
 
     ' Loop the recording for the number of trials
     while (elapsed_trials < num_trials)
 
-        ' Wait for the primate to start by hitting a lever
+        ' Wait for the subject to start by hitting a lever
         if (experiment_state = "Start") then
-
-            if (left_lever_active = 1) then
-                left_lever_value = SignalIn(left_lever_inpin)
-                if (left_lever_value = off) then
-                    elapsed_time = TrialTime - start_time
-                    print #1, "Pressed left start lever after;", elapsed_time
-                    set_left_side(off)
-                    show_back_lever() ' Delay the back lever protrusion
-                end if
-            elseif (right_lever_active = 1) then
-                right_lever_value = SignalIn(right_lever_inpin)
-                if (right_lever_value = off) then
-                    elapsed_time = TrialTime - start_time
-                    print #1, "Pressed right start lever after;", elapsed_time
-                    set_right_side(off)
-                    show_back_lever() ' Delay the back lever protrusion
-                end if
+            if (left_lever_active = 1) and (SignalIn(left_lever_inpin) = off) then
+                start_lever_pressed(1)
+            elseif (right_lever_active = 1) and (SignalIn(right_lever_inpin) = off) then
+                start_lever_pressed(0)
             end if
-        elseif (experiment_state = "Match") then
-            if (back_lever_active = 1) then
-                back_lever_value = SignalIn(back_lever_inpin)
-                if (back_lever_value = off) then
-                    elapsed_time = TrialTime - back_time
-                    print #1, "Pressed back lever after;", elapsed_time
-                    set_back_side(off)
-                    DelayMS(show_front_delay)
-                    set_left_side(on)
-                    set_right_side(on)
-                    back_time = TrialTime
-                end if
-
-            else 'The back lever has been pressed
-                right_lever_value = SignalIn(right_lever_inpin)
-                left_lever_value = SignalIn(left_lever_inpin)
-
-                if (right_lever_value = off) then
-                    elapsed_time = TrialTime - back_time
-                    reset_left_right()
-                    if (trial_sides[elapsed_trials] = 0) then
-                        print #1, "Incorrect response after;", elapsed_time
-                        incorrect_response()
-                    else 'Correct response
-                        print #1, "Correct response after;", elapsed_time
-                        correct_response()
-                    end if
-                    new_experiment()
-                elseif (left_lever_value = off) then
-                    elapsed_time = TrialTime - back_time
-                    reset_left_right()
-                    if (trial_sides[elapsed_trials] = 1) then
-                        print #1, "Incorrect response after;", elapsed_time
-                        incorrect_response()
-                    else 'Correct response
-                        print #1, "Correct response after;", elapsed_time
-                        correct_response()
-                    end if
-                    new_experiment()
-                end if
+        elseif (experiment_state = "Back") then
+            if (SignalIn(back_lever_inpin) = off) then
+                back_lever_pressed()
+            end if
+        else 'Checking if the subject can remember the right lever
+            if (SignalIn(right_lever_inpin) = off) then
+                correct = (trial_sides[elapsed_trials] = 0)
+                end_experiment(correct)
+            elseif (SignalIn(left_lever_inpin) = off) then
+                correct = (trial_sides[elapsed_trials] = 1)
+                end_experiment(correct)
             end if
         end if
 
@@ -350,12 +336,8 @@ sub main()
     StopUnitRecording
 
     'Print summary stats
-    print #1, "Number of trials;", elapsed_trials, ";Number correct;", num_correct
-
-    ' Can't print an array
-    ' print #1, "Lever order (Left is 1);", trial_sides
-    ' print #1, "Trial responses (Correct is 1);", responses
-    ' print #1, "Non Match Delay (Seconds);", delay_times
+    print #1, ";"
+    print #1, "Completed;", elapsed_trials, ";Correct;", num_correct
 
     close #1 'Close the file
 end sub
