@@ -20,6 +20,7 @@ dim max_match_delay
 dim trial_delay
 dim wrong_delay
 dim reward_delay
+dim show_front_delay
 
 'input pins
 dim left_lever_inpin
@@ -47,9 +48,6 @@ dim right_lever_active
 dim back_lever_active
 dim experiment_state
 
-'store a string to print
-dim print_value
-
 'timing
 dim start_time
 dim elapsed_time
@@ -62,15 +60,15 @@ sub setup_pins()
     'setup variables to pins
     left_lever_inpin = 1
     right_lever_inpin = 2
-    back_lever_inpin = 3 'TODO find actual value
+    back_lever_inpin = 1 'TODO find actual value
 
     left_lever_outpin = 1
     right_lever_outpin = 2
-    back_lever_outpin = 3 'TODO find actual value
+    back_lever_outpin = 1 'TODO find actual value
     left_light_outpin = 9
     right_light_outpin = 10
-    back_lever_outpin = 5 'TODO find actual value
-    house_light_outpin = 4 'TODO find actual value
+    back_light_outpin = 10 'TODO find actual value
+    house_light_outpin = 11 'TODO find actual value
     food_outpin = 16
 end sub
 
@@ -78,7 +76,6 @@ sub init_vars()
     'init variables such as trials and times
     elapsed_trials = 0
     num_correct = 0
-    print_value = "Empty"
     start_time = 0
     elapsed_time = 0
     back_time = 0
@@ -114,11 +111,6 @@ sub reset()
     SignalOut(all) = 0
 end sub
 
-sub reset_left_right()
-    set_right_side(off)
-    set_left_side(off)
-end sub
-
 sub set_left_side(state)
     SignalOut(left_light_outpin) = state
     SignalOut(left_lever_outpin) = state
@@ -131,6 +123,11 @@ sub set_right_side(state)
     SignalOut(right_light_outpin) = state
 
     right_lever_active = state
+end sub
+
+sub reset_left_right()
+    set_right_side(off)
+    set_left_side(off)
 end sub
 
 sub set_back_side(state)
@@ -167,9 +164,12 @@ sub knuth_shuffle(byref in_array, array_len)
     'https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
     dim i
     dim j
+    dim temp
     for i = array_len - 1 to 1 step -1
         j = generate_random_float(i)
-        swap(in_array[j], in_array[i])
+        temp = in_array[j]
+        in_array[j] = in_array[i]
+        in_array[i] = temp
     next
 end sub
 
@@ -189,10 +189,10 @@ sub init_experiment()
     ' Do the initial setup
     if (trial_sides[elapsed_trials] = 1) then
         set_left_side(on)
-        print_value = "Trial started with left lever set"
+        print #1, "Trial started with left lever set"
     else
         set_right_side(on)
-        print_value = "Trial started with right lever set"
+        print #1, "Trial started with right lever set"
     end if
 
     left_completed = 0
@@ -236,7 +236,7 @@ end sub
 sub new_experiment()
     ' Begin a new trial
     elapsed_trials = elapsed_trials + 1
-    if (elapsed_trials <= num_trials) then
+    if (elapsed_trials < num_trials) then
         init_experiment()
     end if
 end sub
@@ -269,16 +269,17 @@ sub main()
     wrong_delay = 5 'How long to time out on incorrect response
     'The wrong delay is usually the trial delay/2
     reward_delay = 200 'A small delay before dropping the reward in ms
+    show_front_delay = 1000 'Measured in ms
+    'A small delay before showing the front levers after the back in ms
 
     full_init_before_record()
     'this should output in the same name format as other axona files
     open "data.log" for output as #1
     StartUnitRecording
     init_experiment()
-    print #1, print_value
 
     ' Loop the recording for the number of trials
-    while (elapsed_trials <= num_trials)
+    while (elapsed_trials < num_trials)
 
         ' Wait for the primate to start by hitting a lever
         if (experiment_state = "Start") then
@@ -300,13 +301,14 @@ sub main()
                     show_back_lever() ' Delay the back lever protrusion
                 end if
             end if
-        elseif (experiment_state = "Match")
+        elseif (experiment_state = "Match") then
             if (back_lever_active = 1) then
                 back_lever_value = SignalIn(back_lever_inpin)
                 if (back_lever_value = off) then
                     elapsed_time = TrialTime - back_time
                     print #1, "Pressed back lever after;", elapsed_time
                     set_back_side(off)
+                    DelayMS(show_front_delay)
                     set_left_side(on)
                     set_right_side(on)
                     back_time = TrialTime
@@ -327,7 +329,6 @@ sub main()
                         correct_response()
                     end if
                     new_experiment()
-                    print #1, print_value
                 elseif (left_lever_value = off) then
                     elapsed_time = TrialTime - back_time
                     reset_left_right()
@@ -339,7 +340,6 @@ sub main()
                         correct_response()
                     end if
                     new_experiment()
-                    print #1, print_value
                 end if
             end if
         end if
@@ -351,9 +351,11 @@ sub main()
 
     'Print summary stats
     print #1, "Number of trials;", elapsed_trials, ";Number correct;", num_correct
-    print #1, "Lever order (Left is 1);", trial_sides
-    print #1, "Trial responses (Correct is 1);", responses
-    print #1, "Non Match Delay (Seconds);", delay_times
+
+    ' Can't print an array
+    ' print #1, "Lever order (Left is 1);", trial_sides
+    ' print #1, "Trial responses (Correct is 1);", responses
+    ' print #1, "Non Match Delay (Seconds);", delay_times
 
     close #1 'Close the file
 end sub
