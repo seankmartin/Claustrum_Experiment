@@ -9,21 +9,23 @@ def get_file_size(location):
     return os.path.getsize(location)
 
 
+remap_channels = [
+    32, 33, 34, 35, 36, 37, 38, 39,
+    0, 1, 2, 3, 4, 5, 6, 7,
+    40, 41, 42, 43, 44, 45, 46, 47,
+    8, 9, 10, 11, 12, 13, 14, 15,
+    48, 49, 50, 51, 52, 53, 54, 55,
+    16, 17, 18, 19, 20, 21, 22, 23,
+    56, 57, 58, 59, 60, 61, 62, 63,
+    24, 25, 26, 27, 28, 29, 30, 31]
+num_bytes_per_sample = 2
+num_bytes_per_channel = 128
+header_bytes = 32
+
+
 def extract_channel(chunk, channel):
     """ Gets all three samples from a 432 byte chunk"""
-    remap_channels = [
-        32, 33, 34, 35, 36, 37, 38, 39,
-        0, 1, 2, 3, 4, 5, 6, 7,
-        40, 41, 42, 43, 44, 45, 46, 47,
-        8, 9, 10, 11, 12, 13, 14, 15,
-        48, 49, 50, 51, 52, 53, 54, 55,
-        16, 17, 18, 19, 20, 21, 22, 23,
-        56, 57, 58, 59, 60, 61, 62, 63,
-        24, 25, 26, 27, 28, 29, 30, 31]
     place = remap_channels[channel - 1]
-    num_bytes_per_sample = 2
-    num_bytes_per_channel = 128
-    header_bytes = 32
     offset = header_bytes + (place * num_bytes_per_sample)
     samples = [None, None, None]
     for i in range(3):
