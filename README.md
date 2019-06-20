@@ -4,4 +4,4 @@
 
 ## Current Contents
 
-. rawdataloading.py - Axona bin file data reading
+- rawdataloading.py - Axona bin file data reading
