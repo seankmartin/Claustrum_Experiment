@@ -1,27 +1,29 @@
+import os
 from time import time
 
-remap_channels = [
-    32, 33, 34, 35, 36, 37, 38, 39,
-    0, 1, 2, 3, 4, 5, 6, 7,
-    40, 41, 42, 43, 44, 45, 46, 47,
-    8, 9, 10, 11, 12, 13, 14, 15,
-    48, 49, 50, 51, 52, 53, 54, 55,
-    16, 17, 18, 19, 20, 21, 22, 23,
-    56, 57, 58, 59, 60, 61, 62, 63,
-    24, 25, 26, 27, 28, 29, 30, 31]
+import numpy as np
 
-header_bytes = 32
 
-CHUNKSIZE = 432
-# Could read and store chunks
-
-# Can read specific channels like this
+def get_file_size(location):
+    """ Returns file size in bytes"""
+    return os.path.getsize(location)
 
 
 def extract_channel(chunk, channel):
+    """ Gets all three samples from a 432 byte chunk"""
+    remap_channels = [
+        32, 33, 34, 35, 36, 37, 38, 39,
+        0, 1, 2, 3, 4, 5, 6, 7,
+        40, 41, 42, 43, 44, 45, 46, 47,
+        8, 9, 10, 11, 12, 13, 14, 15,
+        48, 49, 50, 51, 52, 53, 54, 55,
+        16, 17, 18, 19, 20, 21, 22, 23,
+        56, 57, 58, 59, 60, 61, 62, 63,
+        24, 25, 26, 27, 28, 29, 30, 31]
     place = remap_channels[channel - 1]
     num_bytes_per_sample = 2
     num_bytes_per_channel = 128
+    header_bytes = 32
     offset = header_bytes + (place * num_bytes_per_sample)
     samples = [None, None, None]
     for i in range(3):
@@ -30,22 +32,26 @@ def extract_channel(chunk, channel):
     return samples
 
 
-def read_axona_raw(location, channels="all"):
+def read_axona_raw(location, channels="all", chunksize=432):
+    """Extract certain channel information from the axona bin file"""
+    size = get_file_size(location)
     counter = 0
     if channels == "all":
         channels = [i for i in range(1, 65)]
-    channel_data = [[] for i in range(len(channels))]
+    # TODO should be changed to something better for large sets
+    channel_data = np.empty(
+        (len(channels), 3 * size // chunksize), dtype=np.int16)
 
     start = time()
     with open(location, 'rb') as file:
         try:
-            chunk = file.read(CHUNKSIZE)
+            chunk = file.read(chunksize)
             while chunk:
                 for i, channel in enumerate(channels):
                     sample = extract_channel(chunk, channel)
-                    for val in sample:
-                        channel_data[i].append(val)
-                chunk = file.read(CHUNKSIZE)
+                    for j, val in enumerate(sample):
+                        channel_data[i, 3 * counter + j] = val
+                chunk = file.read(chunksize)
                 counter += 1
 
         except Exception as e:
