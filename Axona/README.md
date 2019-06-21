@@ -2,6 +2,10 @@
 
 ## Axona systems related files
 
+## Requirements
+
+numpy and h5py
+
 ## Current Contents
 
 - rawdataloading.py: Axona bin file data reading and output to hdf5.
