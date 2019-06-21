@@ -1,0 +1,10 @@
+Tag;num_trials;max_match_delay;trial_delay;wrong_delay;
+FOR EACH TRIAL
+Trial_Break;Number;TrialTime
+"Begin";TrialTime;Side;DelayToFront
+"Front";TrialTime;PressedAfterShown
+"Back";TrialTime;PressedAfterShown
+"End";TrialTime;Response;PressedAfterShown
+;
+CLOSING LINE AFTER TRIALS
+"Completed";num_trials_completed;"Correct";number_correct

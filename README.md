@@ -4,4 +4,5 @@
 
 ## Current Contents
 
-- Axona: Files related to Axona software.
+- AxonaReading: Files related to reading Axona output.
+- OperantBox: A DACQBASIC operant box controller system.
