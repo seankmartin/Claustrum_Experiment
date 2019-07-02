@@ -1,0 +1,9 @@
+\ Let us turn on and off an input
+
+^OutPin = 1
+
+S.S.1,
+S1,
+    1": ON ^OutPin ---> S2
+S2,
+    5": OFF ^OutPin ---> S1
