@@ -1,4 +1,4 @@
-\ Let us turn on and off an input
+\ Tutorial1: Turn on and off an output
 
 ^OutPin = 1
 

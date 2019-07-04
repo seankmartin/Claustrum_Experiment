@@ -1,0 +1,9 @@
+\Tutorial2 : Count and display an input
+
+^InputPin = 1
+
+S.S.1,
+    S1
+        0.01": ^LightOut ---> S2
+    S2,
+        1 #R ^InputPin: ADD C; SHOW 1, Count, C ---> SX
