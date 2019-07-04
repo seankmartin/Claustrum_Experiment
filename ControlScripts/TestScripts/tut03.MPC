@@ -1,0 +1,23 @@
+\ Tutorial 3: Start program and self terminate
+
+^HouseLight = 7
+^LeftLever = 1
+
+S.S.1, \Main control
+    S1,
+        #START: 
+            ON ^HouseLight 
+        ---> S2
+    S2,
+        1 #R ^LeftLever: 
+            ADD C; 
+            SHOW 1, Count, C 
+        ---> SX
+
+S.S.2 \Program termination control - stop after 1 minute
+    S1,
+        #START: 
+        ---> S2
+    S2,
+        1": 
+        ---> STOPABORT
