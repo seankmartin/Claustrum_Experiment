@@ -5,6 +5,11 @@
 
 S.S.1,
     S1
-        0.01": ^LightOut ---> S2
+        0.01": 
+            ON ^LightOut 
+        ---> S2
     S2,
-        1 #R ^LeverResponse: ADD C; SHOW 1, Count, C ---> SX
+        1 #R ^LeverResponse: 
+            ADD C; 
+            SHOW 1, Count, C 
+        ---> SX
