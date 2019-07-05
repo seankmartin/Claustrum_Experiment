@@ -11,9 +11,19 @@
     "body": ["${1:Input}: ${2:Output} ---> ${3:Next}"],
     "description": "Make a MedPC Sequence"
   },
+  "MedPC Alt Sequence": {
+    "prefix": "alt_seq",
+    "body": ["${1:Input}:", "\t${2:Output}", "---> ${3:Next}"],
+    "description": "Make a MedPC Sequence"
+  },
   "Response Sequence": {
     "prefix": "make_res",
     "body": ["${1:Number} #R ${2:Device}: ${3:Output} ---> ${4:Next}"],
+    "description": "Make a MedPC Response sequence"
+  },
+  "Response Alt Sequence": {
+    "prefix": "alt_res",
+    "body": ["${1:Number} #R ${2:Device}:", "\t${3:Output}", "---> ${4:Next}"],
     "description": "Make a MedPC Response sequence"
   },
   "Show variable": {

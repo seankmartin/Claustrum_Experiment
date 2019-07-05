@@ -1,0 +1,30 @@
+\ Tutorial 4: Create an FR-5 program 
+
+^LeftLever = 1
+
+^HouseLight = 7
+^Reward = 9
+
+S.S.1, \Handle the FR-5 Rewards
+    S1,
+        #START: ON ^HouseLight ---> S2
+    S2,
+        5 #R ^LeftLever: ON ^Reward; Z1 ---> SX
+
+S.S.2, \Handle counting lever responses
+    S1,
+        #START: SHOW 1, Responses, A ---> S2
+    S2,
+        1 #R ^LeftLever: ADD A; SHOW 1, Responses, A ---> SX
+
+S.S.3 \Reward timer and counter
+    S1,
+        #Z1: ADD B; SHOW 2, Rewards, B ---> S2
+    S2,
+        0.05": OFF ^Reward ---> S1
+
+S.S.4 \Turn off the session after a timer
+    S1,
+        #START: ---> S2
+    S2,
+        1': ---> STOPABORT
