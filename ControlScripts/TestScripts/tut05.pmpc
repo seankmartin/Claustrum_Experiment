@@ -1,0 +1,59 @@
+\ Tutorial 5: Create an FI program
+
+
+^LeftLever = 1
+
+^HouseLight = 7
+^Reward = 9
+
+S.S.1, \Handle the FI
+    S1,
+        0.01":
+            SET X = 10
+        ---> S2
+    S2, \Converts the time into MED-PC clock ticks
+        #START:
+            ON ^HouseLight;
+            SET X = X * 1" 
+        ---> S3
+        1":
+            SHOW 1, FI = , X 
+        ---> SX
+    S3,
+        X#T:
+        ---> S4
+    S4,
+        1 #R ^LeftLever:
+            ON ^Reward;
+            Z1
+        ---> S3
+
+S.S.2, \Handle counting lever responses
+    S1,
+        #START:
+            SHOW 2, Responses, A
+        ---> S2
+    S2,
+        1 #R ^LeftLever:
+            ADD A;
+            SHOW 2, Responses, A
+        ---> SX
+
+S.S.3 \Reward timer and counter
+    S1,
+        #Z1:
+            ADD B;
+            SHOW 3, Rewards, B
+        ---> S2
+    S2,
+        0.05":
+            OFF ^Reward
+        ---> S1
+
+S.S.4 \Turn off the session after a timer
+    S1,
+        #START:
+        ---> S2
+    S2,
+        1':
+        ---> STOPABORT
