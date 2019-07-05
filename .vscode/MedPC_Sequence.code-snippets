@@ -1,11 +1,9 @@
 {
-  // Place your neuro-tools workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and
-  // description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope
-  // is left empty or omitted, the snippet gets applied to all languages. The prefix is what is
-  // used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
-  // $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders.
-  // Placeholders with the same ids are connected.
-  // Example:
+  // The snippet blocks below are designed
+  // to capture the syntax of the MEDPC langauage
+  // Alt sequences are not valid MPC langauge and must be converted using
+  // The file parse_mpc.py
+
   "MedPC Sequence": {
     "prefix": "make_seq",
     "body": ["${1:Input}: ${2:Output} ---> ${3:Next}"],
@@ -14,7 +12,7 @@
   "MedPC Alt Sequence": {
     "prefix": "alt_seq",
     "body": ["${1:Input}:", "\t${2:Output}", "---> ${3:Next}"],
-    "description": "Make a MedPC Sequence"
+    "description": "Make a MedPC Alt Sequence"
   },
   "Response Sequence": {
     "prefix": "make_res",
@@ -24,11 +22,21 @@
   "Response Alt Sequence": {
     "prefix": "alt_res",
     "body": ["${1:Number} #R ${2:Device}:", "\t${3:Output}", "---> ${4:Next}"],
-    "description": "Make a MedPC Response sequence"
+    "description": "Make a MedPC Alt Response sequence"
   },
   "Show variable": {
     "prefix": "make_show",
     "body": ["SHOW ${1:Position}, ${2:User Label}, ${3:Variable}"],
     "description": "Make a MedPC Show command"
+  },
+  "Set With Operator": {
+    "prefix": "make_set_op",
+    "body": ["SET ${1:Arg1} = ${2:Arg2} ${3:Operator} ${4:Arg3}"],
+    "description": "Make a MedPC Set command"
+  },
+  "Set": {
+    "prefix": "make_set",
+    "body": ["SET ${1:Arg1} = ${2:Arg2}"],
+    "description": "Make a MedPC Set command"
   }
 }

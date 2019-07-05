@@ -1,3 +1,9 @@
+"""
+Parse a text file that is written in MPC syntax,
+except for additional newlines in sequences.
+This allows to write in an easier fashion, but still have valid MPC code.
+"""
+
 import argparse
 import os
 
