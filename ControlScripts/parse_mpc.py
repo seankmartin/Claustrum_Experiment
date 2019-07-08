@@ -11,15 +11,28 @@ import os
 def sequence_line(line):
     comparison = line.lower().strip()
     return len(comparison) != 0 and not comparison.startswith(
-        ("s", "\\", "^")
+        ("s", "\\", "^", "dim", "disk", "var")
     )
 
 
 def extract_sequence(f, line):
     lines = [line]
+    first_if = True
     while line and not line.startswith("--->"):
-        line = f.readline().strip()
-        lines.append(line)
+        o_line = f.readline()
+        line = o_line.strip()
+        if line.startswith("ENDIF"):
+            first_if = True
+            break
+        elif line.startswith("@"):
+            if first_if:
+                line = "\n " + o_line
+                first_if = False
+            else:
+                line = o_line
+            lines.append(line)
+        else:
+            lines.append(line)
     out_line = lines[0].rstrip() + " "
     for line in lines[1:]:
         out_line = out_line + line + " "
