@@ -38,5 +38,10 @@
     "prefix": "make_set",
     "body": ["SET ${1:Arg1} = ${2:Arg2}"],
     "description": "Make a MedPC Set command"
+  },
+  "Line": {
+    "prefix": "comment_line",
+    "body": "\\***************************************************",
+    "description": "Add a comment line"
   }
 }
