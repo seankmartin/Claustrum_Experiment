@@ -1,0 +1,149 @@
+\***************************************************
+\               File Description Comments
+\***************************************************
+
+\ Magazine Habituation by Seán Martin on 08/07/2019
+    \ Brief Description: Drop a pellet every 30 seconds.
+    \ Ending criteria: Ends after 15mins (Default)
+    \ Locked pins: Remember to turn off the fan 
+
+\***************************************************
+\               Constant Definitions
+\***************************************************
+\ Experiment variable locations
+    ^MaxTimeIdx = 0
+    ^RateDropIdx = 1
+
+\ Index holder locations
+    ^FeederTimeIdx = 0
+    ^NosepokeTimeIdx = 0
+
+\ Counter locations
+    ^FeederCountIdx = 0
+    ^NosepokeCountIdx = 1
+
+\ Inputs
+    ^Nosepoke = 7
+
+\ Outputs
+    ^HouseLight = 7
+    ^Feeder = 9
+    ^FanBox = 16
+
+\***************************************************
+\               Variable Descriptions
+\***************************************************
+
+DIM C = 1
+\ Counter descriptions
+    \ C(0) = Number of Pellets dropped
+    \ C(1) = Number of Nosepokes
+
+DIM A = 1
+DIM B = 1
+DIM D = 50 \ Should be large enough to hold rate * exp_time
+DIM E = 5000 \ Theoretically this could be anything - checks
+\ Arrays
+    \ A = Experiment variables
+    \ B = Index holders
+    \ D = Data array for Feeder drop times
+    \ E = Data array for nosepoke times
+
+\ Aliases
+    VAR_ALIAS Maximum Time in minutes = A(^MaxTimeIdx) \ Default 15 minutes
+    VAR_ALIAS Drop Rate in seconds = A(^RateDropIdx) \ Default 30 seconds
+
+\ Z Pulses
+    \ Z1 = Screen update pulse
+    \ Z2 = Activate Feeder
+    \ Z32 = End the session
+
+\ Single Variables
+    \ T = Elapsed time
+
+DISKVARS = A, C, D, E
+
+\***************************************************
+\               Implementation
+\***************************************************
+
+S.S.1, \ Control flow
+
+    S1, \ Establish default values and turn on fan
+        0.01":
+            SET A(^MaxTimeIdx) = 15;
+            SET A(^RateDropIdx) = 30;
+            LOCKON ^FanBox
+        ---> S2
+
+    S2, \ Wait for start signal
+        #START:
+            ON ^HouseLight;
+            SET A(^RateDropIdx) = A(^RateDropIdx) * 1";
+            Z1
+        ---> S3
+
+    S3, \ Time the session and flag off after Max Time
+        0.01":
+            SET T = T + 0.01;
+            IF T/60 >= A(^MaxTimeIdx) [@EndSession, @ContinueSession]
+                @End: Z32 ---> S4
+                @Cont: ---> SX
+            ENDIF
+
+    S4, \ Stop the session
+        3":
+        ---> STOPABORTFLUSH
+
+\***************************************************
+\                Main Program
+\***************************************************
+S.S.2, \ Experiment logic
+
+    S1, \ Drop pellets at desired rate
+        A(^RateDropIdx)#T:
+            Z2
+    ---> SX       
+
+S.S.5 \ Detect nosepokes and record the times
+
+    S1, \ Detect nosepokes
+        1 #R ^Nosepoke:
+            SET D(B(^NosepokeTimeIdx)) = T;
+            ADD B(^NosepokeTimeIdx);
+            ADD C(^NosepokeCountIdx);
+            Z1
+        ---> S2
+    S2, \ Time out after a poke to avoid multiple recordings
+        0.1":
+        ---> S1
+
+S.S.6, \ Drop pellets
+
+    S1, \ Drop the pellet
+        #Z2:
+            ON ^Feeder;
+            SET D(B(^FeederTimeIdx)) = T;
+            ADD B(^FeederTimeIdx);
+            ADD C(^FeederCountIdx);
+            Z1
+        ---> S2
+
+    S2, \ Turn off the feeder after dropping
+        0.5": 
+            OFF ^Feeder
+        ---> S1
+
+
+S.S.10, \ Update the display
+
+    S1, \ Wait to read a Z pulse
+        #Z1:
+        ---> S2
+    S2, \ Update the screen
+        \ TODO showing time is temp
+        .01":
+            SHOW 0, Number of Pellets, C(0);
+            SHOW 1, Number of Nosepokes, C(1);
+            SHOW 2, Experiment Time, T
+        ---> S1
