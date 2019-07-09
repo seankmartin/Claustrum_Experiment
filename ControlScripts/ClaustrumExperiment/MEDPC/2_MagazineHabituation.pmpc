@@ -50,11 +50,8 @@ DIM E = 5000 \ Theoretically this could be anything - checks
     \ E = Data array for nosepoke times
 
 \ Aliases
-    \ TODO one of these aliases is temp
-    VAR_ALIAS Maximum Time Minutes = A(^MaxTimeIdx) \ Default 15 minutes
-    VAR_ALIAS Drop Rate Seconds = A(^RateDropIdx) \ Default 30 seconds
-    VAR_ALIAS Rate Ticks = G \ Just a test!
-    VAR_ALIAS Test = H \ Also just a test!
+    VAR_ALIAS Maximum Time (min) = A(0) \ Default 15 minutes
+    VAR_ALIAS Drop Rate (secs) = A(1) \ Default 30 seconds
 
 \ Z Pulses
     \ Z1 = Screen update pulse
@@ -64,8 +61,7 @@ DIM E = 5000 \ Theoretically this could be anything - checks
 \ Single Variables
     \ T = Elapsed time
 
-\ TODO remove G and H
-DISKVARS = A, C, D, E, T, G, H,
+DISKVARS = A, C, D, E, T
 
 \***************************************************
 \               Implementation
@@ -105,9 +101,7 @@ S.S.2, \ Experiment logic
 
     S1, \Wait for experiment start
         #START:
-            SET G = A(^RateDropIdx) * 1";
-            SET A(^RateDropIdx) = A(^RateDropIdx) * 1";
-            SET H = A(^RateDropIdx)
+            SET A(^RateDropIdx) = A(^RateDropIdx) * 1"
         ---> S2
     S2, \ Drop pellets at desired rate
         A(^RateDropIdx)#T:
