@@ -1,0 +1,287 @@
+\***************************************************
+\               File Description Comments
+\***************************************************
+
+\ Lever Habituation by Seán Martin on 11/07/2019
+    \ Brief Description: Drop a pellet every 60 seconds.
+    \ Ending criteria: Ends after 30mins, or after 90 pellets.
+    \ Locked pins: Remember to turn off the fan (16) 
+
+\***************************************************
+\               Constant Definitions
+\***************************************************
+\ Experiment variable locations
+    ^MaxTimeIdx = 0
+    ^RateDropIdx = 1
+    ^MaxPelletIdx = 2
+
+\ Index holder locations
+    ^FeederTimeIdx = 0
+    ^NosepokeTimeIdx = 1
+    ^LeftLeverTimeIdx = 2
+    ^RightLeverTimeIdx = 3
+    ^WrongLeftTimeIdx = 4
+    ^WrongRightTimeIdx = 5
+    ^WrongNosepokeTimeIdx = 6
+
+\ Counter locations
+    ^FeederCountIdx = 0
+    ^NosepokeCountIdx = 1
+    ^LeftLeverCountIdx = 2
+    ^RightLeverCountIdx = 3
+    ^WrongLeftCountIdx = 4
+    ^WrongRightCountIdx = 5
+    ^WrongNosepokeCountIdx = 6
+
+\ Inputs
+    ^LeftLever = 1
+    ^RightLever = 3
+    ^Nosepoke = 7
+
+\ Outputs
+    ^LeftLeverOut = 1
+    ^RightLeverOut = 2
+    ^LeftLight = 4
+    ^RightLight = 5
+    ^HouseLight = 7
+    ^Feeder = 9
+    ^FanBox = 16
+
+\***************************************************
+\               Variable Descriptions
+\***************************************************
+
+\ Aliases
+    VAR_ALIAS Maximum Time (min) = A(0) \ Default 30 minutes
+    VAR_ALIAS Drop Rate (secs) = A(1) \ Default 60 seconds
+    VAR_ALIAS Max Pellets = A(2) \ Default 90
+
+\ Arrays
+    \ A = Experiment variables
+    \ B = Index holders
+    \ C = Counters
+    \ D = Data array for feeder drop times
+    \ E = Data array for nosepoke times
+    \ L = Data array for left lever response times
+    \ M = Data array for incorrect left response times
+    \ N = Data array for incorrect right response times
+    \ O = Data array for incorrec nosepoke times
+    \ R = Data array for right lever response times
+
+    DIM A = 2
+    DIM B = 6
+    DIM C = 6
+    DIM D = 50 \ Should be large enough to hold rate * exp_time + end character
+    DIM E = 100 \ Should be large enough to hold max_pellets + 1
+    DIM L = 100 \ Should be large enough to hold max_pellets + 1
+    DIM M = 100000 \ Could be anything
+    DIM N = 100000 \ Could be anything
+    DIM O = 100000 \ Could be anything
+    DIM R = 100 \ Should be large enough to hold max_pellets + 1
+
+\ Counter descriptions
+    \ C(0) = Number of Pellets dropped
+    \ C(1) = Number of Nosepokes
+    \ C(2) = Number of left lever presses
+    \ C(3) = Number of right lever presses
+    \ C(4) = Number of incorrect left lever presses
+    \ C(5) = Number of incorrect right lever presses
+
+\ Z Pulses
+    \ Z1 = Screen update pulse
+    \ Z2 = Activate Feeder
+    \ Z3 = Start timer to turn off left light
+    \ Z4 = Start timer to turn off right light
+    \ Z32 = End the session
+
+\ Single Variables
+    \ T = Elapsed time
+
+\ List of Variables to save at end of trial
+    DISKVARS = A, B, C, D, E, L, M, N, O, R, T
+
+\***************************************************
+\               Implementation
+\***************************************************
+
+S.S.1, \ Control flow
+
+    S1, \ Establish default values and turn on fan
+        0.01":
+            SET A(^MaxTimeIdx) = 30;
+            SET A(^RateDropIdx) = 60;
+            SET A(^MaxPelletIdx) = 90;
+            LOCKON ^FanBox
+        ---> S2
+
+    S2, \ Wait for start signal
+        #START:
+            ON ^HouseLight;
+            Z1
+        ---> S3
+
+    S3, \ Time the session and flag off after Max Time or condition met
+        0.01":
+            SET T = T + 0.01;
+            IF T/60 >= A(^MaxTimeIdx) [@EndSession, @ContinueSession]
+                @End: Z32 ---> S4
+                @Cont: IF C(^FeederCountIdx) >= A(^MaxPelletIdx) [@EndSession]
+                    @End: Z32 ---> S4
+            ENDIF
+
+    S4, \ Stop the session
+        3":
+        ---> STOPABORTFLUSH
+
+\***************************************************
+\                Main Program
+\***************************************************
+S.S.2, \ Experiment logic
+
+    S1, \ Wait for experiment start
+        #START:
+            SET A(^RateDropIdx) = A(^RateDropIdx) * 1"
+        ---> S2
+
+    S2, \ Drop pellets
+        A(^RateDropIdx)#T:
+            Z2
+        ---> S3
+
+        1 #R ^LeftLever:
+            SET L(B(^LeftLeverTimeIdx)) = T;
+            ADD B(^LeftLeverTimeIdx);
+            ADD C(^LeftLeverCountIdx);
+            SET L(B(^LeftLeverTimeIdx)) = -987.987;
+            Z1;
+            Z2;
+            Z3
+        ---> S3
+
+        1 #R ^RightLever:
+            SET R(B(^RightLeverTimeIdx)) = T;
+            ADD B(^RightLeverTimeIdx);
+            ADD C(^RightLeverCountIdx);
+            SET R(B(^RightLeverTimeIdx)) = -987.987;
+            Z1;
+            Z2;
+            Z4
+        ---> S3
+
+    S3, \ Pellet has been dropped, detect right or left presses and nosepoke
+        1 #R ^LeftLever:
+            SET M(B(^WrongLeftTimeIdx)) = T;
+            ADD B(^WrongLeftTimeIdx);
+            ADD C(^WrongLeftCountIdx);
+            SET M(B(^WrongLeftTimeIdx)) = -987.987;
+            Z1
+        ---> SX
+
+        1 #R ^RightLever:
+            SET N(B(^WrongRightTimeIdx)) = T;
+            ADD B(^WrongRightTimeIdx);
+            ADD C(^WrongRightCountIdx);
+            SET N(B(^WrongRightTimeIdx)) = -987.987;
+            Z1
+        ---> SX
+
+        1 #R ^Nosepoke:
+            SET E(B(^NosepokeTimeIdx)) = T;
+            ADD B(^NosepokeTimeIdx);
+            ADD C(^NosepokeCountIdx);
+            SET E(B(^NosepokeTimeIdx)) = -987.987;
+            Z1
+        ---> S4
+
+    S4, \ Time out after a poke to avoid mutiple recordings
+        0.1":
+        --->S2        
+
+S.S.5 \ Detect incorrect nosepokes and record the times
+
+    S1, \Wait for experiment start
+        #START:
+        ---> S2
+
+    S2, \ Detect incorrect nosepokes
+        1 #R ^Nosepoke:
+            SET O(B(^WrongNosepokeTimeIdx)) = T;
+            ADD B(^WrongNosepokeTimeIdx);
+            ADD C(^WrongNosepokeCountIdx);
+            SET O(B(^WrongNosepokeTimeIdx)) = -987.987;
+            Z1
+        ---> S3
+
+        #Z2:
+        ---> S4
+
+    S3, \ Time out after a poke to avoid multiple recordings
+        0.1":
+        ---> S2
+    
+    S4, \ Detect correct nosepoke
+        1 #R ^Nosepoke:
+        ---> S2
+
+S.S.7, \ Drop pellets
+
+    S1, \ Drop the pellet
+        #Z2:
+            ON ^Feeder;
+            SET D(B(^FeederTimeIdx)) = T;
+            ADD B(^FeederTimeIdx);
+            ADD C(^FeederCountIdx);
+            SET D(B(^FeederTimeIdx)) = -987.987;
+            Z1
+        ---> S2
+
+    S2, \ Turn off the feeder after dropping
+        0.5": 
+            OFF ^Feeder
+        ---> S1
+
+
+S.S.8 \ Turn off the left light 2 seconds after press
+
+    S1, \ Wait for a Z to turn on the light
+        #Z3:
+            ON ^LeftLight
+        --->S2
+
+    S2, \Turn off the left light after 2secs
+        2":
+            OFF ^LeftLight
+        ---> S1
+
+S.S.9 \ Turn off the right light 2 seconds after press
+
+    S1, \ Wait for a Z to turn on the light
+        #Z4:
+            ON ^RightLight
+        --->S2
+
+    S2, \Turn off the right light after 2secs
+        2":
+            OFF ^RightLight
+        ---> S1
+
+S.S.10, \ Update the display
+
+    S1, \ Wait 9.99 seconds or for a Z-Pulse
+        9.99":
+        ---> S2
+
+        #Z1:
+        ---> S2
+
+    S2, \ Update the screen
+        .01":
+            SHOW 1, Experiment Time, T;
+            SHOW 2, Pellets, C(^FeederCountIdx);
+            SHOW 3, Correct Nosepokes, C(^NosepokeCountIdx);
+            SHOW 4, Incorrect Nosepokes, C(^WrongNosepokeCountIdx);
+            SHOW 5, Correct Lefts, C(^LeftLeverCountIdx);
+            SHOW 6, Correct Rights, C(^RightLeverCountIdx);
+            SHOW 7, Incorrect Lefts, C(^WrongLeftCountIdx);
+            SHOW 8, Incorrect Rights, C(^WrongRightCountIdx);
+        ---> S1
