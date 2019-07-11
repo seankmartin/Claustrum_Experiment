@@ -14,6 +14,7 @@
     ^MaxTimeIdx = 0
     ^RateDropIdx = 1
     ^MaxPelletIdx = 2
+    ^RequiredPressIdx = 3
 
 \ Index holder locations
     ^FeederTimeIdx = 0
@@ -55,6 +56,7 @@
     VAR_ALIAS Maximum Time (min) = A(0) \ Default 30 minutes
     VAR_ALIAS Drop Rate (secs) = A(1) \ Default 60 seconds
     VAR_ALIAS Max Pellets = A(2) \ Default 90
+    VAR_ALIAS Presses to advance = A(3) \ Default 20
 
 \ Arrays
     \ A = Experiment variables
@@ -65,10 +67,11 @@
     \ L = Data array for left lever response times
     \ M = Data array for incorrect left response times
     \ N = Data array for incorrect right response times
-    \ O = Data array for incorrec nosepoke times
+    \ O = Data array for incorrect nosepoke times
+    \ P = Should pass test?
     \ R = Data array for right lever response times
 
-    DIM A = 2
+    DIM A = 3
     DIM B = 6
     DIM C = 6
     DIM D = 50 \ Should be large enough to hold rate * exp_time + end character
@@ -98,7 +101,7 @@
     \ T = Elapsed time
 
 \ List of Variables to save at end of trial
-    DISKVARS = A, B, C, D, E, L, M, N, O, R, T
+    DISKVARS = A, B, C, D, E, L, M, N, O, P, R, T
 
 \***************************************************
 \               Implementation
@@ -111,6 +114,7 @@ S.S.1, \ Control flow
             SET A(^MaxTimeIdx) = 30;
             SET A(^RateDropIdx) = 60;
             SET A(^MaxPelletIdx) = 90;
+            SET A(^RequiredPressIdx) = 20;
             LOCKON ^FanBox
         ---> S2
 
@@ -129,7 +133,13 @@ S.S.1, \ Control flow
                     @End: Z32 ---> S4
             ENDIF
 
-    S4, \ Stop the session
+    S4, \ Did the subject pass or fail?
+        0.01":
+            IF (C(^LeftLeverCountIdx) + C(^RightLeverCountIdx)) >= A(^RequiredPressIdx) [@Succeed, @Fail]
+                @Succ: SET P = 1 ---> S5
+                @Fail: SET P = 0 ---> S5
+
+    S5, \ Stop the session
         3":
         ---> STOPABORTFLUSH
 
