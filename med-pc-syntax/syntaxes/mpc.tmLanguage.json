@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "MedPC",
+  "patterns": [
+    {
+      "include": "#keywords"
+    }
+  ],
+  "repository": {
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.mpc",
+          "match": "\\b(IF)\\b"
+        },
+        {
+          "name": "keyword.operator.mpc",
+          "match": "\\b(SET|SHOW|ADD|OFF|ON|LOCKON|DISKVARS|DIM|VAR_ALIAS)\\b"
+        }
+      ]
+    }
+  },
+  "scopeName": "source.mpc"
+}
