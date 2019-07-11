@@ -5,7 +5,7 @@
 \ Magazine Habituation by Seán Martin on 08/07/2019
     \ Brief Description: Drop a pellet every 30 seconds.
     \ Ending criteria: Ends after 15mins (Default)
-    \ Locked pins: Remember to turn off the fan 
+    \ Locked pins: Remember to turn off the fan (16)
 
 \***************************************************
 \               Constant Definitions

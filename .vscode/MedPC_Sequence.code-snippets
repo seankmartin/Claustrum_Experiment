@@ -43,5 +43,9 @@
     "prefix": "comment_line",
     "body": "\\***************************************************",
     "description": "Add a comment line"
+  },
+  "Cap Array": {
+    "prefix": "cap_array",
+    "body": "SET ${1:Item} = -987.987"
   }
 }
