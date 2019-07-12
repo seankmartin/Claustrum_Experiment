@@ -115,6 +115,13 @@ S.S.1, \ Control flow
             SET A(^RateDropIdx) = 60;
             SET A(^MaxPelletIdx) = 90;
             SET A(^RequiredPressIdx) = 20;
+            SET D(0) = -987.987;
+            SET E(0) = -987.987;
+            SET L(0) = -987.987;
+            SET M(0) = -987.987;
+            SET N(0) = -987.987;
+            SET O(0) = -987.987;
+            SET R(0) = -987.987;
             LOCKON ^FanBox
         ---> S2
 
@@ -135,6 +142,8 @@ S.S.1, \ Control flow
 
     S4, \ Did the subject pass or fail?
         0.01":
+            OFF ^LeftLeverOut;
+            OFF ^RightLeverOut;
             IF (C(^LeftLeverCountIdx) + C(^RightLeverCountIdx)) >= A(^RequiredPressIdx) [@Succeed, @Fail]
                 @Succ: SET P = 1 ---> S5
                 @Fail: SET P = 0 ---> S5
