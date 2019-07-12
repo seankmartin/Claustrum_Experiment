@@ -4,9 +4,22 @@
   "patterns": [
     {
       "include": "#keywords"
+    },
+    {
+      "include": "#comment"
     }
   ],
   "repository": {
+    "comment": {
+      "patterns": [
+        {
+          "name": "comment.line.mpc",
+          "begin": "\\\\",
+          "end": "\\\n"
+        }
+      ]
+    },
+
     "keywords": {
       "patterns": [
         {
