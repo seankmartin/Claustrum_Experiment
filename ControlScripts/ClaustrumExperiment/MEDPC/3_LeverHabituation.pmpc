@@ -93,8 +93,6 @@
 \ Z Pulses
     \ Z1 = Screen update pulse
     \ Z2 = Activate Feeder
-    \ Z3 = Start timer to turn off left light
-    \ Z4 = Start timer to turn off right light
     \ Z32 = End the session
 
 \ Single Variables
@@ -146,6 +144,7 @@ S.S.1, \ Control flow
         0.01":
             OFF ^LeftLeverOut;
             OFF ^RightLeverOut;
+            OFF ^HouseLight;
             IF (C(^LeftLeverCountIdx) + C(^RightLeverCountIdx)) >= A(^RequiredPressIdx) [@Succeed, @Fail]
                 @Succ: SET P = 1 ---> S5
                 @Fail: SET P = 0 ---> S5
@@ -175,8 +174,7 @@ S.S.2, \ Experiment logic
             ADD C(^LeftLeverCountIdx);
             SET L(B(^LeftLeverTimeIdx)) = -987.987;
             Z1;
-            Z2;
-            Z3
+            Z2
         ---> S3
 
         1 #R ^RightLever:
@@ -185,8 +183,7 @@ S.S.2, \ Experiment logic
             ADD C(^RightLeverCountIdx);
             SET R(B(^RightLeverTimeIdx)) = -987.987;
             Z1;
-            Z2;
-            Z4
+            Z2
         ---> S3
 
     S3, \ Pellet has been dropped, detect right or left presses and nosepoke
@@ -259,31 +256,6 @@ S.S.7, \ Drop pellets
     S2, \ Turn off the feeder after dropping
         0.5": 
             OFF ^Feeder
-        ---> S1
-
-
-S.S.8 \ Turn off the left light 2 seconds after press
-
-    S1, \ Wait for a Z to turn on the light
-        #Z3:
-            ON ^LeftLight
-        --->S2
-
-    S2, \Turn off the left light after 2secs
-        2":
-            OFF ^LeftLight
-        ---> S1
-
-S.S.9 \ Turn off the right light 2 seconds after press
-
-    S1, \ Wait for a Z to turn on the light
-        #Z4:
-            ON ^RightLight
-        --->S2
-
-    S2, \Turn off the right light after 2secs
-        2":
-            OFF ^RightLight
         ---> S1
 
 S.S.10, \ Update the display
