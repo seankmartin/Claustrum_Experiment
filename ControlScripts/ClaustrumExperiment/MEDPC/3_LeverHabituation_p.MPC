@@ -113,7 +113,7 @@ S.S.1, \ Control flow
         0.01": SET A(^MaxTimeIdx) = 30; SET A(^RateDropIdx) = 60; SET A(^MaxPelletIdx) = 90; SET A(^RequiredPressIdx) = 20; SET D(0) = -987.987; SET E(0) = -987.987; SET L(0) = -987.987; SET M(0) = -987.987; SET N(0) = -987.987; SET O(0) = -987.987; SET R(0) = -987.987; LOCKON ^FanBox ---> S2
 
     S2, \ Wait for start signal
-        #START: ON ^HouseLight; Z1 ---> S3
+        #START: ON ^HouseLight; ON ^LeftLeverOut; ON ^RightLeverOut; Z1 ---> S3
 
     S3, \ Time the session and flag off after Max Time or condition met
         0.01": SET T = T + 0.01; IF T/60 >= A(^MaxTimeIdx) [@EndSession, @ContinueSession] 
