@@ -3,40 +3,57 @@
   // to capture the syntax of the MEDPC langauage
   // Alt sequences are not valid MPC langauge and must be converted using
   // The file parse_mpc.py
-
   "MedPC Sequence": {
     "prefix": "make_seq",
-    "body": ["${1:Input}: ${2:Output} ---> ${3:Next}"],
+    "body": [
+      "${1:Input}: ${2:Output} ---> ${3:Next}"
+    ],
     "description": "Make a MedPC Sequence"
   },
   "MedPC Alt Sequence": {
     "prefix": "alt_seq",
-    "body": ["${1:Input}:", "\t${2:Output}", "---> ${3:Next}"],
+    "body": [
+      "${1:Input}:",
+      "\t${2:Output}",
+      "---> ${3:Next}"
+    ],
     "description": "Make a MedPC Alt Sequence"
   },
   "Response Sequence": {
     "prefix": "make_res",
-    "body": ["${1:Number} #R ${2:Device}: ${3:Output} ---> ${4:Next}"],
+    "body": [
+      "${1:Number} #R ${2:Device}: ${3:Output} ---> ${4:Next}"
+    ],
     "description": "Make a MedPC Response sequence"
   },
   "Response Alt Sequence": {
     "prefix": "alt_res",
-    "body": ["${1:Number} #R ${2:Device}:", "\t${3:Output}", "---> ${4:Next}"],
+    "body": [
+      "${1:Number} #R ${2:Device}:",
+      "\t${3:Output}",
+      "---> ${4:Next}"
+    ],
     "description": "Make a MedPC Alt Response sequence"
   },
   "Show variable": {
     "prefix": "make_show",
-    "body": ["SHOW ${1:Position}, ${2:User Label}, ${3:Variable}"],
+    "body": [
+      "SHOW ${1:Position}, ${2:User Label}, ${3:Variable}"
+    ],
     "description": "Make a MedPC Show command"
   },
   "Set With Operator": {
     "prefix": "make_set_op",
-    "body": ["SET ${1:Arg1} = ${2:Arg2} ${3:Operator} ${4:Arg3}"],
+    "body": [
+      "SET ${1:Arg1} = ${2:Arg2} ${3:Operator} ${4:Arg3}"
+    ],
     "description": "Make a MedPC Set command"
   },
   "Set": {
     "prefix": "make_set",
-    "body": ["SET ${1:Arg1} = ${2:Arg2}"],
+    "body": [
+      "SET ${1:Arg1} = ${2:Arg2}"
+    ],
     "description": "Make a MedPC Set command"
   },
   "Line": {
@@ -47,5 +64,13 @@
   "Cap Array": {
     "prefix": "cap_array",
     "body": "SET ${1:Item} = -987.987"
+  },
+  "Add to Array": {
+    "prefix": "append_array",
+    "body": [
+      "SET ${1:Array}(${2:Index}) = ${3:Value};",
+      "ADD B(${2:Index});",
+      "SET ${1:Array}(${2:Index}) = -987.987;"
+    ]
   }
 }
