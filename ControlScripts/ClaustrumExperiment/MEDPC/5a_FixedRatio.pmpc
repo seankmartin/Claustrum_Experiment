@@ -43,6 +43,7 @@
     ^RightLeverOut = 2
     ^RightLight = 5
     ^HouseLight = 7
+    ^Sound = 8
     ^Feeder = 9
     ^FanBox = 16
 
@@ -149,6 +150,7 @@ S.S.1, \ Control flow
         0.01":
             OFF ^RightLeverOut;
             OFF ^HouseLight;
+            OFF ^RightLight;
             IF C(^FeederCountIdx) >= A(^RequiredPelletsIdx) [@Succeed, @Fail]
                 @Succ: SET P = 1 ---> S5
                 @Fail: SET P = 0 ---> S5
@@ -244,7 +246,7 @@ S.S.6, \ Handle the FR increment logic
             Z1
         ---> S1
 
-S.S.9, \ Drop pellets
+S.S.7, \ Drop pellets
 
     S1, \ Drop the pellet
         #Z2:
@@ -259,6 +261,18 @@ S.S.9, \ Drop pellets
     S2, \ Turn off the feeder after dropping
         0.5": 
             OFF ^Feeder
+        ---> S1
+
+S.S.8, \ Turn on the sound and then off again
+
+    S1,
+        #START:
+            ON ^Sound;
+        ---> S2
+    
+    S2, 
+        3":
+            OFF ^Sound;
         ---> S1
 
 S.S.10, \ Update the display

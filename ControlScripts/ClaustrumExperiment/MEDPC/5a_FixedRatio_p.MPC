@@ -122,7 +122,7 @@ S.S.1, \ Control flow
 
 
     S4, \ Did the subject pass or fail?
-        0.01": OFF ^RightLeverOut; OFF ^HouseLight; IF C(^FeederCountIdx) >= A(^RequiredPelletsIdx) [@Succeed, @Fail] 
+        0.01": OFF ^RightLeverOut; OFF ^HouseLight; OFF ^RightLight; IF C(^FeederCountIdx) >= A(^RequiredPelletsIdx) [@Succeed, @Fail] 
                  @Succ: SET P = 1 ---> S5
                  @Fail: SET P = 0 ---> S5
  

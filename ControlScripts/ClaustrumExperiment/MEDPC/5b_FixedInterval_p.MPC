@@ -38,7 +38,6 @@
     ^LeftLeverOut = 1
     ^LeftLight = 4
     ^HouseLight = 7
-    ^Sound = 8
     ^Feeder = 9
     ^FanBox = 16
 
@@ -96,48 +95,25 @@
 S.S.1, \ Control flow
 
     S1, \ Establish default values and turn on fan
-        0.01":
-            SET A(^MaxTimeIdx) = 30;
-            SET A(^MaxPelletIdx) = 45;
-            SET A(^RequiredPelletsIdx) = 45;
-            SET A(^InterResponseTimeIdx) = 20;
-            SET D(0) = -987.987;
-            SET E(0) = -987.987;
-            SET N(0) = -987.987;
-            SET O(0) = -987.987;
-            SET R(0) = -987.987;
-            LOCKON ^FanBox
-        ---> S2
+        0.01": SET A(^MaxTimeIdx) = 30; SET A(^MaxPelletIdx) = 45; SET A(^RequiredPelletsIdx) = 45; SET A(^InterResponseTimeIdx) = 20; SET D(0) = -987.987; SET E(0) = -987.987; SET N(0) = -987.987; SET O(0) = -987.987; SET R(0) = -987.987; LOCKON ^FanBox ---> S2
 
     S2, \ Wait for start signal
-        #START:
-            ON ^HouseLight;
-            ON ^LeftLeverOut;
-            ON ^LeftLight;
-            Z1
-        ---> S3
+        #START: ON ^HouseLight; ON ^LeftLeverOut; ON ^LeftLight; Z1 ---> S3
 
     S3, \ Time the session and flag off after Max Time or condition met
-        0.01":
-            SET T = T + 0.01;
-            IF T/60 >= A(^MaxTimeIdx) [@EndSession, @ContinueSession]
-                @End: Z32 ---> S4
-                @Cont: IF C(^FeederCountIdx) >= A(^MaxPelletIdx) [@EndSession]
-                    @End: Z32 ---> S4
-            ENDIF
+        0.01": SET T = T + 0.01; IF T/60 >= A(^MaxTimeIdx) [@EndSession, @ContinueSession] 
+                 @End: Z32 ---> S4
+                 @Cont: IF C(^FeederCountIdx) >= A(^MaxPelletIdx) [@EndSession]
+                     @End: Z32 ---> S4
+
 
     S4, \ Did the subject pass or fail?
-        0.01":
-            OFF ^LeftLeverOut;
-            OFF ^HouseLight;
-            OFF ^LeftLight;
-            IF C(^FeederCountIdx) >= A(^RequiredPelletsIdx) [@Succeed, @Fail]
-                @Succ: SET P = 1 ---> S5
-                @Fail: SET P = 0 ---> S5
-
+        0.01": OFF ^LeftLeverOut; OFF ^HouseLight; OFF ^LeftLight; IF C(^FeederCountIdx) >= A(^RequiredPelletsIdx) [@Succeed, @Fail] 
+                 @Succ: SET P = 1 ---> S5
+                 @Fail: SET P = 0 ---> S5
+ 
     S5, \ Stop the session
-        3":
-        ---> STOPABORTFLUSH
+        3": ---> STOPABORTFLUSH
 
 \***************************************************
 \                Main Program
@@ -145,110 +121,56 @@ S.S.1, \ Control flow
 S.S.2, \ Experiment logic
 
     S1, \ Wait for experiment start
-        #START:
-            SET A(^InterResponseTimeIdx) = A(^InterResponseTimeIdx) * 1"
-        ---> S2
+        #START: SET A(^InterResponseTimeIdx) = A(^InterResponseTimeIdx) * 1" ---> S2
 
     S2, \ Drop pellets
 
-        1 #R ^LeftLever:
-            SET R(B(^LeftLeverTimeIdx)) = T;
-            ADD B(^LeftLeverTimeIdx);
-            ADD C(^LeftLeverCountIdx);
-            SET R(B(^LeftLeverTimeIdx)) = -987.987;
-            Z1;
-            Z2
-        ---> S3
+        1 #R ^LeftLever: SET R(B(^LeftLeverTimeIdx)) = T; ADD B(^LeftLeverTimeIdx); ADD C(^LeftLeverCountIdx); SET R(B(^LeftLeverTimeIdx)) = -987.987; Z1; Z2 ---> S3
 
     S3, \ Pellet has been dropped, detect left presses and handle FI
 
-        1 #R ^LeftLever:
-            SET N(B(^WrongLeftTimeIdx)) = T;
-            ADD B(^WrongLeftTimeIdx);
-            ADD C(^WrongLeftCountIdx);
-            SET N(B(^WrongLeftTimeIdx)) = -987.987;
-            Z1
-        ---> SX
+        1 #R ^LeftLever: SET N(B(^WrongLeftTimeIdx)) = T; ADD B(^WrongLeftTimeIdx); ADD C(^WrongLeftCountIdx); SET N(B(^WrongLeftTimeIdx)) = -987.987; Z1 ---> SX
 
-        A(^InterResponseTimeIdx)#T:
-        ---> S2
+        A(^InterResponseTimeIdx)#T: ---> S2
 
 S.S.5, \ Detect incorrect nosepokes and record the times
 
     S1, \Wait for experiment start
-        #START:
-        ---> S2
+        #START: ---> S2
 
     S2, \ Detect incorrect nosepokes
-        1 #R ^Nosepoke:
-            SET O(B(^WrongNosepokeTimeIdx)) = T;
-            ADD B(^WrongNosepokeTimeIdx);
-            ADD C(^WrongNosepokeCountIdx);
-            SET O(B(^WrongNosepokeTimeIdx)) = -987.987;
-            Z1
-        ---> S3
+        1 #R ^Nosepoke: SET O(B(^WrongNosepokeTimeIdx)) = T; ADD B(^WrongNosepokeTimeIdx); ADD C(^WrongNosepokeCountIdx); SET O(B(^WrongNosepokeTimeIdx)) = -987.987; Z1 ---> S3
 
-        #Z2:
-        ---> S4
+        #Z2: ---> S4
 
     S3, \ Time out after a poke to avoid multiple recordings
-        0.1":
-        ---> S2
+        0.1": ---> S2
     
     S4, \ Detect correct nosepoke
-        1 #R ^Nosepoke:
-            SET E(B(^NosepokeTimeIdx)) = T;
-            SET J = T;
-            ADD B(^NosepokeTimeIdx);
-            ADD C(^NosepokeCountIdx);
-            SET E(B(^NosepokeTimeIdx)) = -987.987;
-            Z1
-        ---> S3
+        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; SET J = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdx); SET E(B(^NosepokeTimeIdx)) = -987.987; Z1 ---> S3
 
 S.S.7, \ Drop pellets
 
     S1, \ Drop the pellet
-        #Z2:
-            ON ^Feeder;
-            SET D(B(^FeederTimeIdx)) = T;
-            ADD B(^FeederTimeIdx);
-            ADD C(^FeederCountIdx);
-            SET D(B(^FeederTimeIdx)) = -987.987;
-            Z1
-        ---> S2
+        #Z2: ON ^Feeder; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
 
     S2, \ Turn off the feeder after dropping
-        0.5": 
-            OFF ^Feeder
-        ---> S1
+        0.5": OFF ^Feeder ---> S1
 
 S.S.8, \ Turn on the sound and then off again
 
     S1,
-        #START:
-            ON ^Sound;
-        ---> S2
+        #START: ON ^Sound; ---> S2
     
     S2, 
-        3":
-            OFF ^Sound;
-        ---> S1
+        3": OFF ^Sound; ---> S1
 
 S.S.10, \ Update the display
 
     S1, \ Wait 9.99 seconds or for a Z-Pulse
-        9.99":
-        ---> S2
+        9.99": ---> S2
 
-        #Z1:
-        ---> S2
+        #Z1: ---> S2
 
     S2, \ Update the screen
-        .01":
-            SHOW 1, Experiment Time, T;
-            SHOW 2, Pellets, C(^FeederCountIdx);
-            SHOW 3, Correct Nosepokes, C(^NosepokeCountIdx);
-            SHOW 4, Incorrect Nosepokes, C(^WrongNosepokeCountIdx);
-            SHOW 5, Correct Lefts, C(^LeftLeverCountIdx);
-            SHOW 6, Incorrect Lefts, C(^WrongLeftCountIdx);
-        ---> S1
+        .01": SHOW 1, Experiment Time, T; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Correct Nosepokes, C(^NosepokeCountIdx); SHOW 4, Incorrect Nosepokes, C(^WrongNosepokeCountIdx); SHOW 5, Correct Lefts, C(^LeftLeverCountIdx); SHOW 6, Incorrect Lefts, C(^WrongLeftCountIdx); ---> S1
