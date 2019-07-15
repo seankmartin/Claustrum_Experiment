@@ -77,7 +77,7 @@
     DIM E = 120 \ Should be large enough to hold max_pellets + 1
     DIM N = 100000 \ Could be anything
     DIM O = 100000 \ Could be anything
-    DIM R = 120 \ Should be large enough to hold max_pellets + 1
+    DIM R = 1000 \ Should be large enough to hold (max_pellets * max_fr) + 1
 
 \ Counter descriptions
     \ C(0) = Number of Pellets dropped
@@ -177,7 +177,7 @@ S.S.2, \ Experiment logic
             IF K = A(^RatioIdx) [@Passed]
                 @Passed: SET K = 0; Z2; Z3 ---> S3
 
-    S3, \ Pellet has been dropped, detect right or left presses and nosepoke
+    S3, \ Pellet has been dropped, detect right presses and nosepoke
 
         1 #R ^RightLever:
             SET N(B(^WrongRightTimeIdx)) = T;
