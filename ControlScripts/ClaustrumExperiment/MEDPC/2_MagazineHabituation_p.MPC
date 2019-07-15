@@ -97,7 +97,7 @@ S.S.2, \ Experiment logic
     S2, \ Drop pellets at desired rate
         A(^RateDropIdx)#T: Z2 ---> SX
 
-S.S.5 \ Detect nosepokes and record the times
+S.S.5, \ Detect nosepokes and record the times
 
     S1, \Wait for experiment start
         #START: ---> S2

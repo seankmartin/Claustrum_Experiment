@@ -215,7 +215,7 @@ S.S.2, \ Experiment logic
         0.1":
         --->S2        
 
-S.S.5 \ Detect incorrect nosepokes and record the times
+S.S.5, \ Detect incorrect nosepokes and record the times
 
     S1, \Wait for experiment start
         #START:
