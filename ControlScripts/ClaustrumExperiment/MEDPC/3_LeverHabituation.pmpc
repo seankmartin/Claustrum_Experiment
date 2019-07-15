@@ -68,7 +68,6 @@
     \ M = Data array for incorrect left response times
     \ N = Data array for incorrect right response times
     \ O = Data array for incorrect nosepoke times
-    \ P = Should pass test?
     \ R = Data array for right lever response times
 
     DIM A = 3
@@ -96,6 +95,7 @@
     \ Z32 = End the session
 
 \ Single Variables
+    \ P = Should pass test (1 = Yes, 0 = No)
     \ T = Elapsed time
 
 \ List of Variables to save at end of trial
