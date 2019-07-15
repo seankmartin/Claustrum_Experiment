@@ -131,6 +131,7 @@ S.S.1, \ Control flow
         #START:
             ON ^HouseLight;
             ON ^RightLeverOut;
+            ON ^RightLight;
             SET A(^RatioIdx) = A(^StartingRatioIdx);
             Z1
         ---> S3
