@@ -74,13 +74,13 @@
     DIM A = 3
     DIM B = 6
     DIM C = 6
-    DIM D = 50 \ Should be large enough to hold rate * exp_time + end character
-    DIM E = 100 \ Should be large enough to hold max_pellets + 1
-    DIM L = 100 \ Should be large enough to hold max_pellets + 1
+    DIM D = 120 \ Should be large enough to hold rate * exp_time + end character
+    DIM E = 120 \ Should be large enough to hold max_pellets + 1
+    DIM L = 120 \ Should be large enough to hold max_pellets + 1
     DIM M = 100000 \ Could be anything
     DIM N = 100000 \ Could be anything
     DIM O = 100000 \ Could be anything
-    DIM R = 100 \ Should be large enough to hold max_pellets + 1
+    DIM R = 120 \ Should be large enough to hold max_pellets + 1
 
 \ Counter descriptions
     \ C(0) = Number of Pellets dropped
@@ -121,7 +121,7 @@ S.S.1, \ Control flow
 
 
     S4, \ Did the subject pass or fail?
-        0.01": OFF ^LeftLeverOut; OFF ^RightLeverOut; IF (C(^LeftLeverCountIdx) + C(^RightLeverCountIdx)) >= A(^RequiredPressIdx) [@Succeed, @Fail] 
+        0.01": OFF ^LeftLeverOut; OFF ^RightLeverOut; OFF ^HouseLight; IF (C(^LeftLeverCountIdx) + C(^RightLeverCountIdx)) >= A(^RequiredPressIdx) [@Succeed, @Fail] 
                  @Succ: SET P = 1 ---> S5
                  @Fail: SET P = 0 ---> S5
  
