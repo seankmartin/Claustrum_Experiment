@@ -47,10 +47,10 @@
 \***************************************************
 
 \ Aliases
-    VAR_ALIAS Maximum Time (min) = A(^MaxTimeIdx) \ Default 30 minutes
-    VAR_ALIAS Max Pellets = A(^MaxPelletIdx) \ Default 45
-    VAR_ALIAS Pellets To Advance = A(^RequiredPelletsIdx) \ Default 45
-    VAR_ALIAS Fixed Interval (secs) = A(^InterResponseTimeIdx) \ Default 20s
+    VAR_ALIAS Maximum Time (min) = A(0) \ Default 30 minutes
+    VAR_ALIAS Max Pellets = A(1) \ Default 45
+    VAR_ALIAS Pellets To Advance = A(2) \ Default 45
+    VAR_ALIAS Fixed Interval (secs) = A(3) \ Default 20s
 
 \ Arrays
     \ A = Experiment variables
@@ -106,7 +106,8 @@ S.S.1, \ Control flow
             SET N(0) = -987.987;
             SET O(0) = -987.987;
             SET R(0) = -987.987;
-            LOCKON ^FanBox
+            LOCKON ^FanBox;
+            Z1
         ---> S2
 
     S2, \ Wait for start signal
@@ -170,6 +171,10 @@ S.S.2, \ Experiment logic
             Z1
         ---> SX
 
+        1 #R ^Nosepoke:
+        ---> S4
+
+    S4, \ IRT starts after nosepoke
         A(^InterResponseTimeIdx)#T:
         ---> S2
 

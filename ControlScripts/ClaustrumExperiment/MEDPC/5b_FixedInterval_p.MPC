@@ -38,6 +38,7 @@
     ^LeftLeverOut = 1
     ^LeftLight = 4
     ^HouseLight = 7
+    ^Sound = 8
     ^Feeder = 9
     ^FanBox = 16
 
@@ -46,10 +47,10 @@
 \***************************************************
 
 \ Aliases
-    VAR_ALIAS Maximum Time (min) = A(^MaxTimeIdx) \ Default 30 minutes
-    VAR_ALIAS Max Pellets = A(^MaxPelletIdx) \ Default 45
-    VAR_ALIAS Pellets To Advance = A(^RequiredPelletsIdx) \ Default 45
-    VAR_ALIAS Fixed Interval (secs) = A(^InterResponseTimeIdx) \ Default 20s
+    VAR_ALIAS Maximum Time (min) = A(0) \ Default 30 minutes
+    VAR_ALIAS Max Pellets = A(1) \ Default 45
+    VAR_ALIAS Pellets To Advance = A(2) \ Default 45
+    VAR_ALIAS Fixed Interval (secs) = A(3) \ Default 20s
 
 \ Arrays
     \ A = Experiment variables
@@ -95,7 +96,7 @@
 S.S.1, \ Control flow
 
     S1, \ Establish default values and turn on fan
-        0.01": SET A(^MaxTimeIdx) = 30; SET A(^MaxPelletIdx) = 45; SET A(^RequiredPelletsIdx) = 45; SET A(^InterResponseTimeIdx) = 20; SET D(0) = -987.987; SET E(0) = -987.987; SET N(0) = -987.987; SET O(0) = -987.987; SET R(0) = -987.987; LOCKON ^FanBox ---> S2
+        0.01": SET A(^MaxTimeIdx) = 30; SET A(^MaxPelletIdx) = 45; SET A(^RequiredPelletsIdx) = 45; SET A(^InterResponseTimeIdx) = 20; SET D(0) = -987.987; SET E(0) = -987.987; SET N(0) = -987.987; SET O(0) = -987.987; SET R(0) = -987.987; LOCKON ^FanBox; Z1 ---> S2
 
     S2, \ Wait for start signal
         #START: ON ^HouseLight; ON ^LeftLeverOut; ON ^LeftLight; Z1 ---> S3
@@ -131,6 +132,9 @@ S.S.2, \ Experiment logic
 
         1 #R ^LeftLever: SET N(B(^WrongLeftTimeIdx)) = T; ADD B(^WrongLeftTimeIdx); ADD C(^WrongLeftCountIdx); SET N(B(^WrongLeftTimeIdx)) = -987.987; Z1 ---> SX
 
+        1 #R ^Nosepoke: ---> S4
+
+    S4, \ IRT starts after nosepoke
         A(^InterResponseTimeIdx)#T: ---> S2
 
 S.S.5, \ Detect incorrect nosepokes and record the times

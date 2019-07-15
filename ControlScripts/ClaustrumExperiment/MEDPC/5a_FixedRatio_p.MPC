@@ -27,6 +27,7 @@
     ^RightLeverTimeIdx = 2
     ^WrongRightTimeIdx = 3
     ^WrongNosepokeTimeIdx = 4
+    ^RatioSwitchIdx = 5
 
 \ Counter locations
     ^FeederCountIdx = 0
@@ -43,6 +44,7 @@
     ^RightLeverOut = 2
     ^RightLight = 5
     ^HouseLight = 7
+    ^Sound = 8
     ^Feeder = 9
     ^FanBox = 16
 
@@ -51,14 +53,14 @@
 \***************************************************
 
 \ Aliases
-    VAR_ALIAS Maximum Time (min) = A(^MaxTimeIdx) \ Default 30 minutes
-    VAR_ALIAS Max Pellets = A(^MaxPelletIdx) \ Default 45
-    VAR_ALIAS Pellets To Advance = A(^RequiredPelletsIdx) \ Default 45
-    VAR_ALIAS Starting Ratio = A(^StartingRatioIdx) \ Default 3
-    VAR_ALIAS Inter Response Time (secs) = A(^InterResponseTimeIdx) \ Default 2s
-    VAR_ALIAS IRT Trials Required = A(^InterResponseCountIdx) \ Default 3
-    VAR_ALIAS Ratio Increment = A(^RatioIncrementIdx) \ Default 3
-    VAR_ALIAS Max Ratio = A(^MaxRatioIdx) \ Default 15
+    VAR_ALIAS Maximum Time (min) = A(0) \ Default 30 minutes
+    VAR_ALIAS Max Pellets = A(1) \ Default 45
+    VAR_ALIAS Pellets To Advance = A(2) \ Default 45
+    VAR_ALIAS Starting Ratio = A(3) \ Default 3
+    VAR_ALIAS Ratio Increment = A(5) \ Default 3
+    VAR_ALIAS Max Ratio = A(6) \ Default 15
+    VAR_ALIAS Inter Response Time (secs) = A(7) \ Default 2s
+    VAR_ALIAS IRT Trials Required = A(8) \ Default 3
 
 \ Arrays
     \ A = Experiment variables
@@ -66,15 +68,17 @@
     \ C = Counters
     \ D = Data array for feeder drop times
     \ E = Data array for nosepoke times
+    \ M = Data array for the time of FR changes
     \ N = Data array for incorrect right response times
     \ O = Data array for incorrect nosepoke times
     \ R = Data array for right lever response times
 
     DIM A = 8
-    DIM B = 4
+    DIM B = 5
     DIM C = 4
     DIM D = 120 \ Should be large enough to hold max_pellets + 1
     DIM E = 120 \ Should be large enough to hold max_pellets + 1
+    DIM M = 10 \ Should be large enough to hold the max FR increments
     DIM N = 100000 \ Could be anything
     DIM O = 100000 \ Could be anything
     DIM R = 1000 \ Should be large enough to hold (max_pellets * max_fr) + 1
@@ -100,7 +104,7 @@
     \ T = Elapsed time
 
 \ List of Variables to save at end of trial
-    DISKVARS = A, B, C, D, E, N, O, P, R, T
+    DISKVARS = A, B, C, D, E, M, N, O, P, R, T
 
 \***************************************************
 \               Implementation
@@ -109,7 +113,7 @@
 S.S.1, \ Control flow
 
     S1, \ Establish default values and turn on fan
-        0.01": SET A(^MaxTimeIdx) = 30; SET A(^MaxPelletIdx) = 45; SET A(^RequiredPelletsIdx) = 45; SET A(^StartingRatioIdx) = 3; SET A(^RatioIdx) = A(^StartingRatioIdx); SET A(^InterResponseTimeIdx) = 2; SET A(^InterResponseCountIdx) = 3; SET A(^RatioIncrementIdx) = 3; SET A(^MaxRatioIdx) = 15; SET D(0) = -987.987; SET E(0) = -987.987; SET N(0) = -987.987; SET O(0) = -987.987; SET R(0) = -987.987; LOCKON ^FanBox ---> S2
+        0.01": SET A(^MaxTimeIdx) = 30; SET A(^MaxPelletIdx) = 45; SET A(^RequiredPelletsIdx) = 45; SET A(^StartingRatioIdx) = 3; SET A(^RatioIdx) = A(^StartingRatioIdx); SET A(^InterResponseTimeIdx) = 2; SET A(^InterResponseCountIdx) = 3; SET A(^RatioIncrementIdx) = 3; SET A(^MaxRatioIdx) = 15; SET D(0) = -987.987; SET E(0) = -987.987; SET M(0) = -987.987; SET N(0) = -987.987; SET O(0) = -987.987; SET R(0) = -987.987; LOCKON ^FanBox; Z1 ---> S2
 
     S2, \ Wait for start signal
         #START: ON ^HouseLight; ON ^RightLeverOut; ON ^RightLight; SET A(^RatioIdx) = A(^StartingRatioIdx); Z1 ---> S3
@@ -175,15 +179,28 @@ S.S.6, \ Handle the FR increment logic
                  @Slow: SET I = 0 ---> SX
  
     S2, \ Enough Successive fast trails occured
-        0.01": SET I = 0; SET A(^RatioIdx) = A(^RatioIdx) + A(^RatioIncrementIdx); Z1 ---> S1
+        0.01": SET I = 0; SET A(^RatioIdx) = A(^RatioIdx) + A(^RatioIncrementIdx); Z1; SET M(^RatioSwitchIdx) = T; ADD B(^RatioSwitchIdx); SET M(^RatioSwitchIdx) = -987.987; IF A(^RatioIdx) = A(^MaxRatioIdx) [@Stay, @Increase] 
+                 @Stay: ---> S3
+                 @Increase ---> S1
+ 
+    S3, \ Can no longer increase!
+        #Z3: SET L = T - J - 0.01 ---> SX
 
-S.S.9, \ Drop pellets
+S.S.7, \ Drop pellets
 
     S1, \ Drop the pellet
         #Z2: ON ^Feeder; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
 
     S2, \ Turn off the feeder after dropping
         0.5": OFF ^Feeder ---> S1
+
+S.S.8, \ Turn on the sound and then off again
+
+    S1,
+        #START: ON ^Sound; ---> S2
+    
+    S2, 
+        3": OFF ^Sound; ---> S1
 
 S.S.10, \ Update the display
 
