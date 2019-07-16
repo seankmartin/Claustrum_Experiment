@@ -69,8 +69,8 @@
     \ D = Data array for feeder drop times
     \ E = Data array for nosepoke times
     \ M = Data array for the time of FR changes
-    \ N = Data array for incorrect right response times
-    \ O = Data array for incorrect nosepoke times
+    \ N = Data array for unnecessary right response times
+    \ O = Data array for unnecessary nosepoke times
     \ R = Data array for right lever response times
 
     DIM A = 8
@@ -87,8 +87,8 @@
     \ C(0) = Number of Pellets dropped
     \ C(1) = Number of Nosepokes
     \ C(2) = Number of right lever presses
-    \ C(3) = Number of incorrect right lever presses
-    \ C(4) = Number of incorrect nosepokes
+    \ C(3) = Number of unnecessary right lever presses
+    \ C(4) = Number of unnecessary nosepokes
 
 \ Z Pulses
     \ Z1 = Screen update pulse
@@ -205,13 +205,13 @@ S.S.2, \ Experiment logic
             Z1
         ---> S2
 
-S.S.5, \ Detect incorrect nosepokes and record the times
+S.S.5, \ Detect unnecessary nosepokes and record the times
 
     S1, \Wait for experiment start
         #START:
         ---> S2
 
-    S2, \ Detect incorrect nosepokes
+    S2, \ Detect unnecessary nosepokes
         1 #R ^Nosepoke:
             SET O(B(^WrongNosepokeTimeIdx)) = T;
             ADD B(^WrongNosepokeTimeIdx);
@@ -298,9 +298,9 @@ S.S.10, \ Update the display
             SHOW 2, Pellets, C(^FeederCountIdx);
             SHOW 3, Current FR, A(^RatioIdx);
             SHOW 4, Correct Nosepokes, C(^NosepokeCountIdx);
-            SHOW 5, Incorrect Nosepokes, C(^WrongNosepokeCountIdx);
+            SHOW 5, Unnecessary Nosepokes, C(^WrongNosepokeCountIdx);
             SHOW 6, Correct Rights, C(^RightLeverCountIdx);
-            SHOW 7, Incorrect Rights, C(^WrongRightCountIdx);
+            SHOW 7, Unnecessary Rights, C(^WrongRightCountIdx);
             SHOW 8, Current Right Presses, K;
             SHOW 9, Last IRT, L;
             SHOW 10, Successive fast IRTs, I;

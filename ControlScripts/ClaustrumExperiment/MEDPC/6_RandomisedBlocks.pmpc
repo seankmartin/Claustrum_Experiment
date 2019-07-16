@@ -78,9 +78,9 @@
     \ D = Data array for feeder drop times
     \ E = Data array for nosepoke times
     \ L = Data array for left lever response times
-    \ M = Data array for incorrect left response times
-    \ N = Data array for incorrect right response times
-    \ O = Data array for incorrect nosepoke times
+    \ M = Data array for unnecessary left response times
+    \ N = Data array for unnecessary right response times
+    \ O = Data array for unnecessary nosepoke times
     \ R = Data array for right lever response times
     \ Q = Data array for the possible trials
     \ U = Data array which holds the selected trials
@@ -106,9 +106,9 @@
     \ C(1) = Number of Nosepokes
     \ C(2) = Number of left lever presses
     \ C(3) = Number of right lever presses
-    \ C(4) = Number of incorrect left lever presses
-    \ C(5) = Number of incorrect right lever presses
-    \ C(6) = Number of incorrect nosepokes
+    \ C(4) = Number of unnecessary left lever presses
+    \ C(5) = Number of unnecessary right lever presses
+    \ C(6) = Number of unnecessary nosepokes
 
 \ Y 
 
@@ -215,13 +215,13 @@ S.S.2, \ Trial Switching logic
             Z1
         ---> S2
 
-S.S.5, \ Detect incorrect nosepokes and record the times
+S.S.5, \ Detect unnecessary nosepokes and record the times
 
     S1, \Wait for experiment start
         #START:
         ---> S2
 
-    S2, \ Detect incorrect nosepokes
+    S2, \ Detect unnecessary nosepokes
         1 #R ^Nosepoke:
             SET O(B(^WrongNosepokeTimeIdx)) = T;
             ADD B(^WrongNosepokeTimeIdx);
@@ -329,9 +329,9 @@ S.S.10, \ Update the display
             SHOW 2, Pellets, C(^FeederCountIdx);
             SHOW 3, Current FR, A(^RatioIdx);
             SHOW 4, Correct Nosepokes, C(^NosepokeCountIdx);
-            SHOW 5, Incorrect Nosepokes, C(^WrongNosepokeCountIdx);
+            SHOW 5, Unnecessary Nosepokes, C(^WrongNosepokeCountIdx);
             SHOW 6, Correct Rights, C(^RightLeverCountIdx);
-            SHOW 7, Incorrect Rights, C(^WrongRightCountIdx);
+            SHOW 7, Unnecessary Rights, C(^WrongRightCountIdx);
             SHOW 8, Current Right Presses, K;
             SHOW 9, Last IRT, W;
             SHOW 10, Successive fast IRTs, I;

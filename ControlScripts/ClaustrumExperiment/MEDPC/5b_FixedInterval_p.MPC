@@ -58,8 +58,8 @@
     \ C = Counters
     \ D = Data array for feeder drop times
     \ E = Data array for nosepoke times
-    \ N = Data array for incorrect left response times
-    \ O = Data array for incorrect nosepoke times
+    \ N = Data array for unnecessary left response times
+    \ O = Data array for unnecessary nosepoke times
     \ R = Data array for left lever response times
 
     DIM A = 3
@@ -75,8 +75,8 @@
     \ C(0) = Number of Pellets dropped
     \ C(1) = Number of Nosepokes
     \ C(2) = Number of left lever presses
-    \ C(3) = Number of incorrect left lever presses
-    \ C(4) = Number of incorrect nosepokes
+    \ C(3) = Number of unnecessary left lever presses
+    \ C(4) = Number of unnecessary nosepokes
 
 \ Z Pulses
     \ Z1 = Screen update pulse
@@ -140,12 +140,12 @@ S.S.2, \ Experiment logic
 
         1 #R ^LeftLever: SET N(B(^WrongLeftTimeIdx)) = T; ADD B(^WrongLeftTimeIdx); ADD C(^WrongLeftCountIdx); SET N(B(^WrongLeftTimeIdx)) = -987.987; Z1 ---> SX
 
-S.S.5, \ Detect incorrect nosepokes and record the times
+S.S.5, \ Detect unnecessary nosepokes and record the times
 
     S1, \Wait for experiment start
         #START: ---> S2
 
-    S2, \ Detect incorrect nosepokes
+    S2, \ Detect unnecessary nosepokes
         1 #R ^Nosepoke: SET O(B(^WrongNosepokeTimeIdx)) = T; ADD B(^WrongNosepokeTimeIdx); ADD C(^WrongNosepokeCountIdx); SET O(B(^WrongNosepokeTimeIdx)) = -987.987; Z1 ---> SX
 
         #Z2: ---> S3
@@ -177,4 +177,4 @@ S.S.10, \ Update the display
         #Z1: ---> S2
 
     S2, \ Update the screen
-        .01": SHOW 1, Experiment Time, T; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Correct Nosepokes, C(^NosepokeCountIdx); SHOW 4, Incorrect Nosepokes, C(^WrongNosepokeCountIdx); SHOW 5, Correct Lefts, C(^LeftLeverCountIdx); SHOW 6, Incorrect Lefts, C(^WrongLeftCountIdx); ---> S1
+        .01": SHOW 1, Experiment Time, T; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Correct Nosepokes, C(^NosepokeCountIdx); SHOW 4, Unnecessary Nosepokes, C(^WrongNosepokeCountIdx); SHOW 5, Correct Lefts, C(^LeftLeverCountIdx); SHOW 6, Unnecessary Lefts, C(^WrongLeftCountIdx); ---> S1

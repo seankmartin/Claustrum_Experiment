@@ -58,8 +58,8 @@
     \ C = Counters
     \ D = Data array for feeder drop times
     \ E = Data array for nosepoke times
-    \ N = Data array for incorrect left response times
-    \ O = Data array for incorrect nosepoke times
+    \ N = Data array for unnecessary left response times
+    \ O = Data array for unnecessary nosepoke times
     \ R = Data array for left lever response times
 
     DIM A = 3
@@ -75,8 +75,8 @@
     \ C(0) = Number of Pellets dropped
     \ C(1) = Number of Nosepokes
     \ C(2) = Number of left lever presses
-    \ C(3) = Number of incorrect left lever presses
-    \ C(4) = Number of incorrect nosepokes
+    \ C(3) = Number of unnecessary left lever presses
+    \ C(4) = Number of unnecessary nosepokes
 
 \ Z Pulses
     \ Z1 = Screen update pulse
@@ -187,13 +187,13 @@ S.S.2, \ Experiment logic
             Z1
         ---> SX
 
-S.S.5, \ Detect incorrect nosepokes and record the times
+S.S.5, \ Detect unnecessary nosepokes and record the times
 
     S1, \Wait for experiment start
         #START:
         ---> S2
 
-    S2, \ Detect incorrect nosepokes
+    S2, \ Detect unnecessary nosepokes
         1 #R ^Nosepoke:
             SET O(B(^WrongNosepokeTimeIdx)) = T;
             ADD B(^WrongNosepokeTimeIdx);
@@ -258,7 +258,7 @@ S.S.10, \ Update the display
             SHOW 1, Experiment Time, T;
             SHOW 2, Pellets, C(^FeederCountIdx);
             SHOW 3, Correct Nosepokes, C(^NosepokeCountIdx);
-            SHOW 4, Incorrect Nosepokes, C(^WrongNosepokeCountIdx);
+            SHOW 4, Unnecessary Nosepokes, C(^WrongNosepokeCountIdx);
             SHOW 5, Correct Lefts, C(^LeftLeverCountIdx);
-            SHOW 6, Incorrect Lefts, C(^WrongLeftCountIdx);
+            SHOW 6, Unnecessary Lefts, C(^WrongLeftCountIdx);
         ---> S1
