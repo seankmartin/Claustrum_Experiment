@@ -191,16 +191,12 @@ S.S.5, \ Detect incorrect nosepokes and record the times
             ADD C(^WrongNosepokeCountIdx);
             SET O(B(^WrongNosepokeTimeIdx)) = -987.987;
             Z1
-        ---> S3
+        ---> SX
 
         #Z2:
-        ---> S4
-
-    S3, \ Time out after a poke to avoid multiple recordings
-        0.1":
-        ---> S2
+        ---> S3
     
-    S4, \ Detect correct nosepoke
+    S3, \ Detect correct nosepoke
         1 #R ^Nosepoke:
             SET E(B(^NosepokeTimeIdx)) = T;
             SET J = T;
@@ -208,7 +204,7 @@ S.S.5, \ Detect incorrect nosepokes and record the times
             ADD C(^NosepokeCountIdx);
             SET E(B(^NosepokeTimeIdx)) = -987.987;
             Z1
-        ---> S3
+        ---> S2
 
 S.S.7, \ Drop pellets
 
