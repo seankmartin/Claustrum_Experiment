@@ -28,7 +28,7 @@
         },
         {
           "name": "keyword.operator.mpc",
-          "match": "\\b(SET|SHOW|ADD|OFF|ON|LOCKON|DISKVARS|DIM|VAR_ALIAS)\\b"
+          "match": "\\b(SET|SHOW|ADD|OFF|ON|LOCKON|DISKVARS|DIM|VAR_ALIAS|LIST|RANDD|RANDI)\\b"
         }
       ]
     }
