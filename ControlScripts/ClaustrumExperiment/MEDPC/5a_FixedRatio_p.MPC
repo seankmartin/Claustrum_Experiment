@@ -150,10 +150,7 @@ S.S.2, \ Experiment logic
 
         1 #R ^RightLever: SET N(B(^WrongRightTimeIdx)) = T; ADD B(^WrongRightTimeIdx); ADD C(^WrongRightCountIdx); SET N(B(^WrongRightTimeIdx)) = -987.987; Z1 ---> SX
 
-        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; SET J = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdx); SET E(B(^NosepokeTimeIdx)) = -987.987; Z1 ---> S4
-
-    S4, \ Time out after a poke to avoid mutiple recordings
-        0.1": ---> S2
+        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; SET J = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdx); SET E(B(^NosepokeTimeIdx)) = -987.987; Z1 ---> S2
 
 S.S.5, \ Detect incorrect nosepokes and record the times
 
@@ -161,14 +158,11 @@ S.S.5, \ Detect incorrect nosepokes and record the times
         #START: ---> S2
 
     S2, \ Detect incorrect nosepokes
-        1 #R ^Nosepoke: SET O(B(^WrongNosepokeTimeIdx)) = T; ADD B(^WrongNosepokeTimeIdx); ADD C(^WrongNosepokeCountIdx); SET O(B(^WrongNosepokeTimeIdx)) = -987.987; Z1 ---> S3
+        1 #R ^Nosepoke: SET O(B(^WrongNosepokeTimeIdx)) = T; ADD B(^WrongNosepokeTimeIdx); ADD C(^WrongNosepokeCountIdx); SET O(B(^WrongNosepokeTimeIdx)) = -987.987; Z1 ---> SX
 
-        #Z2: ---> S4
-
-    S3, \ Time out after a poke to avoid multiple recordings
-        0.1": ---> S2
+        #Z2: ---> S3
     
-    S4, \ Detect correct nosepoke
+    S3, \ Detect correct nosepoke
         1 #R ^Nosepoke: ---> S2
 
 S.S.6, \ Handle the FR increment logic
