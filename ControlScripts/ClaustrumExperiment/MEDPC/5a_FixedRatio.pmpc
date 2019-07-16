@@ -59,7 +59,7 @@
     VAR_ALIAS Starting Ratio = A(3) \ Default 3
     VAR_ALIAS Ratio Increment = A(5) \ Default 3
     VAR_ALIAS Max Ratio = A(6) \ Default 15
-    VAR_ALIAS Inter Response Time (secs) = A(7) \ Default 2s
+    VAR_ALIAS Inter Response Time (secs) = A(7) \ Default 4s
     VAR_ALIAS IRT Trials Required = A(8) \ Default 3
 
 \ Arrays
@@ -119,7 +119,7 @@ S.S.1, \ Control flow
             SET A(^RequiredPelletsIdx) = 45;
             SET A(^StartingRatioIdx) = 3;
             SET A(^RatioIdx) = A(^StartingRatioIdx);
-            SET A(^InterResponseTimeIdx) = 2;
+            SET A(^InterResponseTimeIdx) = 4;
             SET A(^InterResponseCountIdx) = 3;
             SET A(^RatioIncrementIdx) = 3;
             SET A(^MaxRatioIdx) = 15;
@@ -147,7 +147,7 @@ S.S.1, \ Control flow
             SET T = T + 0.01;
             IF T/60 >= A(^MaxTimeIdx) [@EndSession, @ContinueSession]
                 @End: Z32 ---> S4
-                @Cont: IF C(^FeederCountIdx) >= A(^MaxPelletIdx) [@EndSession]
+                @Cont: IF C(^NosepokeCountIdx) >= A(^MaxPelletIdx) [@EndSession]
                     @End: Z32 ---> S4
             ENDIF
 

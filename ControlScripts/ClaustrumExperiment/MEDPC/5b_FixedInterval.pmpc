@@ -76,6 +76,7 @@
     \ C(1) = Number of Nosepokes
     \ C(2) = Number of left lever presses
     \ C(3) = Number of incorrect left lever presses
+    \ C(4) = Number of incorrect nosepokes
 
 \ Z Pulses
     \ Z1 = Screen update pulse
@@ -123,7 +124,7 @@ S.S.1, \ Control flow
             SET T = T + 0.01;
             IF T/60 >= A(^MaxTimeIdx) [@EndSession, @ContinueSession]
                 @End: Z32 ---> S4
-                @Cont: IF C(^FeederCountIdx) >= A(^MaxPelletIdx) [@EndSession]
+                @Cont: IF C(^NosepokeCountIdx) >= A(^MaxPelletIdx) [@EndSession]
                     @End: Z32 ---> S4
             ENDIF
 
