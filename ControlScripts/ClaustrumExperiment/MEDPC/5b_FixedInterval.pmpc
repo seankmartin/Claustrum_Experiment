@@ -178,6 +178,14 @@ S.S.2, \ Experiment logic
         A(^InterResponseTimeIdx)#T:
         ---> S2
 
+        1 #R ^LeftLever:
+            SET N(B(^WrongLeftTimeIdx)) = T;
+            ADD B(^WrongLeftTimeIdx);
+            ADD C(^WrongLeftCountIdx);
+            SET N(B(^WrongLeftTimeIdx)) = -987.987;
+            Z1
+        ---> SX
+
 S.S.5, \ Detect incorrect nosepokes and record the times
 
     S1, \Wait for experiment start
