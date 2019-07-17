@@ -180,4 +180,4 @@ S.S.10, \ Update the display
         #Z1: ---> S2
 
     S2, \ Update the screen
-        .01": SHOW 1, Experiment Time, T; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Correct Nosepokes, C(^NosepokeCountIdx); SHOW 4, Unnecessary Nosepokes, C(^WrongNosepokeCountIdx); SHOW 5, Correct Lefts, C(^LeftLeverCountIdx); SHOW 6, Correct Rights, C(^RightLeverCountIdx); SHOW 7, Unnecessary Lefts, C(^WrongLeftCountIdx); SHOW 8, Unnecessary Rights, C(^WrongRightCountIdx); ---> S1
+        .01": SHOW 1, Experiment Time, T/60; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Correct Nosepokes, C(^NosepokeCountIdx); SHOW 4, Unnecessary Nosepokes, C(^WrongNosepokeCountIdx); SHOW 5, Correct Lefts, C(^LeftLeverCountIdx); SHOW 6, Correct Rights, C(^RightLeverCountIdx); SHOW 7, Unnecessary Lefts, C(^WrongLeftCountIdx); SHOW 8, Unnecessary Rights, C(^WrongRightCountIdx); ---> S1

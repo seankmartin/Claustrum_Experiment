@@ -262,7 +262,7 @@ S.S.10, \ Update the display
 
     S2, \ Update the screen
         .01":
-            SHOW 1, Experiment Time, T;
+            SHOW 1, Experiment Time, T/60;
             SHOW 2, Pellets, C(^FeederCountIdx);
             SHOW 3, Correct Nosepokes, C(^NosepokeCountIdx);
             SHOW 4, Unnecessary Nosepokes, C(^WrongNosepokeCountIdx);
