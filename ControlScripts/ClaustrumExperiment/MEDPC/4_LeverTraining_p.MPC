@@ -100,6 +100,7 @@
 \ Single Variables
     \ P = Should pass test (1 = Yes, 0 = No)
     \ T = Elapsed time
+    \ S = Time of last lever press
 
 \ List of Variables to save at end of trial
     DISKVARS = A, B, C, D, E, L, M, N, O, P, R, T
@@ -142,9 +143,9 @@ S.S.2, \ Experiment logic
     S2, \ Drop pellets
         A(^RateDropIdx)#T: Z2 ---> S3
 
-        1 #R ^LeftLever: SET L(B(^LeftLeverTimeIdx)) = T; ADD B(^LeftLeverTimeIdx); ADD C(^LeftLeverCountIdx); SET L(B(^LeftLeverTimeIdx)) = -987.987; Z1; Z2; Z3 ---> S3
+        1 #R ^LeftLever: SET L(B(^LeftLeverTimeIdx)) = T; ADD B(^LeftLeverTimeIdx); ADD C(^LeftLeverCountIdx); SET L(B(^LeftLeverTimeIdx)) = -987.987; SET S = T; Z1; Z2; Z3 ---> S3
 
-        1 #R ^RightLever: SET R(B(^RightLeverTimeIdx)) = T; ADD B(^RightLeverTimeIdx); ADD C(^RightLeverCountIdx); SET R(B(^RightLeverTimeIdx)) = -987.987; Z1; Z2; Z4 ---> S3
+        1 #R ^RightLever: SET R(B(^RightLeverTimeIdx)) = T; ADD B(^RightLeverTimeIdx); ADD C(^RightLeverCountIdx); SET R(B(^RightLeverTimeIdx)) = -987.987; SET S = T; Z1; Z2; Z4 ---> S3
 
     S3, \ Pellet has been dropped, detect right or left presses and nosepoke
         1 #R ^LeftLever: SET M(B(^WrongLeftTimeIdx)) = T; ADD B(^WrongLeftTimeIdx); ADD C(^WrongLeftCountIdx); SET M(B(^WrongLeftTimeIdx)) = -987.987; Z1 ---> SX
@@ -220,4 +221,4 @@ S.S.10, \ Update the display
         #Z1: ---> S2
 
     S2, \ Update the screen
-        .01": SHOW 1, Experiment Time, T; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Correct Nosepokes, C(^NosepokeCountIdx); SHOW 4, Unnecessary Nosepokes, C(^WrongNosepokeCountIdx); SHOW 5, Correct Lefts, C(^LeftLeverCountIdx); SHOW 6, Correct Rights, C(^RightLeverCountIdx); SHOW 7, Unnecessary Lefts, C(^WrongLeftCountIdx); SHOW 8, Unnecessary Rights, C(^WrongRightCountIdx); ---> S1
+        .01": SHOW 1, Experiment Time, T/60; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Correct Nosepokes, C(^NosepokeCountIdx); SHOW 4, Correct Levers, C(^LeftLeverCountIdx) + C(^RightLeverCountIdx); SHOW 5, Time Since Lever, S; SHOW 6, Correct Lefts, C(^LeftLeverCountIdx); SHOW 7, Correct Rights, C(^RightLeverCountIdx); SHOW 8, Unnecessary Lefts, C(^WrongLeftCountIdx); SHOW 9, Unnecessary Rights, C(^WrongRightCountIdx); SHOW 10, Unnecessary Nosepokes, C(^WrongNosepokeCountIdx); ---> S1
