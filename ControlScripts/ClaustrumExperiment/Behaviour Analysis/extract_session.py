@@ -6,22 +6,38 @@ Created on Wed Jul 17 18:19:11 2019
 """
 import numpy as np
 
-fileName = "E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-17"
 
-with open(fileName, 'r') as f:
-    lineList = f.read().splitlines()  # reads lines into list
-    lineList = np.array(list(filter(None, lineList)))  # removes empty spaces
-#    print(lineList)
-    arr_index = np.where(lineList == 'E:')
-    stop_index = np.where(lineList == "L:")
-#    print(arr_index)
+def main(filename):
+    with open(filename, 'r') as f:
+        lines = f.read().splitlines()  # reads lines into list
+        lines = np.array(list(filter(None, lines))
+                         )  # removes empty spaces
+    info = extract_information(lines, "E:", "L:")
+    print(info)
+
+
+def extract_information(lines, start_char, end_char):
+    arr_index = np.where(lines == start_char)
+    stop_index = np.where(lines == end_char)
+    data_list = []
     for start, end in zip(arr_index[0], stop_index[0]):
-        data_lines = lineList[start+1:end]
-        for line in data_lines:
-            line = line.lstrip()
-#            for i, el in enumerate(line):
-#                numbers = line.split("   ")
-#            print(numbers)
-#            for num in numbers[2:]:
-#                print(num)
-     
+        data_lines = lines[start + 1:end]
+        last_line = parse_line(data_lines[-1])
+        arr = np.empty(
+            5 * (len(data_lines) - 1) + len(last_line),
+            dtype=np.float32)
+        for i, line in enumerate(data_lines):
+            numbers = parse_line(line)
+            st = 5 * i
+            arr[st:st + len(numbers)] = numbers.astype(np.float32)
+        data_list.append(arr)
+    return data_list
+
+
+def parse_line(line):
+    return line.lstrip().split()[1:]
+
+
+if __name__ == "__main__":
+    filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-17"
+    main(filename)
