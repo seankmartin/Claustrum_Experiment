@@ -144,33 +144,28 @@ S.S.1, \ Control flow
 
     S3, \ End a trial after the max time or end session
         0.01": SET T = T + 0.01; IF (T - A(^LastSwitchTimeIdx)) / 60 >= A(^MaxTimeIdx) [@EndTrial, @ContinueTrial] 
-                 @End: SET A(^LastSwitchTimeIdx) = T; IF A(^LastSwitchTimeIdx) >= (A(^MaxTimeIdx) * 6) - 3 [@End, @Continue]
-                     @End: Z32 ---> S4
-                     @Cont: Z4 ---> SX
+                 @End: SET A(^LastSwitchTimeIdx) = T; Z4 ---> SX
                  @Cont: IF C(^NosepokeCountIdxL) + C(^NosepokeCountIdxR) >= A(^MaxPelletIdx) [@End]
                      @End: Z32 ---> S4
 
 
-    S4, \ Did the subject pass or fail?
-        0.01": OFF ^RightLeverOut; OFF ^HouseLight; OFF ^RightLight; IF C(^FeederCountIdx) >= A(^RequiredPelletsIdx) [@Succeed, @Fail] 
-                 @Succ: SET P = 1 ---> S5
-                 @Fail: SET P = 0 ---> S5
- 
-    S5, \ Stop the session
-        3": ---> STOPABORTFLUSH
+    S4, \ Just continue to update the time
+        0.01": SET T = 0.01 ---> SX
 
 \***************************************************
 \                Main Program
 \***************************************************
 S.S.2, \ Trial Switching logic
     S1, \ Wait for start signal
-        #START: SET A(^FixedIntervalIdx) = A(^FixedIntervalIdx) * 1" ---> S2
+        #START: SET A(^FixedIntervalIdx) = A(^FixedIntervalIdx) * 1"; SET B(^CurrentTrialIdx) = -1 ---> S2
     
     S2, \ Wait for a z pulse to switch
-        #Z4: ---> S3
-
+        #Z4: ADD B(^CurrentTrialIdx); IF B(^CurrentTrialIdx) = 6 [@End, @Continue] 
+                 @End: Z32; ---> S1
+                 @Continue: ---> S3
+ 
     S3, \ Small delay after a trial to allow program switches
-        0.1": SET X(4) = U(B(^CurrentTrialIdx)); ADD B(^CurrentTrialIdx); IF X(4) = 0 [@FI, @FR] 
+        0.1": SET X(4) = U(B(^CurrentTrialIdx)); IF X(4) = 0 [@FI, @FR] 
                  @FI: Z5 ---> S2
                  @FR: Z6 ---> S2
  
@@ -180,7 +175,7 @@ S.S.3, \ Fixed Ratio task
 
     S2, \ Drop pellets and handle FR
         1 #R ^RightLever: SET R(B(^RightLeverTimeIdx)) = T; ADD B(^RightLeverTimeIdx); ADD C(^RightLeverCountIdx); SET R(B(^RightLeverTimeIdx)) = -987.987; Z1; ADD A(^SuccessiveLeverPressIdx); IF A(^SuccessiveLeverPressIdx) = A(^StartingRatioIdx) [@Passed] 
-                 @Passed: SET K = 0; Z2; Z3 ---> S3
+                 @Passed: SET A(^SuccessiveLeverPressIdx) = 0; Z2; Z3 ---> S3
  
         #Z4: ---> S4
 
@@ -201,7 +196,7 @@ S.S.4, \ Fixed interval task
 
     S2, \ Drop pellets
 
-        1 #R ^LeftLever: SET R(B(^LeftLeverTimeIdx)) = T; ADD B(^LeftLeverTimeIdx); ADD C(^LeftLeverCountIdx); SET R(B(^LeftLeverTimeIdx)) = -987.987; Z1; Z2 ---> S3
+        1 #R ^LeftLever: SET R(B(^LeftLeverTimeIdx)) = T; ADD B(^LeftLeverTimeIdx); ADD C(^LeftLeverCountIdx); SET R(B(^LeftLeverTimeIdx)) = -987.987; SET A(^LastIRTIdx) = T - A(^LastNosepokeTimeIdx); Z1; Z2 ---> S3
 
         #Z4: ---> S5
 
@@ -209,7 +204,7 @@ S.S.4, \ Fixed interval task
 
         1 #R ^LeftLever: SET N(B(^WrongLeftTimeIdx)) = T; ADD B(^WrongLeftTimeIdx); ADD C(^WrongLeftCountIdx); SET N(B(^WrongLeftTimeIdx)) = -987.987; Z1 ---> SX
 
-        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdxL); SET E(B(^NosepokeTimeIdx)) = -987.987; Z1 ---> S4
+        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdxL); SET E(B(^NosepokeTimeIdx)) = -987.987; SET A(^LastNosepokeTimeIdx) = T; Z1 ---> S4
 
         #Z4: ---> S5
 
@@ -295,4 +290,13 @@ S.S.10, \ Update the display
         #Z1: ---> S2
 
     S2, \ Update the screen
-        .01": SHOW 1, Experiment Time, T/60; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Current Trial (0 FI 1 FR), U(B(^CurrentTrialIdx)); SHOW 4, FI Rewards Collected, C(^NosepokeCountIdxL); SHOW 5, FR Rewards Collected, C(^NosepokeCountIdxR); SHOW 6, Correct Rights, C(^RightLeverCountIdx); SHOW 7, Correct Lefts, C(^LeftLeverCountIdx); SHOW 9, Unnecessary Rights, C(^WrongRightCountIdx); SHOW 9, Unnecessary Lefts, C(^WrongLeftCountIdx); SHOW 10, Unnecessary Nosepokes FI, C(^WrongNosepokeCountIdxL); SHOW 11, Unnecessary Nosepokes FR, C(^WrongNosepokeCountIdxR); SHOW 12, Current Right Presses, A(^SuccessiveLeverPressIdx); SHOW 13, Last IRT, A(^LastIRTIdx); SHOW 14, Successive fast IRTs, A(^ConsecutiveIRTIdx); SHOW 15, Current Trial Index, B(^CurrentTrialIdx); SHOW 20, Trial 0 (0 FI 1 FR), U(0); SHOW 21, Trial 1 (0 FI 1 FR), U(1); SHOW 22, Trial 2 (0 FI 1 FR), U(2); SHOW 23, Trial 3 (0 FI 1 FR), U(3); SHOW 24, Trial 4 (0 FI 1 FR), U(4); SHOW 25, Trial 5 (0 FI 1 FR), U(5) ---> S1
+        .01": SHOW 1, Experiment Time (mins), T/60; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Current Trial (0 FI 1 FR), U(B(^CurrentTrialIdx)); SHOW 4, FI Rewards Collected, C(^NosepokeCountIdxL); SHOW 5, FR Rewards Collected, C(^NosepokeCountIdxR); SHOW 6, Correct Rights, C(^RightLeverCountIdx); SHOW 7, Correct Lefts, C(^LeftLeverCountIdx); SHOW 8, Unnecessary Rights, C(^WrongRightCountIdx); SHOW 9, Unnecessary Lefts, C(^WrongLeftCountIdx); SHOW 10, Unnecessary Nosepokes FI, C(^WrongNosepokeCountIdxL); SHOW 11, Unnecessary Nosepokes FR, C(^WrongNosepokeCountIdxR); SHOW 12, Current Right Presses, A(^SuccessiveLeverPressIdx); SHOW 13, Last IRT (secs), A(^LastIRTIdx); SHOW 14, Successive fast IRTs FR, A(^ConsecutiveIRTIdx); SHOW 15, Current Trial Index, B(^CurrentTrialIdx); SHOW 16, Trial 0 (0 FI 1 FR), U(0); SHOW 17, Trial 1 (0 FI 1 FR), U(1); SHOW 18, Trial 2 (0 FI 1 FR), U(2); SHOW 19, Trial 3 (0 FI 1 FR), U(3); SHOW 20, Trial 4 (0 FI 1 FR), U(4); SHOW 21, Trial 5 (0 FI 1 FR), U(5) ---> S1
+
+S.S.11 \ Stop the session
+    S1, \Wait for the stop z signal
+        #Z32: OFF ^RightLeverOut; OFF ^HouseLight; OFF ^RightLight; IF C(^FeederCountIdx) >= A(^RequiredPelletsIdx) [@Succeed, @Fail] 
+                 @Succ: SET P = 1 ---> S2
+                 @Fail: SET P = 0 ---> S2
+ 
+    S2, \ Stop the session
+        3": ---> STOPABORTFLUSH
