@@ -11,7 +11,7 @@ import os
 def sequence_line(line):
     comparison = line.lower().strip()
     return len(comparison) != 0 and not comparison.startswith(
-        ("s", "\\", "^", "dim", "disk", "var")
+        ("s", "\\", "^", "dim", "disk", "var", "list")
     )
 
 
