@@ -98,7 +98,11 @@
     DIM N = 100000 \ Could be anything
     DIM O = 100000 \ Could be anything
     DIM R = 7500 \ Should be large enough to hold (max_pellets * max_fr) + 1
-    LIST Q = 0, 0, 0, 1, 1, 1 DIM U = 5 DIM V = 5 DIM X = 4 
+    LIST Q = 0, 0, 0, 1, 1, 1
+    DIM U = 5
+    DIM V = 5
+    DIM X = 4
+
 \ Counter descriptions
     \ C(0) = Number of Pellets dropped
     \ C(1) = Number of Nosepokes on FI
@@ -143,7 +147,8 @@ S.S.1, \ Control flow
                  @End: SET A(^LastSwitchTimeIdx) = T; IF A(^LastSwitchTimeIdx) >= (A(^MaxTimeIdx) * 6) - 3 [@End, @Continue]
                      @End: Z32 ---> S4
                      @Cont: Z4 ---> SX
-                 @Cont: IF C(^NosepokeCountIdx) >= A(^MaxPelletIdx) [Z32] ---> S4
+                 @Cont: IF C(^NosepokeCountIdxL) + C(^NosepokeCountIdxR) >= A(^MaxPelletIdx) [@End]
+                     @End: Z32 ---> S4
 
 
     S4, \ Did the subject pass or fail?
@@ -165,7 +170,7 @@ S.S.2, \ Trial Switching logic
         #Z4: ---> S3
 
     S3, \ Small delay after a trial to allow program switches
-        0.1": SET X(4) = U(B(^CurrentTrialIdx)) ADD B(^CurrentTrialIdx) IF X(4) = 0 [@FI, @FR] 
+        0.1": SET X(4) = U(B(^CurrentTrialIdx)); ADD B(^CurrentTrialIdx); IF X(4) = 0 [@FI, @FR] 
                  @FI: Z5 ---> S2
                  @FR: Z6 ---> S2
  
@@ -274,8 +279,8 @@ S.S.8, \ Turn on the sound and then off again
         3": OFF ^Sound; ---> S1
 
 S.S.9, \ Generate the random set of trials.
-    S1,
-        0.01": \ Generate a sampling without 3 in a row RANDD U(0) = Q; RANDD U(1) = Q; RANDD U(2) = Q; RANDD U(3) = Q; RANDD U(4) = Q; RANDD U(5) = Q; SET X(0) = U(0) + U(1) + U(2); SET X(1) = U(1) + U(2) + U(3); SET X(2) = U(2) + U(3) + U(4); SET X(3) = U(3) + U(4) + U(5); IF (X(0) = 0) OR (X(0) = 3) OR (X(1) = 0) OR (X(1) = 3) OR (X(2) = 0) OR (X(2) = 3) OR (X(3) = 0) OR (X(3) = 3) [@True, @False] 
+    S1, \ Generate a sampling without 3 in a row
+        0.01": RANDD U(0) = Q; RANDD U(1) = Q; RANDD U(2) = Q; RANDD U(3) = Q; RANDD U(4) = Q; RANDD U(5) = Q; SET X(0) = U(0) + U(1) + U(2); SET X(1) = U(1) + U(2) + U(3); SET X(2) = U(2) + U(3) + U(4); SET X(3) = U(3) + U(4) + U(5); IF (X(0) = 0) OR (X(0) = 3) OR (X(1) = 0) OR (X(1) = 3) OR (X(2) = 0) OR (X(2) = 3) OR (X(3) = 0) OR (X(3) = 3) [@True, @False] 
                  @True: ---> S1
                  @False: Z1 ---> S2
  
@@ -290,4 +295,4 @@ S.S.10, \ Update the display
         #Z1: ---> S2
 
     S2, \ Update the screen
-        .01": SHOW 1, Experiment Time, T/60; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Current Trial (0 FI, 1 FR), U(B(^CurrentTrialIdx)); SHOW 4, FI Rewards Collected, C(^NosepokeCountIdxL); SHOW 5, FR Rewards Collected, C(^NosepokeCountIdxR); SHOW 6, Correct Rights, C(^RightLeverCountIdx); SHOW 7, Correct Lefts, C(^LeftLeverCountIdx) SHOW 9, Unnecessary Rights, C(^WrongRightCountIdx); SHOW 9, Unnecessary Lefts, C(^WrongLeftCountIdx); SHOW 10, Unnecessary Nosepokes FI, C(^WrongNosepokeCountIdxL); SHOW 11, Unnecessary Nosepokes FR, C(^WrongNosepokeCountIdxR); SHOW 12, Current Right Presses, A(^SuccessiveLeverPressIdx); SHOW 13, Last IRT, A(^LastIRTIdx); SHOW 14, Successive fast IRTs, A(^ConsecutiveIRTIdx); SHOW 15, Current Trial Index, B(^CurrentTrialIdx); SHOW 20, Trial 0 (0 FI, 1 FR), U(0); SHOW 21, Trial 1 (0 FI, 1 FR), U(1); SHOW 22, Trial 2 (0 FI, 1 FR), U(2); SHOW 23, Trial 3 (0 FI, 1 FR), U(3); SHOW 24, Trial 4 (0 FI, 1 FR), U(4); SHOW 25, Trial 5 (0 FI, 1 FR), U(5) ---> S1
+        .01": SHOW 1, Experiment Time, T/60; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Current Trial (0 FI 1 FR), U(B(^CurrentTrialIdx)); SHOW 4, FI Rewards Collected, C(^NosepokeCountIdxL); SHOW 5, FR Rewards Collected, C(^NosepokeCountIdxR); SHOW 6, Correct Rights, C(^RightLeverCountIdx); SHOW 7, Correct Lefts, C(^LeftLeverCountIdx); SHOW 9, Unnecessary Rights, C(^WrongRightCountIdx); SHOW 9, Unnecessary Lefts, C(^WrongLeftCountIdx); SHOW 10, Unnecessary Nosepokes FI, C(^WrongNosepokeCountIdxL); SHOW 11, Unnecessary Nosepokes FR, C(^WrongNosepokeCountIdxR); SHOW 12, Current Right Presses, A(^SuccessiveLeverPressIdx); SHOW 13, Last IRT, A(^LastIRTIdx); SHOW 14, Successive fast IRTs, A(^ConsecutiveIRTIdx); SHOW 15, Current Trial Index, B(^CurrentTrialIdx); SHOW 20, Trial 0 (0 FI 1 FR), U(0); SHOW 21, Trial 1 (0 FI 1 FR), U(1); SHOW 22, Trial 2 (0 FI 1 FR), U(2); SHOW 23, Trial 3 (0 FI 1 FR), U(3); SHOW 24, Trial 4 (0 FI 1 FR), U(4); SHOW 25, Trial 5 (0 FI 1 FR), U(5) ---> S1
