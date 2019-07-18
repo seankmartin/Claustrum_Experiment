@@ -325,11 +325,11 @@ S.S.10, \ Update the display
 
     S2, \ Update the screen
         .01":
-            SHOW 1, Experiment Time, T/60;
+            SHOW 1, Experiment Time (mins), T/60;
             SHOW 2, Pellets, C(^FeederCountIdx);
             SHOW 3, Correct Nosepokes, C(^NosepokeCountIdx);
             SHOW 4, Correct Levers, C(^LeftLeverCountIdx) + C(^RightLeverCountIdx);
-            SHOW 5, Time Since Lever, S; 
+            SHOW 5, Time Since Lever (mins), (T - S) / 60; 
             SHOW 6, Correct Lefts, C(^LeftLeverCountIdx);
             SHOW 7, Correct Rights, C(^RightLeverCountIdx);
             SHOW 8, Unnecessary Lefts, C(^WrongLeftCountIdx);
