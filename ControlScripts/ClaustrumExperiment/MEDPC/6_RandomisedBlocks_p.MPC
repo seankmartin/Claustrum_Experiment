@@ -162,7 +162,7 @@ S.S.2, \ Trial Switching logic
     
     S2, \ Wait for a z pulse to switch
         #Z4: ADD B(^CurrentTrialIdx); IF B(^CurrentTrialIdx) = 6 [@End, @Continue] 
-                 @End: Z32; ---> S1
+                 @End: SET B(^CurrentTrialIdx) = 5; Z32; ---> S1
                  @Continue: ---> S3
  
     S3, \ Small delay after a trial to allow program switches
@@ -197,13 +197,13 @@ S.S.4, \ Fixed interval task
 
     S2, \ Drop pellets
 
-        1 #R ^LeftLever: SET R(B(^LeftLeverTimeIdx)) = T; ADD B(^LeftLeverTimeIdx); ADD C(^LeftLeverCountIdx); SET R(B(^LeftLeverTimeIdx)) = -987.987; SET A(^LastIRTIdx) = T - A(^LastNosepokeTimeIdx); Z1; Z2 ---> S3
+        1 #R ^LeftLever: SET L(B(^LeftLeverTimeIdx)) = T; ADD B(^LeftLeverTimeIdx); ADD C(^LeftLeverCountIdx); SET L(B(^LeftLeverTimeIdx)) = -987.987; SET A(^LastIRTIdx) = T - A(^LastNosepokeTimeIdx); Z1; Z2 ---> S3
 
         #Z4: ---> S5
 
     S3, \ Pellet has been dropped, detect left presses and handle FI
 
-        1 #R ^LeftLever: SET N(B(^WrongLeftTimeIdx)) = T; ADD B(^WrongLeftTimeIdx); ADD C(^WrongLeftCountIdx); SET N(B(^WrongLeftTimeIdx)) = -987.987; Z1 ---> SX
+        1 #R ^LeftLever: SET M(B(^WrongLeftTimeIdx)) = T; ADD B(^WrongLeftTimeIdx); ADD C(^WrongLeftCountIdx); SET M(B(^WrongLeftTimeIdx)) = -987.987; Z1 ---> SX
 
         1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdxL); SET E(B(^NosepokeTimeIdx)) = -987.987; SET A(^LastNosepokeTimeIdx) = T; Z1 ---> S4
 
@@ -212,7 +212,7 @@ S.S.4, \ Fixed interval task
     S4, \ IRT starts after nosepoke
         A(^FixedIntervalIdx)#T: ---> S2
 
-        1 #R ^LeftLever: SET N(B(^WrongLeftTimeIdx)) = T; ADD B(^WrongLeftTimeIdx); ADD C(^WrongLeftCountIdx); SET N(B(^WrongLeftTimeIdx)) = -987.987; Z1 ---> SX
+        1 #R ^LeftLever: SET M(B(^WrongLeftTimeIdx)) = T; ADD B(^WrongLeftTimeIdx); ADD C(^WrongLeftCountIdx); SET M(B(^WrongLeftTimeIdx)) = -987.987; Z1 ---> SX
 
         #Z4: ---> S5
 

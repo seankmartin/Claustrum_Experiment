@@ -190,7 +190,7 @@ S.S.2, \ Trial Switching logic
         #Z4:
             ADD B(^CurrentTrialIdx);
             IF B(^CurrentTrialIdx) = 6 [@End, @Continue]
-                @End: Z32; ---> S1
+                @End: SET B(^CurrentTrialIdx) = 5; Z32; ---> S1
                 @Continue: ---> S3
 
     S3, \ Small delay after a trial to allow program switches
@@ -259,10 +259,10 @@ S.S.4, \ Fixed interval task
     S2, \ Drop pellets
 
         1 #R ^LeftLever:
-            SET R(B(^LeftLeverTimeIdx)) = T;
+            SET L(B(^LeftLeverTimeIdx)) = T;
             ADD B(^LeftLeverTimeIdx);
             ADD C(^LeftLeverCountIdx);
-            SET R(B(^LeftLeverTimeIdx)) = -987.987;
+            SET L(B(^LeftLeverTimeIdx)) = -987.987;
             SET A(^LastIRTIdx) = T - A(^LastNosepokeTimeIdx);
             Z1;
             Z2
@@ -274,10 +274,10 @@ S.S.4, \ Fixed interval task
     S3, \ Pellet has been dropped, detect left presses and handle FI
 
         1 #R ^LeftLever:
-            SET N(B(^WrongLeftTimeIdx)) = T;
+            SET M(B(^WrongLeftTimeIdx)) = T;
             ADD B(^WrongLeftTimeIdx);
             ADD C(^WrongLeftCountIdx);
-            SET N(B(^WrongLeftTimeIdx)) = -987.987;
+            SET M(B(^WrongLeftTimeIdx)) = -987.987;
             Z1
         ---> SX
 
@@ -298,10 +298,10 @@ S.S.4, \ Fixed interval task
         ---> S2
 
         1 #R ^LeftLever:
-            SET N(B(^WrongLeftTimeIdx)) = T;
+            SET M(B(^WrongLeftTimeIdx)) = T;
             ADD B(^WrongLeftTimeIdx);
             ADD C(^WrongLeftCountIdx);
-            SET N(B(^WrongLeftTimeIdx)) = -987.987;
+            SET M(B(^WrongLeftTimeIdx)) = -987.987;
             Z1
         ---> SX
 
