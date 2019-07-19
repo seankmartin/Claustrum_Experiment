@@ -44,6 +44,7 @@
     ^RightLeverOut = 2
     ^LeftLight = 4
     ^RightLight = 5
+    ^RewardLight = 6
     ^HouseLight = 7
     ^Feeder = 9
     ^FanBox = 16
@@ -152,7 +153,7 @@ S.S.2, \ Experiment logic
 
         1 #R ^RightLever: SET N(B(^WrongRightTimeIdx)) = T; ADD B(^WrongRightTimeIdx); ADD C(^WrongRightCountIdx); SET N(B(^WrongRightTimeIdx)) = -987.987; Z1 ---> SX
 
-        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdx); SET E(B(^NosepokeTimeIdx)) = -987.987; Z1 ---> S2
+        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdx); SET E(B(^NosepokeTimeIdx)) = -987.987; OFF ^RewardLight; Z1 ---> S2
 
 S.S.5, \ Detect unnecessary nosepokes and record the times
 
@@ -208,7 +209,7 @@ S.S.6, \ Detect multiple presses on the same lever
 S.S.7, \ Drop pellets
 
     S1, \ Drop the pellet
-        #Z2: ON ^Feeder; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
+        #Z2: ON ^Feeder; ON ^RewardLight; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
 
     S2, \ Turn off the feeder after dropping
         0.5": OFF ^Feeder ---> S1

@@ -43,6 +43,7 @@
 \ Outputs
     ^RightLeverOut = 2
     ^RightLight = 5
+    ^RewardLight = 6
     ^HouseLight = 7
     ^Sound = 8
     ^Feeder = 9
@@ -202,6 +203,7 @@ S.S.2, \ Experiment logic
             ADD B(^NosepokeTimeIdx);
             ADD C(^NosepokeCountIdx);
             SET E(B(^NosepokeTimeIdx)) = -987.987;
+            OFF ^RewardLight;
             Z1
         ---> S2
 
@@ -259,6 +261,7 @@ S.S.7, \ Drop pellets
     S1, \ Drop the pellet
         #Z2:
             ON ^Feeder;
+            ON ^RewardLight;
             SET D(B(^FeederTimeIdx)) = T;
             ADD B(^FeederTimeIdx);
             ADD C(^FeederCountIdx);
@@ -303,5 +306,5 @@ S.S.10, \ Update the display
             SHOW 7, Unnecessary Nosepokes, C(^WrongNosepokeCountIdx);
             SHOW 8, Unnecessary Rights, C(^WrongRightCountIdx);
             SHOW 9, Last IRT, L;
-            SHOW 10, Successive fast IRTs, I;
+            SHOW 10, Successive fast IRTs, I
         ---> S1

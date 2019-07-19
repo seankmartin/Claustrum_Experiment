@@ -26,6 +26,7 @@
     ^Nosepoke = 7
 
 \ Outputs
+    ^RewardLight = 6
     ^HouseLight = 7
     ^Feeder = 9
     ^FanBox = 16
@@ -108,6 +109,7 @@ S.S.2, \ Experiment logic
         #START:
             SET A(^RateDropIdx) = A(^RateDropIdx) * 1"
         ---> S2
+
     S2, \ Drop pellets at desired rate
         A(^RateDropIdx)#T:
             Z2
@@ -125,18 +127,16 @@ S.S.5, \ Detect nosepokes and record the times
             ADD B(^NosepokeTimeIdx);
             ADD C(^NosepokeCountIdx);
             SET E(B(^NosepokeTimeIdx)) = -987.987;
+            OFF ^RewardLight;
             Z1
-        ---> S3
-
-    S3, \ Time out after a poke to avoid multiple recordings
-        0.1":
-        ---> S2
+        ---> SX
 
 S.S.6, \ Drop pellets
 
     S1, \ Drop the pellet
         #Z2:
             ON ^Feeder;
+            ON ^RewardLight;
             SET D(B(^FeederTimeIdx)) = T;
             ADD B(^FeederTimeIdx);
             ADD C(^FeederCountIdx);
@@ -163,5 +163,5 @@ S.S.10, \ Update the display
         .01":
             SHOW 1, Number of Pellets, C(0);
             SHOW 2, Number of Nosepokes, C(1);
-            SHOW 3, Experiment Time, T
+            SHOW 3, Experiment Time (mins), T / 60
         ---> S1

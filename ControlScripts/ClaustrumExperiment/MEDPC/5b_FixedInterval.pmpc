@@ -37,6 +37,7 @@
 \ Outputs
     ^LeftLeverOut = 1
     ^LeftLight = 4
+    ^RewardLight = 6
     ^HouseLight = 7
     ^Sound = 8
     ^Feeder = 9
@@ -212,6 +213,7 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
             ADD B(^NosepokeTimeIdx);
             ADD C(^NosepokeCountIdx);
             SET E(B(^NosepokeTimeIdx)) = -987.987;
+            OFF ^RewardLight;
             Z1
         ---> S2
 
@@ -220,6 +222,7 @@ S.S.7, \ Drop pellets
     S1, \ Drop the pellet
         #Z2:
             ON ^Feeder;
+            ON ^RewardLight;
             SET D(B(^FeederTimeIdx)) = T;
             ADD B(^FeederTimeIdx);
             ADD C(^FeederCountIdx);

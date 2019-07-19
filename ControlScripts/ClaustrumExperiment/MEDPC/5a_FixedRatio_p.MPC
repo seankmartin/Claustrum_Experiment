@@ -43,6 +43,7 @@
 \ Outputs
     ^RightLeverOut = 2
     ^RightLight = 5
+    ^RewardLight = 6
     ^HouseLight = 7
     ^Sound = 8
     ^Feeder = 9
@@ -151,7 +152,7 @@ S.S.2, \ Experiment logic
 
         1 #R ^RightLever: SET N(B(^WrongRightTimeIdx)) = T; ADD B(^WrongRightTimeIdx); ADD C(^WrongRightCountIdx); SET N(B(^WrongRightTimeIdx)) = -987.987; Z1 ---> SX
 
-        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; SET J = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdx); SET E(B(^NosepokeTimeIdx)) = -987.987; Z1 ---> S2
+        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; SET J = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdx); SET E(B(^NosepokeTimeIdx)) = -987.987; OFF ^RewardLight; Z1 ---> S2
 
 S.S.5, \ Detect unnecessary nosepokes and record the times
 
@@ -184,7 +185,7 @@ S.S.6, \ Handle the FR increment logic
 S.S.7, \ Drop pellets
 
     S1, \ Drop the pellet
-        #Z2: ON ^Feeder; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
+        #Z2: ON ^Feeder; ON ^RewardLight; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
 
     S2, \ Turn off the feeder after dropping
         0.5": OFF ^Feeder ---> S1
@@ -205,4 +206,4 @@ S.S.10, \ Update the display
         #Z1: ---> S2
 
     S2, \ Update the screen
-        .01": SHOW 1, Experiment Time, T/60; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Current FR, A(^RatioIdx); SHOW 4, Correct Nosepokes, C(^NosepokeCountIdx); SHOW 5, Correct Rights, C(^RightLeverCountIdx); SHOW 6, Current Right Presses, K; SHOW 7, Unnecessary Nosepokes, C(^WrongNosepokeCountIdx); SHOW 8, Unnecessary Rights, C(^WrongRightCountIdx); SHOW 9, Last IRT, L; SHOW 10, Successive fast IRTs, I; ---> S1
+        .01": SHOW 1, Experiment Time, T/60; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Current FR, A(^RatioIdx); SHOW 4, Correct Nosepokes, C(^NosepokeCountIdx); SHOW 5, Correct Rights, C(^RightLeverCountIdx); SHOW 6, Current Right Presses, K; SHOW 7, Unnecessary Nosepokes, C(^WrongNosepokeCountIdx); SHOW 8, Unnecessary Rights, C(^WrongRightCountIdx); SHOW 9, Last IRT, L; SHOW 10, Successive fast IRTs, I ---> S1

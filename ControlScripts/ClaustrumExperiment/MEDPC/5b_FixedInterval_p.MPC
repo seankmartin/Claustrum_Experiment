@@ -37,6 +37,7 @@
 \ Outputs
     ^LeftLeverOut = 1
     ^LeftLight = 4
+    ^RewardLight = 6
     ^HouseLight = 7
     ^Sound = 8
     ^Feeder = 9
@@ -151,12 +152,12 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
         #Z2: ---> S3
     
     S3, \ Detect correct nosepoke
-        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; SET J = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdx); SET E(B(^NosepokeTimeIdx)) = -987.987; Z1 ---> S2
+        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; SET J = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdx); SET E(B(^NosepokeTimeIdx)) = -987.987; OFF ^RewardLight; Z1 ---> S2
 
 S.S.7, \ Drop pellets
 
     S1, \ Drop the pellet
-        #Z2: ON ^Feeder; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
+        #Z2: ON ^Feeder; ON ^RewardLight; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
 
     S2, \ Turn off the feeder after dropping
         0.5": OFF ^Feeder ---> S1

@@ -44,6 +44,7 @@
     ^RightLeverOut = 2
     ^LeftLight = 4
     ^RightLight = 5
+    ^RewardLight = 6
     ^HouseLight = 7
     ^Feeder = 9
     ^FanBox = 16
@@ -216,6 +217,7 @@ S.S.2, \ Experiment logic
             ADD B(^NosepokeTimeIdx);
             ADD C(^NosepokeCountIdx);
             SET E(B(^NosepokeTimeIdx)) = -987.987;
+            OFF ^RewardLight;
             Z1
         ---> S2      
 
@@ -302,6 +304,7 @@ S.S.7, \ Drop pellets
     S1, \ Drop the pellet
         #Z2:
             ON ^Feeder;
+            ON ^RewardLight;
             SET D(B(^FeederTimeIdx)) = T;
             ADD B(^FeederTimeIdx);
             ADD C(^FeederCountIdx);

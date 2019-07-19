@@ -54,6 +54,7 @@
     ^LeftLight = 4
     ^RightLeverOut = 2
     ^RightLight = 5
+    ^RewardLight = 6
     ^HouseLight = 7
     ^Sound = 8
     ^Feeder = 9
@@ -233,7 +234,7 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
         #Z6: ---> S4
     
     S3, \ Detect correct nosepoke on FI
-        1 #R ^Nosepoke: ---> S2
+        1 #R ^Nosepoke: OFF ^RewardLight; ---> S2
 
         #Z6: ---> S4
 
@@ -245,7 +246,7 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
         #Z5: ---> S2
     
     S5, \ Detect correct nosepoke on FR
-        1 #R ^Nosepoke: ---> S4
+        1 #R ^Nosepoke: OFF ^RewardLight; ---> S4
 
         #Z5: ---> S2
 
@@ -260,7 +261,7 @@ S.S.6, \ Handle the FR IRT logic
 S.S.7, \ Drop pellets
 
     S1, \ Drop the pellet
-        #Z2: ON ^Feeder; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
+        #Z2: ON ^Feeder; ON ^RewardLight; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
 
     S2, \ Turn off the feeder after dropping
         0.5": OFF ^Feeder ---> S1
