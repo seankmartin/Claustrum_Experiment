@@ -12,7 +12,7 @@ def main(filename):
         lines = f.read().splitlines()  # reads lines into list
         lines = np.array(list(filter(None, lines))
                          )  # removes empty spaces
-    info = extract_information(lines, "E:", "L:")
+    info = extract_information(lines, "M:", "N:")
     print(info)
 
 
@@ -29,15 +29,16 @@ def extract_information(lines, start_char, end_char):
         for i, line in enumerate(data_lines):
             numbers = parse_line(line)
             st = 5 * i
-            arr[st:st + len(numbers)] = numbers.astype(np.float32)
+            arr[st:st + len(numbers)] = numbers
         data_list.append(arr)
     return data_list
 
 
-def parse_line(line):
-    return line.lstrip().split()[1:]
+def parse_line(line, dtype=np.float32):
+    return np.array(line.lstrip().split()[1:]).astype(dtype)
 
 
 if __name__ == "__main__":
-    filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-17"
+    # filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-17"
+    filename = r"G:\t"
     main(filename)
