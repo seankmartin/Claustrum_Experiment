@@ -15,7 +15,7 @@ def main(filename):
 
         print_session_info(lines)
         s_type = '4'  # change number based on desired session
-        session = parse_session_sean(lines, s_type)
+        session = parse_session(lines, s_type)
         print(session)
 #    info = extract_data(sessions[i], "D:", "E:")
 #    print(info)
@@ -23,44 +23,13 @@ def main(filename):
 
 def print_session_info(lines):
     s_list = np.flatnonzero(
-        np.core.defchararray.find(lines, "MSN:") != -1)
-    print('Sessions in file:', lines[s_list])
+            np.core.defchararray.find(lines, "MSN:") != -1)
+    a_list = np.flatnonzero(
+            np.core.defchararray.find(lines, "Subject:") != -1)
+    print('Sessions in file:', lines[np.stack((a_list, s_list), axis=-1)])
 
 
 def parse_session(lines, s_type):
-    if s_type == '2':
-        s_type = 'MSN: 2_MagazineHabituation_p'
-    elif s_type == '3':
-        s_type = 'MSN: 3_LeverHabituation_p'
-    elif s_type == '4':
-        s_type = 'MSN: 4_LeverTraining_p'
-    elif s_type == '5a':
-        s_type = 'MSN: 5a_FixedRatio_p'
-    elif s_type == '5b':
-        s_type = 'MSN: 5b_FixedInterval_p'
-    elif s_type == 'DNMTS':
-        s_type = 'MSN: DNMTS'
-    else:
-        print('Error! Invalid session type!')
-        return None
-
-    s_index = np.where(lines == s_type)
-    s_index = s_index[0] - 8  # Index for start of particular session
-    s_start = np.flatnonzero(
-        np.core.defchararray.find(lines, "Start Date:") != -1)
-    print(s_index)
-    print(s_start)
-    s_end = np.where(s_index == s_start)
-    print(s_end)
-#    s_end = np.append(s_start[1:], [len(lines)])
-    sessions = []
-    for start, end in zip(s_index, s_end):
-        s_data = lines[start:end]
-        sessions.append(s_data)
-    return sessions
-
-
-def parse_session_sean(lines, s_type):
     if s_type == '2':
         s_type = 'MSN: 2_MagazineHabituation_p'
     elif s_type == '3':
@@ -119,6 +88,6 @@ def parse_line(line, dtype=np.float32):
 
 
 if __name__ == "__main__":
-    # filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-17"
-    filename = r"G:\test"
+    filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-17"
+#    filename = r"G:\test"
     main(filename)
