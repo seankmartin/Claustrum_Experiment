@@ -4,6 +4,8 @@ Created on Wed Jul 17 18:19:11 2019
 
 @author: HAMG
 """
+
+import pandas as pd
 import numpy as np
 
 
@@ -17,9 +19,18 @@ def main(filename):
 
     s_index = 1  # change number based on desired session
     data = extract_session_data(sessions, s_index)
-    
-    print(data[0]) #change number based on desired parameter
-#    print(data)
+    IRT(data)
+
+
+def IRT(data):
+    all_lever = np.sort(np.concatenate((data[2], data[6]), axis=None))
+    IRT = data[1] - all_lever
+    ave_IRT = np.average(data[1] - all_lever)
+    return print('Average Inter-Response Time (IRT): ',
+                 ave_IRT, '\nIRTs: ', IRT)
+
+#    print(len(data[1]))  # change number based on desired parameter
+#    print(len(all_lever))  # change number based on desired parameter
 
 
 def extract_session_data(sessions, s_index):
@@ -35,13 +46,13 @@ def extract_session_data(sessions, s_index):
     elif c_session[8] == 'MSN: 3_LeverHabituation_p':
         print('To be updated...')
     elif c_session[8] == 'MSN: 4_LeverTraining_p':
-        data_info = np.array([['D:','E:','Reward'],
+        data_info = np.array([['D:', 'E:', 'Reward'],
                              ['E:', 'L:', 'Nosepoke'],
                              ['L:', 'M:', 'L'],
                              ['M:', 'N:', 'Un_L'],
                              ['N:', 'O:', 'Un_R'],
-                             ['O:', 'R:', 'Un_R'],
-                             ['R:', 'END' , 'R']])
+                             ['O:', 'R:', 'Un_Nosepoke'],
+                             ['R:', 'END', 'R']])
     elif c_session[8] == 'MSN: 5a_FixedRatio_p':
         print('To be updated...')
     elif c_session[8] == 'MSN: 5b_FixedInterval_p':
@@ -52,13 +63,12 @@ def extract_session_data(sessions, s_index):
         print('Error! Invalid session type!')
         return None
     data = []
-    data_i = data_info[:, 2]
     i = 0
     print("Parameters extracted:")
     for start_char, end_char, parameter in data_info:
-        print(i, '->', parameter)
         c_data = extract_data(c_session, start_char, end_char)
         data.append(c_data)
+        print(i, '->', parameter)
         i += 1
     print('')
     return data
@@ -91,49 +101,49 @@ def parse_sessions(lines):
         sessions.append(s_data)
     return sessions
 
-
-#def parse_session_type(lines, s_type):
-#    #  Extracts specific data from specific session types
-#    if s_type == '2':
-#        s_type = 'MSN: 2_MagazineHabituation_p'
-#    elif s_type == '3':
-#        s_type = 'MSN: 3_LeverHabituation_p'
-#    elif s_type == '4':
-#        s_type = 'MSN: 4_LeverTraining_p'
-#    elif s_type == '5a':
-#        s_type = 'MSN: 5a_FixedRatio_p'
-#    elif s_type == '5b':
-#        s_type = 'MSN: 5b_FixedInterval_p'
-#    elif s_type == 'DNMTS':
-#        s_type = 'MSN: DNMTS'
-#    else:
-#        print('Error! Invalid session type!')
-#        return None
+# =============================================================================
+# #  Previous method to parse sessions based on specific session types
+# def parse_session_type(lines, s_type):
+#     if s_type == '2':
+#         s_type = 'MSN: 2_MagazineHabituation_p'
+#     elif s_type == '3':
+#         s_type = 'MSN: 3_LeverHabituation_p'
+#     elif s_type == '4':
+#         s_type = 'MSN: 4_LeverTraining_p'
+#     elif s_type == '5a':
+#         s_type = 'MSN: 5a_FixedRatio_p'
+#     elif s_type == '5b':
+#         s_type = 'MSN: 5b_FixedInterval_p'
+#     elif s_type == 'DNMTS':
+#         s_type = 'MSN: DNMTS'
+#     else:
+#         print('Error! Invalid session type!')
+#         return None
 #
-#    id_increment = 8
-#    s_starts = np.flatnonzero(
-#        np.core.defchararray.find(lines, "Start Date:") != -1)
-#    s_ends = np.zeros_like(s_starts)
-#    s_ends[:-1] = s_starts[1:]
-#    s_ends[-1] = lines.size
-#    s_identifiers = lines[s_starts + id_increment]
-#    s_id_indices = np.nonzero(s_identifiers == s_type)
-#    s_id_starts = s_starts[s_id_indices]
-#    s_id_ends = s_ends[s_id_indices]
+#     id_increment = 8
+#     s_starts = np.flatnonzero(
+#         np.core.defchararray.find(lines, "Start Date:") != -1)
+#     s_ends = np.zeros_like(s_starts)
+#     s_ends[:-1] = s_starts[1:]
+#     s_ends[-1] = lines.size
+#     s_identifiers = lines[s_starts + id_increment]
+#     s_id_indices = np.nonzero(s_identifiers == s_type)
+#     s_id_starts = s_starts[s_id_indices]
+#     s_id_ends = s_ends[s_id_indices]
 #
-#    sessions = []
-#    for start, end in zip(s_id_starts, s_id_ends):
-#        s_data = np.array(lines[start:end])
-#        sessions.append(s_data)
-#    return sessions
+#     sessions = []
+#     for start, end in zip(s_id_starts, s_id_ends):
+#         s_data = np.array(lines[start:end])
+#         sessions.append(s_data)
+#     return sessions
+# =============================================================================
 
 
 def extract_data(lines, start_char, end_char):
     start_index = np.flatnonzero(lines == start_char)
     stop_index = np.flatnonzero(lines == end_char)
     if end_char == 'END':
-        stop_index = [lines.size]
-    
+        stop_index = [lines.size]  # Last timepoint does not have a end_char
     data_list = []
     for start, end in zip(start_index, stop_index):
         data_lines = lines[start + 1:end]
