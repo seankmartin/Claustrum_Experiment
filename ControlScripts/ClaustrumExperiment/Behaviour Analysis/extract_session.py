@@ -13,15 +13,55 @@ def main(filename):
         lines = np.array(
             list(filter(None, lines)))  # removes empty space
         sessions = parse_sessions(lines)
-        print_session_info(lines)
+#        print_session_info(lines)  # uncomment to print sessions info
 
-#    s_type = '4'  # change number based on desired session type
-#    session = parse_session_type(lines, s_type)
-    
     s_index = 1  # change number based on desired session
-    data = extract_data(sessions[s_index], "L:", "M:")
-    print(data)
+    data = extract_session_data(sessions, s_index)
+    
+    print(data[0]) #change number based on desired parameter
+#    print(data)
 
+
+def extract_session_data(sessions, s_index):
+    c_session = sessions[s_index]
+    print("")
+    print(c_session[0][-14:])  # Date
+    print(c_session[2])  # Subject number
+    print(c_session[8])  # Session Type
+    print("")
+
+    if c_session[8] == 'MSN: 2_MagazineHabituation_p':
+        print('To be updated...')
+    elif c_session[8] == 'MSN: 3_LeverHabituation_p':
+        print('To be updated...')
+    elif c_session[8] == 'MSN: 4_LeverTraining_p':
+        data_info = np.array([['D:','E:','Reward'],
+                             ['E:', 'L:', 'Nosepoke'],
+                             ['L:', 'M:', 'L'],
+                             ['M:', 'N:', 'Un_L'],
+                             ['N:', 'O:', 'Un_R'],
+                             ['O:', 'R:', 'Un_R'],
+                             ['R:', 'END' , 'R']])
+    elif c_session[8] == 'MSN: 5a_FixedRatio_p':
+        print('To be updated...')
+    elif c_session[8] == 'MSN: 5b_FixedInterval_p':
+        print('To be updated...')
+    elif c_session[8] == 'MSN: DNMTS':
+        print('To be updated...')
+    else:
+        print('Error! Invalid session type!')
+        return None
+    data = []
+    data_i = data_info[:, 2]
+    i = 0
+    print("Parameters extracted:")
+    for start_char, end_char, parameter in data_info:
+        print(i, '->', parameter)
+        c_data = extract_data(c_session, start_char, end_char)
+        data.append(c_data)
+        i += 1
+    print('')
+    return data
 
 
 def print_session_info(lines):
@@ -48,7 +88,6 @@ def parse_sessions(lines):
     sessions = []
     for start, end in zip(s_starts, s_ends):
         s_data = np.array(lines[start:end])
-        print(len(s_data))
         sessions.append(s_data)
     return sessions
 
@@ -90,10 +129,13 @@ def parse_sessions(lines):
 
 
 def extract_data(lines, start_char, end_char):
-    start_index = np.where(lines == start_char)
-    stop_index = np.where(lines == end_char)
+    start_index = np.flatnonzero(lines == start_char)
+    stop_index = np.flatnonzero(lines == end_char)
+    if end_char == 'END':
+        stop_index = [lines.size]
+    
     data_list = []
-    for start, end in zip(start_index[0], stop_index[0]):
+    for start, end in zip(start_index, stop_index):
         data_lines = lines[start + 1:end]
 #        print(data_lines)
         last_line = parse_line(data_lines[-1])
@@ -105,7 +147,6 @@ def extract_data(lines, start_char, end_char):
             st = 5 * i
             arr[st:st + len(numbers)] = numbers
         data_list.append(arr)
-#        print(type(data_list))
     return data_list[0]
 
 
