@@ -21,23 +21,37 @@ def main(filename):
     s_index = 1  # change number based on desired session
     data = extract_session_data(sessions, s_index)
 #    IRT(data)
-    cumplot(sessions, data, s_index)
+    cumplot(sessions, data, s_index, True)
 
 
-def cumplot(sessions, data, s_index):
+def cumplot(sessions, data, s_index, smooth=True):
     all_lever = np.sort(np.concatenate(
-            (data[2], data[6], data[3], data[4]), axis=None))
+        (data[2], data[6], data[3], data[4]), axis=None))
 #    all_lever = np.sort(np.concatenate((data[2], data[6]), axis=None))
-    print((all_lever))
-    values, base = np.histogram(all_lever, bins=len(all_lever)*4)
-    cumulative = np.cumsum(values)
+    print("Lever Responses at:", all_lever)
+
+    # You have the array sorted, no need to histogram
     reward_markers = data[1]
-    print(reward_markers)
-    plt.title('Cumulative Lever Presses\n for Subject {}, in {}'.format(sessions[s_index][2][9:], sessions[s_index][8][5:]))
+    print("Rewards Collected at:", reward_markers)
+    plt.title('Cumulative Lever Presses\n for Subject {}, in {}'.format(
+        sessions[s_index][2][9:], sessions[s_index][8][5:]))
     plt.xlabel('Time (s)')
     plt.ylabel('Cumulative Lever Presses')
-    plt.plot(base[:-1], cumulative, c='blue')
-    plt.show()
+
+    if smooth:
+        values, base = np.histogram(all_lever, bins=len(all_lever) * 4)
+        cumulative = np.cumsum(values)
+        plt.plot(base[:-1], cumulative, c='blue')
+
+    else:
+        lever_times = np.insert(all_lever, 0, 0, axis=0)
+        plt.step(lever_times, np.arange(
+            lever_times.size), c='blue', where="post")
+
+    plt.savefig("CumulativeHist_" + sessions[s_index][2]
+                [9:] + "_" + sessions[s_index][8][5:] + ".png", dpi=400)
+    plt.close()
+
 
 def IRT(data):
     all_lever = np.sort(np.concatenate((data[2], data[6]), axis=None))
@@ -64,12 +78,12 @@ def extract_session_data(sessions, s_index):
         print('To be updated...')
     elif c_session[8] == 'MSN: 4_LeverTraining_p':
         data_info = np.array([['D:', 'E:', 'Reward'],
-                             ['E:', 'L:', 'Nosepoke'],
-                             ['L:', 'M:', 'L'],
-                             ['M:', 'N:', 'Un_L'],
-                             ['N:', 'O:', 'Un_R'],
-                             ['O:', 'R:', 'Un_Nosepoke'],
-                             ['R:', 'END', 'R']])
+                              ['E:', 'L:', 'Nosepoke'],
+                              ['L:', 'M:', 'L'],
+                              ['M:', 'N:', 'Un_L'],
+                              ['N:', 'O:', 'Un_R'],
+                              ['O:', 'R:', 'Un_Nosepoke'],
+                              ['R:', 'END', 'R']])
     elif c_session[8] == 'MSN: 5a_FixedRatio_p':
         print('To be updated...')
     elif c_session[8] == 'MSN: 5b_FixedInterval_p':
@@ -93,10 +107,10 @@ def extract_session_data(sessions, s_index):
 
 def print_session_info(lines):
     s_list = np.flatnonzero(
-            np.core.defchararray.find(lines, "MSN:") != -1)
+        np.core.defchararray.find(lines, "MSN:") != -1)
     # returns index in np.array for cells containing "MSN:"
     a_list = np.flatnonzero(
-            np.core.defchararray.find(lines, "Subject:") != -1)
+        np.core.defchararray.find(lines, "Subject:") != -1)
     p_list = np.stack((a_list, s_list), axis=-1)
     i = 0
     print('Sessions in file:')
@@ -182,6 +196,6 @@ def parse_line(line, dtype=np.float32):
 
 
 if __name__ == "__main__":
-    filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-17"
-#    filename = r"G:\test"
+    # filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-17"
+    filename = r"G:\test"
     main(filename)
