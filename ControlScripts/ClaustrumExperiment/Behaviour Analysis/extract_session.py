@@ -24,10 +24,11 @@ def main(filename):
 #    cumplot(sessions, data, s_index)
 
 
-def cumplot(sessions, data, s_index):
+def cumplot(sessions, data, s_index, smooth=False):
     all_lever = np.sort(np.concatenate(
-            (data[2], data[6], data[3], data[4]), axis=None))
+        (data[2], data[6], data[3], data[4]), axis=None))
 #    all_lever = np.sort(np.concatenate((data[2], data[6]), axis=None))
+<<<<<<< HEAD
     print((all_lever))
     values, base = np.histogram(all_lever, bins=len(all_lever)*4)
     cumulative = np.cumsum(values)
@@ -35,10 +36,48 @@ def cumplot(sessions, data, s_index):
     print(reward_markers)
     plt.title('Cumulative Lever Presses\n for Subject {}, in {}'
               .format(sessions[s_index][2][9:], sessions[s_index][8][5:]))
+=======
+    print("Lever Responses at:", all_lever)
+
+    # You have the array sorted, no need to histogram
+    reward_times = data[1]
+    print("Rewards Collected at:", reward_times)
+    plt.title('Cumulative Lever Presses\n', fontsize=14)
+    plt.suptitle('Subject {}, {}\n'.format(
+        sessions[s_index][2][9:], sessions[s_index][8][5:]),
+        fontsize=10, y=0.92, x=0.51)
+>>>>>>> temp_change
     plt.xlabel('Time (s)')
     plt.ylabel('Cumulative Lever Presses')
-    plt.plot(base[:-1], cumulative, c='blue')
-    plt.show()
+
+    if smooth:
+        values, base = np.histogram(all_lever, bins=len(all_lever) * 4)
+        cumulative = np.cumsum(values)
+        plot_arr_x = np.append(base[:-1], base[-1] + 50)
+        plot_arr_y = np.append(cumulative, cumulative[-1])
+        plt.plot(plot_arr_x, plot_arr_y, c='blue')
+        bins = base[:-1]
+
+    else:
+        lever_times = np.insert(all_lever, 0, 0, axis=0)
+        plt.step(lever_times, np.arange(
+            lever_times.size), c='blue', where="post")
+        plt.plot(
+            [lever_times[-1], lever_times[-1] + 40],
+            [lever_times.size - 1, lever_times.size - 1],
+            c='blue')
+        bins = lever_times
+
+    reward_y = np.digitize(reward_times, bins) - 1
+
+    if smooth:
+        reward_y = cumulative[reward_y]
+
+    plt.scatter(reward_times, reward_y, marker="*", c="g")
+    plt.savefig("CumulativeHist_" + sessions[s_index][2]
+                [9:] + "_" + sessions[s_index][8][5:] + ".png", dpi=400)
+    plt.close()
+
 
 
 def IRT(sessions, data, s_index):
@@ -76,12 +115,12 @@ def extract_session_data(sessions, s_index):
         print('To be updated...')
     elif c_session[8] == 'MSN: 4_LeverTraining_p':
         data_info = np.array([['D:', 'E:', 'Reward'],
-                             ['E:', 'L:', 'Nosepoke'],
-                             ['L:', 'M:', 'L'],
-                             ['M:', 'N:', 'Un_L'],
-                             ['N:', 'O:', 'Un_R'],
-                             ['O:', 'R:', 'Un_Nosepoke'],
-                             ['R:', 'END', 'R']])
+                              ['E:', 'L:', 'Nosepoke'],
+                              ['L:', 'M:', 'L'],
+                              ['M:', 'N:', 'Un_L'],
+                              ['N:', 'O:', 'Un_R'],
+                              ['O:', 'R:', 'Un_Nosepoke'],
+                              ['R:', 'END', 'R']])
     elif c_session[8] == 'MSN: 5a_FixedRatio_p':
         data_info = np.array([['D:', 'E:', 'Reward'],
                              ['E:', 'M:', 'Nosepoke'],
@@ -110,10 +149,10 @@ def extract_session_data(sessions, s_index):
 
 def print_session_info(lines):
     s_list = np.flatnonzero(
-            np.core.defchararray.find(lines, "MSN:") != -1)
+        np.core.defchararray.find(lines, "MSN:") != -1)
     # returns index in np.array for cells containing "MSN:"
     a_list = np.flatnonzero(
-            np.core.defchararray.find(lines, "Subject:") != -1)
+        np.core.defchararray.find(lines, "Subject:") != -1)
     p_list = np.stack((a_list, s_list), axis=-1)
     i = 0
     print('Sessions in file:')
@@ -199,6 +238,6 @@ def parse_line(line, dtype=np.float32):
 
 
 if __name__ == "__main__":
-    filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-17"
-#    filename = r"G:\test"
+    # filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-17"
+    filename = r"G:\test"
     main(filename)
