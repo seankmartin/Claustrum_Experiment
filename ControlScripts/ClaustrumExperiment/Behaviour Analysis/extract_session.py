@@ -28,15 +28,6 @@ def cumplot(sessions, data, s_index, smooth=False):
     all_lever = np.sort(np.concatenate(
         (data[2], data[6], data[3], data[4]), axis=None))
 #    all_lever = np.sort(np.concatenate((data[2], data[6]), axis=None))
-<<<<<<< HEAD
-    print((all_lever))
-    values, base = np.histogram(all_lever, bins=len(all_lever)*4)
-    cumulative = np.cumsum(values)
-    reward_markers = data[1]
-    print(reward_markers)
-    plt.title('Cumulative Lever Presses\n for Subject {}, in {}'
-              .format(sessions[s_index][2][9:], sessions[s_index][8][5:]))
-=======
     print("Lever Responses at:", all_lever)
 
     # You have the array sorted, no need to histogram
@@ -46,7 +37,6 @@ def cumplot(sessions, data, s_index, smooth=False):
     plt.suptitle('Subject {}, {}\n'.format(
         sessions[s_index][2][9:], sessions[s_index][8][5:]),
         fontsize=10, y=0.92, x=0.51)
->>>>>>> temp_change
     plt.xlabel('Time (s)')
     plt.ylabel('Cumulative Lever Presses')
 
@@ -77,7 +67,6 @@ def cumplot(sessions, data, s_index, smooth=False):
     plt.savefig("CumulativeHist_" + sessions[s_index][2]
                 [9:] + "_" + sessions[s_index][8][5:] + ".png", dpi=400)
     plt.close()
-
 
 
 def IRT(sessions, data, s_index):
@@ -123,11 +112,11 @@ def extract_session_data(sessions, s_index):
                               ['R:', 'END', 'R']])
     elif c_session[8] == 'MSN: 5a_FixedRatio_p':
         data_info = np.array([['D:', 'E:', 'Reward'],
-                             ['E:', 'M:', 'Nosepoke'],
-                             ['M:', 'N:', 'FR Changes'],
-                             ['N:', 'O:', 'Un_R'],
-                             ['O:', 'R:', 'Un_Nosepoke'],
-                             ['R:', 'END', 'R']])
+                              ['E:', 'M:', 'Nosepoke'],
+                              ['M:', 'N:', 'FR Changes'],
+                              ['N:', 'O:', 'Un_R'],
+                              ['O:', 'R:', 'Un_Nosepoke'],
+                              ['R:', 'END', 'R']])
     elif c_session[8] == 'MSN: 5b_FixedInterval_p':
         print('To be updated...')
     elif c_session[8] == 'MSN: DNMTS':
