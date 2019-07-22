@@ -6,6 +6,7 @@ Created on Wed Jul 17 18:19:11 2019
 """
 
 import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -19,8 +20,24 @@ def main(filename):
 
     s_index = 1  # change number based on desired session
     data = extract_session_data(sessions, s_index)
-    IRT(data)
+#    IRT(data)
+    cumplot(sessions, data, s_index)
 
+
+def cumplot(sessions, data, s_index):
+    all_lever = np.sort(np.concatenate(
+            (data[2], data[6], data[3], data[4]), axis=None))
+#    all_lever = np.sort(np.concatenate((data[2], data[6]), axis=None))
+    print((all_lever))
+    values, base = np.histogram(all_lever, bins=len(all_lever)*4)
+    cumulative = np.cumsum(values)
+    reward_markers = data[1]
+    print(reward_markers)
+    plt.title('Cumulative Lever Presses\n for Subject {}, in {}'.format(sessions[s_index][2][9:], sessions[s_index][8][5:]))
+    plt.xlabel('Time (s)')
+    plt.ylabel('Cumulative Lever Presses')
+    plt.plot(base[:-1], cumulative, c='blue')
+    plt.show()
 
 def IRT(data):
     all_lever = np.sort(np.concatenate((data[2], data[6]), axis=None))
