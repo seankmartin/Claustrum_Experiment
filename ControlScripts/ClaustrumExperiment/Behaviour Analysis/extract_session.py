@@ -18,12 +18,17 @@ def main(filename):
         sessions = parse_sessions(lines)
         print_session_info(lines)  # uncomment to print sessions info
 
-    s_index = 1  # change number based on desired session
-    c_session = sessions[s_index]
-    data = extract_session_data(c_session, True)  # True to disp parameter idx
+        s_index = 15  # change number based on desired session
 
-    IRT(c_session, data)
-    cumplot(c_session, data, True)
+#    for s_index in np.arange(len(sessions)):  # Batch run for file
+        c_session = sessions[s_index]
+        # set to True to display parameter index
+        data = extract_session_data(c_session, False)
+        if not data:
+            print('Not ready for analysis!')
+        else:
+            IRT(c_session, data)
+            cumplot(c_session, data, True)
 
 
 def extract_lever_ts(c_session, data, includeUN=False):
@@ -43,13 +48,14 @@ def extract_lever_ts(c_session, data, includeUN=False):
 
 
 def cumplot(c_session, data, includeUN=False, smooth=False):
+    date = c_session[0][-8:].replace('/', '_')
     lever_ts = extract_lever_ts(c_session, data, includeUN)
 
     # You have the array sorted, no need to histogram
     reward_times = data[1]
     plt.title('Cumulative Lever Presses\n', fontsize=15)
-    plt.suptitle('\n(Subject {}, {})'.format(
-            c_session[2][9:], c_session[8][5:]), fontsize=9, y=.98, x=.51)
+    plt.suptitle('\n(Subject {}, {}, {})'.format(
+        c_session[2][9:], c_session[8][5:], date), fontsize=9, y=.98, x=.51)
     plt.xlabel('Time (s)')
     plt.ylabel('Cumulative Lever Presses')
 
@@ -80,43 +86,44 @@ def cumplot(c_session, data, includeUN=False, smooth=False):
                 label='Reward Collected')
     plt.legend()
     plt.savefig("CumulativeHist_" + c_session[2]
-                [9:] + "_" + c_session[8][5:] + ".png", dpi=400)
-#    plt.close()
+                [9:] + "_" + c_session[8][5:] + "_" + date + ".png", dpi=400)
+    plt.close()
 
 
 def IRT(c_session, data):
+    date = c_session[0][-8:].replace('/', '_')
     lever_ts = extract_lever_ts(c_session, data, False)
     # b assigns ascending numbers to rewards within lever presses
     b = np.digitize(data[0], bins=lever_ts)
     _, a = np.unique(b, return_index=True)  # returns index for good rewards
     good_nosepokes = data[1][a]  # nosepoke ts for pressing levers
     if c_session[8] == 'MSN: 5a_FixedRatio_p':
-        lever_ts = lever_ts[::3]
+        ratio = 3  # !!Need to find correct reference
+        lever_ts = lever_ts[::ratio]
+    print((good_nosepokes))
+    print((lever_ts))
     if len(lever_ts[1:]) > len(good_nosepokes[:-1]):
-        IRT = lever_ts[1:] - good_nosepokes[:]  # Ended session w lever press
+        IRT = lever_ts[1:] - good_nosepokes[:]  # Ended sess w lever press
     else:
         IRT = lever_ts[1:] - good_nosepokes[:-1]  # Ended session w nosepoke
-    hist_count, hist_bins, _ = plt.hist(IRT, bins=math.ceil(np.amax(IRT)),
-                                        range=(0, math.ceil(np.amax(IRT))))
-    maxidx = np.argmax(np.array(hist_count))
     plt.title('Inter-Response Time\n', fontsize=15)
-    plt.suptitle('\n(Subject {}, {})'.format(
-        c_session[2][9:], c_session[8][5:]), fontsize=9, y=.98, x=.51)
+    plt.suptitle('\n(Subject {}, {}, {})'.format(
+        c_session[2][9:], c_session[8][5:], date), fontsize=9, y=.98, x=.51)
     plt.xlabel('IRT (s)')
     plt.ylabel('Counts')
-    plt.show()
     plt.savefig("IRT_Hist_" + c_session[2]
-                [9:] + "_" + c_session[8][5:] + ".png", dpi=400)
-#    plt.close()
-    print('Most Freq. IRT Bin: {} s'.format((hist_bins[maxidx+1] -
-          hist_bins[maxidx])/2 + hist_bins[maxidx]))
-    print('Median Inter-Response Time (IRT): {0:.2f} s'.format(np.median(IRT)))
-    print('Min IRT: {0:.2f} s'.format(np.amin(IRT)))
-    print('Max IRT: {0:.2f} s'.format(np.amax(IRT)))
-    print('IRTs: ', np.round(IRT, decimals=2))
+                [9:] + "_" + c_session[8][5:] + "_" + date + ".png", dpi=400)
+    plt.close()
 
-#    print(len(data[1]))  # change number based on desired parameter
-#    print(len(all_lever))  # change number based on desired parameter
+    hist_count, hist_bins, _ = plt.hist(IRT, bins=math.ceil(np.amax(IRT)),
+                                        range=(0, math.ceil(np.amax(IRT))))
+#    maxidx = np.argmax(np.array(hist_count))
+#    print('Most Freq. IRT Bin: {} s'.format((hist_bins[maxidx+1] -
+#          hist_bins[maxidx])/2 + hist_bins[maxidx]))
+#    print('Median Inter-Response Time (IRT): {0:.2f} s'.format(np.median(IRT)))
+#    print('Min IRT: {0:.2f} s'.format(np.amin(IRT)))
+#    print('Max IRT: {0:.2f} s'.format(np.amax(IRT)))
+#    print('IRTs: ', np.round(IRT, decimals=2))
 
 
 def extract_session_data(c_session, dispPara=False):
@@ -127,9 +134,9 @@ def extract_session_data(c_session, dispPara=False):
     print("")
 
     if c_session[8] == 'MSN: 2_MagazineHabituation_p':
-        print('To be updated...')
+        return print('To be updated...')
     elif c_session[8] == 'MSN: 3_LeverHabituation_p':
-        print('To be updated...')
+        return print('To be updated...')
     elif c_session[8] == 'MSN: 4_LeverTraining_p':
         data_info = np.array([['D:', 'E:', 'Reward'],
                               ['E:', 'L:', 'Nosepoke'],
@@ -146,12 +153,11 @@ def extract_session_data(c_session, dispPara=False):
                               ['O:', 'R:', 'Un_Nosepoke'],
                               ['R:', 'END', 'R']])
     elif c_session[8] == 'MSN: 5b_FixedInterval_p':
-        print('To be updated...')
+        return print('To be updated...')
     elif c_session[8] == 'MSN: DNMTS':
-        print('To be updated...')
+        return print('To be updated...')
     else:
-        print('Error! Invalid session type!')
-        return None
+        return print('Error! Invalid session type!')
     data = []
     if dispPara:
         i = 0
@@ -263,6 +269,6 @@ def parse_line(line, dtype=np.float32):
 
 
 if __name__ == "__main__":
-    filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-21"
+    filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-19"
 #    filename = r"G:\test"
     main(filename)
