@@ -21,33 +21,49 @@ def main(filename):
     s_index = 1  # change number based on desired session
     data = extract_session_data(sessions, s_index)
 #    IRT(data)
-    cumplot(sessions, data, s_index, True)
+    cumplot(sessions, data, s_index)
 
 
-def cumplot(sessions, data, s_index, smooth=True):
+def cumplot(sessions, data, s_index, smooth=False):
     all_lever = np.sort(np.concatenate(
         (data[2], data[6], data[3], data[4]), axis=None))
 #    all_lever = np.sort(np.concatenate((data[2], data[6]), axis=None))
     print("Lever Responses at:", all_lever)
 
     # You have the array sorted, no need to histogram
-    reward_markers = data[1]
-    print("Rewards Collected at:", reward_markers)
-    plt.title('Cumulative Lever Presses\n for Subject {}, in {}'.format(
-        sessions[s_index][2][9:], sessions[s_index][8][5:]))
+    reward_times = data[1]
+    print("Rewards Collected at:", reward_times)
+    plt.title('Cumulative Lever Presses\n', fontsize=14)
+    plt.suptitle('Subject {}, {}\n'.format(
+        sessions[s_index][2][9:], sessions[s_index][8][5:]),
+        fontsize=10, y=0.92, x=0.51)
     plt.xlabel('Time (s)')
     plt.ylabel('Cumulative Lever Presses')
 
     if smooth:
         values, base = np.histogram(all_lever, bins=len(all_lever) * 4)
         cumulative = np.cumsum(values)
-        plt.plot(base[:-1], cumulative, c='blue')
+        plot_arr_x = np.append(base[:-1], base[-1] + 50)
+        plot_arr_y = np.append(cumulative, cumulative[-1])
+        plt.plot(plot_arr_x, plot_arr_y, c='blue')
+        bins = base[:-1]
 
     else:
         lever_times = np.insert(all_lever, 0, 0, axis=0)
         plt.step(lever_times, np.arange(
             lever_times.size), c='blue', where="post")
+        plt.plot(
+            [lever_times[-1], lever_times[-1] + 40],
+            [lever_times.size - 1, lever_times.size - 1],
+            c='blue')
+        bins = lever_times
 
+    reward_y = np.digitize(reward_times, bins) - 1
+
+    if smooth:
+        reward_y = cumulative[reward_y]
+
+    plt.scatter(reward_times, reward_y, marker="*", c="g")
     plt.savefig("CumulativeHist_" + sessions[s_index][2]
                 [9:] + "_" + sessions[s_index][8][5:] + ".png", dpi=400)
     plt.close()
