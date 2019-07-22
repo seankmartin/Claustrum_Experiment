@@ -20,8 +20,8 @@ def main(filename):
 
     s_index = 1  # change number based on desired session
     data = extract_session_data(sessions, s_index)
-#    IRT(data)
-    cumplot(sessions, data, s_index)
+    IRT(sessions, data, s_index)
+#    cumplot(sessions, data, s_index)
 
 
 def cumplot(sessions, data, s_index):
@@ -33,18 +33,30 @@ def cumplot(sessions, data, s_index):
     cumulative = np.cumsum(values)
     reward_markers = data[1]
     print(reward_markers)
-    plt.title('Cumulative Lever Presses\n for Subject {}, in {}'.format(sessions[s_index][2][9:], sessions[s_index][8][5:]))
+    plt.title('Cumulative Lever Presses\n for Subject {}, in {}'
+              .format(sessions[s_index][2][9:], sessions[s_index][8][5:]))
     plt.xlabel('Time (s)')
     plt.ylabel('Cumulative Lever Presses')
     plt.plot(base[:-1], cumulative, c='blue')
     plt.show()
 
-def IRT(data):
+
+def IRT(sessions, data, s_index):
     all_lever = np.sort(np.concatenate((data[2], data[6]), axis=None))
     IRT = data[1] - all_lever
     ave_IRT = np.average(data[1] - all_lever)
-    return print('Average Inter-Response Time (IRT): ',
-                 ave_IRT, '\nIRTs: ', IRT)
+    plt.hist(IRT, bins=100)
+    plt.title('Inter-Response Time\n', fontsize=15)
+    plt.suptitle('\n(Subject {}, {})'
+                 .format(sessions[s_index][2][9:], sessions[s_index][8][5:]),
+                 fontsize=9, y=.98, x=.51)
+    plt.xlabel('IRT (s)')
+    plt.ylabel('Counts')
+    plt.show()
+    print('Average Inter-Response Time (IRT): ',
+          ave_IRT, '\nMin IRT:', np.amin(IRT), '\tMax IRT:',
+          np.amax(IRT), '\nIRTs: ', IRT)
+    return None
 
 #    print(len(data[1]))  # change number based on desired parameter
 #    print(len(all_lever))  # change number based on desired parameter
@@ -71,7 +83,12 @@ def extract_session_data(sessions, s_index):
                              ['O:', 'R:', 'Un_Nosepoke'],
                              ['R:', 'END', 'R']])
     elif c_session[8] == 'MSN: 5a_FixedRatio_p':
-        print('To be updated...')
+        data_info = np.array([['D:', 'E:', 'Reward'],
+                             ['E:', 'M:', 'Nosepoke'],
+                             ['M:', 'N:', 'FR Changes'],
+                             ['N:', 'O:', 'Un_R'],
+                             ['O:', 'R:', 'Un_Nosepoke'],
+                             ['R:', 'END', 'R']])
     elif c_session[8] == 'MSN: 5b_FixedInterval_p':
         print('To be updated...')
     elif c_session[8] == 'MSN: DNMTS':
