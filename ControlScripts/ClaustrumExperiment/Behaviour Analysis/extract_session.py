@@ -7,6 +7,7 @@ Created on Wed Jul 17 18:19:11 2019
 
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 
 def main(filename):
@@ -15,14 +16,14 @@ def main(filename):
         lines = np.array(
             list(filter(None, lines)))  # removes empty space
         sessions = parse_sessions(lines)
-#        print_session_info(lines)  # uncomment to print sessions info
+        print_session_info(lines)  # uncomment to print sessions info
 
-    s_index = 11  # change number based on desired session
+    s_index = 1  # change number based on desired session
     c_session = sessions[s_index]
-    data = extract_session_data(c_session)
+    data = extract_session_data(c_session, True)  # True to disp parameter idx
 
     IRT(c_session, data)
-#    cumplot(c_session, data, True)
+    cumplot(c_session, data, True)
 
 
 def extract_lever_ts(c_session, data, includeUN=False):
@@ -37,7 +38,7 @@ def extract_lever_ts(c_session, data, includeUN=False):
             lever_ts = np.sort(np.concatenate((data[5], data[3]), axis=None))
         else:
             lever_ts = data[5]
-    print("Lever Responses at:", lever_ts)
+#    print("Lever Responses at:", lever_ts)
     return lever_ts
 
 
@@ -89,9 +90,15 @@ def IRT(c_session, data):
     b = np.digitize(data[0], bins=lever_ts)
     _, a = np.unique(b, return_index=True)  # returns index for good rewards
     good_nosepokes = data[1][a]  # nosepoke ts for pressing levers
-    IRT = lever_ts[1:] - good_nosepokes[:-1]
-    ave_IRT = np.average(good_nosepokes - lever_ts)
-    plt.hist(IRT, bins=len(IRT))
+    if c_session[8] == 'MSN: 5a_FixedRatio_p':
+        lever_ts = lever_ts[::3]
+    if len(lever_ts[1:]) > len(good_nosepokes[:-1]):
+        IRT = lever_ts[1:] - good_nosepokes[:]  # Ended session w lever press
+    else:
+        IRT = lever_ts[1:] - good_nosepokes[:-1]  # Ended session w nosepoke
+    hist_count, hist_bins, _ = plt.hist(IRT, bins=math.ceil(np.amax(IRT)),
+                                        range=(0, math.ceil(np.amax(IRT))))
+    maxidx = np.argmax(np.array(hist_count))
     plt.title('Inter-Response Time\n', fontsize=15)
     plt.suptitle('\n(Subject {}, {})'.format(
         c_session[2][9:], c_session[8][5:]), fontsize=9, y=.98, x=.51)
@@ -101,16 +108,18 @@ def IRT(c_session, data):
     plt.savefig("IRT_Hist_" + c_session[2]
                 [9:] + "_" + c_session[8][5:] + ".png", dpi=400)
 #    plt.close()
-    print('Average Inter-Response Time (IRT): {0:.2f}s'.format(ave_IRT))
-    print('Min IRT: {0:.2f}s'.format(np.amin(IRT)))
-    print('Max IRT: {0:.2f}s'.format(np.amax(IRT)))
+    print('Most Freq. IRT Bin: {} s'.format((hist_bins[maxidx+1] -
+          hist_bins[maxidx])/2 + hist_bins[maxidx]))
+    print('Median Inter-Response Time (IRT): {0:.2f} s'.format(np.median(IRT)))
+    print('Min IRT: {0:.2f} s'.format(np.amin(IRT)))
+    print('Max IRT: {0:.2f} s'.format(np.amax(IRT)))
     print('IRTs: ', np.round(IRT, decimals=2))
 
 #    print(len(data[1]))  # change number based on desired parameter
 #    print(len(all_lever))  # change number based on desired parameter
 
 
-def extract_session_data(c_session):
+def extract_session_data(c_session, dispPara=False):
     print("")
     print(c_session[0][-14:])  # Date
     print(c_session[2])  # Subject number
@@ -144,14 +153,19 @@ def extract_session_data(c_session):
         print('Error! Invalid session type!')
         return None
     data = []
-    i = 0
-    print("Parameters extracted:")
-    for start_char, end_char, parameter in data_info:
-        c_data = extract_data(c_session, start_char, end_char)
-        data.append(c_data)
-        print(i, '->', parameter)
-        i += 1
-    print('')
+    if dispPara:
+        i = 0
+        print("Parameters extracted:")
+        for start_char, end_char, parameter in data_info:
+            c_data = extract_data(c_session, start_char, end_char)
+            data.append(c_data)
+            print(i, '->', parameter)
+            i += 1
+        print('')
+    else:
+        for start_char, end_char, parameter in data_info:
+            c_data = extract_data(c_session, start_char, end_char)
+            data.append(c_data)
     return data
 
 
@@ -249,6 +263,6 @@ def parse_line(line, dtype=np.float32):
 
 
 if __name__ == "__main__":
-    filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-18"
+    filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-21"
 #    filename = r"G:\test"
     main(filename)
