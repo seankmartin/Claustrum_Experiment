@@ -18,7 +18,7 @@ def main(filename):
         sessions = parse_sessions(lines)
         print_session_info(lines)  # uncomment to print sessions info
 
-#        s_index = 3  # change number based on desired session
+#        s_index = 1  # change number based on desired session
 
     for s_index in np.arange(len(sessions)):  # Batch run for file
         c_session = sessions[s_index]
@@ -31,16 +31,21 @@ def main(filename):
             cumplot(c_session, data, True)
 
 
-def extract_lever_ts(c_session, data, includeUN=False):
+def extract_lever_ts(c_session, data, includeUN=True):
     if c_session[8] == 'MSN: 4_LeverTraining_p':
         if includeUN:
             lever_ts = np.sort(np.concatenate(
-                    (data[2], data[6], data[3], data[4]), axis=None))
+                    (data[3], data[7], data[4], data[5]), axis=None))
         else:
-            lever_ts = np.sort(np.concatenate((data[2], data[6]), axis=None))
+            lever_ts = np.sort(np.concatenate((data[3], data[7]), axis=None))
     elif c_session[8] == 'MSN: 5a_FixedRatio_p':
         if includeUN:
-            lever_ts = np.sort(np.concatenate((data[5], data[3]), axis=None))
+            lever_ts = np.sort(np.concatenate((data[6], data[4]), axis=None))
+        else:
+            lever_ts = data[6]
+    elif c_session[8] == 'MSN: 5b_FixedInterval_p':
+        if includeUN:
+            lever_ts = np.sort(np.concatenate((data[3], data[5]), axis=None))
         else:
             lever_ts = data[5]
 #    print("Lever Responses at:", lever_ts)
@@ -52,7 +57,7 @@ def cumplot(c_session, data, includeUN=False, smooth=False):
     lever_ts = extract_lever_ts(c_session, data, includeUN)
 
     # You have the array sorted, no need to histogram
-    reward_times = data[1]
+    reward_times = data[2]
     plt.title('Cumulative Lever Presses\n', fontsize=15)
     plt.suptitle('\n(Subject {}, {}, {})'.format(
         c_session[2][9:], c_session[8][5:], date), fontsize=9, y=.98, x=.51)
@@ -84,6 +89,8 @@ def cumplot(c_session, data, includeUN=False, smooth=False):
 
     plt.scatter(reward_times, reward_y, marker="x", c="r",
                 label='Reward Collected')
+#    plt.xlim(900, 1200)
+#    plt.ylim(90, 140)
     plt.legend()
     plt.savefig(c_session[2][9:] + "_CumulativeHist_" +
                 c_session[8][5:] + "_" + date + ".png", dpi=400)
@@ -94,11 +101,11 @@ def IRT(c_session, data):
     date = c_session[0][-8:].replace('/', '_')
     lever_ts = extract_lever_ts(c_session, data, False)
     # b assigns ascending numbers to rewards within lever presses
-    b = np.digitize(data[0], bins=lever_ts)
+    b = np.digitize(data[1], bins=lever_ts)
     _, a = np.unique(b, return_index=True)  # returns index for good rewards
-    good_nosepokes = data[1][a]  # nosepoke ts for pressing levers
+    good_nosepokes = data[2][a]  # nosepoke ts for pressing levers
     if c_session[8] == 'MSN: 5a_FixedRatio_p':
-        ratio = 3  # !!Need to find correct reference
+        ratio = int(data[0][3])  # !!Need to find correct reference
         lever_ts = lever_ts[::ratio]
     print((good_nosepokes))
     print((lever_ts))
@@ -138,7 +145,8 @@ def extract_session_data(c_session, dispPara=False):
     elif c_session[8] == 'MSN: 3_LeverHabituation_p':
         return print('To be updated...')
     elif c_session[8] == 'MSN: 4_LeverTraining_p':
-        data_info = np.array([['D:', 'E:', 'Reward'],
+        data_info = np.array([['A:', 'B:', 'Experiment Variables'],
+                              ['D:', 'E:', 'Reward'],
                               ['E:', 'L:', 'Nosepoke'],
                               ['L:', 'M:', 'L'],
                               ['M:', 'N:', 'Un_L'],
@@ -146,14 +154,32 @@ def extract_session_data(c_session, dispPara=False):
                               ['O:', 'R:', 'Un_Nosepoke'],
                               ['R:', 'END', 'R']])
     elif c_session[8] == 'MSN: 5a_FixedRatio_p':
-        data_info = np.array([['D:', 'E:', 'Reward'],
+        data_info = np.array([['A:', 'B:', 'Experiment Variables'],
+                              ['D:', 'E:', 'Reward'],
                               ['E:', 'M:', 'Nosepoke'],
                               ['M:', 'N:', 'FR Changes'],
                               ['N:', 'O:', 'Un_R'],
                               ['O:', 'R:', 'Un_Nosepoke'],
                               ['R:', 'END', 'R']])
     elif c_session[8] == 'MSN: 5b_FixedInterval_p':
-        return print('To be updated...')
+        data_info = np.array([['A:', 'B:', 'Experiment Variables'],
+                              ['D:', 'E:', 'Reward'],
+                              ['E:', 'N:', 'Nosepoke'],
+                              ['N:', 'O:', 'Un_L'],
+                              ['O:', 'R:', 'Un_Nosepoke'],
+                              ['R:', 'END', 'L']])
+    elif c_session[8] == 'MSN: 6_RandomisedBlocks_p':
+        data_info = np.array([['A:', 'B:', 'Experiment Variables'],
+                              ['D:', 'E:', 'Reward'],
+                              ['E:', 'L:', 'Nosepoke'],
+                              ['L:', 'M:', 'L'],
+                              ['M:', 'N:', 'Un_L'],
+                              ['N:', 'O:', 'Un_R'],
+                              ['O:', 'R:', 'Un_Nosepoke'],
+                              ['R:', 'Q:', 'R'],
+                              ['Q:', 'U:', 'Possible Trials'],
+                              ['U:', 'V:', 'Selected Trials'],
+                              ['V:', 'X:', 'Per Trial Pellets']])
     elif c_session[8] == 'MSN: DNMTS':
         return print('To be updated...')
     else:
