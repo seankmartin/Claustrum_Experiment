@@ -5,7 +5,6 @@ Created on Wed Jul 17 18:19:11 2019
 @author: HAMG
 """
 
-import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -18,30 +17,43 @@ def main(filename):
         sessions = parse_sessions(lines)
 #        print_session_info(lines)  # uncomment to print sessions info
 
-    s_index = 1  # change number based on desired session
-    data = extract_session_data(sessions, s_index)
-    IRT(sessions, data, s_index)
-#    cumplot(sessions, data, s_index)
+    s_index = 11  # change number based on desired session
+    c_session = sessions[s_index]
+    data = extract_session_data(c_session)
+
+    IRT(c_session, data)
+#    cumplot(c_session, data, True)
 
 
-def cumplot(sessions, data, s_index, smooth=False):
-    all_lever = np.sort(np.concatenate(
-        (data[2], data[6], data[3], data[4]), axis=None))
-#    all_lever = np.sort(np.concatenate((data[2], data[6]), axis=None))
-    print("Lever Responses at:", all_lever)
+def extract_lever_ts(c_session, data, includeUN=False):
+    if c_session[8] == 'MSN: 4_LeverTraining_p':
+        if includeUN:
+            lever_ts = np.sort(np.concatenate(
+                    (data[2], data[6], data[3], data[4]), axis=None))
+        else:
+            lever_ts = np.sort(np.concatenate((data[2], data[6]), axis=None))
+    elif c_session[8] == 'MSN: 5a_FixedRatio_p':
+        if includeUN:
+            lever_ts = np.sort(np.concatenate((data[5], data[3]), axis=None))
+        else:
+            lever_ts = data[5]
+    print("Lever Responses at:", lever_ts)
+    return lever_ts
+
+
+def cumplot(c_session, data, includeUN=False, smooth=False):
+    lever_ts = extract_lever_ts(c_session, data, includeUN)
 
     # You have the array sorted, no need to histogram
     reward_times = data[1]
-    print("Rewards Collected at:", reward_times)
-    plt.title('Cumulative Lever Presses\n', fontsize=14)
-    plt.suptitle('Subject {}, {}\n'.format(
-        sessions[s_index][2][9:], sessions[s_index][8][5:]),
-        fontsize=10, y=0.92, x=0.51)
+    plt.title('Cumulative Lever Presses\n', fontsize=15)
+    plt.suptitle('\n(Subject {}, {})'.format(
+            c_session[2][9:], c_session[8][5:]), fontsize=9, y=.98, x=.51)
     plt.xlabel('Time (s)')
     plt.ylabel('Cumulative Lever Presses')
 
     if smooth:
-        values, base = np.histogram(all_lever, bins=len(all_lever) * 4)
+        values, base = np.histogram(lever_ts, bins=len(lever_ts) * 4)
         cumulative = np.cumsum(values)
         plot_arr_x = np.append(base[:-1], base[-1] + 50)
         plot_arr_y = np.append(cumulative, cumulative[-1])
@@ -49,13 +61,13 @@ def cumplot(sessions, data, s_index, smooth=False):
         bins = base[:-1]
 
     else:
-        lever_times = np.insert(all_lever, 0, 0, axis=0)
+        lever_times = np.insert(lever_ts, 0, 0, axis=0)
         plt.step(lever_times, np.arange(
             lever_times.size), c='blue', where="post")
         plt.plot(
             [lever_times[-1], lever_times[-1] + 40],
             [lever_times.size - 1, lever_times.size - 1],
-            c='blue')
+            c='blue', label='Lever Response')
         bins = lever_times
 
     reward_y = np.digitize(reward_times, bins) - 1
@@ -63,35 +75,42 @@ def cumplot(sessions, data, s_index, smooth=False):
     if smooth:
         reward_y = cumulative[reward_y]
 
-    plt.scatter(reward_times, reward_y, marker="*", c="g")
-    plt.savefig("CumulativeHist_" + sessions[s_index][2]
-                [9:] + "_" + sessions[s_index][8][5:] + ".png", dpi=400)
-    plt.close()
+    plt.scatter(reward_times, reward_y, marker="x", c="r",
+                label='Reward Collected')
+    plt.legend()
+    plt.savefig("CumulativeHist_" + c_session[2]
+                [9:] + "_" + c_session[8][5:] + ".png", dpi=400)
+#    plt.close()
 
 
-def IRT(sessions, data, s_index):
-    all_lever = np.sort(np.concatenate((data[2], data[6]), axis=None))
-    IRT = data[1] - all_lever
-    ave_IRT = np.average(data[1] - all_lever)
-    plt.hist(IRT, bins=100)
+def IRT(c_session, data):
+    lever_ts = extract_lever_ts(c_session, data, False)
+    # b assigns ascending numbers to rewards within lever presses
+    b = np.digitize(data[0], bins=lever_ts)
+    _, a = np.unique(b, return_index=True)  # returns index for good rewards
+    good_nosepokes = data[1][a]  # nosepoke ts for pressing levers
+    IRT = lever_ts[1:] - good_nosepokes[:-1]
+    ave_IRT = np.average(good_nosepokes - lever_ts)
+    plt.hist(IRT, bins=len(IRT))
     plt.title('Inter-Response Time\n', fontsize=15)
-    plt.suptitle('\n(Subject {}, {})'
-                 .format(sessions[s_index][2][9:], sessions[s_index][8][5:]),
-                 fontsize=9, y=.98, x=.51)
+    plt.suptitle('\n(Subject {}, {})'.format(
+        c_session[2][9:], c_session[8][5:]), fontsize=9, y=.98, x=.51)
     plt.xlabel('IRT (s)')
     plt.ylabel('Counts')
     plt.show()
-    print('Average Inter-Response Time (IRT): ',
-          ave_IRT, '\nMin IRT:', np.amin(IRT), '\tMax IRT:',
-          np.amax(IRT), '\nIRTs: ', IRT)
-    return None
+    plt.savefig("IRT_Hist_" + c_session[2]
+                [9:] + "_" + c_session[8][5:] + ".png", dpi=400)
+#    plt.close()
+    print('Average Inter-Response Time (IRT): {0:.2f}s'.format(ave_IRT))
+    print('Min IRT: {0:.2f}s'.format(np.amin(IRT)))
+    print('Max IRT: {0:.2f}s'.format(np.amax(IRT)))
+    print('IRTs: ', np.round(IRT, decimals=2))
 
 #    print(len(data[1]))  # change number based on desired parameter
 #    print(len(all_lever))  # change number based on desired parameter
 
 
-def extract_session_data(sessions, s_index):
-    c_session = sessions[s_index]
+def extract_session_data(c_session):
     print("")
     print(c_session[0][-14:])  # Date
     print(c_session[2])  # Subject number
@@ -209,16 +228,19 @@ def extract_data(lines, start_char, end_char):
     data_list = []
     for start, end in zip(start_index, stop_index):
         data_lines = lines[start + 1:end]
-#        print(data_lines)
-        last_line = parse_line(data_lines[-1])
-        arr = np.empty(
-            5 * (len(data_lines) - 1) + len(last_line),
-            dtype=np.float32)
-        for i, line in enumerate(data_lines):
-            numbers = parse_line(line)
-            st = 5 * i
-            arr[st:st + len(numbers)] = numbers
+        if not data_lines.size:
+            arr = np.array([])
+        else:
+            last_line = parse_line(data_lines[-1])
+            arr = np.empty(
+                5 * (len(data_lines) - 1) + len(last_line),
+                dtype=np.float32)
+            for i, line in enumerate(data_lines):
+                numbers = parse_line(line)
+                st = 5 * i
+                arr[st:st + len(numbers)] = numbers
         data_list.append(arr)
+#        print(len(data_list[0]))
     return data_list[0]
 
 
@@ -227,6 +249,6 @@ def parse_line(line, dtype=np.float32):
 
 
 if __name__ == "__main__":
-    # filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-17"
-    filename = r"G:\test"
+    filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-18"
+#    filename = r"G:\test"
     main(filename)
