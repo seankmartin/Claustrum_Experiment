@@ -18,9 +18,9 @@ def main(filename):
         sessions = parse_sessions(lines)
         print_session_info(lines)  # uncomment to print sessions info
 
-        s_index = 15  # change number based on desired session
+#        s_index = 3  # change number based on desired session
 
-#    for s_index in np.arange(len(sessions)):  # Batch run for file
+    for s_index in np.arange(len(sessions)):  # Batch run for file
         c_session = sessions[s_index]
         # set to True to display parameter index
         data = extract_session_data(c_session, False)
@@ -85,8 +85,8 @@ def cumplot(c_session, data, includeUN=False, smooth=False):
     plt.scatter(reward_times, reward_y, marker="x", c="r",
                 label='Reward Collected')
     plt.legend()
-    plt.savefig("CumulativeHist_" + c_session[2]
-                [9:] + "_" + c_session[8][5:] + "_" + date + ".png", dpi=400)
+    plt.savefig(c_session[2][9:] + "_CumulativeHist_" +
+                c_session[8][5:] + "_" + date + ".png", dpi=400)
     plt.close()
 
 
@@ -106,24 +106,24 @@ def IRT(c_session, data):
         IRT = lever_ts[1:] - good_nosepokes[:]  # Ended sess w lever press
     else:
         IRT = lever_ts[1:] - good_nosepokes[:-1]  # Ended session w nosepoke
+    hist_count, hist_bins, _ = plt.hist(IRT, bins=math.ceil(np.amax(IRT)),
+                                        range=(0, math.ceil(np.amax(IRT))))
     plt.title('Inter-Response Time\n', fontsize=15)
     plt.suptitle('\n(Subject {}, {}, {})'.format(
         c_session[2][9:], c_session[8][5:], date), fontsize=9, y=.98, x=.51)
     plt.xlabel('IRT (s)')
     plt.ylabel('Counts')
-    plt.savefig("IRT_Hist_" + c_session[2]
-                [9:] + "_" + c_session[8][5:] + "_" + date + ".png", dpi=400)
+    plt.savefig(c_session[2][9:] + "_IRT_Hist_" +
+                c_session[8][5:] + "_" + date + ".png", dpi=400)
     plt.close()
 
-    hist_count, hist_bins, _ = plt.hist(IRT, bins=math.ceil(np.amax(IRT)),
-                                        range=(0, math.ceil(np.amax(IRT))))
-#    maxidx = np.argmax(np.array(hist_count))
-#    print('Most Freq. IRT Bin: {} s'.format((hist_bins[maxidx+1] -
-#          hist_bins[maxidx])/2 + hist_bins[maxidx]))
-#    print('Median Inter-Response Time (IRT): {0:.2f} s'.format(np.median(IRT)))
-#    print('Min IRT: {0:.2f} s'.format(np.amin(IRT)))
-#    print('Max IRT: {0:.2f} s'.format(np.amax(IRT)))
-#    print('IRTs: ', np.round(IRT, decimals=2))
+    maxidx = np.argmax(np.array(hist_count))
+    print('Most Freq. IRT Bin: {} s'.format((hist_bins[maxidx+1] -
+          hist_bins[maxidx])/2 + hist_bins[maxidx]))
+    print('Median Inter-Response Time (IRT): {0:.2f} s'.format(np.median(IRT)))
+    print('Min IRT: {0:.2f} s'.format(np.amin(IRT)))
+    print('Max IRT: {0:.2f} s'.format(np.amax(IRT)))
+    print('IRTs: ', np.round(IRT, decimals=2))
 
 
 def extract_session_data(c_session, dispPara=False):
@@ -269,6 +269,6 @@ def parse_line(line, dtype=np.float32):
 
 
 if __name__ == "__main__":
-    filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-19"
+    filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-22"
 #    filename = r"G:\test"
     main(filename)
