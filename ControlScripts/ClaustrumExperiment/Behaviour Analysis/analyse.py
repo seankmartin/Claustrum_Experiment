@@ -9,9 +9,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 import extract_session as ex
+import os.path
 
 
-def cumplot(c_session, data, includeUN=False, smooth=False):
+def cumplot(c_session, data, out_dir, includeUN=False, smooth=False):
     date = c_session[0][-8:].replace('/', '_')
     lever_ts = ex.lever_ts(c_session, data, includeUN)
 
@@ -65,12 +66,13 @@ def cumplot(c_session, data, includeUN=False, smooth=False):
     plt.legend()
 #    plt.ylim(0, 140)
     plt.xlim(0, 30*60)
-    plt.savefig(c_session[2][9:].zfill(3) + "_CumulativeHist_" +
-                c_session[8][5:-2] + "_" + date + ".png", dpi=400)
+    plt.savefig(os.path.join(out_dir, c_session[2][9:].zfill(3) +
+                             "_CumulativeHist_" + c_session[8][5:-2] +
+                             "_" + date + ".png"), dpi=400)
     plt.close()
 
 
-def IRT(c_session, data, showIRT=False):
+def IRT(c_session, data, out_dir, showIRT=False):
     date = c_session[0][-8:].replace('/', '_')
     lever_ts = ex.lever_ts(c_session, data, False)
     rewards_i = data[1]
@@ -124,7 +126,7 @@ def IRT(c_session, data, showIRT=False):
     out_name = (c_session[2][9:].zfill(3) + "_IRT_Hist_" +
                 c_session[8][5:-2] + "_" + date + ".png")
     print("Saved figure to {}".format(out_name))
-    fig.savefig(out_name, dpi=400)
+    fig.savefig(os.path.join(out_dir, out_name), dpi=400)
     if showIRT:
         show_IRT_details(IRT, maxidx, hist_bins)
 #    plt.show()

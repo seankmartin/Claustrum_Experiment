@@ -11,6 +11,8 @@ import analyse as an
 
 
 def main(filename):
+    out_dir = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
+
     with open(filename, 'r') as f:
         lines = f.read().splitlines()  # reads lines into list
         lines = np.array(
@@ -29,11 +31,11 @@ def main(filename):
             print('Not ready for analysis!')
         else:
             # True prints IRT details on console
-            an.IRT(c_session, data, False)
-            an.cumplot(c_session, data, True)
+            an.IRT(c_session, data, out_dir, False)
+            an.cumplot(c_session, data, out_dir, True)
 
 
 if __name__ == "__main__":
-    filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-22"
+    filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-23"
 #    filename = r"G:\test"
     main(filename)
