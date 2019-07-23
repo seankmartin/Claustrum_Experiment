@@ -8,6 +8,7 @@ Created on Wed Jul 17 18:19:11 2019
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+from datetime import datetime
 
 
 def main(filename):
@@ -18,16 +19,17 @@ def main(filename):
         sessions = parse_sessions(lines)
         print_session_info(lines)  # uncomment to print sessions info
 
-#        s_index = 1  # change number based on desired session
+#        s_index = 0  # change number based on desired session
 
     for s_index in np.arange(len(sessions)):  # Batch run for file
         c_session = sessions[s_index]
         # set to True to display parameter index
-        data = extract_session_data(c_session, False)
+        data = extract_session_data(c_session, True)
+        extract_time_taken(c_session, data)  # extracts time taken for session
         if not data:
             print('Not ready for analysis!')
         else:
-            IRT(c_session, data)
+            IRT(c_session, data, False)  # True prints IRT details on console
             cumplot(c_session, data, True)
 
 
@@ -59,8 +61,20 @@ def cumplot(c_session, data, includeUN=False, smooth=False):
     # You have the array sorted, no need to histogram
     reward_times = data[2]
     plt.title('Cumulative Lever Presses\n', fontsize=15)
-    plt.suptitle('\n(Subject {}, {}, {})'.format(
-        c_session[2][9:], c_session[8][5:], date), fontsize=9, y=.98, x=.51)
+    if c_session[8] == 'MSN: 5a_FixedRatio_p':
+        ratio = int(data[0][3])
+        plt.suptitle('\n(Subject {}, {} {}, {})'.format(
+                c_session[2][9:], c_session[8][5:-2], ratio, date),
+                fontsize=9, y=.98, x=.51)
+    elif c_session[8] == 'MSN: 5b_FixedInterval_p':
+        interval = int(data[0][3]/100)
+        plt.suptitle('\n(Subject {}, {} {}s, {})'.format(
+                c_session[2][9:], c_session[8][5:-2], interval, date),
+                fontsize=9, y=.98, x=.51)
+    else:
+        plt.suptitle('\n(Subject {}, {}, {})'.format(
+                c_session[2][9:], c_session[8][5:-2], date),
+                fontsize=9, y=.98, x=.51)
     plt.xlabel('Time (s)')
     plt.ylabel('Cumulative Lever Presses')
 
@@ -92,39 +106,76 @@ def cumplot(c_session, data, includeUN=False, smooth=False):
 #    plt.xlim(900, 1200)
 #    plt.ylim(90, 140)
     plt.legend()
-    plt.savefig(c_session[2][9:] + "_CumulativeHist_" +
-                c_session[8][5:] + "_" + date + ".png", dpi=400)
+#    plt.ylim(0, 140)
+    plt.xlim(0, 30*60)
+    plt.savefig(c_session[2][9:].zfill(3) + "_CumulativeHist_" +
+                c_session[8][5:-2] + "_" + date + ".png", dpi=400)
     plt.close()
 
 
-def IRT(c_session, data):
+def IRT(c_session, data, showIRT=False):
     date = c_session[0][-8:].replace('/', '_')
     lever_ts = extract_lever_ts(c_session, data, False)
+    rewards_i = data[1]
+    nosepokes_i = data[2]
+    # Session ended w/o reward collection
+    if len(rewards_i) > len(nosepokes_i):
+        # Assumes reward collected at end of session
+        nosepokes_i = np.append(nosepokes_i, [data[0][0]*60])
+    # Only consider after the first lever press
+    reward_idxs = np.nonzero(rewards_i >= lever_ts[0])
+    rewards = rewards_i[reward_idxs]
+    nosepokes = nosepokes_i[reward_idxs]
     # b assigns ascending numbers to rewards within lever presses
-    b = np.digitize(data[1], bins=lever_ts)
+    b = np.digitize(rewards, bins=lever_ts)
     _, a = np.unique(b, return_index=True)  # returns index for good rewards
-    good_nosepokes = data[2][a]  # nosepoke ts for pressing levers
+    good_nosepokes = nosepokes[a]  # nosepoke ts for pressing levers
     if c_session[8] == 'MSN: 5a_FixedRatio_p':
-        ratio = int(data[0][3])  # !!Need to find correct reference
+        ratio = int(data[0][3])
         lever_ts = lever_ts[::ratio]
-    print((good_nosepokes))
-    print((lever_ts))
     if len(lever_ts[1:]) > len(good_nosepokes[:-1]):
         IRT = lever_ts[1:] - good_nosepokes[:]  # Ended sess w lever press
     else:
         IRT = lever_ts[1:] - good_nosepokes[:-1]  # Ended session w nosepoke
-    hist_count, hist_bins, _ = plt.hist(IRT, bins=math.ceil(np.amax(IRT)),
-                                        range=(0, math.ceil(np.amax(IRT))))
-    plt.title('Inter-Response Time\n', fontsize=15)
-    plt.suptitle('\n(Subject {}, {}, {})'.format(
-        c_session[2][9:], c_session[8][5:], date), fontsize=9, y=.98, x=.51)
-    plt.xlabel('IRT (s)')
-    plt.ylabel('Counts')
-    plt.savefig(c_session[2][9:] + "_IRT_Hist_" +
-                c_session[8][5:] + "_" + date + ".png", dpi=400)
+    fig, ax = plt.subplots()
+    hist_count, hist_bins, _ = ax.hist(
+            IRT, bins=math.ceil(np.amax(IRT)),
+            range=(0, math.ceil(np.amax(IRT))))
+
+    # Plotting of IRT Graphs
+    ax.set_title('Inter-Response Time\n', fontsize=15)
+    if c_session[8] == 'MSN: 5a_FixedRatio_p':
+        fig.suptitle('\n(Subject {}, {} {}, {})'.format(
+                c_session[2][9:], c_session[8][5:-2], ratio, date),
+                fontsize=9, y=.98, x=.51)
+    elif c_session[8] == 'MSN: 5b_FixedInterval_p':
+        interval = int(data[0][3]/100)
+        plt.suptitle('\n(Subject {}, {} {}s, {})'.format(
+                c_session[2][9:], c_session[8][5:-2], interval, date),
+                fontsize=9, y=.98, x=.51)
+    else:
+        fig.suptitle('\n(Subject {}, {}, {})'.format(
+                c_session[2][9:], c_session[8][5:-2], date),
+                fontsize=9, y=.98, x=.51)
+    ax.set_xlabel('IRT (s)')
+    ax.set_ylabel('Counts')
+    maxidx = np.argmax(np.array(hist_count))
+    tdelta_mins = extract_time_taken(c_session, data)
+    maxval = (hist_bins[maxidx+1] - hist_bins[maxidx])/2 + hist_bins[maxidx]
+    ax.text(0.55, 0.8, 'Session Duration: {} mins\nMost Freq. IRT Bin: {} s'
+            .format(tdelta_mins, maxval), transform=ax.transAxes)
+    out_name = (c_session[2][9:].zfill(3) + "_IRT_Hist_" +
+                c_session[8][5:-2] + "_" + date + ".png")
+    print("Saved figure to {}".format(out_name))
+    fig.savefig(out_name, dpi=400)
+    if showIRT:
+        show_IRT_details(IRT, maxidx, hist_bins)
+#    plt.show()
     plt.close()
 
-    maxidx = np.argmax(np.array(hist_count))
+
+def show_IRT_details(IRT, maxidx, hist_bins):
+    plt.show()
     print('Most Freq. IRT Bin: {} s'.format((hist_bins[maxidx+1] -
           hist_bins[maxidx])/2 + hist_bins[maxidx]))
     print('Median Inter-Response Time (IRT): {0:.2f} s'.format(np.median(IRT)))
@@ -190,8 +241,8 @@ def extract_session_data(c_session, dispPara=False):
         print("Parameters extracted:")
         for start_char, end_char, parameter in data_info:
             c_data = extract_data(c_session, start_char, end_char)
+            print(i, '-> {}: {}'.format(parameter, len(c_data)))
             data.append(c_data)
-            print(i, '->', parameter)
             i += 1
         print('')
     else:
@@ -288,6 +339,15 @@ def extract_data(lines, start_char, end_char):
         data_list.append(arr)
 #        print(len(data_list[0]))
     return data_list[0]
+
+
+def extract_time_taken(c_session, data):
+    start_t = c_session[6][-8:]
+    end_t = c_session[7][-8:]
+    fmt = '%H:%M:%S'
+    tdelta = datetime.strptime(end_t, fmt) - datetime.strptime(start_t, fmt)
+    tdelta_mins = int(tdelta.total_seconds()/60)
+    return tdelta_mins
 
 
 def parse_line(line, dtype=np.float32):
