@@ -2,18 +2,24 @@
 """
 Created on Wed Jul 17 18:19:11 2019
 
-@author: HAMG
+Written by Sean Martin and Gao Xiang Ham
 """
 
 import numpy as np
+# import h5py
 from datetime import datetime
+from session_config import SessionInfo
+
+
+# def create_hdf5_storage(hdf5_file, config):
+#     for
 
 
 def lever_ts(c_session, data, includeUN=True):
     if c_session[8] == 'MSN: 4_LeverTraining_p':
         if includeUN:
             lever_ts = np.sort(np.concatenate(
-                    (data[3], data[7], data[4], data[5]), axis=None))
+                (data[3], data[7], data[4], data[5]), axis=None))
         else:
             lever_ts = np.sort(np.concatenate((data[3], data[7]), axis=None))
     elif c_session[8] == 'MSN: 5a_FixedRatio_p':
@@ -37,50 +43,12 @@ def session_data(c_session, dispPara=False):
     print(c_session[8])  # Session Type
     print("")
 
-    if c_session[8] == 'MSN: 2_MagazineHabituation_p':
-        return print('To be updated...')
-    elif c_session[8] == 'MSN: 3_LeverHabituation_p':
-        return print('To be updated...')
-    elif c_session[8] == 'MSN: 4_LeverTraining_p':
-        data_info = np.array([['A:', 'B:', 'Experiment Variables'],
-                              ['D:', 'E:', 'Reward'],
-                              ['E:', 'L:', 'Nosepoke'],
-                              ['L:', 'M:', 'L'],
-                              ['M:', 'N:', 'Un_L'],
-                              ['N:', 'O:', 'Un_R'],
-                              ['O:', 'R:', 'Un_Nosepoke'],
-                              ['R:', 'END', 'R']])
-    elif c_session[8] == 'MSN: 5a_FixedRatio_p':
-        data_info = np.array([['A:', 'B:', 'Experiment Variables'],
-                              ['D:', 'E:', 'Reward'],
-                              ['E:', 'M:', 'Nosepoke'],
-                              ['M:', 'N:', 'FR Changes'],
-                              ['N:', 'O:', 'Un_R'],
-                              ['O:', 'R:', 'Un_Nosepoke'],
-                              ['R:', 'END', 'R']])
-    elif c_session[8] == 'MSN: 5b_FixedInterval_p':
-        data_info = np.array([['A:', 'B:', 'Experiment Variables'],
-                              ['D:', 'E:', 'Reward'],
-                              ['E:', 'N:', 'Nosepoke'],
-                              ['N:', 'O:', 'Un_L'],
-                              ['O:', 'R:', 'Un_Nosepoke'],
-                              ['R:', 'END', 'L']])
-    elif c_session[8] == 'MSN: 6_RandomisedBlocks_p':
-        data_info = np.array([['A:', 'B:', 'Experiment Variables'],
-                              ['D:', 'E:', 'Reward'],
-                              ['E:', 'L:', 'Nosepoke'],
-                              ['L:', 'M:', 'L'],
-                              ['M:', 'N:', 'Un_L'],
-                              ['N:', 'O:', 'Un_R'],
-                              ['O:', 'R:', 'Un_Nosepoke'],
-                              ['R:', 'Q:', 'R'],
-                              ['Q:', 'U:', 'Possible Trials'],
-                              ['U:', 'V:', 'Selected Trials'],
-                              ['V:', 'X:', 'Per Trial Pellets']])
-    elif c_session[8] == 'MSN: DNMTS':
-        return print('To be updated...')
-    else:
-        return print('Error! Invalid session type!')
+    s_info = SessionInfo()
+    data_info = s_info.get_session_type_info(c_session[8])
+    if data_info is None:
+        print("Unable to parse information for {}".format(c_session[8]))
+        return
+
     data = []
     if dispPara:
         i = 0
@@ -192,7 +160,7 @@ def time_taken(c_session, data):
     end_t = c_session[7][-8:]
     fmt = '%H:%M:%S'
     tdelta = datetime.strptime(end_t, fmt) - datetime.strptime(start_t, fmt)
-    tdelta_mins = int(tdelta.total_seconds()/60)
+    tdelta_mins = int(tdelta.total_seconds() / 60)
     return tdelta_mins
 
 
