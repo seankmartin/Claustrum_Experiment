@@ -6,7 +6,7 @@ Created on Wed Jul 17 18:19:11 2019
 """
 
 import numpy as np
-import extract_session as ex
+from parse_sessions import SessionExtractor
 import analyse as an
 from bv_utils import make_dir_if_not_exists
 
@@ -16,26 +16,25 @@ def main(filename):
     out_dir = r"G:\out_plots"
     make_dir_if_not_exists(out_dir)
 
-    with open(filename, 'r') as f:
-        lines = f.read().splitlines()  # reads lines into list
-        lines = np.array(
-            list(filter(None, lines)))  # removes empty space
-        sessions = ex.parse_sessions(lines)
-        ex.print_session_info(lines)  # uncomment to print sessions info
+    s_extractor = SessionExtractor(filename, verbose=True)
+    print(s_extractor)
 
-#        s_index = 0  # change number based on desired session
+    for s in s_extractor:  # Batch run for file
+        time_taken = s.time_taken()
+        c_session = s.get_lines()
+        timestamps = s.get_timestamps()
+        lever_ts = s.get_lever_ts()
+        good_lever_ts = s.get_lever_ts(False)
 
-    for s_index in np.arange(len(sessions)):  # Batch run for file
-        c_session = sessions[s_index]
-        # set to True to display parameter index
-        data = ex.session_data(c_session, True)
-        ex.time_taken(c_session, data)  # extracts time taken for session
-        if not data:
+        print("Session duration {} mins".format(time_taken))
+        if len(timestamps.keys()) == 0:
             print('Not ready for analysis!')
-        else:
-            # True prints IRT details on console
-            an.IRT(c_session, data, out_dir, False)
-            an.cumplot(c_session, data, out_dir, True)
+            continue
+
+        # Will need to refactor these
+        an.IRT(c_session, timestamps, good_lever_ts,
+               time_taken, out_dir, False)
+        an.cumplot(c_session, timestamps, lever_ts, out_dir, False)
 
 
 if __name__ == "__main__":

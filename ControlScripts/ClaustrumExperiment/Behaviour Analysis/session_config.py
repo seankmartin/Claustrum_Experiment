@@ -7,6 +7,11 @@ import numpy as np
 
 class SessionInfo:
     def __init__(self):
+        self.metadata_info = [
+            "start_date", "end_date", "subject",
+            "experiment", "group",
+            "box", "start_time", "end_time", "name"]
+
         self.session_info_dict = {}
 
         # Empty keys that should probably be updated at some stage
@@ -66,3 +71,8 @@ class SessionInfo:
         if key:
             return self.session_info_dict.get(key, None)
         return self.session_info_dict
+
+    def get_metadata(self, name=None):
+        if name:
+            return self.metadata_info.index(name)
+        return self.metadata_info

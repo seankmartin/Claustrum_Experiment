@@ -1,3 +1,4 @@
 ControlScripts/ExampleScripts
 *.png
 *.pyc
+*objectdb
