@@ -169,7 +169,7 @@ S.S.2, \ Experiment logic
             Z2
         ---> S4
 
-    S3, \ Pellet has been dropped, detect left presses and handle FI
+    S4, \ Pellet has been dropped, detect left presses and handle FI
 
         1 #R ^LeftLever:
             SET N(B(^WrongLeftTimeIdx)) = T;
@@ -182,7 +182,7 @@ S.S.2, \ Experiment logic
         1 #R ^Nosepoke:
         ---> S5
 
-    S4, \ IRT starts after nosepoke
+    S5, \ IRT starts after nosepoke
         A(^InterResponseTimeIdx)#T:
         ---> S3
 
