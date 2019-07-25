@@ -138,8 +138,6 @@ S.S.1, \ Control flow
     S2, \ Wait for start signal
         #START:
             ON ^HouseLight;
-            ON ^RightLeverOut;
-            ON ^RightLight;
             SET A(^RatioIdx) = A(^StartingRatioIdx);
             Z1
         ---> S3
@@ -147,7 +145,7 @@ S.S.1, \ Control flow
     S3, \ Time the session and flag off after Max Time or condition met
         0.01":
             SET T = T + 0.01;
-            IF T/60 >= A(^MaxTimeIdx) [@EndSession, @ContinueSession]
+            IF (T-5)/60 >= A(^MaxTimeIdx) [@EndSession, @ContinueSession]
                 @End: Z32 ---> S4
                 @Cont: IF C(^NosepokeCountIdx) >= A(^MaxPelletIdx) [@EndSession]
                     @End: Z32 ---> S4
@@ -171,11 +169,19 @@ S.S.1, \ Control flow
 \***************************************************
 S.S.2, \ Experiment logic
 
-    S1, \ Wait for experiment start
+    S1, \ Wait for the experiment start
         #START:
+            ON ^Sound;
         ---> S2
+    
+    S2, \ Turn off sound and show response levers
+        5":
+            OFF ^Sound;
+            ON ^RightLeverOut;
+            ON ^RightLight;
+        ---> S3
 
-    S2, \ Drop pellets and handle FR
+    S3, \ Drop pellets and handle FR
 
         1 #R ^RightLever:
             SET R(B(^RightLeverTimeIdx)) = T;
@@ -185,9 +191,9 @@ S.S.2, \ Experiment logic
             Z1;
             ADD K;
             IF K = A(^RatioIdx) [@Passed]
-                @Passed: SET K = 0; Z2; Z3 ---> S3
+                @Passed: SET K = 0; Z2; Z3 ---> S4
 
-    S3, \ Pellet has been dropped, detect right presses and nosepoke
+    S4, \ Pellet has been dropped, detect right presses and nosepoke
 
         1 #R ^RightLever:
             SET N(B(^WrongRightTimeIdx)) = T;
@@ -205,7 +211,7 @@ S.S.2, \ Experiment logic
             SET E(B(^NosepokeTimeIdx)) = -987.987;
             OFF ^RewardLight;
             Z1
-        ---> S2
+        ---> S3
 
 S.S.5, \ Detect unnecessary nosepokes and record the times
 
@@ -272,18 +278,6 @@ S.S.7, \ Drop pellets
     S2, \ Turn off the feeder after dropping
         0.5": 
             OFF ^Feeder
-        ---> S1
-
-S.S.8, \ Turn on the sound and then off again
-
-    S1,
-        #START:
-            ON ^Sound;
-        ---> S2
-    
-    S2, 
-        3":
-            OFF ^Sound;
         ---> S1
 
 S.S.10, \ Update the display

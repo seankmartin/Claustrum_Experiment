@@ -114,16 +114,15 @@ S.S.1, \ Control flow
 
     S2, \ Wait for start signal
         #START:
+            SET A(^InterResponseTimeIdx) = A(^InterResponseTimeIdx) * 1";
             ON ^HouseLight;
-            ON ^LeftLeverOut;
-            ON ^LeftLight;
             Z1
         ---> S3
 
     S3, \ Time the session and flag off after Max Time or condition met
         0.01":
             SET T = T + 0.01;
-            IF T/60 >= A(^MaxTimeIdx) [@EndSession, @ContinueSession]
+            IF (T-5)/60 >= A(^MaxTimeIdx) [@EndSession, @ContinueSession]
                 @End: Z32 ---> S4
                 @Cont: IF C(^NosepokeCountIdx) >= A(^MaxPelletIdx) [@EndSession]
                     @End: Z32 ---> S4
@@ -147,12 +146,19 @@ S.S.1, \ Control flow
 \***************************************************
 S.S.2, \ Experiment logic
 
-    S1, \ Wait for experiment start
+    S1, \Wait for experiment start
         #START:
-            SET A(^InterResponseTimeIdx) = A(^InterResponseTimeIdx) * 1"
+            ON ^Sound;
         ---> S2
+    
+    S2, \Turn off the sound and show response levers
+        5":
+            OFF ^Sound;
+            ON ^LeftLeverOut;
+            ON ^LeftLight;
+        ---> S3
 
-    S2, \ Drop pellets
+    S3, \ Drop pellets
 
         1 #R ^LeftLever:
             SET R(B(^LeftLeverTimeIdx)) = T;
@@ -161,7 +167,7 @@ S.S.2, \ Experiment logic
             SET R(B(^LeftLeverTimeIdx)) = -987.987;
             Z1;
             Z2
-        ---> S3
+        ---> S4
 
     S3, \ Pellet has been dropped, detect left presses and handle FI
 
@@ -174,11 +180,11 @@ S.S.2, \ Experiment logic
         ---> SX
 
         1 #R ^Nosepoke:
-        ---> S4
+        ---> S5
 
     S4, \ IRT starts after nosepoke
         A(^InterResponseTimeIdx)#T:
-        ---> S2
+        ---> S3
 
         1 #R ^LeftLever:
             SET N(B(^WrongLeftTimeIdx)) = T;
@@ -233,18 +239,6 @@ S.S.7, \ Drop pellets
     S2, \ Turn off the feeder after dropping
         0.5": 
             OFF ^Feeder
-        ---> S1
-
-S.S.8, \ Turn on the sound and then off again
-
-    S1,
-        #START:
-            ON ^Sound;
-        ---> S2
-    
-    S2, 
-        3":
-            OFF ^Sound;
         ---> S1
 
 S.S.10, \ Update the display

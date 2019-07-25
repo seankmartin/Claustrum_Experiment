@@ -144,7 +144,7 @@ S.S.1, \ Control flow
         #START: ON ^HouseLight; Z4 ---> S3
 
     S3, \ End a trial after the max time or end session
-        0.01": SET T = T + 0.01; IF (T - A(^LastSwitchTimeIdx)) / 60 >= A(^MaxTimeIdx) [@EndTrial, @ContinueTrial] 
+        0.01": SET T = T + 0.01; IF (T - A(^LastSwitchTimeIdx) - 5) / 60 >= A(^MaxTimeIdx) [@EndTrial, @ContinueTrial] 
                  @End: SET A(^LastSwitchTimeIdx) = T; Z4 ---> SX
                  @Cont: IF C(^NosepokeCountIdxL) + C(^NosepokeCountIdxR) >= A(^MaxPelletIdx) [@End]
                      @End: Z32 ---> S4
@@ -162,11 +162,11 @@ S.S.2, \ Trial Switching logic
     
     S2, \ Wait for a z pulse to switch
         #Z4: ADD B(^CurrentTrialIdx); IF B(^CurrentTrialIdx) = 6 [@End, @Continue] 
-                 @End: SET B(^CurrentTrialIdx) = 5; Z32; ---> S1
-                 @Continue: ---> S3
+                 @End: SET B(^CurrentTrialIdx) = 5; Z32 ---> S1
+                 @Continue: ON ^Sound ---> S3
  
-    S3, \ Small delay after a trial to allow program switches
-        0.1": SET X(4) = U(B(^CurrentTrialIdx)); IF X(4) = 0 [@FI, @FR] 
+    S3, \Turn off the sound and start trial
+        5": OFF ^Sound; SET X(4) = U(B(^CurrentTrialIdx)); IF X(4) = 0 [@FI, @FR] 
                  @FI: Z5 ---> S2
                  @FR: Z6 ---> S2
  
@@ -265,14 +265,6 @@ S.S.7, \ Drop pellets
 
     S2, \ Turn off the feeder after dropping
         0.5": OFF ^Feeder ---> S1
-
-S.S.8, \ Turn on the sound and then off again
-
-    S1,
-        #Z4: ON ^Sound; ---> S2
-    
-    S2, 
-        3": OFF ^Sound; ---> S1
 
 S.S.9, \ Generate the random set of trials.
     S1, \ Generate a sampling without 3 in a row
