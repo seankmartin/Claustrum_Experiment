@@ -51,7 +51,7 @@
     VAR_ALIAS Maximum Time (min) = A(0) \ Default 30 minutes
     VAR_ALIAS Max Pellets = A(1) \ Default 45
     VAR_ALIAS Pellets To Advance = A(2) \ Default 45
-    VAR_ALIAS Fixed Interval (secs) = A(3) \ Default 20s
+    VAR_ALIAS Fixed Interval (secs) = A(3) \ Default 30s
 
 \ Arrays
     \ A = Experiment variables
@@ -102,7 +102,7 @@ S.S.1, \ Control flow
             SET A(^MaxTimeIdx) = 30;
             SET A(^MaxPelletIdx) = 45;
             SET A(^RequiredPelletsIdx) = 45;
-            SET A(^InterResponseTimeIdx) = 20;
+            SET A(^InterResponseTimeIdx) = 30;
             SET D(0) = -987.987;
             SET E(0) = -987.987;
             SET N(0) = -987.987;
