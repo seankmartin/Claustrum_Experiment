@@ -4,10 +4,10 @@ Created on Wed Jul 17 18:19:11 2019
 
 @author: HAMG
 """
-
+import os
 import numpy as np
 from parse_sessions import SessionExtractor
-import analyse as an
+import bv_analyse as bv_an
 from bv_utils import make_dir_if_not_exists
 
 
@@ -31,13 +31,21 @@ def main(filename):
             print('Not ready for analysis!')
             continue
 
-        # Will need to refactor these
-        an.IRT(c_session, timestamps, good_lever_ts,
+#       Will need to refactor these
+        bv_an.IRT(c_session, timestamps, good_lever_ts,
                time_taken, out_dir, False)
-        an.cumplot(c_session, timestamps, lever_ts, out_dir, False)
+        bv_an.cumplot(c_session, timestamps, lever_ts, out_dir, False)
 
 
 if __name__ == "__main__":
-    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-25"
+    # Batch processing of sessions in folder
+    in_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\\"
+    in_files = os.listdir(in_dir)
+    for file in in_files:
+        filename = in_dir + file
+        if os.path.isfile(filename):
+            main(filename)
+#    # Running single session files
+#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-25"
 #    filename = r"G:\test"
-    main(filename)
+#    main(filename)

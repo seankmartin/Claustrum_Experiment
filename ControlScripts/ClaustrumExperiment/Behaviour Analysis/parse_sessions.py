@@ -14,8 +14,8 @@ from session_config import SessionInfo
 class SessionExtractor:
     def __init__(self, file_location, verbose=False):
         self.file_location = file_location
-        self.sessions = []
-        self.verbose = verbose
+        self.sessions = []  # sessions extracted are stored in this list
+        self.verbose = verbose  
 
         self.extract_sessions()
 
