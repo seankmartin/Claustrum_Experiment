@@ -79,7 +79,7 @@ def IRT(c_session, timestamps, lever_ts, time_taken, out_dir, showIRT=False):
     if len(rewards_i) > len(nosepokes_i):
         # Assumes reward collected at end of session
         nosepokes_i = np.append(
-            nosepokes_i, [timestamps["Experimental Variables"][0] * 60])
+            nosepokes_i, [timestamps["Experiment Variables"][0] * 60])
     # Only consider after the first lever press
     reward_idxs = np.nonzero(rewards_i >= lever_ts[0])
     rewards = rewards_i[reward_idxs]

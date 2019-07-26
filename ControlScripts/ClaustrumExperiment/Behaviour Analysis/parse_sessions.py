@@ -157,8 +157,8 @@ class Session:
         return arr
 
     def time_taken(self):
-        start_time = self.get_metadata("start_time")[-8:]
-        end_time = self.get_metadata("end_time")[-8:]
+        start_time = self.get_metadata("start_time")[-8:].replace(' ', '0')
+        end_time = self.get_metadata("end_time")[-8:].replace(' ', '0')
         fmt = '%H:%M:%S'
         tdelta = (
             datetime.strptime(end_time, fmt) -

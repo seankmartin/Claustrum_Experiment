@@ -12,8 +12,8 @@ from bv_utils import make_dir_if_not_exists
 
 
 def main(filename):
-    # out_dir = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
-    out_dir = r"G:\out_plots"
+    out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
+#    out_dir = r"G:\out_plots"
     make_dir_if_not_exists(out_dir)
 
     s_extractor = SessionExtractor(filename, verbose=True)
@@ -38,6 +38,6 @@ def main(filename):
 
 
 if __name__ == "__main__":
-    # filename = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-23"
-    filename = r"G:\test"
+    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-25"
+#    filename = r"G:\test"
     main(filename)
