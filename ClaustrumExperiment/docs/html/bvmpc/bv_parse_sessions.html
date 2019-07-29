@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>bvmpc.bv_parse_sessions API documentation</title>
+<meta name="description" content="This module handles reading Session data from a MedPC file …" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>bvmpc.bv_parse_sessions</code></h1>
+</header>
+<section id="section-intro">
+<p>This module handles reading Session data from a MedPC file.</p>
+<p>Written by Sean Martin and Gao Xiang Ham</p>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">&#34;&#34;&#34;
+This module handles reading Session data from a MedPC file.
+
+Written by Sean Martin and Gao Xiang Ham
+&#34;&#34;&#34;
+
+import numpy as np
+# import h5py
+from datetime import datetime
+from bvmpc.bv_session_config import SessionInfo
+
+
+class SessionExtractor:
+    &#34;&#34;&#34;
+    Session Extractor pulls info from MEDPC files.
+
+    This info is stored in a list of Session objects.
+    &#34;&#34;&#34;
+
+    def __init__(self, file_location, verbose=False):
+        &#34;&#34;&#34;
+        Initialise with an extraction location and then extract.
+
+        Parameters
+        ----------
+        file_location : str
+            Where the MEDPC file is to extract from.
+        verbose : bool
+            If this is true, print information during loading.
+
+        &#34;&#34;&#34;
+        self.file_location = file_location
+        self.sessions = []  # sessions extracted are stored in this list
+        self.verbose = verbose
+
+        self.extract_sessions()
+
+    def get_sessions(self):
+        &#34;&#34;&#34;Return the list of Session objects that were extracted.&#34;&#34;&#34;
+        return self.sessions
+
+    def extract_sessions(self):
+        &#34;&#34;&#34;
+        Extract MPC sessions.
+
+        Returns
+        -------
+        A List of sessions, one element for each session.
+
+        &#34;&#34;&#34;
+        with open(self.file_location, &#39;r&#39;) as f:
+            lines = f.read().splitlines()  # reads lines into list
+            lines = np.array(
+                list(filter(None, lines)))  # removes empty space
+
+            s_starts = np.flatnonzero(
+                np.core.defchararray.find(lines, &#34;Start Date:&#34;) != -1)
+            s_ends = np.zeros_like(s_starts)
+            s_ends[:-1] = s_starts[1:]
+            s_ends[-1] = lines.size
+
+            for start, end in zip(s_starts, s_ends):
+                s_data = np.array(lines[start:end])
+                self.sessions.append(Session(s_data, self.verbose))
+            return self.sessions
+
+    def __repr__(self):
+        &#34;&#34;&#34;Session names that will be extracted.&#34;&#34;&#34;
+        out_str = self._get_session_names()
+        return out_str
+
+    def print_session_names(self):
+        &#34;&#34;&#34;Print the session names.&#34;&#34;&#34;
+        print(self._get_session_names())
+
+    def _get_session_names(self):
+        &#34;&#34;&#34;Session names that will be extracted.&#34;&#34;&#34;
+        str_list = []
+        str_list.append(&#34;Sessions in file:\n&#34;)
+        for i, s in enumerate(self.sessions):
+            str_list.append(&#34;{} -&gt; {}\n&#34;.format(i, s.get_name()))
+        return &#34;&#34;.join(str_list)
+
+    def __len__(self):
+        &#34;&#34;&#34;Return Number of sessions in the extractor.&#34;&#34;&#34;
+        return len(self.sessions)
+
+    def __getitem__(self, i):
+        &#34;&#34;&#34;Get the ith indexed session.&#34;&#34;&#34;
+        return self.sessions[i]
+
+
+class Session:
+    &#34;&#34;&#34;The base class to hold MEDPC behaviour information.&#34;&#34;&#34;
+
+    def __init__(self, lines, verbose=False):
+        &#34;&#34;&#34;
+        Initialise the Session with lines from a MEDPC file.
+
+        Then extract this info into native attributes.
+
+        Parameters
+        ----------
+        lines : List of str
+            The lines in the MedPC file for this session.
+        verbose: bool - Default False
+            Whether to print information while loading.
+
+        &#34;&#34;&#34;
+        self.lines = lines
+        self.session_info = SessionInfo()
+        self.metadata = {}
+        self.timestamps = {}
+        self.verbose = verbose
+
+        self._extract_metadata()
+        self._extract_session_arrays()
+
+    def get_metadata(self, key=None):
+        &#34;&#34;&#34;
+        Get the metadata for the Session.
+
+        Parameters
+        ----------
+        key : str - Default None
+            Possible Keys: &#34;start_date&#34;, &#34;end_date&#34;, &#34;subject&#34;,
+            &#34;experiment&#34;, &#34;group&#34;, &#34;box&#34;, &#34;start_time&#34;, &#34;end_time&#34;, &#34;name&#34;
+
+        Returns
+        -------
+        str : If key is a valid key.
+        Dict : If key is None, all the metadata.
+
+        &#34;&#34;&#34;
+        if key:
+            return self.metadata[key]
+        return self.metadata
+
+    def get_subject_type(self):
+        &#34;&#34;&#34;Return the subject and session type as a string.&#34;&#34;&#34;
+        subject = self.lines[
+            self.session_info.get_metadata(&#34;subject&#34;)]
+        name = self.lines[
+            self.session_info.get_metadata(&#34;name&#34;)]
+        return &#39;{}, {}&#39;.format(subject, name)
+
+    def get_arrays(self, key=None):
+        &#34;&#34;&#34;
+        Return the timestamps in the session.
+
+        Parameters
+        ----------
+        key : str - Default None
+            The name of the timestamp to get.
+
+        Returns
+        -------
+        np.ndarray: If key is a valid key.
+        [] : If key is not a valid key
+        Dict : If key is None, all the timestamps.
+
+        &#34;&#34;&#34;
+        if key:
+            return self.timestamps.get(key, [])
+        return self.timestamps
+
+    def get_lever_ts(self, include_un=True):
+        &#34;&#34;&#34;
+        Get the timestamps of the lever presses.
+
+        Parameters
+        ----------
+        include_un : bool - Default True
+            Include lever presses that were unnecessary for the reward.
+
+        Returns
+        -------
+        np.ndarray : A numpy array of sorted timestamps.
+
+        &#34;&#34;&#34;
+        levers = [
+            self.get_arrays(&#34;R&#34;),
+            self.get_arrays(&#34;L&#34;)]
+        if include_un:
+            levers.append(self.get_arrays(&#34;Un_R&#34;))
+            levers.append(self.get_arrays(&#34;Un_L&#34;))
+        return np.sort(np.concatenate(levers, axis=None))
+
+    def _extract_metadata(self):
+        &#34;&#34;&#34;Private function to pull metadata out of lines.&#34;&#34;&#34;
+        for i, name in enumerate(self.session_info.get_metadata()):
+            self.metadata[name] = self.lines[i]
+
+    def _extract_session_arrays(self):
+        &#34;&#34;&#34;Private function to pull session arrays out of lines.&#34;&#34;&#34;
+        print(&#34;Extracting arrays for {}&#34;.format(self))
+        data_info = self.session_info.get_session_type_info(
+            self.get_metadata(&#34;name&#34;))
+
+        if data_info is None:
+            print(&#34;Unable to parse information&#34;)
+            return
+
+        if self.verbose:
+            print(&#34;Parameters extracted:&#34;)
+        for i, (start_char, end_char, parameter) in enumerate(data_info):
+            c_data = self._extract_array(self.lines, start_char, end_char)
+            self.timestamps[parameter] = c_data
+            if self.verbose:
+                print(i, &#39;-&gt; {}: {}&#39;.format(parameter, len(c_data)))
+
+        return self.timestamps
+
+    @staticmethod
+    def _extract_array(lines, start_char, end_char):
+        &#34;&#34;&#34;Private function to pull a single session from lines.&#34;&#34;&#34;
+        def parse_line(line, dtype=np.float32):
+            return np.array(line.lstrip().split()[1:]).astype(dtype)
+
+        start_index = np.flatnonzero(lines == start_char)
+        stop_index = np.flatnonzero(lines == end_char)
+        if end_char == &#39;END&#39;:
+            # Last timepoint does not have a end_char
+            stop_index = [lines.size]
+
+        data_lines = lines[start_index[0] + 1:stop_index[0]]
+        if not data_lines.size:
+            return np.array([])
+
+        last_line = parse_line(data_lines[-1])
+        arr = np.empty(
+            5 * (len(data_lines) - 1) + len(last_line),
+            dtype=np.float32)
+        for i, line in enumerate(data_lines):
+            numbers = parse_line(line)
+            st = 5 * i
+            arr[st:st + len(numbers)] = numbers
+        return arr
+
+    def time_taken(self):
+        &#34;&#34;&#34;Calculate how long the Session took in mins.&#34;&#34;&#34;
+        start_time = self.get_metadata(&#34;start_time&#34;)[-8:].replace(&#39; &#39;, &#39;0&#39;)
+        end_time = self.get_metadata(&#34;end_time&#34;)[-8:].replace(&#39; &#39;, &#39;0&#39;)
+        fmt = &#39;%H:%M:%S&#39;
+        tdelta = (
+            datetime.strptime(end_time, fmt) -
+            datetime.strptime(start_time, fmt))
+        tdelta_mins = int(tdelta.total_seconds() / 60)
+        return tdelta_mins
+
+    def __repr__(self):
+        &#34;&#34;&#34;
+        Return string representation of the Session.
+
+        Currently includes the date, subject and trial type.
+        &#34;&#34;&#34;
+        return (
+            self.get_metadata(&#34;start_date&#34;) + &#34; &#34; + self.get_subject_type())</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="bvmpc.bv_parse_sessions.Session"><code class="flex name class">
+<span>class <span class="ident">Session</span></span>
+<span>(</span><span>lines, verbose=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>The base class to hold MEDPC behaviour information.</p>
+<p>Initialise the Session with lines from a MEDPC file.</p>
+<p>Then extract this info into native attributes.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>lines</code></strong> :&ensp;<code>List</code> of <code>str</code></dt>
+<dd>The lines in the MedPC file for this session.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code> - <code>Default</code> <code>False</code></dt>
+<dd>Whether to print information while loading.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Session:
+    &#34;&#34;&#34;The base class to hold MEDPC behaviour information.&#34;&#34;&#34;
+
+    def __init__(self, lines, verbose=False):
+        &#34;&#34;&#34;
+        Initialise the Session with lines from a MEDPC file.
+
+        Then extract this info into native attributes.
+
+        Parameters
+        ----------
+        lines : List of str
+            The lines in the MedPC file for this session.
+        verbose: bool - Default False
+            Whether to print information while loading.
+
+        &#34;&#34;&#34;
+        self.lines = lines
+        self.session_info = SessionInfo()
+        self.metadata = {}
+        self.timestamps = {}
+        self.verbose = verbose
+
+        self._extract_metadata()
+        self._extract_session_arrays()
+
+    def get_metadata(self, key=None):
+        &#34;&#34;&#34;
+        Get the metadata for the Session.
+
+        Parameters
+        ----------
+        key : str - Default None
+            Possible Keys: &#34;start_date&#34;, &#34;end_date&#34;, &#34;subject&#34;,
+            &#34;experiment&#34;, &#34;group&#34;, &#34;box&#34;, &#34;start_time&#34;, &#34;end_time&#34;, &#34;name&#34;
+
+        Returns
+        -------
+        str : If key is a valid key.
+        Dict : If key is None, all the metadata.
+
+        &#34;&#34;&#34;
+        if key:
+            return self.metadata[key]
+        return self.metadata
+
+    def get_subject_type(self):
+        &#34;&#34;&#34;Return the subject and session type as a string.&#34;&#34;&#34;
+        subject = self.lines[
+            self.session_info.get_metadata(&#34;subject&#34;)]
+        name = self.lines[
+            self.session_info.get_metadata(&#34;name&#34;)]
+        return &#39;{}, {}&#39;.format(subject, name)
+
+    def get_arrays(self, key=None):
+        &#34;&#34;&#34;
+        Return the timestamps in the session.
+
+        Parameters
+        ----------
+        key : str - Default None
+            The name of the timestamp to get.
+
+        Returns
+        -------
+        np.ndarray: If key is a valid key.
+        [] : If key is not a valid key
+        Dict : If key is None, all the timestamps.
+
+        &#34;&#34;&#34;
+        if key:
+            return self.timestamps.get(key, [])
+        return self.timestamps
+
+    def get_lever_ts(self, include_un=True):
+        &#34;&#34;&#34;
+        Get the timestamps of the lever presses.
+
+        Parameters
+        ----------
+        include_un : bool - Default True
+            Include lever presses that were unnecessary for the reward.
+
+        Returns
+        -------
+        np.ndarray : A numpy array of sorted timestamps.
+
+        &#34;&#34;&#34;
+        levers = [
+            self.get_arrays(&#34;R&#34;),
+            self.get_arrays(&#34;L&#34;)]
+        if include_un:
+            levers.append(self.get_arrays(&#34;Un_R&#34;))
+            levers.append(self.get_arrays(&#34;Un_L&#34;))
+        return np.sort(np.concatenate(levers, axis=None))
+
+    def _extract_metadata(self):
+        &#34;&#34;&#34;Private function to pull metadata out of lines.&#34;&#34;&#34;
+        for i, name in enumerate(self.session_info.get_metadata()):
+            self.metadata[name] = self.lines[i]
+
+    def _extract_session_arrays(self):
+        &#34;&#34;&#34;Private function to pull session arrays out of lines.&#34;&#34;&#34;
+        print(&#34;Extracting arrays for {}&#34;.format(self))
+        data_info = self.session_info.get_session_type_info(
+            self.get_metadata(&#34;name&#34;))
+
+        if data_info is None:
+            print(&#34;Unable to parse information&#34;)
+            return
+
+        if self.verbose:
+            print(&#34;Parameters extracted:&#34;)
+        for i, (start_char, end_char, parameter) in enumerate(data_info):
+            c_data = self._extract_array(self.lines, start_char, end_char)
+            self.timestamps[parameter] = c_data
+            if self.verbose:
+                print(i, &#39;-&gt; {}: {}&#39;.format(parameter, len(c_data)))
+
+        return self.timestamps
+
+    @staticmethod
+    def _extract_array(lines, start_char, end_char):
+        &#34;&#34;&#34;Private function to pull a single session from lines.&#34;&#34;&#34;
+        def parse_line(line, dtype=np.float32):
+            return np.array(line.lstrip().split()[1:]).astype(dtype)
+
+        start_index = np.flatnonzero(lines == start_char)
+        stop_index = np.flatnonzero(lines == end_char)
+        if end_char == &#39;END&#39;:
+            # Last timepoint does not have a end_char
+            stop_index = [lines.size]
+
+        data_lines = lines[start_index[0] + 1:stop_index[0]]
+        if not data_lines.size:
+            return np.array([])
+
+        last_line = parse_line(data_lines[-1])
+        arr = np.empty(
+            5 * (len(data_lines) - 1) + len(last_line),
+            dtype=np.float32)
+        for i, line in enumerate(data_lines):
+            numbers = parse_line(line)
+            st = 5 * i
+            arr[st:st + len(numbers)] = numbers
+        return arr
+
+    def time_taken(self):
+        &#34;&#34;&#34;Calculate how long the Session took in mins.&#34;&#34;&#34;
+        start_time = self.get_metadata(&#34;start_time&#34;)[-8:].replace(&#39; &#39;, &#39;0&#39;)
+        end_time = self.get_metadata(&#34;end_time&#34;)[-8:].replace(&#39; &#39;, &#39;0&#39;)
+        fmt = &#39;%H:%M:%S&#39;
+        tdelta = (
+            datetime.strptime(end_time, fmt) -
+            datetime.strptime(start_time, fmt))
+        tdelta_mins = int(tdelta.total_seconds() / 60)
+        return tdelta_mins
+
+    def __repr__(self):
+        &#34;&#34;&#34;
+        Return string representation of the Session.
+
+        Currently includes the date, subject and trial type.
+        &#34;&#34;&#34;
+        return (
+            self.get_metadata(&#34;start_date&#34;) + &#34; &#34; + self.get_subject_type())</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="bvmpc.bv_parse_sessions.Session.get_arrays"><code class="name flex">
+<span>def <span class="ident">get_arrays</span></span>(<span>self, key=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Return the timestamps in the session.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>key</code></strong> :&ensp;<code>str</code> - <code>Default</code> <code>None</code></dt>
+<dd>The name of the timestamp to get.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>np.ndarray: If key is a valid key.
+[] : If key is not a valid key
+Dict : If key is None, all the timestamps.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_arrays(self, key=None):
+    &#34;&#34;&#34;
+    Return the timestamps in the session.
+
+    Parameters
+    ----------
+    key : str - Default None
+        The name of the timestamp to get.
+
+    Returns
+    -------
+    np.ndarray: If key is a valid key.
+    [] : If key is not a valid key
+    Dict : If key is None, all the timestamps.
+
+    &#34;&#34;&#34;
+    if key:
+        return self.timestamps.get(key, [])
+    return self.timestamps</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_parse_sessions.Session.get_lever_ts"><code class="name flex">
+<span>def <span class="ident">get_lever_ts</span></span>(<span>self, include_un=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get the timestamps of the lever presses.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>include_un</code></strong> :&ensp;<code>bool</code> - <code>Default</code> <code>True</code></dt>
+<dd>Include lever presses that were unnecessary for the reward.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>np.ndarray : A numpy array of sorted timestamps.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_lever_ts(self, include_un=True):
+    &#34;&#34;&#34;
+    Get the timestamps of the lever presses.
+
+    Parameters
+    ----------
+    include_un : bool - Default True
+        Include lever presses that were unnecessary for the reward.
+
+    Returns
+    -------
+    np.ndarray : A numpy array of sorted timestamps.
+
+    &#34;&#34;&#34;
+    levers = [
+        self.get_arrays(&#34;R&#34;),
+        self.get_arrays(&#34;L&#34;)]
+    if include_un:
+        levers.append(self.get_arrays(&#34;Un_R&#34;))
+        levers.append(self.get_arrays(&#34;Un_L&#34;))
+    return np.sort(np.concatenate(levers, axis=None))</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_parse_sessions.Session.get_metadata"><code class="name flex">
+<span>def <span class="ident">get_metadata</span></span>(<span>self, key=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get the metadata for the Session.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>key</code></strong> :&ensp;<code>str</code> - <code>Default</code> <code>None</code></dt>
+<dd>Possible Keys: "start_date", "end_date", "subject",
+"experiment", "group", "box", "start_time", "end_time", "name"</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>str : If key is a valid key.
+Dict : If key is None, all the metadata.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_metadata(self, key=None):
+    &#34;&#34;&#34;
+    Get the metadata for the Session.
+
+    Parameters
+    ----------
+    key : str - Default None
+        Possible Keys: &#34;start_date&#34;, &#34;end_date&#34;, &#34;subject&#34;,
+        &#34;experiment&#34;, &#34;group&#34;, &#34;box&#34;, &#34;start_time&#34;, &#34;end_time&#34;, &#34;name&#34;
+
+    Returns
+    -------
+    str : If key is a valid key.
+    Dict : If key is None, all the metadata.
+
+    &#34;&#34;&#34;
+    if key:
+        return self.metadata[key]
+    return self.metadata</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_parse_sessions.Session.get_subject_type"><code class="name flex">
+<span>def <span class="ident">get_subject_type</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Return the subject and session type as a string.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_subject_type(self):
+    &#34;&#34;&#34;Return the subject and session type as a string.&#34;&#34;&#34;
+    subject = self.lines[
+        self.session_info.get_metadata(&#34;subject&#34;)]
+    name = self.lines[
+        self.session_info.get_metadata(&#34;name&#34;)]
+    return &#39;{}, {}&#39;.format(subject, name)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_parse_sessions.Session.time_taken"><code class="name flex">
+<span>def <span class="ident">time_taken</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Calculate how long the Session took in mins.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def time_taken(self):
+    &#34;&#34;&#34;Calculate how long the Session took in mins.&#34;&#34;&#34;
+    start_time = self.get_metadata(&#34;start_time&#34;)[-8:].replace(&#39; &#39;, &#39;0&#39;)
+    end_time = self.get_metadata(&#34;end_time&#34;)[-8:].replace(&#39; &#39;, &#39;0&#39;)
+    fmt = &#39;%H:%M:%S&#39;
+    tdelta = (
+        datetime.strptime(end_time, fmt) -
+        datetime.strptime(start_time, fmt))
+    tdelta_mins = int(tdelta.total_seconds() / 60)
+    return tdelta_mins</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="bvmpc.bv_parse_sessions.SessionExtractor"><code class="flex name class">
+<span>class <span class="ident">SessionExtractor</span></span>
+<span>(</span><span>file_location, verbose=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Session Extractor pulls info from MEDPC files.</p>
+<p>This info is stored in a list of Session objects.</p>
+<p>Initialise with an extraction location and then extract.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>file_location</code></strong> :&ensp;<code>str</code></dt>
+<dd>Where the MEDPC file is to extract from.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If this is true, print information during loading.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class SessionExtractor:
+    &#34;&#34;&#34;
+    Session Extractor pulls info from MEDPC files.
+
+    This info is stored in a list of Session objects.
+    &#34;&#34;&#34;
+
+    def __init__(self, file_location, verbose=False):
+        &#34;&#34;&#34;
+        Initialise with an extraction location and then extract.
+
+        Parameters
+        ----------
+        file_location : str
+            Where the MEDPC file is to extract from.
+        verbose : bool
+            If this is true, print information during loading.
+
+        &#34;&#34;&#34;
+        self.file_location = file_location
+        self.sessions = []  # sessions extracted are stored in this list
+        self.verbose = verbose
+
+        self.extract_sessions()
+
+    def get_sessions(self):
+        &#34;&#34;&#34;Return the list of Session objects that were extracted.&#34;&#34;&#34;
+        return self.sessions
+
+    def extract_sessions(self):
+        &#34;&#34;&#34;
+        Extract MPC sessions.
+
+        Returns
+        -------
+        A List of sessions, one element for each session.
+
+        &#34;&#34;&#34;
+        with open(self.file_location, &#39;r&#39;) as f:
+            lines = f.read().splitlines()  # reads lines into list
+            lines = np.array(
+                list(filter(None, lines)))  # removes empty space
+
+            s_starts = np.flatnonzero(
+                np.core.defchararray.find(lines, &#34;Start Date:&#34;) != -1)
+            s_ends = np.zeros_like(s_starts)
+            s_ends[:-1] = s_starts[1:]
+            s_ends[-1] = lines.size
+
+            for start, end in zip(s_starts, s_ends):
+                s_data = np.array(lines[start:end])
+                self.sessions.append(Session(s_data, self.verbose))
+            return self.sessions
+
+    def __repr__(self):
+        &#34;&#34;&#34;Session names that will be extracted.&#34;&#34;&#34;
+        out_str = self._get_session_names()
+        return out_str
+
+    def print_session_names(self):
+        &#34;&#34;&#34;Print the session names.&#34;&#34;&#34;
+        print(self._get_session_names())
+
+    def _get_session_names(self):
+        &#34;&#34;&#34;Session names that will be extracted.&#34;&#34;&#34;
+        str_list = []
+        str_list.append(&#34;Sessions in file:\n&#34;)
+        for i, s in enumerate(self.sessions):
+            str_list.append(&#34;{} -&gt; {}\n&#34;.format(i, s.get_name()))
+        return &#34;&#34;.join(str_list)
+
+    def __len__(self):
+        &#34;&#34;&#34;Return Number of sessions in the extractor.&#34;&#34;&#34;
+        return len(self.sessions)
+
+    def __getitem__(self, i):
+        &#34;&#34;&#34;Get the ith indexed session.&#34;&#34;&#34;
+        return self.sessions[i]</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="bvmpc.bv_parse_sessions.SessionExtractor.extract_sessions"><code class="name flex">
+<span>def <span class="ident">extract_sessions</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Extract MPC sessions.</p>
+<h2 id="returns">Returns</h2>
+<p>A List of sessions, one element for each session.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def extract_sessions(self):
+    &#34;&#34;&#34;
+    Extract MPC sessions.
+
+    Returns
+    -------
+    A List of sessions, one element for each session.
+
+    &#34;&#34;&#34;
+    with open(self.file_location, &#39;r&#39;) as f:
+        lines = f.read().splitlines()  # reads lines into list
+        lines = np.array(
+            list(filter(None, lines)))  # removes empty space
+
+        s_starts = np.flatnonzero(
+            np.core.defchararray.find(lines, &#34;Start Date:&#34;) != -1)
+        s_ends = np.zeros_like(s_starts)
+        s_ends[:-1] = s_starts[1:]
+        s_ends[-1] = lines.size
+
+        for start, end in zip(s_starts, s_ends):
+            s_data = np.array(lines[start:end])
+            self.sessions.append(Session(s_data, self.verbose))
+        return self.sessions</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_parse_sessions.SessionExtractor.get_sessions"><code class="name flex">
+<span>def <span class="ident">get_sessions</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Return the list of Session objects that were extracted.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_sessions(self):
+    &#34;&#34;&#34;Return the list of Session objects that were extracted.&#34;&#34;&#34;
+    return self.sessions</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_parse_sessions.SessionExtractor.print_session_names"><code class="name flex">
+<span>def <span class="ident">print_session_names</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Print the session names.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def print_session_names(self):
+    &#34;&#34;&#34;Print the session names.&#34;&#34;&#34;
+    print(self._get_session_names())</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="bvmpc" href="index.html">bvmpc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="bvmpc.bv_parse_sessions.Session" href="#bvmpc.bv_parse_sessions.Session">Session</a></code></h4>
+<ul class="">
+<li><code><a title="bvmpc.bv_parse_sessions.Session.get_arrays" href="#bvmpc.bv_parse_sessions.Session.get_arrays">get_arrays</a></code></li>
+<li><code><a title="bvmpc.bv_parse_sessions.Session.get_lever_ts" href="#bvmpc.bv_parse_sessions.Session.get_lever_ts">get_lever_ts</a></code></li>
+<li><code><a title="bvmpc.bv_parse_sessions.Session.get_metadata" href="#bvmpc.bv_parse_sessions.Session.get_metadata">get_metadata</a></code></li>
+<li><code><a title="bvmpc.bv_parse_sessions.Session.get_subject_type" href="#bvmpc.bv_parse_sessions.Session.get_subject_type">get_subject_type</a></code></li>
+<li><code><a title="bvmpc.bv_parse_sessions.Session.time_taken" href="#bvmpc.bv_parse_sessions.Session.time_taken">time_taken</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="bvmpc.bv_parse_sessions.SessionExtractor" href="#bvmpc.bv_parse_sessions.SessionExtractor">SessionExtractor</a></code></h4>
+<ul class="">
+<li><code><a title="bvmpc.bv_parse_sessions.SessionExtractor.extract_sessions" href="#bvmpc.bv_parse_sessions.SessionExtractor.extract_sessions">extract_sessions</a></code></li>
+<li><code><a title="bvmpc.bv_parse_sessions.SessionExtractor.get_sessions" href="#bvmpc.bv_parse_sessions.SessionExtractor.get_sessions">get_sessions</a></code></li>
+<li><code><a title="bvmpc.bv_parse_sessions.SessionExtractor.print_session_names" href="#bvmpc.bv_parse_sessions.SessionExtractor.print_session_names">print_session_names</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>bvmpc.bv_analyse API documentation</title>
+<meta name="description" content="Plots and analysis for MEDPC behaviour …" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>bvmpc.bv_analyse</code></h1>
+</header>
+<section id="section-intro">
+<p>Plots and analysis for MEDPC behaviour.</p>
+<p>@author: HAMG</p>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python"># -*- coding: utf-8 -*-
+&#34;&#34;&#34;
+Plots and analysis for MEDPC behaviour.
+
+@author: HAMG
+&#34;&#34;&#34;
+
+import matplotlib.pyplot as plt
+import numpy as np
+import math
+import os.path
+
+
+def cumplot(session, out_dir, smooth=False, ax=None):
+    &#34;&#34;&#34;Perform a cumulative plot for a Session.&#34;&#34;&#34;
+    date = session.get_metadata(&#39;start_date&#39;)[-8:].replace(&#39;/&#39;, &#39;_&#39;)
+    timestamps = session.get_arrays()
+    lever_ts = session.get_lever_ts()
+    session_type = session.get_metadata(&#39;name&#39;)
+    subject = session.get_metadata(&#39;subject&#39;)
+
+    # You have the array sorted, no need to histogram
+    reward_times = timestamps[&#34;Nosepoke&#34;]
+    fig, ax = plt.subplots()
+    ax.set_title(&#39;Cumulative Lever Presses\n&#39;, fontsize=15)
+    if session_type == &#39;MSN: 5a_FixedRatio_p&#39;:
+        ratio = int(timestamps[&#34;Experiment Variables&#34;][3])
+        plt.suptitle(&#39;\n(Subject {}, {} {}, {})&#39;.format(
+            subject[9:], session_type[5:-2], ratio, date),
+            fontsize=9, y=.98, x=.51)
+    elif session_type == &#39;MSN: 5b_FixedInterval_p&#39;:
+        interval = int(timestamps[&#34;Experiment Variables&#34;][3] / 100)
+        plt.suptitle(&#39;\n(Subject {}, {} {}s, {})&#39;.format(
+            subject[9:], session_type[5:-2], interval, date),
+            fontsize=9, y=.98, x=.51)
+    else:
+        plt.suptitle(&#39;\n(Subject {}, {}, {})&#39;.format(
+            subject[9:], session_type[5:-2], date),
+            fontsize=9, y=.98, x=.51)
+    ax.set_xlabel(&#39;Time (s)&#39;)
+    ax.set_ylabel(&#39;Cumulative Lever Presses&#39;)
+
+    if smooth:
+        values, base = np.histogram(lever_ts, bins=len(lever_ts) * 4)
+        cumulative = np.cumsum(values)
+        plot_arr_x = np.append(base[:-1], base[-1] + 50)
+        plot_arr_y = np.append(cumulative, cumulative[-1])
+        ax.plot(plot_arr_x, plot_arr_y, c=&#39;blue&#39;)
+        bins = base[:-1]
+
+    else:
+        lever_times = np.insert(lever_ts, 0, 0, axis=0)
+        ax.step(lever_times, np.arange(
+            lever_times.size), c=&#39;blue&#39;, where=&#34;post&#34;)
+        ax.plot(
+            [lever_times[-1], lever_times[-1] + 40],
+            [lever_times.size - 1, lever_times.size - 1],
+            c=&#39;blue&#39;, label=&#39;Lever Response&#39;)
+        bins = lever_times
+
+    reward_y = np.digitize(reward_times, bins) - 1
+
+    if smooth:
+        reward_y = cumulative[reward_y]
+
+    out_name = (subject[9:].zfill(3) + &#34;_CumulativeHist_&#34; +
+                session_type[5:-2] + &#34;_&#34; + date + &#34;.png&#34;)
+    out_name = os.path.join(out_dir, out_name)
+    print(&#34;Saved figure to {}&#34;.format(out_name))
+    plt.scatter(reward_times, reward_y, marker=&#34;x&#34;, c=&#34;r&#34;,
+                label=&#39;Reward Collected&#39;)
+    # Text Display on Graph
+    ax.text(0.55, 0.15, &#39;Total # of Lever Press: {}\nTotal # of Rewards: {}&#39;
+            .format(len(lever_ts), len(reward_times)), transform=ax.transAxes)
+
+    ax.legend()
+    ax.set_xlim(0, 30 * 60)
+    fig.savefig(out_name, dpi=400)
+    plt.close()
+
+
+def IRT(session, out_dir, showIRT=False, ax=None):
+    &#34;&#34;&#34;Perform an inter-response time plot for a Session.&#34;&#34;&#34;
+    date = session.get_metadata(&#39;start_date&#39;)[-8:].replace(&#39;/&#39;, &#39;_&#39;)
+    time_taken = session.time_taken()
+    timestamps = session.get_arrays()
+    good_lever_ts = session.get_lever_ts(False)
+    session_type = session.get_metadata(&#39;name&#39;)
+    subject = session.get_metadata(&#39;subject&#39;)
+
+    rewards_i = timestamps[&#34;Reward&#34;]
+    nosepokes_i = timestamps[&#34;Nosepoke&#34;]
+    # Session ended w/o reward collection
+    if len(rewards_i) &gt; len(nosepokes_i):
+        # Assumes reward collected at end of session
+        nosepokes_i = np.append(
+            nosepokes_i, [timestamps[&#34;Experiment Variables&#34;][0] * 60])
+    # Only consider after the first lever press
+    reward_idxs = np.nonzero(rewards_i &gt;= good_lever_ts[0])
+    rewards = rewards_i[reward_idxs]
+    nosepokes = nosepokes_i[reward_idxs]
+    # b assigns ascending numbers to rewards within lever presses
+    b = np.digitize(rewards, bins=good_lever_ts)
+    _, a = np.unique(b, return_index=True)  # returns index for good rewards
+    good_nosepokes = nosepokes[a]  # nosepoke ts for pressing levers
+    if session_type == &#39;MSN: 5a_FixedRatio_p&#39;:
+        ratio = int(timestamps[&#34;Experiment Variables&#34;][3])
+        good_lever_ts = good_lever_ts[::ratio]
+    if len(good_lever_ts[1:]) &gt; len(good_nosepokes[:-1]):
+        IRT = good_lever_ts[1:] - good_nosepokes[:]  # Ended sess w lever press
+    else:
+        # Ended session w nosepoke
+        IRT = good_lever_ts[1:] - good_nosepokes[:-1]
+    fig, ax = plt.subplots()
+    hist_count, hist_bins, _ = ax.hist(
+        IRT, bins=math.ceil(np.amax(IRT)),
+        range=(0, math.ceil(np.amax(IRT))))
+
+    # Plotting of IRT Graphs
+    ax.set_title(&#39;Inter-Response Time\n&#39;, fontsize=15)
+    if session_type == &#39;MSN: 5a_FixedRatio_p&#39;:
+        fig.suptitle(&#39;\n(Subject {}, {} {}, {})&#39;.format(
+            subject[9:], session_type[5:-2], ratio, date),
+            fontsize=9, y=.98, x=.51)
+    elif session_type == &#39;MSN: 5b_FixedInterval_p&#39;:
+        interval = int(timestamps[&#34;Experiment Variables&#34;][3] / 100)
+        fig.suptitle(&#39;\n(Subject {}, {} {}s, {})&#39;.format(
+            subject[9:], session_type[5:-2], interval, date),
+            fontsize=9, y=.98, x=.51)
+    else:
+        fig.suptitle(&#39;\n(Subject {}, {}, {})&#39;.format(
+            subject[9:], session_type[5:-2], date),
+            fontsize=9, y=.98, x=.51)
+    ax.set_xlabel(&#39;IRT (s)&#39;)
+    ax.set_ylabel(&#39;Counts&#39;)
+    maxidx = np.argmax(np.array(hist_count))
+    maxval = (hist_bins[maxidx + 1] - hist_bins[maxidx]) / \
+        2 + hist_bins[maxidx]
+
+    # Text Display on Graph
+    ax.text(0.55, 0.8, &#39;Session Duration: {} mins\nMost Freq. IRT Bin: {} s&#39;
+            .format(time_taken, maxval), transform=ax.transAxes)
+
+    out_name = (subject[9:].zfill(3) + &#34;_IRT_Hist_&#34; +
+                session_type[5:-2] + &#34;_&#34; + date + &#34;.png&#34;)
+    print(&#34;Saved figure to {}&#34;.format(
+        os.path.join(out_dir, out_name)))
+    fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+    if showIRT:
+        show_IRT_details(IRT, maxidx, hist_bins)
+#    plt.show()
+    plt.close()
+
+
+def show_IRT_details(IRT, maxidx, hist_bins):
+    &#34;&#34;&#34;Display further information for an IRT.&#34;&#34;&#34;
+    plt.show()
+    print(&#39;Most Freq. IRT Bin: {} s&#39;.format((hist_bins[maxidx + 1] -
+                                             hist_bins[maxidx]) / 2 + hist_bins[maxidx]))
+    print(
+        &#39;Median Inter-Response Time (IRT): {0:.2f} s&#39;.format(np.median(IRT)))
+    print(&#39;Min IRT: {0:.2f} s&#39;.format(np.amin(IRT)))
+    print(&#39;Max IRT: {0:.2f} s&#39;.format(np.amax(IRT)))
+    print(&#39;IRTs: &#39;, np.round(IRT, decimals=2))</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="bvmpc.bv_analyse.IRT"><code class="name flex">
+<span>def <span class="ident">IRT</span></span>(<span>session, out_dir, showIRT=False, ax=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Perform an inter-response time plot for a Session.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def IRT(session, out_dir, showIRT=False, ax=None):
+    &#34;&#34;&#34;Perform an inter-response time plot for a Session.&#34;&#34;&#34;
+    date = session.get_metadata(&#39;start_date&#39;)[-8:].replace(&#39;/&#39;, &#39;_&#39;)
+    time_taken = session.time_taken()
+    timestamps = session.get_arrays()
+    good_lever_ts = session.get_lever_ts(False)
+    session_type = session.get_metadata(&#39;name&#39;)
+    subject = session.get_metadata(&#39;subject&#39;)
+
+    rewards_i = timestamps[&#34;Reward&#34;]
+    nosepokes_i = timestamps[&#34;Nosepoke&#34;]
+    # Session ended w/o reward collection
+    if len(rewards_i) &gt; len(nosepokes_i):
+        # Assumes reward collected at end of session
+        nosepokes_i = np.append(
+            nosepokes_i, [timestamps[&#34;Experiment Variables&#34;][0] * 60])
+    # Only consider after the first lever press
+    reward_idxs = np.nonzero(rewards_i &gt;= good_lever_ts[0])
+    rewards = rewards_i[reward_idxs]
+    nosepokes = nosepokes_i[reward_idxs]
+    # b assigns ascending numbers to rewards within lever presses
+    b = np.digitize(rewards, bins=good_lever_ts)
+    _, a = np.unique(b, return_index=True)  # returns index for good rewards
+    good_nosepokes = nosepokes[a]  # nosepoke ts for pressing levers
+    if session_type == &#39;MSN: 5a_FixedRatio_p&#39;:
+        ratio = int(timestamps[&#34;Experiment Variables&#34;][3])
+        good_lever_ts = good_lever_ts[::ratio]
+    if len(good_lever_ts[1:]) &gt; len(good_nosepokes[:-1]):
+        IRT = good_lever_ts[1:] - good_nosepokes[:]  # Ended sess w lever press
+    else:
+        # Ended session w nosepoke
+        IRT = good_lever_ts[1:] - good_nosepokes[:-1]
+    fig, ax = plt.subplots()
+    hist_count, hist_bins, _ = ax.hist(
+        IRT, bins=math.ceil(np.amax(IRT)),
+        range=(0, math.ceil(np.amax(IRT))))
+
+    # Plotting of IRT Graphs
+    ax.set_title(&#39;Inter-Response Time\n&#39;, fontsize=15)
+    if session_type == &#39;MSN: 5a_FixedRatio_p&#39;:
+        fig.suptitle(&#39;\n(Subject {}, {} {}, {})&#39;.format(
+            subject[9:], session_type[5:-2], ratio, date),
+            fontsize=9, y=.98, x=.51)
+    elif session_type == &#39;MSN: 5b_FixedInterval_p&#39;:
+        interval = int(timestamps[&#34;Experiment Variables&#34;][3] / 100)
+        fig.suptitle(&#39;\n(Subject {}, {} {}s, {})&#39;.format(
+            subject[9:], session_type[5:-2], interval, date),
+            fontsize=9, y=.98, x=.51)
+    else:
+        fig.suptitle(&#39;\n(Subject {}, {}, {})&#39;.format(
+            subject[9:], session_type[5:-2], date),
+            fontsize=9, y=.98, x=.51)
+    ax.set_xlabel(&#39;IRT (s)&#39;)
+    ax.set_ylabel(&#39;Counts&#39;)
+    maxidx = np.argmax(np.array(hist_count))
+    maxval = (hist_bins[maxidx + 1] - hist_bins[maxidx]) / \
+        2 + hist_bins[maxidx]
+
+    # Text Display on Graph
+    ax.text(0.55, 0.8, &#39;Session Duration: {} mins\nMost Freq. IRT Bin: {} s&#39;
+            .format(time_taken, maxval), transform=ax.transAxes)
+
+    out_name = (subject[9:].zfill(3) + &#34;_IRT_Hist_&#34; +
+                session_type[5:-2] + &#34;_&#34; + date + &#34;.png&#34;)
+    print(&#34;Saved figure to {}&#34;.format(
+        os.path.join(out_dir, out_name)))
+    fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+    if showIRT:
+        show_IRT_details(IRT, maxidx, hist_bins)
+#    plt.show()
+    plt.close()</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_analyse.cumplot"><code class="name flex">
+<span>def <span class="ident">cumplot</span></span>(<span>session, out_dir, smooth=False, ax=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Perform a cumulative plot for a Session.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def cumplot(session, out_dir, smooth=False, ax=None):
+    &#34;&#34;&#34;Perform a cumulative plot for a Session.&#34;&#34;&#34;
+    date = session.get_metadata(&#39;start_date&#39;)[-8:].replace(&#39;/&#39;, &#39;_&#39;)
+    timestamps = session.get_arrays()
+    lever_ts = session.get_lever_ts()
+    session_type = session.get_metadata(&#39;name&#39;)
+    subject = session.get_metadata(&#39;subject&#39;)
+
+    # You have the array sorted, no need to histogram
+    reward_times = timestamps[&#34;Nosepoke&#34;]
+    fig, ax = plt.subplots()
+    ax.set_title(&#39;Cumulative Lever Presses\n&#39;, fontsize=15)
+    if session_type == &#39;MSN: 5a_FixedRatio_p&#39;:
+        ratio = int(timestamps[&#34;Experiment Variables&#34;][3])
+        plt.suptitle(&#39;\n(Subject {}, {} {}, {})&#39;.format(
+            subject[9:], session_type[5:-2], ratio, date),
+            fontsize=9, y=.98, x=.51)
+    elif session_type == &#39;MSN: 5b_FixedInterval_p&#39;:
+        interval = int(timestamps[&#34;Experiment Variables&#34;][3] / 100)
+        plt.suptitle(&#39;\n(Subject {}, {} {}s, {})&#39;.format(
+            subject[9:], session_type[5:-2], interval, date),
+            fontsize=9, y=.98, x=.51)
+    else:
+        plt.suptitle(&#39;\n(Subject {}, {}, {})&#39;.format(
+            subject[9:], session_type[5:-2], date),
+            fontsize=9, y=.98, x=.51)
+    ax.set_xlabel(&#39;Time (s)&#39;)
+    ax.set_ylabel(&#39;Cumulative Lever Presses&#39;)
+
+    if smooth:
+        values, base = np.histogram(lever_ts, bins=len(lever_ts) * 4)
+        cumulative = np.cumsum(values)
+        plot_arr_x = np.append(base[:-1], base[-1] + 50)
+        plot_arr_y = np.append(cumulative, cumulative[-1])
+        ax.plot(plot_arr_x, plot_arr_y, c=&#39;blue&#39;)
+        bins = base[:-1]
+
+    else:
+        lever_times = np.insert(lever_ts, 0, 0, axis=0)
+        ax.step(lever_times, np.arange(
+            lever_times.size), c=&#39;blue&#39;, where=&#34;post&#34;)
+        ax.plot(
+            [lever_times[-1], lever_times[-1] + 40],
+            [lever_times.size - 1, lever_times.size - 1],
+            c=&#39;blue&#39;, label=&#39;Lever Response&#39;)
+        bins = lever_times
+
+    reward_y = np.digitize(reward_times, bins) - 1
+
+    if smooth:
+        reward_y = cumulative[reward_y]
+
+    out_name = (subject[9:].zfill(3) + &#34;_CumulativeHist_&#34; +
+                session_type[5:-2] + &#34;_&#34; + date + &#34;.png&#34;)
+    out_name = os.path.join(out_dir, out_name)
+    print(&#34;Saved figure to {}&#34;.format(out_name))
+    plt.scatter(reward_times, reward_y, marker=&#34;x&#34;, c=&#34;r&#34;,
+                label=&#39;Reward Collected&#39;)
+    # Text Display on Graph
+    ax.text(0.55, 0.15, &#39;Total # of Lever Press: {}\nTotal # of Rewards: {}&#39;
+            .format(len(lever_ts), len(reward_times)), transform=ax.transAxes)
+
+    ax.legend()
+    ax.set_xlim(0, 30 * 60)
+    fig.savefig(out_name, dpi=400)
+    plt.close()</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_analyse.show_IRT_details"><code class="name flex">
+<span>def <span class="ident">show_IRT_details</span></span>(<span>IRT, maxidx, hist_bins)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Display further information for an IRT.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def show_IRT_details(IRT, maxidx, hist_bins):
+    &#34;&#34;&#34;Display further information for an IRT.&#34;&#34;&#34;
+    plt.show()
+    print(&#39;Most Freq. IRT Bin: {} s&#39;.format((hist_bins[maxidx + 1] -
+                                             hist_bins[maxidx]) / 2 + hist_bins[maxidx]))
+    print(
+        &#39;Median Inter-Response Time (IRT): {0:.2f} s&#39;.format(np.median(IRT)))
+    print(&#39;Min IRT: {0:.2f} s&#39;.format(np.amin(IRT)))
+    print(&#39;Max IRT: {0:.2f} s&#39;.format(np.amax(IRT)))
+    print(&#39;IRTs: &#39;, np.round(IRT, decimals=2))</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="bvmpc" href="index.html">bvmpc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="bvmpc.bv_analyse.IRT" href="#bvmpc.bv_analyse.IRT">IRT</a></code></li>
+<li><code><a title="bvmpc.bv_analyse.cumplot" href="#bvmpc.bv_analyse.cumplot">cumplot</a></code></li>
+<li><code><a title="bvmpc.bv_analyse.show_IRT_details" href="#bvmpc.bv_analyse.show_IRT_details">show_IRT_details</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
