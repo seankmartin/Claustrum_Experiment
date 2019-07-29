@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jul 17 18:19:11 2019
+Plots and analysis for MEDPC behaviour.
 
 @author: HAMG
 """
@@ -12,12 +12,12 @@ import os.path
 
 
 def cumplot(session, out_dir, smooth=False, ax=None):
+    """Perform a cumulative plot for a Session."""
     date = session.get_metadata('start_date')[-8:].replace('/', '_')
-    timestamps = session.get_timestamps()
+    timestamps = session.get_arrays()
     lever_ts = session.get_lever_ts()
     session_type = session.get_metadata('name')
     subject = session.get_metadata('subject')
-
 
     # You have the array sorted, no need to histogram
     reward_times = timestamps["Nosepoke"]
@@ -35,7 +35,7 @@ def cumplot(session, out_dir, smooth=False, ax=None):
             fontsize=9, y=.98, x=.51)
     else:
         plt.suptitle('\n(Subject {}, {}, {})'.format(
-           subject[9:], session_type[5:-2], date),
+            subject[9:], session_type[5:-2], date),
             fontsize=9, y=.98, x=.51)
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('Cumulative Lever Presses')
@@ -64,14 +64,14 @@ def cumplot(session, out_dir, smooth=False, ax=None):
         reward_y = cumulative[reward_y]
 
     out_name = (subject[9:].zfill(3) + "_CumulativeHist_" +
-                session_type[5:-2] + "_" + date + ".png")   
+                session_type[5:-2] + "_" + date + ".png")
     out_name = os.path.join(out_dir, out_name)
     print("Saved figure to {}".format(out_name))
     plt.scatter(reward_times, reward_y, marker="x", c="r",
                 label='Reward Collected')
     # Text Display on Graph
     ax.text(0.55, 0.15, 'Total # of Lever Press: {}\nTotal # of Rewards: {}'
-        .format(len(lever_ts),len(reward_times)), transform=ax.transAxes)
+            .format(len(lever_ts), len(reward_times)), transform=ax.transAxes)
 
     ax.legend()
     ax.set_xlim(0, 30 * 60)
@@ -80,13 +80,14 @@ def cumplot(session, out_dir, smooth=False, ax=None):
 
 
 def IRT(session, out_dir, showIRT=False, ax=None):
+    """Perform an inter-response time plot for a Session."""
     date = session.get_metadata('start_date')[-8:].replace('/', '_')
     time_taken = session.time_taken()
-    timestamps = session.get_timestamps()
+    timestamps = session.get_arrays()
     good_lever_ts = session.get_lever_ts(False)
     session_type = session.get_metadata('name')
     subject = session.get_metadata('subject')
-    
+
     rewards_i = timestamps["Reward"]
     nosepokes_i = timestamps["Nosepoke"]
     # Session ended w/o reward collection
@@ -108,7 +109,8 @@ def IRT(session, out_dir, showIRT=False, ax=None):
     if len(good_lever_ts[1:]) > len(good_nosepokes[:-1]):
         IRT = good_lever_ts[1:] - good_nosepokes[:]  # Ended sess w lever press
     else:
-        IRT = good_lever_ts[1:] - good_nosepokes[:-1]  # Ended session w nosepoke
+        # Ended session w nosepoke
+        IRT = good_lever_ts[1:] - good_nosepokes[:-1]
     fig, ax = plt.subplots()
     hist_count, hist_bins, _ = ax.hist(
         IRT, bins=math.ceil(np.amax(IRT)),
@@ -151,10 +153,12 @@ def IRT(session, out_dir, showIRT=False, ax=None):
 
 
 def show_IRT_details(IRT, maxidx, hist_bins):
+    """Display further information for an IRT."""
     plt.show()
     print('Most Freq. IRT Bin: {} s'.format((hist_bins[maxidx + 1] -
                                              hist_bins[maxidx]) / 2 + hist_bins[maxidx]))
-    print('Median Inter-Response Time (IRT): {0:.2f} s'.format(np.median(IRT)))
+    print(
+        'Median Inter-Response Time (IRT): {0:.2f} s'.format(np.median(IRT)))
     print('Min IRT: {0:.2f} s'.format(np.amin(IRT)))
     print('Max IRT: {0:.2f} s'.format(np.amax(IRT)))
     print('IRTs: ', np.round(IRT, decimals=2))

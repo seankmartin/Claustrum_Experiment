@@ -1,6 +1,6 @@
 @ECHO OFF
 
-set ROOT=C:\Users\smartin5\Repos\neuro-tools\ControlScripts\
+set ROOT=C:\Users\smartin5\Repos\neuro-tools\
 set LOCA=%ROOT%\ClaustrumExperiment\MEDPC
 set SCRIPTLOC=%ROOT%\parse_mpc.py
 
