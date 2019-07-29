@@ -78,9 +78,14 @@ class Session:
         self._extract_metadata()
         self._extract_session_arrays()
 
-    def get_metadata(self, name=None):
-        if name:
-            return self.metadata[name]
+    def get_metadata(self, key=None):
+        """
+        Possible Keys: "start_date", "end_date", "subject",
+            "experiment", "group", "box", "start_time", "end_time", "name"
+            
+        """
+        if key:
+            return self.metadata[key]
         return self.metadata
 
     def get_name(self):

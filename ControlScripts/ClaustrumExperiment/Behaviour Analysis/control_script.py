@@ -21,31 +21,28 @@ def main(filename):
 
     for s in s_extractor:  # Batch run for file
         time_taken = s.time_taken()
-        c_session = s.get_lines()
         timestamps = s.get_timestamps()
-        lever_ts = s.get_lever_ts()
-        good_lever_ts = s.get_lever_ts(False)
-
+        
         print("Session duration {} mins".format(time_taken))
         if len(timestamps.keys()) == 0:
             print('Not ready for analysis!')
             continue
 
 #       Will need to refactor these
-        bv_an.IRT(c_session, timestamps, good_lever_ts,
-               time_taken, out_dir, False)
-        bv_an.cumplot(c_session, timestamps, lever_ts, out_dir, False)
+        bv_an.IRT(s, out_dir, False)
+        bv_an.cumplot(s, out_dir, False)
+#        bv_an.cumplot(s, out_dir, False, ax)  #plot multiple sessiosn
 
 
 if __name__ == "__main__":
-    # Batch processing of sessions in folder
-    in_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\\"
-    in_files = os.listdir(in_dir)
-    for file in in_files:
-        filename = in_dir + file
-        if os.path.isfile(filename):
-            main(filename)
+#    # Batch processing of sessions in folder
+#    in_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\\"
+#    in_files = os.listdir(in_dir)
+#    for file in in_files:
+#        filename = in_dir + file
+#        if os.path.isfile(filename):
+#            main(filename)
 #    # Running single session files
-#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-25"
+    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-07-28"
 #    filename = r"G:\test"
-#    main(filename)
+    main(filename)
