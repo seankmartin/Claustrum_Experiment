@@ -4,4 +4,4 @@
 
 ## Current Contents
 
-1. 7 MEDPC procedures
+1. A set of tutorial scripts to understand MEDPC.
