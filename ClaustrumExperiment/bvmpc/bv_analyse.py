@@ -43,19 +43,24 @@ def cumplot(session, out_dir, smooth=False, ax=None):
     if smooth:
         values, base = np.histogram(lever_ts, bins=len(lever_ts) * 4)
         cumulative = np.cumsum(values)
-        plot_arr_x = np.append(base[:-1], base[-1] + 50)
-        plot_arr_y = np.append(cumulative, cumulative[-1])
+        plot_arr_x = base[:-1]
+        plot_arr_y = cumulative
+        if reward_times[-1] > base[-1]:
+            plot_arr_x = np.append(plot_arr_x, reward_times[-1])
+            plot_arr_y = np.append(plot_arr_y, cumulative[-1])
+
         ax.plot(plot_arr_x, plot_arr_y, c='blue')
         bins = base[:-1]
 
     else:
         lever_times = np.insert(lever_ts, 0, 0, axis=0)
         ax.step(lever_times, np.arange(
-            lever_times.size), c='blue', where="post")
-        ax.plot(
-            [lever_times[-1], lever_times[-1] + 40],
-            [lever_times.size - 1, lever_times.size - 1],
-            c='blue', label='Lever Response')
+            lever_times.size), c='blue', where="post", label='Lever Response')
+        if reward_times[-1] > lever_times[-1]:
+            ax.plot(
+                [lever_times[-1], reward_times[-1] + 2],
+                [lever_times.size - 1, lever_times.size - 1],
+                c='blue')
         bins = lever_times
 
     reward_y = np.digitize(reward_times, bins) - 1
