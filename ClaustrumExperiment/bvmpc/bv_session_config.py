@@ -13,14 +13,26 @@ class SessionInfo:
             "experiment", "group",
             "box", "start_time", "end_time", "name"]
 
+        self.metadata_start_idx = [
+            len("Start Date: "),
+            len("End Date: "),
+            len("Subject: "),
+            len("Experiment: "),
+            len("Group: "),
+            len("Box: "),
+            len("Start Time: "),
+            len("End Time: "),
+            len("MSN: ")
+        ]
+
         self.session_info_dict = {}
 
         # Empty keys that should probably be updated at some stage
-        self.session_info_dict['MSN: 2_MagazineHabituation_p'] = None
-        self.session_info_dict['MSN: 3_LeverHabituation_p'] = None
-        self.session_info_dict['MSN: DNMTS'] = None
+        self.session_info_dict['2_MagazineHabituation_p'] = None
+        self.session_info_dict['3_LeverHabituation_p'] = None
+        self.session_info_dict['DNMTS'] = None
 
-        self.session_info_dict['MSN: 4_LeverTraining_p'] = (
+        self.session_info_dict['4_LeverTraining_p'] = (
             np.array([
                 ['A:', 'B:', 'Experiment Variables'],
                 ['D:', 'E:', 'Reward'],
@@ -32,7 +44,7 @@ class SessionInfo:
                 ['R:', 'END', 'R']
             ]))
 
-        self.session_info_dict['MSN: 5a_FixedRatio_p'] = (
+        self.session_info_dict['5a_FixedRatio_p'] = (
             np.array([
                 ['A:', 'B:', 'Experiment Variables'],
                 ['D:', 'E:', 'Reward'],
@@ -43,7 +55,7 @@ class SessionInfo:
                 ['R:', 'END', 'R']
             ]))
 
-        self.session_info_dict['MSN: 5b_FixedInterval_p'] = (
+        self.session_info_dict['5b_FixedInterval_p'] = (
             np.array([
                 ['A:', 'B:', 'Experiment Variables'],
                 ['D:', 'E:', 'Reward'],
@@ -53,7 +65,7 @@ class SessionInfo:
                 ['R:', 'END', 'L']
             ]))
 
-        self.session_info_dict['MSN: 6_RandomisedBlocks_p'] = (
+        self.session_info_dict['6_RandomisedBlocks_p'] = (
             np.array([
                 ['A:', 'B:', 'Experiment Variables'],
                 ['D:', 'E:', 'Reward'],
@@ -109,3 +121,21 @@ class SessionInfo:
         if key:
             return self.metadata_info.index(key)
         return self.metadata_info
+
+    def get_metadata_start(self, idx=None):
+        """
+        Return the start index of the metadata information.
+
+        Parameters
+        ----------
+        idx : int
+            The index for which to return the start point.
+
+        Returns
+        -------
+        int : The start index for the information
+        List : If idx is None, all the start indices.
+        """
+        if idx is not None:
+            return self.metadata_start_idx[idx]
+        return self.metadata_start_idx

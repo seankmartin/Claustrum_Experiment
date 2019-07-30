@@ -4,10 +4,11 @@ This module handles reading Session data from a MedPC file.
 Written by Sean Martin and Gao Xiang Ham
 """
 
+import os
 import numpy as np
-# import h5py
+import h5py
 from datetime import datetime
-from bvmpc.bv_session_config import SessionInfo
+from bv_session_config import SessionInfo
 
 
 class SessionExtractor:
@@ -61,7 +62,8 @@ class SessionExtractor:
 
             for start, end in zip(s_starts, s_ends):
                 s_data = np.array(lines[start:end])
-                self.sessions.append(Session(s_data, self.verbose))
+                self.sessions.append(
+                    Session(lines=s_data, verbose=self.verbose))
             return self.sessions
 
     def __repr__(self):
@@ -78,7 +80,7 @@ class SessionExtractor:
         str_list = []
         str_list.append("Sessions in file:\n")
         for i, s in enumerate(self.sessions):
-            str_list.append("{} -> {}\n".format(i, s.get_name()))
+            str_list.append("{} -> {}\n".format(i, s.get_subject_type()))
         return "".join(str_list)
 
     def __len__(self):
@@ -93,7 +95,7 @@ class SessionExtractor:
 class Session:
     """The base class to hold MEDPC behaviour information."""
 
-    def __init__(self, lines, verbose=False):
+    def __init__(self, h5_file=None, lines=None, verbose=False):
         """
         Initialise the Session with lines from a MEDPC file.
 
@@ -107,14 +109,42 @@ class Session:
             Whether to print information while loading.
 
         """
-        self.lines = lines
         self.session_info = SessionInfo()
         self.metadata = {}
-        self.timestamps = {}
+        self.info_arrays = {}
         self.verbose = verbose
+        self.out_dir = None
 
-        self._extract_metadata()
-        self._extract_session_arrays()
+        a = lines is None
+        b = h5_file is None
+        if (a and b or (not a and not b)):
+            print("Error: Do not pass lines and h5_file to Session")
+            return
+
+        if lines is not None:
+            self.lines = lines
+            self._extract_metadata()
+            self._extract_session_arrays()
+
+        elif h5_file is not None:
+            self.h5_file = h5_file
+            self._extract_h5_info()
+
+        else:
+            print("Error: Unknown situation in Session init")
+            exit(-1)
+
+    def save_to_h5(self, out_dir, name=None):
+        """Save information to a h5 file"""
+        location = name
+        if name == None:
+            location = "{}_{}_{}_{}.h5".format(
+                self.get_metadata("subject"),
+                self.get_metadata("start_date").replace("/", "-"),
+                self.get_metadata("start_time")[:-3].replace(":", "-"),
+                self.get_metadata("name"))
+        self.h5_file = os.path.join(out_dir, location)
+        self._save_h5_info()
 
     def get_metadata(self, key=None):
         """
@@ -138,31 +168,29 @@ class Session:
 
     def get_subject_type(self):
         """Return the subject and session type as a string."""
-        subject = self.lines[
-            self.session_info.get_metadata("subject")]
-        name = self.lines[
-            self.session_info.get_metadata("name")]
-        return '{}, {}'.format(subject, name)
+        subject = self.get_metadata("subject")
+        name = self.get_metadata("name")
+        return 'Subject: {}, Trial Type {}'.format(subject, name)
 
     def get_arrays(self, key=None):
         """
-        Return the timestamps in the session.
+        Return the info arrays in the session.
 
         Parameters
         ----------
         key : str - Default None
-            The name of the timestamp to get.
+            The name of the info array to get.
 
         Returns
         -------
         np.ndarray: If key is a valid key.
         [] : If key is not a valid key
-        Dict : If key is None, all the timestamps.
+        Dict : If key is None, all the info arrays.
 
         """
         if key:
-            return self.timestamps.get(key, [])
-        return self.timestamps
+            return self.info_arrays.get(key, [])
+        return self.info_arrays
 
     def get_lever_ts(self, include_un=True):
         """
@@ -186,10 +214,41 @@ class Session:
             levers.append(self.get_arrays("Un_L"))
         return np.sort(np.concatenate(levers, axis=None))
 
+    def time_taken(self):
+        """Calculate how long the Session took in mins."""
+        start_time = self.get_metadata("start_time")[-8:].replace(' ', '0')
+        end_time = self.get_metadata("end_time")[-8:].replace(' ', '0')
+        fmt = '%H:%M:%S'
+        tdelta = (
+            datetime.strptime(end_time, fmt) -
+            datetime.strptime(start_time, fmt))
+        tdelta_mins = int(tdelta.total_seconds() / 60)
+        return tdelta_mins
+
+    def _save_h5_info(self):
+        """Private function to save info to h5 file"""
+        with h5py.File(self.h5_file, "w", libver="latest") as f:
+            for key, val in self.get_metadata().items():
+                print("I'm in here! {} {}".format(key, val))
+                f.attrs[key] = val
+            for key, val in f.attrs.items():
+                print(key, val)
+            for key, val in self.get_arrays().items():
+                f.create_dataset(key, data=val, dtype=np.float32)
+
+    def _extract_h5_info(self):
+        """Private function to pull info from h5 file"""
+        with h5py.File(self.h5_file, "r", libver="latest") as f:
+            for key, val in f.attrs.items():
+                self.metadata[key] = val
+            for key in f.keys():
+                self.info_arrays[key] = f[key][()]
+
     def _extract_metadata(self):
         """Private function to pull metadata out of lines."""
         for i, name in enumerate(self.session_info.get_metadata()):
-            self.metadata[name] = self.lines[i]
+            start = self.session_info.get_metadata_start(i)
+            self.metadata[name] = self.lines[i][start:]
 
     def _extract_session_arrays(self):
         """Private function to pull session arrays out of lines."""
@@ -205,11 +264,11 @@ class Session:
             print("Parameters extracted:")
         for i, (start_char, end_char, parameter) in enumerate(data_info):
             c_data = self._extract_array(self.lines, start_char, end_char)
-            self.timestamps[parameter] = c_data
+            self.info_arrays[parameter] = c_data
             if self.verbose:
                 print(i, '-> {}: {}'.format(parameter, len(c_data)))
 
-        return self.timestamps
+        return self.info_arrays
 
     @staticmethod
     def _extract_array(lines, start_char, end_char):
@@ -236,17 +295,6 @@ class Session:
             st = 5 * i
             arr[st:st + len(numbers)] = numbers
         return arr
-
-    def time_taken(self):
-        """Calculate how long the Session took in mins."""
-        start_time = self.get_metadata("start_time")[-8:].replace(' ', '0')
-        end_time = self.get_metadata("end_time")[-8:].replace(' ', '0')
-        fmt = '%H:%M:%S'
-        tdelta = (
-            datetime.strptime(end_time, fmt) -
-            datetime.strptime(start_time, fmt))
-        tdelta_mins = int(tdelta.total_seconds() / 60)
-        return tdelta_mins
 
     def __repr__(self):
         """
