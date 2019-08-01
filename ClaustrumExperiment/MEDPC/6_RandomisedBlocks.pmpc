@@ -69,7 +69,7 @@
     VAR_ALIAS Trial Length = A(0) \ Default 5
     VAR_ALIAS Max Pellets = A(1) \ Default 180
     VAR_ALIAS Pellets To Advance = A(2) \ Default 90
-    VAR_ALIAS Fixed Ratio = A(3) \ Default 15
+    VAR_ALIAS Fixed Ratio = A(3) \ Default 6
     VAR_ALIAS Inter Response Time (secs) = A(4) \ Default 4s
     VAR_ALIAS Fixed Interal = A(5) \ Default 30
 
@@ -142,7 +142,7 @@ S.S.1, \ Control flow
             SET A(^MaxTimeIdx) = 5;
             SET A(^MaxPelletIdx) = 180;
             SET A(^RequiredPelletsIdx) = 90;
-            SET A(^StartingRatioIdx) = 15;
+            SET A(^StartingRatioIdx) = 6;
             SET A(^InterResponseTimeIdx) = 4;
             SET A(^FixedIntervalIdx) = 30;
             SET D(0) = -987.987;
