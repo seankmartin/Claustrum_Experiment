@@ -21,35 +21,37 @@ import matplotlib.gridspec as gridspec
 
 def plot_sessions():
     # Parameters for specifying session
-    sub_list = ['1']
+    sub_list = ['1', '2', '3', '4', '5', '6']
     s_list = ['5a', '5b']
     d_list = ['07-31']
     in_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
     out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
     
-    #extracts hdf5 session based on specification
-    s_grp, out_name = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
-
-    # Plots summary of day
-    cols = 2
-    rows = len(s_grp)
-    size_multiplier = 5
-    fig = plt.figure(
-            figsize=(cols * size_multiplier, rows * size_multiplier), 
-            tight_layout=False)
-    gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
-        
-    for i, s in enumerate(s_grp):
-        ax1 = fig.add_subplot(gs[i, 0])
-        bv_an.cumplot(s, out_dir, False, ax1)
-        ax2 = fig.add_subplot(gs[i, 1])        
-        bv_an.IRT(s, out_dir, False, ax2)
-        plt.tight_layout()
-
-    print("Saved figure to {}".format(
-        os.path.join(out_dir, out_name)))
-    fig.savefig(os.path.join(out_dir, out_name), dpi=400)
-    plt.close()
+    for sub_list in sub_list:
+            
+        #extracts hdf5 session based on specification
+        s_grp, out_name = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
+    
+        # Plots summary of day
+        cols = 2
+        rows = len(s_grp)
+        size_multiplier = 5
+        fig = plt.figure(
+                figsize=(cols * size_multiplier, rows * size_multiplier), 
+                tight_layout=False)
+        gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
+            
+        for i, s in enumerate(s_grp):
+            ax1 = fig.add_subplot(gs[i, 0])
+            bv_an.cumplot(s, out_dir, False, ax1)
+            ax2 = fig.add_subplot(gs[i, 1])        
+            bv_an.IRT(s, out_dir, False, ax2)
+            plt.tight_layout()
+    
+        print("Saved figure to {}".format(
+            os.path.join(out_dir, out_name)))
+        fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+        plt.close()
     
 
 
@@ -75,7 +77,7 @@ def extract_hdf5s(in_dir, out_dir, sub_list=None, s_list=None, d_list=None):
     out_name = "Sum_plot"
     names = ["sub_list", "s_list", "d_list"]
     for name in names:
-        out_name = out_name + str(name_dict.get(name, ""))
+        out_name = out_name + "_" + str(name_dict.get(name, ""))
     out_name.replace("__", "_")
     out_name.replace("__", "_")
     for file in in_files:
