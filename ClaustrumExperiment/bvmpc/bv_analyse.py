@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 import os.path
+from bv_utils import make_dir_if_not_exists, print_h5, mycolors
 
 
 def cumplot(session, out_dir, smooth=False, ax=None, title=False):
@@ -58,11 +59,14 @@ def cumplot(session, out_dir, smooth=False, ax=None, title=False):
             ax.set_title('\n(Subject {}, FI{}s, {})'.format(
                 subject, interval, date),
                 fontsize=12)
-        elif session_type == '6_RandomisedBlocks_p:':
+        elif session_type == '6_RandomisedBlocks_p':
+            switch_ts = np.arange(5, 1830, 305)
+            for x in switch_ts:
+                plt.axvline(x, color='g', linestyle='-.', linewidth='.2')
             ratio = int(timestamps["Experiment Variables"][3])
             interval = int(timestamps["Experiment Variables"][5] / 100)
-            ax.set_title('\n(Subject {}, {} FR{}/FI{}s, {})'.format(
-                subject, session_type[:-2], ratio, interval, date),
+            ax.set_title('\n(Subject {}, FR{}/FI{}s, {})'.format(
+                subject, ratio, interval, date),
                 fontsize=12)
 
     ax.set_xlabel('Time (s)')
@@ -77,18 +81,18 @@ def cumplot(session, out_dir, smooth=False, ax=None, title=False):
             plot_arr_x = np.append(plot_arr_x, reward_times[-1])
             plot_arr_y = np.append(plot_arr_y, cumulative[-1])
 
-        ax.plot(plot_arr_x, plot_arr_y, c='blue')
+        ax.plot(plot_arr_x, plot_arr_y, c=mycolors(subject))
         bins = base[:-1]
 
     else:
         lever_times = np.insert(lever_ts, 0, 0, axis=0)
         ax.step(lever_times, np.arange(
-            lever_times.size), c='blue', where="post", label='Lever Response')
+            lever_times.size), c=mycolors(subject), where="post", label='IR'+subject)
         if reward_times[-1] > lever_times[-1]:
             ax.plot(
                 [lever_times[-1], reward_times[-1] + 2],
                 [lever_times.size - 1, lever_times.size - 1],
-                c='blue')
+                c=mycolors(subject))
         bins = lever_times
 
     reward_y = np.digitize(reward_times, bins) - 1
@@ -96,10 +100,10 @@ def cumplot(session, out_dir, smooth=False, ax=None, title=False):
     if smooth:
         reward_y = cumulative[reward_y]
         
-    plt.scatter(reward_times, reward_y, marker="x", c="r",
-                label='Reward Collected')
+    plt.scatter(reward_times, reward_y, marker="x", c="grey",
+                label='Reward Collected', s=25)
     ax.legend()
-    ax.set_xlim(0, 30 * 60)
+    ax.set_xlim(0, 30 * 60 + 30)
 
     if single_plot:
         out_name = (subject.zfill(3) + "_CumulativeHist_" +
@@ -151,7 +155,7 @@ def IRT(session, out_dir, showIRT=False, ax=None):
 
     hist_count, hist_bins, _ = ax.hist(
         IRT, bins=math.ceil(np.amax(IRT)),
-        range=(0, math.ceil(np.amax(IRT))))
+        range=(0, math.ceil(np.amax(IRT))), color=mycolors(subject))
 
     # Plotting of IRT Graphs
     if ax is None:

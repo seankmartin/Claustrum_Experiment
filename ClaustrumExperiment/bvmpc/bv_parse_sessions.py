@@ -59,6 +59,8 @@ class SessionExtractor:
             s_ends = np.zeros_like(s_starts)
             s_ends[:-1] = s_starts[1:]
             s_ends[-1] = lines.size
+            print((s_ends))
+            print((s_starts))
 
             for start, end in zip(s_starts, s_ends):
                 s_data = np.array(lines[start:end])

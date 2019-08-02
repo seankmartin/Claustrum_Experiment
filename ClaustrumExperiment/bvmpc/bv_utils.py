@@ -9,6 +9,12 @@ def make_dir_if_not_exists(location):
     """Make directory structure for given location."""
     os.makedirs(location, exist_ok=True)
 
+def mycolors(subject):
+    i = int(subject)
+    mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange', 
+                    'tab:brown', 'tab:pink', 'tab:olive', 
+                    'deeppink', 'steelblue', 'firebrick', 'mediumseagreen']
+    return mycolors[i]
 
 def walk_dict(d, depth=0):
     """Walk a Dictionary."""

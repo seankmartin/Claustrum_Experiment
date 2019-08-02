@@ -28,8 +28,23 @@ class SessionInfo:
         self.session_info_dict = {}
 
         # Empty keys that should probably be updated at some stage
-        self.session_info_dict['2_MagazineHabituation_p'] = None
-        self.session_info_dict['3_LeverHabituation_p'] = None
+        self.session_info_dict['2_MagazineHabituation_p'] = (
+            np.array([
+                ['A:', 'B:', 'Experiment Variables'],
+                ['D:', 'E:', 'Reward'],
+                ['E:', 'END', 'Nosepoke']
+            ]))
+        self.session_info_dict['3_LeverHabituation_p'] = (
+            np.array([
+                ['A:', 'B:', 'Experiment Variables'],
+                ['D:', 'E:', 'Reward'],
+                ['E:', 'L:', 'Nosepoke'],
+                ['L:', 'M:', 'L'],
+                ['M:', 'N:', 'Un_L'],
+                ['N:', 'O:', 'Un_R'],
+                ['O:', 'R:', 'Un_Nosepoke'],
+                ['R:', 'END', 'R']
+            ]))
         self.session_info_dict['DNMTS'] = None
 
         self.session_info_dict['4_LeverTraining_p'] = (
@@ -74,10 +89,9 @@ class SessionInfo:
                 ['M:', 'N:', 'Un_L'],
                 ['N:', 'O:', 'Un_R'],
                 ['O:', 'R:', 'Un_Nosepoke'],
-                ['R:', 'Q:', 'R'],
-                ['Q:', 'U:', 'Possible Trials'],
-                ['U:', 'V:', 'Selected Trials'],
-                ['V:', 'X:', 'Per Trial Pellets']
+                ['R:', 'U:', 'R'],
+                ['U:', 'V:', 'Trial Type'],  # 1 is FR, 0 is FI 
+#                ['V:', 'END', 'Per Trial Pellets']
             ]))
 
     def get_session_type_info(self, key=None):
