@@ -10,12 +10,12 @@ import matplotlib.gridspec as gridspec
 
 def plot_sessions():
     # Parameters for specifying session
-#    sub_list = ['1', '2', '3', '4', '5', '6']
-    sub_list = ['3']
+    sub_list = ['1', '2', '3', '4', '5', '6']
+#    sub_list = ['3']
 #    sub_list = ['1', '2', '3', '4']
 #    sub_list = ['5', '6']
-    s_list = ['5a', '5b']
-    d_list = ['07-31']
+    s_list = ['6']
+    d_list = ['08-01']
     in_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
     out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
 
@@ -23,7 +23,7 @@ def plot_sessions():
     for c, sub in enumerate(sub_list):
         #extracts hdf5 session based on specification
         s_grp, out_name = extract_hdf5s(in_dir, out_dir, sub, s_list, d_list)
-        sum_plot(s_grp, out_name, out_dir)
+        sum_plot(s_grp, out_name, out_dir, False)
     
 #    # Plots timeline for specified subjects    
 #    timeline_plot(sub_list, in_dir, out_dir)
@@ -224,17 +224,19 @@ if __name__ == "__main__":
 ##            main(filename)  # Uncomment to run from mpc file
 #            convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
     
-    # Processing specific sessions from hdf5
+#    # Processing specific sessions from hdf5
     plot_sessions()
 
     # Running single session files
-#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-01"
+#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-02"
 #     filename = r"G:\test"
 #     filename = r"/home/sean/Documents/Data/!2019-07-22"
 
 #    out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
 #    out_dir = r"G:\out_plots"
 #    out_dir = r"/home/sean/Documents/Data/results"
+    
+#    out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
 #    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
 #    run_mpc_file(filename, out_dir)
 

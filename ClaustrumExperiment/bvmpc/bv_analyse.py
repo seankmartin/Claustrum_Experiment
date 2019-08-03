@@ -116,6 +116,9 @@ def cumplot(session, out_dir, smooth=False, ax=None, title=False):
         fig.savefig(out_name, dpi=400)
         plt.close()
     else:
+        # Text Display on Graph
+        ax.text(0.43, 0.15, 'Total # of Lever Press: {}\nTotal # of Rewards: {}'
+                .format(len(lever_ts), len(reward_times)), transform=ax.transAxes)
         return
 
 
