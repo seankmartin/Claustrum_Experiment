@@ -15,7 +15,7 @@ def plot_sessions():
 #    sub_list = ['1', '2', '3', '4']
 #    sub_list = ['5', '6']
     s_list = ['6']
-    d_list = ['08-01']
+    d_list = ['08-03']
     in_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
     out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
 
@@ -23,10 +23,10 @@ def plot_sessions():
     for c, sub in enumerate(sub_list):
         #extracts hdf5 session based on specification
         s_grp, out_name = extract_hdf5s(in_dir, out_dir, sub, s_list, d_list)
-        sum_plot(s_grp, out_name, out_dir, False)
+        sum_plot(s_grp, out_name, out_dir, IRT=False)
     
 #    # Plots timeline for specified subjects    
-#    timeline_plot(sub_list, in_dir, out_dir)
+#    timeline_plot(sub_list, in_dir, out_dir, True)
 
 def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
     # Plot size
@@ -52,7 +52,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
             elif s_type == '5b':
                 s_name = 'I' + str(int(timestamps["Experiment Variables"][3]/100))
             else:
-                s_name = s_type.replace('_', '').replace('2','M').replace('3','L').replace('4','L').replace('6', 'R')
+                s_name = s_type.replace('_', '').replace('2','M').replace('3','Lh').replace('4','Lt').replace('6', 'R1')
             rewards_t = len(timestamps["Reward"])
             s_list.append(s_name)
             r_list.append(rewards_t)
@@ -69,7 +69,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
         else:
             ax = fig.add_subplot(gs[int(subject)-1, :])  # For use w Sub 1-4
 #            ax = fig.add_subplot(gs[int(subject)-5, :])  # For use w Sub 5-6
-        plt.plot(s_idx, r_list, label='IR'+subject, linewidth='4',
+        plt.plot(s_idx, r_list, label='Animal'+subject, linewidth='4',
                  color=mycolors(subject))
         plt.xticks(s_idx, s_list, fontsize=15)
         ax.tick_params(axis='y', labelsize=15)
@@ -77,10 +77,10 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
         plt.axhline(90, color='r', linestyle='-.', linewidth='.5')
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        ax.set_xlabel('Sessions', fontsize=15)
-        ax.set_ylabel('Total Rewards', fontsize=15)
+        ax.set_xlabel('Sessions', fontsize=20)
+        ax.set_ylabel('Total Rewards', fontsize=20)
         plt.legend()
-        ax.set_title('\nSubject {} Timeline'.format(subject), fontsize=20)
+        ax.set_title('\nSubject {} Timeline'.format(subject), fontsize=25)
         
         if single_plot:
             print("Saved figure to {}".format(
@@ -98,10 +98,10 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
 
 
     
-def sum_plot(s_grp, out_name, out_dir, IRT=True):
+def sum_plot(s_grp, out_name, out_dir, zoom=True, IRT=True):
         # Plots summary of day
         cols = 2
-        if IRT:
+        if IRT or zoom:
             rows = len(s_grp)
         else:
             rows = 1
@@ -112,14 +112,18 @@ def sum_plot(s_grp, out_name, out_dir, IRT=True):
         gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
             
         for i, s in enumerate(s_grp):
-            if IRT:
+            if IRT or zoom:
                 ax1 = fig.add_subplot(gs[i, 0])
             else:
                 ax1 = fig.add_subplot(gs[0, i])
-            bv_an.cumplot(s, out_dir, False, ax1)
+            bv_an.cumplot(s, out_dir, ax1, smooth=False, zoom=False, zoom_sch=False)
+            
             if IRT:
                 ax2 = fig.add_subplot(gs[i, 1])        
-                bv_an.IRT(s, out_dir, False, ax2)
+                bv_an.IRT(s, out_dir, ax2, smooth=False)
+            elif zoom:
+                ax2 = fig.add_subplot(gs[i, 1])
+                bv_an.cumplot(s, out_dir, ax2, smooth=False, zoom=False, zoom_sch=True)
             plt.tight_layout()
         
         out_name = "Sum_plot" + out_name
@@ -224,11 +228,11 @@ if __name__ == "__main__":
 ##            main(filename)  # Uncomment to run from mpc file
 #            convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
     
-#    # Processing specific sessions from hdf5
+    # Processing specific sessions from hdf5
     plot_sessions()
 
     # Running single session files
-#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-02"
+#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-03"
 #     filename = r"G:\test"
 #     filename = r"/home/sean/Documents/Data/!2019-07-22"
 

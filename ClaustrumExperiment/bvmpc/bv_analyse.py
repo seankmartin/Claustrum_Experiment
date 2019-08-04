@@ -12,7 +12,7 @@ import os.path
 from bv_utils import make_dir_if_not_exists, print_h5, mycolors
 
 
-def cumplot(session, out_dir, smooth=False, ax=None, title=False):
+def cumplot(session, out_dir, ax=None, smooth=False, zoom=False, zoom_sch=False, title=False):
     """Perform a cumulative plot for a Session."""
     date = session.get_metadata('start_date').replace('/', '_')
     timestamps = session.get_arrays()
@@ -30,33 +30,33 @@ def cumplot(session, out_dir, smooth=False, ax=None, title=False):
         ax.set_title('Cumulative Lever Presses\n', fontsize=15)
         if session_type == '5a_FixedRatio_p':
             ratio = int(timestamps["Experiment Variables"][3])
-            plt.suptitle('\n(Subject {}, {} {}, {})'.format(
+            plt.suptitle('\nSubject {}, {} {}, {}'.format(
                 subject, session_type[:-2], ratio, date),
                 fontsize=9, y=.98, x=.51)
         elif session_type == '5b_FixedInterval_p':
             interval = int(timestamps["Experiment Variables"][3] / 100)
-            plt.suptitle('\n(Subject {}, {} {}s, {})'.format(
+            plt.suptitle('\nSubject {}, {} {}s, {}'.format(
                 subject, session_type[:-2], interval, date),
                 fontsize=9, y=.98, x=.51)
         elif session_type == '6_RandomisedBlocks_p:':
             ratio = int(timestamps["Experiment Variables"][3])
             interval = int(timestamps["Experiment Variables"][5] / 100)
-            plt.suptitle('\n(Subject {}, {} FR{}/FI{}s, {})'.format(
+            plt.suptitle('\nSubject {}, {} FR{}/FI{}s, {}'.format(
                 subject, session_type[:-2], ratio, interval, date),
                 fontsize=9, y=.98, x=.51)
         else:
-            plt.suptitle('\n(Subject {}, {}, {})'.format(
+            plt.suptitle('\nSubject {}, {}, {}'.format(
                 subject, session_type[:-2], date),
                 fontsize=9, y=.98, x=.51)
     else:
         if session_type == '5a_FixedRatio_p':
             ratio = int(timestamps["Experiment Variables"][3])
-            ax.set_title('\n(Subject {}, FR{}, {})'.format(
+            ax.set_title('\nSubject {}, FR{}, {}'.format(
                 subject, ratio, date),
                 fontsize=12)
         elif session_type == '5b_FixedInterval_p':
             interval = int(timestamps["Experiment Variables"][3] / 100)
-            ax.set_title('\n(Subject {}, FI{}s, {})'.format(
+            ax.set_title('\nSubject {}, FI{}s, {}'.format(
                 subject, interval, date),
                 fontsize=12)
         elif session_type == '6_RandomisedBlocks_p':
@@ -65,7 +65,7 @@ def cumplot(session, out_dir, smooth=False, ax=None, title=False):
                 plt.axvline(x, color='g', linestyle='-.', linewidth='.2')
             ratio = int(timestamps["Experiment Variables"][3])
             interval = int(timestamps["Experiment Variables"][5] / 100)
-            ax.set_title('\n(Subject {}, FR{}/FI{}s, {})'.format(
+            ax.set_title('\nSubject {}, FR{}/FI{}s, {}'.format(
                 subject, ratio, interval, date),
                 fontsize=12)
 
@@ -83,11 +83,47 @@ def cumplot(session, out_dir, smooth=False, ax=None, title=False):
 
         ax.plot(plot_arr_x, plot_arr_y, c=mycolors(subject))
         bins = base[:-1]
+    elif zoom:
+        trial_lever_ts = np.split(lever_ts,np.searchsorted(lever_ts,reward_times))
+        norm_reward_ts = []
+        norm_lever_ts = []
+        reward_times_0 = np.append([0], reward_times, axis=0)
+        for i, l in enumerate(trial_lever_ts[:-1]):
+            norm_lever_ts.append(np.append([0], l-reward_times_0[i], axis=0))
+            norm_reward_ts.append(reward_times[i]-reward_times_0[i])
+        ax.set_xlim(0, np.max(norm_reward_ts))
+        for i in norm_lever_ts:
+            print(i.size)
+            ax.step(i, np.arange(i.size), c=mycolors(subject), where="post", label='Animal'+subject)
+            plt.show()
+    elif zoom_sch:
+        sch_type = session.get_arrays('Trial Type')
+        sch_switch = np.arange(5, 1830, 305)
+        sch_lever_ts = np.split(lever_ts,np.searchsorted(lever_ts, sch_switch))
+        sch_reward_ts = np.split(reward_times,np.searchsorted(reward_times, sch_switch))
+        norm_reward_ts = []
+        norm_lever_ts = []
+        for i, l in enumerate(sch_lever_ts[1:]):
+            norm_lever_ts.append(np.append([0], l-sch_switch[i], axis=0))
+            norm_reward_ts.append(sch_reward_ts[i+1]-sch_switch[i])
+        ax.set_xlim(0, 305)
+        for i, l in enumerate(norm_lever_ts):
+            if sch_type[i] == 1:
+                ax.step(l, np.arange(l.size), c=mycolors(i), where="post", label='B'+str(i+1)+' - FR')
+            else:
+                ax.step(l, np.arange(l.size), c=mycolors(i), where="post", label='B'+str(i+1)+' - FI')
+            bins = l
+            reward_y = np.digitize(norm_reward_ts[i], bins) - 1
+            plt.scatter(norm_reward_ts[i], reward_y, marker="x", c="grey", s=25)
+        ax.set_title('\nSubject {}, Schedule-Based'.format(
+                subject), fontsize=12)
+        ax.legend()
+        return
 
     else:
         lever_times = np.insert(lever_ts, 0, 0, axis=0)
         ax.step(lever_times, np.arange(
-            lever_times.size), c=mycolors(subject), where="post", label='IR'+subject)
+            lever_times.size), c=mycolors(subject), where="post", label='Animal'+subject)
         if reward_times[-1] > lever_times[-1]:
             ax.plot(
                 [lever_times[-1], reward_times[-1] + 2],
@@ -103,7 +139,7 @@ def cumplot(session, out_dir, smooth=False, ax=None, title=False):
     plt.scatter(reward_times, reward_y, marker="x", c="grey",
                 label='Reward Collected', s=25)
     ax.legend()
-    ax.set_xlim(0, 30 * 60 + 30)
+#    ax.set_xlim(0, 30 * 60 + 30)
 
     if single_plot:
         out_name = (subject.zfill(3) + "_CumulativeHist_" +
