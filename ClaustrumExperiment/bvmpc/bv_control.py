@@ -14,15 +14,21 @@ def plot_sessions():
 #    sub_list = ['3']
 #    sub_list = ['1', '2', '3', '4']
 #    sub_list = ['5', '6']
-    s_list = ['6']
-    d_list = ['08-03']
+    s_list = ['5a', '5b']
+    d_list = ['07-31']
     in_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
     out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
 
     # Summary plot for Cum Graph
-    for c, sub in enumerate(sub_list):
+#    for c, sub in enumerate(sub_list):
         #extracts hdf5 session based on specification
-        s_grp, out_name = extract_hdf5s(in_dir, out_dir, sub, s_list, d_list)
+    s_grp, out_name = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
+    if len(s_grp) > 6:
+        s_grp1 = s_grp[::2]
+        sum_plot(s_grp1, out_name+'_1', out_dir, IRT=False)
+        s_grp2 = s_grp[1::2]
+        sum_plot(s_grp2, out_name+'_2', out_dir, IRT=False)        
+    else:
         sum_plot(s_grp, out_name, out_dir, IRT=False)
     
 #    # Plots timeline for specified subjects    
@@ -34,8 +40,8 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
     size_multiplier = 5
     fig = plt.figure(
             figsize=(cols * size_multiplier, rows * size_multiplier), 
-            tight_layout=False)
-    gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.5)
+            tight_layout=False) 
+    gs = gridspec.GridSpec(rows, cols, wspace=0.4, hspace=0.5)
     for c, sub in enumerate(sub_list):
             
         
@@ -65,7 +71,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
                     tight_layout=False)
             gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
             ax = fig.add_subplot(gs[0, :])
-            out_name = "Timeline" + out_name
+            out_name = "Timeline" + out_name + ".png"
         else:
             ax = fig.add_subplot(gs[int(subject)-1, :])  # For use w Sub 1-4
 #            ax = fig.add_subplot(gs[int(subject)-5, :])  # For use w Sub 5-6
@@ -102,7 +108,11 @@ def sum_plot(s_grp, out_name, out_dir, zoom=True, IRT=True):
         # Plots summary of day
         cols = 2
         if IRT or zoom:
-            rows = len(s_grp)
+            if len(s_grp) > 2:
+                cols = 2*round(len(s_grp)/2)
+                rows = 2
+            else:
+                rows = len(s_grp)
         else:
             rows = 1
         size_multiplier = 5
@@ -113,7 +123,7 @@ def sum_plot(s_grp, out_name, out_dir, zoom=True, IRT=True):
             
         for i, s in enumerate(s_grp):
             if IRT or zoom:
-                ax1 = fig.add_subplot(gs[i, 0])
+                ax1 = fig.add_subplot(gs[(i+2)%2, int(i/2)*2])
             else:
                 ax1 = fig.add_subplot(gs[0, i])
             bv_an.cumplot(s, out_dir, ax1, smooth=False, zoom=False, zoom_sch=False)
@@ -122,11 +132,11 @@ def sum_plot(s_grp, out_name, out_dir, zoom=True, IRT=True):
                 ax2 = fig.add_subplot(gs[i, 1])        
                 bv_an.IRT(s, out_dir, ax2, smooth=False)
             elif zoom:
-                ax2 = fig.add_subplot(gs[i, 1])
+                ax2 = fig.add_subplot(gs[(i+2)%2, int(i/2)*2+1])
                 bv_an.cumplot(s, out_dir, ax2, smooth=False, zoom=False, zoom_sch=True)
             plt.tight_layout()
         
-        out_name = "Sum_plot" + out_name
+        out_name = "Sum_plot" + out_name + ".png"
         print("Saved figure to {}".format(
             os.path.join(out_dir, out_name)))
         fig.savefig(os.path.join(out_dir, out_name), dpi=400)
@@ -158,7 +168,7 @@ def extract_hdf5s(in_dir, out_dir, sub_list=None, s_list=None, d_list=None):
         out_name = out_name + "_" + str(name_dict.get(name, ""))
     out_name.replace("__", "_")
     out_name.replace("__", "_")
-    out_name = out_name + ".png"
+    out_name = out_name
     for file in in_files:
         splits = file.split('_')
         subject = splits[0]
@@ -232,7 +242,7 @@ if __name__ == "__main__":
     plot_sessions()
 
     # Running single session files
-#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-03"
+#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-04"
 #     filename = r"G:\test"
 #     filename = r"/home/sean/Documents/Data/!2019-07-22"
 
@@ -240,6 +250,7 @@ if __name__ == "__main__":
 #    out_dir = r"G:\out_plots"
 #    out_dir = r"/home/sean/Documents/Data/results"
     
+#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-05"
 #    out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
 #    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
 #    run_mpc_file(filename, out_dir)
