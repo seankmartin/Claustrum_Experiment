@@ -247,7 +247,8 @@ S.S.3, \ Fixed Ratio task
             SET F(B(^LeftDurRightIdx)) = T;
             ADD B(^LeftDurRightIdx);
             SET F(B(^LeftDurRightIdx)) = -987.987;
-            ADD C(^LeftDurRightCountIdx)
+            ADD C(^LeftDurRightCountIdx);
+            Z1
         ---> SX
 
         #Z4:
@@ -275,7 +276,8 @@ S.S.3, \ Fixed Ratio task
             SET H(B(^BLeftDurRightIdx)) = T;
             ADD B(^BLeftDurRightIdx);
             SET H(B(^BLeftDurRightIdx)) = -987.987;
-            ADD C(^BLeftDurRightCountIdx)
+            ADD C(^BLeftDurRightCountIdx);
+            Z1
         ---> SX
 
         #Z4:
@@ -313,7 +315,8 @@ S.S.4, \ Fixed interval task
             SET G(B(^RightDurLeftIdx)) = T;
             ADD B(^RightDurLeftIdx);
             SET G(B(^RightDurLeftIdx)) = -987.987;
-            ADD C(^RightDurLeftCountIdx)
+            ADD C(^RightDurLeftCountIdx);
+            Z1
         ---> SX
 
         #Z4:
@@ -342,7 +345,8 @@ S.S.4, \ Fixed interval task
             SET I(B(^BRightDurLeftIdx)) = T;
             ADD B(^BRightDurLeftIdx);
             SET I(B(^BRightDurLeftIdx)) = -987.987;
-            ADD C(^BRightDurLeftCountIdx)
+            ADD C(^BRightDurLeftCountIdx);
+            Z1
         ---> SX
 
         #Z4:
@@ -364,7 +368,8 @@ S.S.4, \ Fixed interval task
             SET I(B(^BRightDurLeftIdx)) = T;
             ADD B(^BRightDurLeftIdx);
             SET I(B(^BRightDurLeftIdx)) = -987.987;
-            ADD C(^BRightDurLeftCountIdx)
+            ADD C(^BRightDurLeftCountIdx);
+            Z1
         ---> SX
 
         #Z4:
@@ -505,7 +510,7 @@ S.S.10, \ Update the display
             SHOW 10, Left in Right, C(^LeftDurRightCountIdx);
             SHOW 11, Right in Left, C(^RightDurLeftCountIdx);
             SHOW 12, Bad Left in Right, C(^BLeftDurRightCountIdx);
-            SHOW 12, Bad Right in Left, C(^BRightDurLeftCountIdx);
+            SHOW 13, Bad Right in Left, C(^BRightDurLeftCountIdx);
             SHOW 14, Unnecessary Nosepokes FI, C(^WrongNosepokeCountIdxL);
             SHOW 15, Unnecessary Nosepokes FR, C(^WrongNosepokeCountIdxR);
             SHOW 16, Current Right Presses, A(^SuccessiveLeverPressIdx);
