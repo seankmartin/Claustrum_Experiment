@@ -1,0 +1,324 @@
+\***************************************************
+\               File Description Comments
+\***************************************************
+
+\ Lever Habituation by Seán Martin on 11/07/2019
+    \ Brief Description: Randomised blocks: FR 15 and FI 20 are selected to show up in a random odered for 3 trials each. Three blocks of either won't show up in a row.
+    \ Ending criteria: Ends after 90mins, or after 500 pellets.
+    \ Locked pins: Remember to turn off the fan (16) 
+
+\***************************************************
+\               Constant Definitions
+\***************************************************
+\ Experiment variable locations (points into A)
+    ^MaxTimeIdx = 0
+    ^MaxPelletIdx = 1
+    ^RequiredPelletsIdx = 2
+    ^StartingRatioIdx = 3
+    ^InterResponseTimeIdx = 4
+    ^FixedIntervalIdx = 5
+    ^ConsecutiveIRTIdx = 6
+    ^LastNosepokeTimeIdx = 7
+    ^SuccessiveLeverPressIdx = 8
+    ^LastIRTIdx = 9
+    ^LastSwitchTimeIdx = 10
+
+\ Index holder locations (points into B)
+    ^FeederTimeIdx = 0
+    ^NosepokeTimeIdx = 1
+    ^LeftLeverTimeIdx = 2
+    ^RightLeverTimeIdx = 3
+    ^WrongLeftTimeIdx = 4
+    ^WrongRightTimeIdx = 5
+    ^WrongNosepokeTimeIdx = 6
+    ^CurrentTrialIdx = 7
+    ^LeftDurRightIdx = 8
+    ^RightDurLeftIdx = 9
+    ^BLeftDurRightIdx = 10
+    ^BRightDurLeftIdx = 11
+
+\ Counter locations (points into C)
+    ^FeederCountIdx = 0
+    ^NosepokeCountIdxL = 1
+    ^NosepokeCountIdxR = 2
+    ^LeftLeverCountIdx = 3
+    ^RightLeverCountIdx = 4
+    ^WrongLeftCountIdx = 5
+    ^WrongRightCountIdx = 6
+    ^WrongNosepokeCountIdxL = 7
+    ^WrongNosepokeCountIdxR = 8
+    ^LeftDurRightCountIdx = 9
+    ^RightDurLeftCountIdx = 10
+    ^BLeftDurRightCountIdx = 11
+    ^BRightDurLeftCountIdx = 12
+
+\ Inputs
+    ^LeftLever = 1
+    ^RightLever = 3
+    ^Nosepoke = 7
+
+\ Outputs
+    ^LeftLeverOut = 1
+    ^LeftLight = 4
+    ^RightLeverOut = 2
+    ^RightLight = 5
+    ^RewardLight = 6
+    ^HouseLight = 7
+    ^Sound = 8
+    ^Feeder = 9
+    ^FanBox = 16
+
+\***************************************************
+\               Variable Descriptions
+\***************************************************
+
+\ Aliases
+    VAR_ALIAS Trial Length = A(0) \ Default 5
+    VAR_ALIAS Max Pellets = A(1) \ Default 180
+    VAR_ALIAS Pellets To Advance = A(2) \ Default 90
+    VAR_ALIAS Fixed Ratio = A(3) \ Default 6
+    VAR_ALIAS Inter Response Time (secs) = A(4) \ Default 4s
+    VAR_ALIAS Fixed Interal = A(5) \ Default 30
+
+\ Arrays
+    \ A = Experiment variables
+    \ B = Index holders
+    \ C = Counters
+    \ D = Data array for feeder drop times
+    \ E = Data array for nosepoke times
+    \ F = Data array for left presses during right trial
+    \ G = Data array for right presses during left trial
+    \ H = Data array for bad left presses during right trial
+    \ I = Data array for bad right presses during left trial
+    \ L = Data array for left lever response times
+    \ M = Data array for unnecessary left response times
+    \ N = Data array for unnecessary right response times
+    \ O = Data array for unnecessary nosepoke times
+    \ R = Data array for right lever response times
+    \ Q = Data array for the possible trials
+    \ U = Data array which holds the selected trials
+    \ V = Data array for per trial pellets
+    \ X = Internal computation array
+
+    DIM A = 10
+    DIM B = 11
+    DIM C = 12
+    DIM D = 500 \ Should be large enough to hold max_pellets + 1
+    DIM E = 500 \ Should be large enough to hold max_pellets + 1
+    DIM F = 30000 \ Could be anything
+    DIM G = 30000 \ Could be anything
+    DIM H = 30000 \ Could be anything
+    DIM I = 30000 \ Could be anything
+    DIM L = 7500 \ Should be large enough to hold (max_pellets * max_fr) + 1
+    DIM M = 100000 \ Could be anything
+    DIM N = 100000 \ Could be anything
+    DIM O = 100000 \ Could be anything
+    DIM R = 7500 \ Should be large enough to hold (max_pellets * max_fr) + 1
+    LIST Q = 0, 0, 0, 1, 1, 1
+    DIM U = 5
+    DIM V = 5
+    DIM X = 4
+
+\ Counter descriptions
+    \ C(0) = Number of Pellets dropped
+    \ C(1) = Number of Nosepokes on FI
+    \ C(2) = Number of Nospokes on FR
+    \ C(3) = Number of left lever presses
+    \ C(4) = Number of right lever presses
+    \ C(5) = Number of unnecessary left lever presses
+    \ C(6) = Number of unnecessary right lever presses
+    \ C(7) = Number of unnecessary nosepokes on FI
+    \ C(8) = Number of unnecessary nosepokes on FR
+    \ C(9) = Number of left presses during right trial
+    \ C(10) = Number of right presses during left trial
+    \ C(11) = Number of bad left presses during right trial
+    \ C(12) = Number of bad right presses during left trial
+
+\ Z Pulses
+    \ Z1 = Screen update pulse
+    \ Z2 = Activate Feeder
+    \ Z3 = Completed a FR trial
+    \ Z4 = Completed a FI or FR test
+    \ Z5 = Start a FI
+    \ Z6 = Start a FR
+    \ Z32 = End the session
+
+\ Single Variables
+    \ P = Should pass test (1 = Yes, 0 = No)
+    \ T = Elapsed time
+
+\ List of Variables to save at end of trial
+    DISKVARS = A, B, C, D, E, F, G, H, I, L, M, N, O, P, R, U, V, T
+
+\***************************************************
+\               Implementation
+\***************************************************
+
+S.S.1, \ Control flow
+
+    S1, \ Establish default values and turn on fan
+        0.01": SET A(^MaxTimeIdx) = 5; SET A(^MaxPelletIdx) = 180; SET A(^RequiredPelletsIdx) = 90; SET A(^StartingRatioIdx) = 6; SET A(^InterResponseTimeIdx) = 4; SET A(^FixedIntervalIdx) = 30; SET D(0) = -987.987; SET E(0) = -987.987; SET F(0) = -987.987; SET G(0) = -987.987; SET H(0) = -987.987; SET I(0) = -987.987; SET L(0) = -987.987; SET M(0) = -987.987; SET N(0) = -987.987; SET O(0) = -987.987; SET R(0) = -987.987; LOCKON ^FanBox; Z1 ---> S2
+
+    S2, \ Wait for start signal
+        #START: ON ^HouseLight; Z4 ---> S3
+
+    S3, \ End a trial after the max time or end session
+        0.01": SET T = T + 0.01; IF (T - A(^LastSwitchTimeIdx) - 5) / 60 >= A(^MaxTimeIdx) [@EndTrial, @ContinueTrial] 
+                 @End: SET A(^LastSwitchTimeIdx) = T; Z4 ---> SX
+                 @Cont: IF C(^NosepokeCountIdxL) + C(^NosepokeCountIdxR) >= A(^MaxPelletIdx) [@End]
+                     @End: Z32 ---> S4
+
+
+    S4, \ Just continue to update the time
+        0.01": SET T = 0.01 ---> SX
+
+\***************************************************
+\                Main Program
+\***************************************************
+S.S.2, \ Trial Switching logic
+    S1, \ Wait for start signal
+        #START: SET A(^FixedIntervalIdx) = A(^FixedIntervalIdx) * 1"; SET B(^CurrentTrialIdx) = -1 ---> S2
+    
+    S2, \ Wait for a z pulse to switch
+        #Z4: ADD B(^CurrentTrialIdx); IF B(^CurrentTrialIdx) = 6 [@End, @Continue] 
+                 @End: SET B(^CurrentTrialIdx) = 5; Z32 ---> S1
+                 @Continue: ON ^Sound ---> S3
+ 
+    S3, \Turn off the sound and start trial
+        5": OFF ^Sound; SET X(4) = U(B(^CurrentTrialIdx)); IF X(4) = 0 [@FI, @FR] 
+                 @FI: Z5 ---> S2
+                 @FR: Z6 ---> S2
+ 
+S.S.3, \ Fixed Ratio task
+    S1, \ Wait for trial start
+        #Z6: ON ^RightLeverOut; ON ^RightLight; ON ^LeftLeverOut ---> S2
+
+    S2, \ Drop pellets and handle FR
+        1 #R ^RightLever: SET R(B(^RightLeverTimeIdx)) = T; ADD B(^RightLeverTimeIdx); ADD C(^RightLeverCountIdx); SET R(B(^RightLeverTimeIdx)) = -987.987; Z1; ADD A(^SuccessiveLeverPressIdx); IF A(^SuccessiveLeverPressIdx) = A(^StartingRatioIdx) [@Passed] 
+                 @Passed: SET A(^SuccessiveLeverPressIdx) = 0; Z2; Z3 ---> S3
+ 
+        1 #R ^LeftLever: SET F(B(^LeftDurRightIdx)) = T; ADD B(^LeftDurRightIdx); SET F(B(^LeftDurRightIdx)) = -987.987; ADD C(^LeftDurRightCountIdx) ---> SX
+
+        #Z4: ---> S4
+
+    S3, \ Pellet has been dropped, detect right presses and nosepoke
+        1 #R ^RightLever: SET N(B(^WrongRightTimeIdx)) = T; ADD B(^WrongRightTimeIdx); ADD C(^WrongRightCountIdx); SET N(B(^WrongRightTimeIdx)) = -987.987; Z1 ---> SX
+
+        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; SET A(^LastNosepokeTimeIdx) = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdxR); SET E(B(^NosepokeTimeIdx)) = -987.987; Z1 ---> S2
+
+        1 #R ^LeftLever: SET H(B(^BLeftDurRightIdx)) = T; ADD B(^BLeftDurRightIdx); SET H(B(^BLeftDurRightIdx)) = -987.987; ADD C(^BLeftDurRightCountIdx) ---> SX
+
+        #Z4: ---> S4
+
+    S4, \ Perform any wrap up calcs after trial
+        0.01": OFF ^RightLeverOut; OFF ^RightLight; OFF ^LeftLeverOut; ---> S1
+
+S.S.4, \ Fixed interval task
+
+    S1, \ Wait for trial start
+        #Z5: ON ^LeftLeverOut; ON ^LeftLight; ON ^RightLeverOut; ---> S2
+
+    S2, \ Drop pellets
+
+        1 #R ^LeftLever: SET L(B(^LeftLeverTimeIdx)) = T; ADD B(^LeftLeverTimeIdx); ADD C(^LeftLeverCountIdx); SET L(B(^LeftLeverTimeIdx)) = -987.987; SET A(^LastIRTIdx) = T - A(^LastNosepokeTimeIdx); Z1; Z2 ---> S3
+
+        1 #R ^RightLever: SET G(B(^RightDurLeftIdx)) = T; ADD B(^RightDurLeftIdx); SET G(B(^RightDurLeftIdx)) = -987.987; ADD C(^RightDurLeftCountIdx) ---> SX
+
+        #Z4: ---> S5
+
+    S3, \ Pellet has been dropped, detect left presses and handle FI
+
+        1 #R ^LeftLever: SET M(B(^WrongLeftTimeIdx)) = T; ADD B(^WrongLeftTimeIdx); ADD C(^WrongLeftCountIdx); SET M(B(^WrongLeftTimeIdx)) = -987.987; Z1 ---> SX
+
+        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdxL); SET E(B(^NosepokeTimeIdx)) = -987.987; SET A(^LastNosepokeTimeIdx) = T; Z1 ---> S4
+
+        1 #R ^RightLever: SET I(B(^BRightDurLeftIdx)) = T; ADD B(^BRightDurLeftIdx); SET I(B(^BRightDurLeftIdx)) = -987.987; ADD C(^BRightDurLeftCountIdx) ---> SX
+
+        #Z4: ---> S5
+
+    S4, \ IRT starts after nosepoke
+        A(^FixedIntervalIdx)#T: ---> S2
+
+        1 #R ^LeftLever: SET M(B(^WrongLeftTimeIdx)) = T; ADD B(^WrongLeftTimeIdx); ADD C(^WrongLeftCountIdx); SET M(B(^WrongLeftTimeIdx)) = -987.987; Z1 ---> SX
+
+        1 #R ^RightLever: SET I(B(^BRightDurLeftIdx)) = T; ADD B(^BRightDurLeftIdx); SET I(B(^BRightDurLeftIdx)) = -987.987; ADD C(^BRightDurLeftCountIdx) ---> SX
+
+        #Z4: ---> S5
+
+    S5, \ Perform any wrap up calcs after trial
+        0.01": OFF ^LeftLeverOut; OFF ^LeftLight; OFF ^RightLeverOut ---> S1
+
+S.S.5, \ Detect unnecessary nosepokes and record the times
+
+    S1, \Wait for experiment start
+        #Z5: ---> S2
+
+        #Z6: ---> S4
+
+    S2, \ Detect unnecessary nosepokes on FI
+        1 #R ^Nosepoke: SET O(B(^WrongNosepokeTimeIdx)) = T; ADD B(^WrongNosepokeTimeIdx); ADD C(^WrongNosepokeCountIdxL); SET O(B(^WrongNosepokeTimeIdx)) = -987.987; Z1 ---> SX
+
+        #Z2: ---> S3
+
+        #Z6: ---> S4
+    
+    S3, \ Detect correct nosepoke on FI
+        1 #R ^Nosepoke: OFF ^RewardLight; ---> S2
+
+        #Z6: ---> S4
+
+    S4, \ Detect unnecessary nosepokes on FR
+        1 #R ^Nosepoke: SET O(B(^WrongNosepokeTimeIdx)) = T; ADD B(^WrongNosepokeTimeIdx); ADD C(^WrongNosepokeCountIdxR); SET O(B(^WrongNosepokeTimeIdx)) = -987.987; Z1 ---> SX
+
+        #Z2: ---> S5
+
+        #Z5: ---> S2
+    
+    S5, \ Detect correct nosepoke on FR
+        1 #R ^Nosepoke: OFF ^RewardLight; ---> S4
+
+        #Z5: ---> S2
+
+S.S.6, \ Handle the FR IRT logic
+
+    S1, \ Trial finished, get IRT
+        #Z3: SET A(^LastIRTIdx) = T - A(^LastNosepokeTimeIdx) - 0.01; Z1; IF A(^LastIRTIdx) <= A(^InterResponseTimeIdx) [@Fast, @Slow] 
+                 @Fast: ADD A(^ConsecutiveIRTIdx) ---> SX
+                 @Slow: SET A(^ConsecutiveIRTIdx) = 0 ---> SX
+ 
+
+S.S.7, \ Drop pellets
+
+    S1, \ Drop the pellet
+        #Z2: ON ^Feeder; ON ^RewardLight; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
+
+    S2, \ Turn off the feeder after dropping
+        0.5": OFF ^Feeder ---> S1
+
+S.S.9, \ Generate the random set of trials.
+    S1, \ Generate a sampling without 3 in a row
+        0.01": RANDD U(0) = Q; RANDD U(1) = Q; RANDD U(2) = Q; RANDD U(3) = Q; RANDD U(4) = Q; RANDD U(5) = Q; SET X(0) = U(0) + U(1) + U(2); SET X(1) = U(1) + U(2) + U(3); SET X(2) = U(2) + U(3) + U(4); SET X(3) = U(3) + U(4) + U(5); IF (X(0) = 0) OR (X(0) = 3) OR (X(1) = 0) OR (X(1) = 3) OR (X(2) = 0) OR (X(2) = 3) OR (X(3) = 0) OR (X(3) = 3) [@True, @False] 
+                 @True: ---> S1
+                 @False: Z1 ---> S2
+ 
+    S2, \ Do nothing
+        #START: ---> SX
+
+S.S.10, \ Update the display
+
+    S1, \ Wait 9.99 seconds or for a Z-Pulse
+        9.99": ---> S2
+
+        #Z1: ---> S2
+
+    S2, \ Update the screen
+        .01": SHOW 1, Experiment Time (mins), T/60; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Current Trial (0 FI 1 FR), U(B(^CurrentTrialIdx)); SHOW 4, FI Rewards Collected, C(^NosepokeCountIdxL); SHOW 5, FR Rewards Collected, C(^NosepokeCountIdxR); SHOW 6, Correct Rights, C(^RightLeverCountIdx); SHOW 7, Correct Lefts, C(^LeftLeverCountIdx); SHOW 8, Unnecessary Rights, C(^WrongRightCountIdx); SHOW 9, Unnecessary Lefts, C(^WrongLeftCountIdx); SHOW 10, Left in Right, C(^LeftDurRightCountIdx); SHOW 11, Right in Left, C(^RightDurLeftCountIdx); SHOW 12, Bad Left in Right, C(^BLeftDurRightCountIdx); SHOW 12, Bad Right in Left, C(^BRightDurLeftCountIdx); SHOW 14, Unnecessary Nosepokes FI, C(^WrongNosepokeCountIdxL); SHOW 15, Unnecessary Nosepokes FR, C(^WrongNosepokeCountIdxR); SHOW 16, Current Right Presses, A(^SuccessiveLeverPressIdx); SHOW 17, Last IRT (secs), A(^LastIRTIdx); SHOW 18, Successive fast IRTs FR, A(^ConsecutiveIRTIdx); SHOW 19, Current Trial Index, B(^CurrentTrialIdx); SHOW 20, Trial 0 (0 FI 1 FR), U(0); SHOW 21, Trial 1 (0 FI 1 FR), U(1); SHOW 22, Trial 2 (0 FI 1 FR), U(2); SHOW 23, Trial 3 (0 FI 1 FR), U(3); SHOW 24, Trial 4 (0 FI 1 FR), U(4); SHOW 25, Trial 5 (0 FI 1 FR), U(5) ---> S1
+
+S.S.11 \ Stop the session
+    S1, \Wait for the stop z signal
+        #Z32: OFF ^RightLeverOut; OFF ^LeftLeverOut; OFF ^HouseLight; OFF ^RightLight; OFF ^LeftLight; IF C(^FeederCountIdx) >= A(^RequiredPelletsIdx) [@Succeed, @Fail] 
+                 @Succ: SET P = 1 ---> S2
+                 @Fail: SET P = 0 ---> S2
+ 
+    S2, \ Stop the session
+        3": ---> STOPABORTFLUSH

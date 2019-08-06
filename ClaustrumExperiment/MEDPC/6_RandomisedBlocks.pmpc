@@ -64,7 +64,6 @@
 \               Variable Descriptions
 \***************************************************
 
-\ TODO fix these to match A
 \ Aliases
     VAR_ALIAS Trial Length = A(0) \ Default 5
     VAR_ALIAS Max Pellets = A(1) \ Default 180
@@ -460,6 +459,8 @@ S.S.11 \ Stop the session
             OFF ^RightLeverOut;
             OFF ^HouseLight;
             OFF ^RightLight;
+            OFF ^LeftLeverOut;
+            OFF ^LeftLight;
             IF C(^FeederCountIdx) >= A(^RequiredPelletsIdx) [@Succeed, @Fail]
                 @Succ: SET P = 1 ---> S2
                 @Fail: SET P = 0 ---> S2
