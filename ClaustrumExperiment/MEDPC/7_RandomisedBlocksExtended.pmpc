@@ -409,6 +409,7 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
     S3, \ Detect correct nosepoke on FI
         1 #R ^Nosepoke:
             OFF ^RewardLight;
+            ADD V(^CurrentTrialIdx)
         ---> S2
 
         #Z6:
@@ -432,6 +433,7 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
     S5, \ Detect correct nosepoke on FR
         1 #R ^Nosepoke:
             OFF ^RewardLight;
+            ADD V(^CurrentTrialIdx)
         ---> S4
 
         #Z5:
@@ -522,7 +524,13 @@ S.S.10, \ Update the display
             SHOW 22, Trial 2 (0 FI 1 FR), U(2);
             SHOW 23, Trial 3 (0 FI 1 FR), U(3);
             SHOW 24, Trial 4 (0 FI 1 FR), U(4);
-            SHOW 25, Trial 5 (0 FI 1 FR), U(5)
+            SHOW 25, Trial 5 (0 FI 1 FR), U(5);
+            SHOW 26, Trial 0 Rewards, V(0);
+            SHOW 27, Trial 1 Rewards, V(1);
+            SHOW 28, Trial 2 Rewards, V(2);
+            SHOW 29, Trial 3 Rewards, V(3);
+            SHOW 30, Trial 4 Rewards, V(4);
+            SHOW 31, Trial 5 Rewards, V(5)
         ---> S1
 
 S.S.11 \ Stop the session

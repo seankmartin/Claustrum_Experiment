@@ -233,7 +233,7 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
         #Z6: ---> S4
     
     S3, \ Detect correct nosepoke on FI
-        1 #R ^Nosepoke: OFF ^RewardLight; ---> S2
+        1 #R ^Nosepoke: OFF ^RewardLight; ADD V(^CurrentTrialIdx) ---> S2
 
         #Z6: ---> S4
 
@@ -245,7 +245,7 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
         #Z5: ---> S2
     
     S5, \ Detect correct nosepoke on FR
-        1 #R ^Nosepoke: OFF ^RewardLight; ---> S4
+        1 #R ^Nosepoke: OFF ^RewardLight; ADD V(^CurrentTrialIdx) ---> S4
 
         #Z5: ---> S2
 
@@ -282,7 +282,7 @@ S.S.10, \ Update the display
         #Z1: ---> S2
 
     S2, \ Update the screen
-        .01": SHOW 1, Experiment Time (mins), T/60; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Current Trial (0 FI 1 FR), U(B(^CurrentTrialIdx)); SHOW 4, FI Rewards Collected, C(^NosepokeCountIdxL); SHOW 5, FR Rewards Collected, C(^NosepokeCountIdxR); SHOW 6, Correct Rights, C(^RightLeverCountIdx); SHOW 7, Correct Lefts, C(^LeftLeverCountIdx); SHOW 8, Unnecessary Rights, C(^WrongRightCountIdx); SHOW 9, Unnecessary Lefts, C(^WrongLeftCountIdx); SHOW 10, Unnecessary Nosepokes FI, C(^WrongNosepokeCountIdxL); SHOW 11, Unnecessary Nosepokes FR, C(^WrongNosepokeCountIdxR); SHOW 12, Current Right Presses, A(^SuccessiveLeverPressIdx); SHOW 13, Last IRT (secs), A(^LastIRTIdx); SHOW 14, Successive fast IRTs FR, A(^ConsecutiveIRTIdx); SHOW 15, Current Trial Index, B(^CurrentTrialIdx); SHOW 16, Trial 0 (0 FI 1 FR), U(0); SHOW 17, Trial 1 (0 FI 1 FR), U(1); SHOW 18, Trial 2 (0 FI 1 FR), U(2); SHOW 19, Trial 3 (0 FI 1 FR), U(3); SHOW 20, Trial 4 (0 FI 1 FR), U(4); SHOW 21, Trial 5 (0 FI 1 FR), U(5) ---> S1
+        .01": SHOW 1, Experiment Time (mins), T/60; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Current Trial (0 FI 1 FR), U(B(^CurrentTrialIdx)); SHOW 4, FI Rewards Collected, C(^NosepokeCountIdxL); SHOW 5, FR Rewards Collected, C(^NosepokeCountIdxR); SHOW 6, Correct Rights, C(^RightLeverCountIdx); SHOW 7, Correct Lefts, C(^LeftLeverCountIdx); SHOW 8, Unnecessary Rights, C(^WrongRightCountIdx); SHOW 9, Unnecessary Lefts, C(^WrongLeftCountIdx); SHOW 10, Unnecessary Nosepokes FI, C(^WrongNosepokeCountIdxL); SHOW 11, Unnecessary Nosepokes FR, C(^WrongNosepokeCountIdxR); SHOW 12, Current Right Presses, A(^SuccessiveLeverPressIdx); SHOW 13, Last IRT (secs), A(^LastIRTIdx); SHOW 14, Successive fast IRTs FR, A(^ConsecutiveIRTIdx); SHOW 15, Current Trial Index, B(^CurrentTrialIdx); SHOW 16, Trial 0 (0 FI 1 FR), U(0); SHOW 17, Trial 1 (0 FI 1 FR), U(1); SHOW 18, Trial 2 (0 FI 1 FR), U(2); SHOW 19, Trial 3 (0 FI 1 FR), U(3); SHOW 20, Trial 4 (0 FI 1 FR), U(4); SHOW 21, Trial 5 (0 FI 1 FR), U(5); SHOW 22, Trial 0 Rewards, V(0); SHOW 23, Trial 1 Rewards, V(1); SHOW 24, Trial 2 Rewards, V(2); SHOW 25, Trial 3 Rewards, V(3); SHOW 26, Trial 4 Rewards, V(4); SHOW 27, Trial 5 Rewards, V(5) ---> S1
 
 S.S.11 \ Stop the session
     S1, \Wait for the stop z signal
