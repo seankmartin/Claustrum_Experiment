@@ -59,15 +59,15 @@ sub setup_pins()
     'setup variables to pins
     left_lever_inpin = 1
     right_lever_inpin = 2
-    back_lever_inpin = 1 'TODO find actual value
+    back_lever_inpin = 3
 
     left_lever_outpin = 1
     right_lever_outpin = 2
-    back_lever_outpin = 1 'TODO find actual value
+    back_lever_outpin = 3
     left_light_outpin = 9
     right_light_outpin = 10
-    back_light_outpin = 10 'TODO find actual value
-    house_light_outpin = 11 'TODO find actual value
+    back_light_outpin = 11
+    house_light_outpin = 12
     food_outpin = 16
 end sub
 
@@ -111,6 +111,7 @@ sub reset()
 end sub
 
 sub set_left_side(state)
+    ' Set left light and lever to state
     SignalOut(left_light_outpin) = state
     SignalOut(left_lever_outpin) = state
 
@@ -118,6 +119,7 @@ sub set_left_side(state)
 end sub
 
 sub set_right_side(state)
+    ' Set right light and lever to state
     SignalOut(right_lever_outpin) = state
     SignalOut(right_light_outpin) = state
 
@@ -125,11 +127,13 @@ sub set_right_side(state)
 end sub
 
 sub reset_left_right()
+    ' Set right and left sides off
     set_right_side(off)
     set_left_side(off)
 end sub
 
 sub set_back_side(state)
+    ' Set back light and lever to state
     SignalOut(back_lever_outpin) = state
     SignalOut(back_light_outpin) = state
 
@@ -186,10 +190,10 @@ sub new_experiment(first)
             side = ";Right;"
             side_nice = "right lever"
         end if
-        print, "Starting Trial number ", elapsed_trials+1, " Out of ", num_trials
-        print, "Showing the subject ", side_nice, ", will delay ", delay_times[elapsed_trials], " seconds before the matching"
-        print #1, "Details for trial;", elapsed_trials+1
-        print #1, "Begin;" TrialTime, side, delay_times[elapsed_trials]
+        print "Starting Trial number ", elapsed_trials+1, " Out of ", num_trials
+        print "Showing the subject ", side_nice, ", will delay ", delay_times[elapsed_trials], " seconds before the matching"
+        print #1, "Trial;", elapsed_trials+1
+        print #1, "Begin;", TrialTime, side, delay_times[elapsed_trials]
 
         left_completed = 0
         right_completed = 0
@@ -221,7 +225,7 @@ end sub
 sub show_back_lever()
     ' Delay for a while and then show the back lever
     dim delay
-    delay = generate_random_float(max_match_delay)
+    delay = delay_times[elapsed_trials]
     DelayMS(delay * 1000)
     set_back_side(on)
     back_time = TrialTime
@@ -231,7 +235,7 @@ end sub
 sub start_lever_pressed(side)
     ' Call after the start lever is pressed, side = 1 denotes left
     elapsed_time = TrialTime - start_time
-    print #1, "Front", TrialTime, ";", elapsed_time
+    print #1, "Front;", TrialTime, ";", elapsed_time
 
     if (side = 1) then
         set_left_side(off)
@@ -251,18 +255,19 @@ sub back_lever_pressed()
     set_left_side(on)
     set_right_side(on)
     back_time = TrialTime
+    experiment_state = "End"
 end sub
 
 sub end_experiment(correct)
     elapsed_time = TrialTime - back_time
     reset_left_right()
-    if (correct = 1) then
+    if correct then
         correct_response()
     else
         incorrect_response()
     end if
 
-    print "Ending trial, was the subject correct in this trial? (1/0): ", correct
+    print "Ending trial, was the subject correct in this trial? ", correct
     print #1, "End;", TrialTime, ";", correct, ";", elapsed_time
     print #1, ";"
     new_experiment(0)
@@ -296,7 +301,6 @@ end sub
 
 sub main()
     ' Run the experiments and record the data
-    dim correct
     '''NB Change important variables here'''
     num_trials = 60 'Number of trials should be divisible by 2
     max_match_delay = 30 'Max time before the back lever comes out
@@ -309,6 +313,8 @@ sub main()
     tag = "Optional tag" ' You may tag this experiment if you wish
     'this should output in the same name format as other axona files
     open "data.log" for output as #1
+
+    dim correct
     full_init_before_record()
     StartUnitRecording
     new_experiment(1)
@@ -329,10 +335,12 @@ sub main()
             end if
         else 'Checking if the subject can remember the right lever
             if (SignalIn(right_lever_inpin) = off) then
-                correct = (trial_sides[elapsed_trials] = 0)
+                print "Pressed ", 0, "correct ", 1-trial_sides[elapsed_trials]
+                correct = (trial_sides[elapsed_trials] = 1)
                 end_experiment(correct)
             elseif (SignalIn(left_lever_inpin) = off) then
-                correct = (trial_sides[elapsed_trials] = 1)
+                print "Pressed ", 1, "correct ", 1-trial_sides[elapsed_trials]
+                correct = (trial_sides[elapsed_trials] = 0)
                 end_experiment(correct)
             end if
         end if
