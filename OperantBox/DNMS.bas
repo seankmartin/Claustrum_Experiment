@@ -195,8 +195,6 @@ sub new_experiment(first)
         print #1, "Trial;", elapsed_trials+1
         print #1, "Begin;", TrialTime, side, delay_times[elapsed_trials]
 
-        left_completed = 0
-        right_completed = 0
         start_time = TrialTime
         experiment_state = "Start"
     end if
