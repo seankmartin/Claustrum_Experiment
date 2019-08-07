@@ -11,6 +11,32 @@ import math
 import os.path
 from bv_utils import mycolors
 
+def split_lever_ts(session, out_dir, ax=None):
+    """Split lever ts for into schedule-based arrays of trials"""
+    # still in progress
+    timestamps = session.get_arrays()
+    lever_ts = session.get_lever_ts()
+    switch_ts = np.arange(5, 1830, 305)
+    reward_times = timestamps["Nosepoke"]
+    trial_type = session.get_arrays('Trial Type')
+
+    ratio_lever_ts = []
+    interval_lever_ts = []
+    block_lever_ts = np.split(lever_ts, np.searchsorted(lever_ts, switch_ts))
+    block_reward_ts = np.split(reward_times, np.searchsorted(reward_times, switch_ts))
+    for i, (l, r) in enumerate(zip(block_lever_ts, block_reward_ts)):
+        if trial_type[i] == 1:  # FR Block
+            split_lever_ts = np.split(l, np.searchsorted(l, r))
+            ratio_lever_ts.append(split_lever_ts)
+        elif trial_type[i] == 0:  # FR Block
+            split_lever_ts = np.split(l, np.searchsorted(l, r))
+            interval_lever_ts.append(split_lever_ts)
+        else:
+            print('Not Ready for analysis!')
+    print('len of ratio_l'+len(ratio_lever_ts))
+    print('len of interval_l'+len(interval_lever_ts))
+    return ratio_lever_ts, interval_lever_ts
+
 
 def cumplot(session, out_dir, ax=None, smooth=False, zoom=False, zoom_sch=False, title=False):
     """Perform a cumulative plot for a Session."""
@@ -19,10 +45,9 @@ def cumplot(session, out_dir, ax=None, smooth=False, zoom=False, zoom_sch=False,
     lever_ts = session.get_lever_ts()
     session_type = session.get_metadata('name')
     subject = session.get_metadata('subject')
-
-    # You have the array sorted, no need to histogram
     reward_times = timestamps["Nosepoke"]
     single_plot = False
+    
     if ax is None:
         single_plot = True
         fig, ax = plt.subplots()
@@ -287,3 +312,4 @@ def show_IRT_details(IRT, maxidx, hist_bins):
     print('Min IRT: {0:.2f} s'.format(np.amin(IRT)))
     print('Max IRT: {0:.2f} s'.format(np.amax(IRT)))
     print('IRTs: ', np.round(IRT, decimals=2))
+

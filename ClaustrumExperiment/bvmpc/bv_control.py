@@ -1,5 +1,6 @@
 """Control script for MEDPC behaviour analysis."""
 import os
+import math
 import numpy as np
 from bv_parse_sessions import SessionExtractor, Session
 import bv_analyse as bv_an
@@ -8,31 +9,32 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
-def plot_sessions():
+def plot_sessions(summary=True, timeline=False):
     # Parameters for specifying session
     sub_list = ['1', '2', '3', '4', '5', '6']
-#    sub_list = ['3']
+#    sub_list = ['6']
 #    sub_list = ['1', '2', '3', '4']
 #    sub_list = ['5', '6']
-    s_list = ['5a', '5b']
-    d_list = ['07-31']
+    s_list = ['6']
+    d_list = ['08-07']
     in_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
     out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
 
-    # Summary plot for Cum Graph
-#    for c, sub in enumerate(sub_list):
-        #extracts hdf5 session based on specification
-    s_grp, out_name = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
-    if len(s_grp) > 6:
-        s_grp1 = s_grp[::2]
-        sum_plot(s_grp1, out_name+'_1', out_dir, IRT=False)
-        s_grp2 = s_grp[1::2]
-        sum_plot(s_grp2, out_name+'_2', out_dir, IRT=False)        
-    else:
-        sum_plot(s_grp, out_name, out_dir, IRT=False)
-    
-#    # Plots timeline for specified subjects    
-#    timeline_plot(sub_list, in_dir, out_dir, True)
+    if summary:
+        # Summary plot for Cum Graph
+#        for c, sub in enumerate(sub_list):
+            #  extracts hdf5 session based on specification
+        s_grp, out_name = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
+        if len(s_grp) > 6:
+            s_grp1 = s_grp[::2]
+            sum_plot(s_grp1, out_name+'_1', out_dir, IRT=False)
+            s_grp2 = s_grp[1::2]
+            sum_plot(s_grp2, out_name+'_2', out_dir, IRT=False)        
+        else:
+            sum_plot(s_grp, out_name, out_dir, IRT=False)
+    if timeline:
+        # Plots timeline for specified subjects    
+        timeline_plot(sub_list, in_dir, out_dir, single_plot=True)
 
 def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
     # Plot size
@@ -43,8 +45,6 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
             tight_layout=False) 
     gs = gridspec.GridSpec(rows, cols, wspace=0.4, hspace=0.5)
     for c, sub in enumerate(sub_list):
-            
-        
         # Plot total pellets across sessions
         s_grp, out_name = extract_hdf5s(in_dir, out_dir, sub)
         s_list = []
@@ -73,8 +73,8 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
             ax = fig.add_subplot(gs[0, :])
             out_name = "Timeline" + out_name + ".png"
         else:
-            ax = fig.add_subplot(gs[int(subject)-1, :])  # For use w Sub 1-4
-#            ax = fig.add_subplot(gs[int(subject)-5, :])  # For use w Sub 5-6
+#            ax = fig.add_subplot(gs[int(subject)-1, :])  # For use w Sub 1-4
+            ax = fig.add_subplot(gs[int(subject)-5, :])  # For use w Sub 5-6
         plt.plot(s_idx, r_list, label='Animal'+subject, linewidth='4',
                  color=mycolors(subject))
         plt.xticks(s_idx, s_list, fontsize=15)
@@ -109,7 +109,7 @@ def sum_plot(s_grp, out_name, out_dir, zoom=True, IRT=True):
         cols = 2
         if IRT or zoom:
             if len(s_grp) > 2:
-                cols = 2*round(len(s_grp)/2)
+                cols = 2*math.ceil(len(s_grp)/2)
                 rows = 2
             else:
                 rows = len(s_grp)
@@ -136,7 +136,7 @@ def sum_plot(s_grp, out_name, out_dir, zoom=True, IRT=True):
                 bv_an.cumplot(s, out_dir, ax2, smooth=False, zoom=False, zoom_sch=True)
             plt.tight_layout()
         
-        out_name = "Sum_plot" + out_name + ".png"
+        out_name = "Sum" + out_name + ".png"
         print("Saved figure to {}".format(
             os.path.join(out_dir, out_name)))
         fig.savefig(os.path.join(out_dir, out_name), dpi=400)
@@ -250,7 +250,7 @@ if __name__ == "__main__":
 #    out_dir = r"G:\out_plots"
 #    out_dir = r"/home/sean/Documents/Data/results"
     
-#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-05"
+#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-06"
 #    out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
 #    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
 #    run_mpc_file(filename, out_dir)
