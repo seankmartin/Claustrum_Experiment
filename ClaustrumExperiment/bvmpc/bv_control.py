@@ -299,7 +299,7 @@ if __name__ == "__main__":
 #    out_dir = r"G:\out_plots"
 #    out_dir = r"/home/sean/Documents/Data/results"
     
-#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-07"
+#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-08"
 #    out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
 #    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
 #    run_mpc_file(filename, out_dir)

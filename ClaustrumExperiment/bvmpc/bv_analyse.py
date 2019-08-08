@@ -147,7 +147,7 @@ def cumplot(session, out_dir, ax=None, zoom=False,
         norm_reward_ts = []
         norm_lever_ts = []
         norm_err_ts = []
-        ratio_c = plt.cm.get_cmap('autumn')
+        ratio_c = plt.cm.get_cmap('Wistia')
         interval_c = plt.cm.get_cmap('winter')
         for i, l in enumerate(sch_lever_ts[1:]):
             norm_lever_ts.append(np.append([0], l-sch_switch[i], axis=0))
