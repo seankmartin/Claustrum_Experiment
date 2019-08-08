@@ -41,7 +41,7 @@ def split_lever_ts(session, out_dir, ax=None):
 
 
 def cumplot(session, out_dir, ax=None, zoom=False,
-            zoom_sch=False, title=False):
+            zoom_sch=False, plot_error=False, plot_all=False):
     """Perform a cumulative plot for a Session."""
     date = session.get_metadata('start_date').replace('/', '_')
     timestamps = session.get_arrays()
@@ -126,38 +126,53 @@ def cumplot(session, out_dir, ax=None, zoom=False,
         # plots cum graph based on schedule type (i.e. FI/FR)
         sch_type = session.get_arrays('Trial Type')
         sch_switch = np.arange(5, 1830, 305)
-#        if stage == '7':  # plots errors only
-#            lever_ts = session.get_err_lever_ts()
-
-#        if stage == '7': # plots all responses incl. errors
-#            err_lever_ts = session.get_err_lever_ts()
-#            lever_ts = np.sort(np.concatenate((
-#                    lever_ts, err_lever_ts), axis=None))
+        incl = ""
+        if stage == '7' and plot_error:  # plots errors only
+            incl = '_Errors_Only'
+            lever_ts = session.get_err_lever_ts()
+        elif stage == '7' and plot_all: # plots all responses incl. errors
+            incl = '_All'
+            err_lever_ts = session.get_err_lever_ts()
+            lever_ts = np.sort(np.concatenate((
+                    lever_ts, err_lever_ts), axis=None))
+            sch_err_ts = np.split(err_lever_ts,
+                                np.searchsorted(err_lever_ts, sch_switch))
+        elif stage == '7': # plots all responses exclu. errors
+            incl = '_Correct Only'
+            
         sch_lever_ts = np.split(lever_ts,
                                 np.searchsorted(lever_ts, sch_switch))
         sch_reward_ts = np.split(reward_times,
                                  np.searchsorted(reward_times, sch_switch))
         norm_reward_ts = []
         norm_lever_ts = []
+        norm_err_ts = []
         ratio_c = plt.cm.get_cmap('autumn')
         interval_c = plt.cm.get_cmap('winter')
         for i, l in enumerate(sch_lever_ts[1:]):
             norm_lever_ts.append(np.append([0], l-sch_switch[i], axis=0))
             norm_reward_ts.append(sch_reward_ts[i+1]-sch_switch[i])
+            if stage == '7' and plot_all: # plots all responses incl. errors
+                norm_err_ts.append(sch_err_ts[i+1]-sch_switch[i])
         ax.set_xlim(0, 305)
         for i, l in enumerate(norm_lever_ts):
             if sch_type[i] == 1:
-                ax.step(l, np.arange(l.size), c=ratio_c(i*45),
-                        where="post", label='B'+str(i+1)+' - FR')
+                ax.step(l, np.arange(l.size), c=ratio_c(i*45), where="post",
+                         label='B'+str(i+1)+' - FR', zorder=1)
             else:
-                ax.step(l, np.arange(l.size), c=interval_c(i*45),
-                        where="post", label='B'+str(i+1)+' - FI')
+                ax.step(l, np.arange(l.size), c=interval_c(i*45), where="post",
+                         label='B'+str(i+1)+' - FI', zorder=1)
             bins = l
             reward_y = np.digitize(norm_reward_ts[i], bins) - 1
+            if stage == '7' and plot_all: # plots all responses incl. errors
+                    ax.scatter(norm_err_ts[i], np.isin(
+                    l, norm_err_ts[i]).nonzero()[0],
+                    c='r', s=1, zorder=2)
+                    incl = '_All'
             plt.scatter(norm_reward_ts[i], reward_y,
                         marker="x", c="grey", s=25)
-        ax.set_title('\nSubject {}, Schedule-Based'.format(
-                subject), fontsize=12)
+        ax.set_title('\nSubject {}, Block-Split {}'.format(
+                subject, incl), fontsize=12)
         ax.legend()
         return
 
@@ -196,18 +211,18 @@ def cumplot(session, out_dir, ax=None, zoom=False,
         return
 
     else:
-#        if stage == '7':
-#            err_lever_ts = session.get_err_lever_ts()
-#            lever_ts = np.sort(np.concatenate((
-#                    lever_ts, err_lever_ts), axis=None))
+        if stage == '7':
+            err_lever_ts = session.get_err_lever_ts()
+            lever_ts = np.sort(np.concatenate((
+                    lever_ts, err_lever_ts), axis=None))
         lever_times = np.insert(lever_ts, 0, 0, axis=0)
         ax.step(lever_times, np.arange(
             lever_times.size), c=mycolors(subject),
-                where="post", label='Animal'+subject)
-#        if stage == '7':  # plots error press in red
-#            ax.step(err_lever_ts, np.isin(
-#                    lever_times, err_lever_ts).nonzero()[0],
-#                    c='r', where="post", label='Errors')
+                where="post", label='Animal'+subject, zorder=1)
+        if stage == '7':  # plots error press in red
+            ax.scatter(err_lever_ts, np.isin(
+                    lever_times, err_lever_ts).nonzero()[0],
+                    c='r', label='Errors', s=1, zorder=2)
         if reward_times[-1] > lever_times[-1]:
             ax.plot(
                 [lever_times[-1], reward_times[-1] + 2],
@@ -216,14 +231,14 @@ def cumplot(session, out_dir, ax=None, zoom=False,
         bins = lever_times
         reward_y = np.digitize(reward_times, bins) - 1
 
-    plt.scatter(reward_times, reward_y, marker="x", c="grey",
+    ax.scatter(reward_times, reward_y, marker="x", c="grey",
                 label='Reward Collected', s=25)
     ax.legend()
 #    ax.set_xlim(0, 30 * 60 + 30)
 
     if single_plot:
-        out_name = (subject.zfill(3) + "_CumulativeHist_" +
-                    session_type[:-2] + "_" + date + ".png")
+        out_name = (subject.zfill(3) + "_CumulativeHist_" + date +
+                    "_" + session_type[:-2]  + ".png")
         out_name = os.path.join(out_dir, out_name)
         print("Saved figure to {}".format(out_name))
         # Text Display on Graph
@@ -233,7 +248,7 @@ def cumplot(session, out_dir, ax=None, zoom=False,
         plt.close()
     else:
         # Text Display on Graph
-        ax.text(0.43, 0.2, 'Total # of Lever Press: {}\nTotal # of Rewards: {}'
+        ax.text(0.05, 0.85, 'Total # of Lever Press: {}\nTotal # of Rewards: {}'
                 .format(len(lever_ts), len(reward_times)), transform=ax.transAxes)
         return
 

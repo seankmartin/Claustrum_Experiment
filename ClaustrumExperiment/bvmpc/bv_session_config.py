@@ -104,7 +104,7 @@ class SessionInfo:
                 # R during FI Trial; R when L available
                 ['G:', 'H:', 'FI_Err'],
                 # L during FR Trial_Un; L before reward collection
-#                ['H:', 'I:', 'Un_FR_Err'],
+                ['H:', 'I:', 'Un_FR_Err'],
                 # R during FI Trial_Un; R during waiting time
                 ['I:', 'L:', 'Un_FI_Err'],
                 ['L:', 'M:', 'L'],

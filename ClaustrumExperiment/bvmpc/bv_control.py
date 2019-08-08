@@ -9,21 +9,19 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
-def plot_sessions(summary=True, timeline=False):
+def plot_sessions(summary=False, single=True, timeline=False):
     # Parameters for specifying session
     sub_list = ['1', '2', '3', '4', '5', '6']
 #    sub_list = ['6']
 #    sub_list = ['1', '2', '3', '4']
 #    sub_list = ['5', '6']
-    s_list = ['7']
+    s_list = ['6', '7']
     d_list = ['08-07']
-    in_dir = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
-    out_dir = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
+    in_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
+    out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
 
     if summary:
-        # Summary plot for Cum Graph
-#        for c, sub in enumerate(sub_list):
-            #  extracts hdf5 session based on specification
+        #  extracts hdf5 session based on specification
         s_grp, out_name = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
         if len(s_grp) > 6:
             s_grp1 = s_grp[::2]
@@ -32,9 +30,97 @@ def plot_sessions(summary=True, timeline=False):
             sum_plot(s_grp2, out_name+'_2', out_dir, IRT=False)        
         else:
             sum_plot(s_grp, out_name, out_dir, IRT=False)
+    elif single:
+        # Single Subject Plots
+        for c, sub in enumerate(sub_list):
+            s_grp, out_name = extract_hdf5s(in_dir, out_dir, sub, s_list, d_list)
+            s_passed = []
+            for s in s_grp:
+                stage = s.get_metadata('name')[:2].replace('_', '')
+                s_passed.append(stage)
+                subject = s.get_metadata('subject')
+            if '7' in s_passed:
+                size_multiplier = 5
+                rows, cols = [len(s_grp), 4]
+                fig = plt.figure(
+                        figsize=(cols * size_multiplier,
+                                 rows * size_multiplier), tight_layout=False)
+                gs = gridspec.GridSpec(rows, cols, wspace=0.3, hspace=0.3)
+                for i, s in enumerate(s_grp):
+                    ax1 = fig.add_subplot(gs[i, 0])
+                    bv_an.cumplot(s, out_dir, ax1, zoom=False, zoom_sch=False)
+                    ax2 = fig.add_subplot(gs[i, 1])
+                    bv_an.cumplot(s, out_dir, ax2, zoom=False, zoom_sch=True,
+                              plot_error=False, plot_all=True)
+                    ax3 = fig.add_subplot(gs[i, 2])
+                    bv_an.cumplot(s, out_dir, ax3, zoom=False, zoom_sch=True,
+                              plot_error=False, plot_all=False)
+                    ax4 = fig.add_subplot(gs[i, 3])
+                    bv_an.cumplot(s, out_dir, ax4, zoom=False, zoom_sch=True,
+                              plot_error=True, plot_all=False)
+                fig.suptitle(('Subject ' + subject + ' Performance'), fontsize=30)
+#                # Seperate plots w line
+#                ax1.hlines(1.13, -0, 4.9, clip_on=False,
+#                           transform=ax1.transAxes, linewidth=0.7)
+                out_name = "Sum" + out_name + ".png"
+                print("Saved figure to {}".format(
+                    os.path.join(out_dir, out_name)))
+                fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+                plt.close()
+            else:
+                sum_plot(s_grp, out_name, out_dir, IRT=False, single=single)
+            
     if timeline:
-        # Plots timeline for specified subjects    
-        timeline_plot(sub_list, in_dir, out_dir, single_plot=True)
+        if not single:
+            sub_list = [['1', '2', '3', '4'], ['5', '6']]
+            for l in sub_list:
+                timeline_plot(l, in_dir, out_dir, single_plot=single)
+        else:
+            # Plots timeline for specified subjects
+            timeline_plot(sub_list, in_dir, out_dir, single_plot=single)
+
+
+def sum_plot(s_grp, out_name, out_dir, zoom=True, IRT=True, single=False):
+    # Plots summary of day
+    cols = 2
+    if IRT or zoom:
+        if len(s_grp) > 2:
+            cols = 2*math.ceil(len(s_grp)/2)
+            rows = 2
+        else:
+            rows = len(s_grp)
+    else:
+        rows = 1
+    size_multiplier = 5
+    fig = plt.figure(
+            figsize=(cols * size_multiplier, rows * size_multiplier),
+            tight_layout=False)
+    gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
+
+    for i, s in enumerate(s_grp):
+        subject = s.get_metadata('subject')
+        if IRT or zoom:
+            ax1 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2])
+        else:
+            ax1 = fig.add_subplot(gs[0, i])
+        bv_an.cumplot(s, out_dir, ax1, zoom=False, zoom_sch=False)
+
+        if IRT:
+            ax2 = fig.add_subplot(gs[i, 1])
+            bv_an.IRT(s, out_dir, ax2,)
+        elif zoom:
+            ax2 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2+1])
+            bv_an.cumplot(s, out_dir, ax2, zoom=False, zoom_sch=True,
+                          plot_error=False, plot_all=True)
+        plt.tight_layout()
+    if single:
+        fig.suptitle(('Subject ' + subject + ' Performance'), fontsize=30)
+    out_name = "Sum" + out_name + ".png"
+    print("Saved figure to {}".format(
+        os.path.join(out_dir, out_name)))
+    fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+    plt.close()
+
 
 def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
     # Plot size
@@ -76,8 +162,8 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
             ax = fig.add_subplot(gs[0, :])
             out_name = "Timeline" + out_name + ".png"
         else:
-#            ax = fig.add_subplot(gs[int(subject)-1, :])  # For use w Sub 1-4
-            ax = fig.add_subplot(gs[int(subject)-5, :])  # For use w Sub 5-6
+            ax = fig.add_subplot(gs[int(c), :])
+
         plt.plot(s_idx, r_list, label='Animal'+subject, linewidth='4',
                  color=mycolors(subject))
         plt.xticks(s_idx, s_list, fontsize=15)
@@ -106,45 +192,6 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
         plt.close()
 
 
-def sum_plot(s_grp, out_name, out_dir, zoom=True, IRT=True):
-    # Plots summary of day
-    cols = 2
-    if IRT or zoom:
-        if len(s_grp) > 2:
-            cols = 2*math.ceil(len(s_grp)/2)
-            rows = 2
-        else:
-            rows = len(s_grp)
-    else:
-        rows = 1
-    size_multiplier = 5
-    fig = plt.figure(
-            figsize=(cols * size_multiplier, rows * size_multiplier),
-            tight_layout=False)
-    gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
-
-    for i, s in enumerate(s_grp):
-        if IRT or zoom:
-            ax1 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2])
-        else:
-            ax1 = fig.add_subplot(gs[0, i])
-        bv_an.cumplot(s, out_dir, ax1, zoom=False, zoom_sch=False)
-
-        if IRT:
-            ax2 = fig.add_subplot(gs[i, 1])
-            bv_an.IRT(s, out_dir, ax2,)
-        elif zoom:
-            ax2 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2+1])
-            bv_an.cumplot(s, out_dir, ax2, zoom=False, zoom_sch=True)
-        plt.tight_layout()
-
-    out_name = "Sum" + out_name + ".png"
-    print("Saved figure to {}".format(
-        os.path.join(out_dir, out_name)))
-    fig.savefig(os.path.join(out_dir, out_name), dpi=400)
-    plt.close()
-
-
 def extract_hdf5s(in_dir, out_dir, sub_list=None, s_list=None, d_list=None):
     '''Extracts specified sessions from hdf5 files '''
     
@@ -165,7 +212,7 @@ def extract_hdf5s(in_dir, out_dir, sub_list=None, s_list=None, d_list=None):
     if d_list is not None:
         name_dict["d_list"] = d_list
     out_name = ""
-    names = ["sub_list", "s_list", "d_list"]
+    names = ["sub_list", "d_list", "s_list"]
     for name in names:
         out_name = out_name + "_" + str(name_dict.get(name, ""))
     out_name.replace("__", "_")

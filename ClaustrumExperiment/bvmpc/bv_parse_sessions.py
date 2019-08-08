@@ -305,10 +305,9 @@ class Session:
         if end_char == 'END':
             # Last timepoint does not have a end_char
             stop_index = [lines.size]
-
-        data_lines = lines[start_index[0] + 1:stop_index[0]]
-        if not data_lines.size:
+        if start_index[0] + 1 == stop_index[0]:
             return np.array([])
+        data_lines = lines[start_index[0] + 1:stop_index[0]]
 
         last_line = parse_line(data_lines[-1])
         arr = np.empty(
