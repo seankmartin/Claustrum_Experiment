@@ -216,6 +216,28 @@ class Session:
             levers.append(self.get_arrays("Un_L"))
         return np.sort(np.concatenate(levers, axis=None))
 
+    def get_err_lever_ts(self, include_un=True):
+        """
+        Get the timestamps of the error/opposite lever presses.
+
+        Parameters
+        ----------
+        include_un : bool - Default True
+            Include lever presses that were unnecessary for the reward.
+
+        Returns
+        -------
+        np.ndarray : A numpy array of sorted timestamps.
+
+        """
+        levers = [
+            self.get_arrays("FR_Err"),
+            self.get_arrays("FI_Err")]
+        if include_un:
+            levers.append(self.get_arrays("Un_FR_Err"))
+            levers.append(self.get_arrays("Un_FI_Err"))
+        return np.sort(np.concatenate(levers, axis=None))
+
     def time_taken(self):
         """Calculate how long the Session took in mins."""
         start_time = self.get_metadata("start_time")[-8:].replace(' ', '0')

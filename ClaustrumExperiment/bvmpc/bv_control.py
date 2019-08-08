@@ -15,10 +15,10 @@ def plot_sessions(summary=True, timeline=False):
 #    sub_list = ['6']
 #    sub_list = ['1', '2', '3', '4']
 #    sub_list = ['5', '6']
-    s_list = ['6']
+    s_list = ['7']
     d_list = ['08-07']
-    in_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
-    out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
+    in_dir = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
+    out_dir = r"E:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
 
     if summary:
         # Summary plot for Cum Graph
@@ -56,9 +56,12 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
             if s_type == '5a':
                 s_name = 'R' + str(int(timestamps["Experiment Variables"][3]))
             elif s_type == '5b':
-                s_name = 'I' + str(int(timestamps["Experiment Variables"][3]/100))
+                s_name = 'I' + str(int(timestamps[
+                        "Experiment Variables"][3]/100))
             else:
-                s_name = s_type.replace('_', '').replace('2','M').replace('3','Lh').replace('4','Lt').replace('6', 'R1')
+                s_name = s_type.replace('_', '').replace('2', 'M').replace(
+                        '3', 'Lh').replace('4', 'Lt').replace(
+                                '6', 'R1').replace('7', 'R2')
             rewards_t = len(timestamps["Reward"])
             s_list.append(s_name)
             r_list.append(rewards_t)
@@ -103,44 +106,43 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
         plt.close()
 
 
-    
 def sum_plot(s_grp, out_name, out_dir, zoom=True, IRT=True):
-        # Plots summary of day
-        cols = 2
-        if IRT or zoom:
-            if len(s_grp) > 2:
-                cols = 2*math.ceil(len(s_grp)/2)
-                rows = 2
-            else:
-                rows = len(s_grp)
+    # Plots summary of day
+    cols = 2
+    if IRT or zoom:
+        if len(s_grp) > 2:
+            cols = 2*math.ceil(len(s_grp)/2)
+            rows = 2
         else:
-            rows = 1
-        size_multiplier = 5
-        fig = plt.figure(
-                figsize=(cols * size_multiplier, rows * size_multiplier), 
-                tight_layout=False)
-        gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
-            
-        for i, s in enumerate(s_grp):
-            if IRT or zoom:
-                ax1 = fig.add_subplot(gs[(i+2)%2, int(i/2)*2])
-            else:
-                ax1 = fig.add_subplot(gs[0, i])
-            bv_an.cumplot(s, out_dir, ax1, smooth=False, zoom=False, zoom_sch=False)
-            
-            if IRT:
-                ax2 = fig.add_subplot(gs[i, 1])        
-                bv_an.IRT(s, out_dir, ax2, smooth=False)
-            elif zoom:
-                ax2 = fig.add_subplot(gs[(i+2)%2, int(i/2)*2+1])
-                bv_an.cumplot(s, out_dir, ax2, smooth=False, zoom=False, zoom_sch=True)
-            plt.tight_layout()
-        
-        out_name = "Sum" + out_name + ".png"
-        print("Saved figure to {}".format(
-            os.path.join(out_dir, out_name)))
-        fig.savefig(os.path.join(out_dir, out_name), dpi=400)
-        plt.close()
+            rows = len(s_grp)
+    else:
+        rows = 1
+    size_multiplier = 5
+    fig = plt.figure(
+            figsize=(cols * size_multiplier, rows * size_multiplier),
+            tight_layout=False)
+    gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
+
+    for i, s in enumerate(s_grp):
+        if IRT or zoom:
+            ax1 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2])
+        else:
+            ax1 = fig.add_subplot(gs[0, i])
+        bv_an.cumplot(s, out_dir, ax1, zoom=False, zoom_sch=False)
+
+        if IRT:
+            ax2 = fig.add_subplot(gs[i, 1])
+            bv_an.IRT(s, out_dir, ax2,)
+        elif zoom:
+            ax2 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2+1])
+            bv_an.cumplot(s, out_dir, ax2, zoom=False, zoom_sch=True)
+        plt.tight_layout()
+
+    out_name = "Sum" + out_name + ".png"
+    print("Saved figure to {}".format(
+        os.path.join(out_dir, out_name)))
+    fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+    plt.close()
 
 
 def extract_hdf5s(in_dir, out_dir, sub_list=None, s_list=None, d_list=None):
@@ -250,7 +252,7 @@ if __name__ == "__main__":
 #    out_dir = r"G:\out_plots"
 #    out_dir = r"/home/sean/Documents/Data/results"
     
-#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-06"
+#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-07"
 #    out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
 #    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
 #    run_mpc_file(filename, out_dir)
