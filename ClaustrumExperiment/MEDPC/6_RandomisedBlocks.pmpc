@@ -314,7 +314,6 @@ S.S.4, \ Fixed interval task
             IF Y = 0 [@Good, @Bad]
                 @Good: ---> S5
                 @Bad: ---> S6
-        ---> S5
 
         1 #R ^LeftLever:
             SET M(B(^WrongLeftTimeIdx)) = T;
@@ -465,7 +464,7 @@ S.S.7, \ Drop pellets
     
     S4, \ Turn on feeder for second reward
         0.1":
-            ON ^Feeder
+            ON ^Feeder;
             SET D(B(^FeederTimeIdx)) = T;
             ADD B(^FeederTimeIdx);
             ADD C(^FeederCountIdx);
@@ -535,7 +534,7 @@ S.S.10, \ Update the display
             SHOW 28, Double Rewards, C(^DoubleRewardIdx)
         ---> S1
 
-S.S.11 \ Stop the session
+S.S.11, \ Stop the session
     S1, \Wait for the stop z signal
         #Z32:
             OFF ^RightLeverOut;
