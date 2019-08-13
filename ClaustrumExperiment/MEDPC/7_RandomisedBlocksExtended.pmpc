@@ -533,7 +533,7 @@ S.S.10, \ Update the display
             SHOW 31, Trial 5 Rewards, V(5)
         ---> S1
 
-S.S.11 \ Stop the session
+S.S.11, \ Stop the session
     S1, \Wait for the stop z signal
         #Z32:
             OFF ^RightLeverOut;

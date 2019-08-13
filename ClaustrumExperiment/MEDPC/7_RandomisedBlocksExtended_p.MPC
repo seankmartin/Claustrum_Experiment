@@ -314,7 +314,7 @@ S.S.10, \ Update the display
     S2, \ Update the screen
         .01": SHOW 1, Experiment Time (mins), T/60; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Current Trial (0 FI 1 FR), U(B(^CurrentTrialIdx)); SHOW 4, FI Rewards Collected, C(^NosepokeCountIdxL); SHOW 5, FR Rewards Collected, C(^NosepokeCountIdxR); SHOW 6, Correct Rights, C(^RightLeverCountIdx); SHOW 7, Correct Lefts, C(^LeftLeverCountIdx); SHOW 8, Unnecessary Rights, C(^WrongRightCountIdx); SHOW 9, Unnecessary Lefts, C(^WrongLeftCountIdx); SHOW 10, Left in Right, C(^LeftDurRightCountIdx); SHOW 11, Right in Left, C(^RightDurLeftCountIdx); SHOW 12, Bad Left in Right, C(^BLeftDurRightCountIdx); SHOW 13, Bad Right in Left, C(^BRightDurLeftCountIdx); SHOW 14, Unnecessary Nosepokes FI, C(^WrongNosepokeCountIdxL); SHOW 15, Unnecessary Nosepokes FR, C(^WrongNosepokeCountIdxR); SHOW 16, Current Right Presses, A(^SuccessiveLeverPressIdx); SHOW 17, Last IRT (secs), A(^LastIRTIdx); SHOW 18, Successive fast IRTs FR, A(^ConsecutiveIRTIdx); SHOW 19, Current Trial Index, B(^CurrentTrialIdx); SHOW 20, Trial 0 (0 FI 1 FR), U(0); SHOW 21, Trial 1 (0 FI 1 FR), U(1); SHOW 22, Trial 2 (0 FI 1 FR), U(2); SHOW 23, Trial 3 (0 FI 1 FR), U(3); SHOW 24, Trial 4 (0 FI 1 FR), U(4); SHOW 25, Trial 5 (0 FI 1 FR), U(5); SHOW 26, Trial 0 Rewards, V(0); SHOW 27, Trial 1 Rewards, V(1); SHOW 28, Trial 2 Rewards, V(2); SHOW 29, Trial 3 Rewards, V(3); SHOW 30, Trial 4 Rewards, V(4); SHOW 31, Trial 5 Rewards, V(5) ---> S1
 
-S.S.11 \ Stop the session
+S.S.11, \ Stop the session
     S1, \Wait for the stop z signal
         #Z32: OFF ^RightLeverOut; OFF ^LeftLeverOut; OFF ^HouseLight; OFF ^RightLight; OFF ^LeftLight; IF C(^FeederCountIdx) >= A(^RequiredPelletsIdx) [@Succeed, @Fail] 
                  @Succ: SET P = 1 ---> S2
