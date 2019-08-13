@@ -388,7 +388,7 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
     S3, \ Detect correct nosepoke on FI
         1 #R ^Nosepoke:
             OFF ^RewardLight;
-            ADD V(^CurrentTrialIdx)
+            ADD V(B(^CurrentTrialIdx))
         ---> S2
 
         #Z6:
@@ -412,7 +412,7 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
     S5, \ Detect correct nosepoke on FR
         1 #R ^Nosepoke:
             OFF ^RewardLight;
-            ADD V(^CurrentTrialIdx)
+            ADD V(B(^CurrentTrialIdx))
         ---> S4
 
         #Z5:
