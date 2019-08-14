@@ -395,7 +395,7 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
     
     S3, \ Detect correct nosepoke on FI
         1 #R ^Nosepoke:
-            OFF ^RewardLight;
+            OFF ^RewardLight
         ---> S2
 
         #Z4: 

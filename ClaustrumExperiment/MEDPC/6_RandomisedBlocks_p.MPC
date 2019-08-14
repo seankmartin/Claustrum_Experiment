@@ -165,7 +165,7 @@ S.S.1, \ Control flow
 \***************************************************
 S.S.2, \ Trial Switching logic
     S1, \ Wait for start signal
-        #START: SET A(^FixedIntervalIdx) = A(^FixedIntervalIdx) * 1"; SET B(^CurrentTrialIdx) = -1; SET A(^FirstWait) = A(^FixedIntervalIdx) - (A(^FixedWindowIdx) * 1"); SET A(^SecondWait) = (A(^FixedWindowIdx) * 2) * 1"; SET A(^FixedWindowIdx) = A(^FixedWindowIdx) * 1" ---> S2
+        #START: SET B(^CurrentTrialIdx) = -1; SET A(^FirstWait) = (A(^FixedIntervalIdx) - A(^FixedWindowIdx)) * 1"; SET A(^SecondWait) = (A(^FixedWindowIdx) * 2) * 1"; SET A(^FixedIntervalIdx) = A(^FixedIntervalIdx) * 1"; SET A(^FixedWindowIdx) = A(^FixedWindowIdx) * 1" ---> S2
     
     S2, \ Wait for a z pulse to switch
         #Z4: ADD B(^CurrentTrialIdx); IF B(^CurrentTrialIdx) = 6 [@End, @Continue] 
@@ -257,14 +257,12 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
 
         #Z2: ---> S3
 
-        #Z8: ---> S6 
+        #Z8: ---> S6
 
         #Z4: ---> S1
     
     S3, \ Detect correct nosepoke on FI
         1 #R ^Nosepoke: OFF ^RewardLight ---> S2
-
-        #Z6: ---> S4
 
         #Z4: OFF ^RewardLight ---> S1
 
@@ -278,11 +276,10 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
     S5, \ Detect correct nosepoke on FR
         1 #R ^Nosepoke: OFF ^RewardLight ---> S4
 
-        #Z4: OFF ^RewardLight ---> S1
+         #Z4: OFF ^RewardLight ---> S1
 
     S6, \ Wait a bit then look for nosepoke
-        0.3": ---> S3
-
+        0.3": ---> S3 
 S.S.6, \ Handle the FR IRT logic
 
     S1, \ Trial finished, get IRT
