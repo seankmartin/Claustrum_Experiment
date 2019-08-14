@@ -263,6 +263,7 @@ S.S.3, \ Fixed Ratio task
 S.S.4, \ Fixed interval task
 
     S1, \ Wait for trial start
+
         #Z5:
             ON ^LeftLeverOut;
             ON ^LeftLight;
@@ -270,6 +271,7 @@ S.S.4, \ Fixed interval task
         ---> S2
 
     S2, \ Drop pellets
+
         1 #R ^LeftLever:
             SET L(B(^LeftLeverTimeIdx)) = T;
             ADD B(^LeftLeverTimeIdx);
@@ -284,6 +286,7 @@ S.S.4, \ Fixed interval task
         ---> S7
 
     S3, \ Pellet has been dropped, detect left presses and handle FI
+
         1 #R ^LeftLever:
             SET M(B(^WrongLeftTimeIdx)) = T;
             ADD B(^WrongLeftTimeIdx);
@@ -307,7 +310,9 @@ S.S.4, \ Fixed interval task
 
     S4, \ IRT starts after nosepoke
         A(^FirstWait)#T:
-        ---> S6
+            IF Y = 0 [@Good, @Bad]
+                @Good: ---> S5
+                @Bad: ---> S6
 
         1 #R ^LeftLever:
             SET M(B(^WrongLeftTimeIdx)) = T;
@@ -323,7 +328,7 @@ S.S.4, \ Fixed interval task
     
 
     S5, \In the special window for two pellets
-        A(^FixedWindowIdx)#T:
+        A(^SecondWait)#T:
         ---> S2
 
         1 #R ^LeftLever:
@@ -341,9 +346,7 @@ S.S.4, \ Fixed interval task
 
     S6, \ Pressed the lever too early, only one pellet
         A(^FixedWindowIdx)#T:
-            IF Y = 0 [@Good, @Bad]
-                @Good: ---> S5
-                @Bad: ---> S2
+        ---> S2
 
         1 #R ^LeftLever:
             SET M(B(^WrongLeftTimeIdx)) = T;
