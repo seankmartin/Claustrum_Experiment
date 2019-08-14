@@ -128,7 +128,6 @@
     \ Z4 = Completed a FI or FR test
     \ Z5 = Start a FI
     \ Z6 = Start a FR
-    \ Z7 = Change FR Window
     \ Z8 = Activate Feeder twice
     \ Z32 = End the session
 

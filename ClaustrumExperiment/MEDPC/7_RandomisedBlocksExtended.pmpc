@@ -17,11 +17,14 @@
     ^StartingRatioIdx = 3
     ^InterResponseTimeIdx = 4
     ^FixedIntervalIdx = 5
-    ^ConsecutiveIRTIdx = 6
-    ^LastNosepokeTimeIdx = 7
-    ^SuccessiveLeverPressIdx = 8
-    ^LastIRTIdx = 9
-    ^LastSwitchTimeIdx = 10
+    ^FixedWindowIdx = 6
+    ^ConsecutiveIRTIdx = 7
+    ^LastNosepokeTimeIdx = 8
+    ^SuccessiveLeverPressIdx = 9
+    ^LastIRTIdx = 10
+    ^LastSwitchTimeIdx = 11
+    ^FirstWait = 12
+    ^SecondWait = 13
 
 \ Index holder locations (points into B)
     ^FeederTimeIdx = 0
@@ -51,6 +54,7 @@
     ^RightDurLeftCountIdx = 10
     ^BLeftDurRightCountIdx = 11
     ^BRightDurLeftCountIdx = 12
+    ^DoubleRewardIdx = 13
 
 \ Inputs
     ^LeftLever = 1
@@ -79,6 +83,7 @@
     VAR_ALIAS Fixed Ratio = A(3) \ Default 6
     VAR_ALIAS Inter Response Time (secs) = A(4) \ Default 4s
     VAR_ALIAS Fixed Interal = A(5) \ Default 30
+    VAR_ALIAS Fixed Window = A(6) \ Default 3
 
 \ Arrays
     \ A = Experiment variables
@@ -99,10 +104,11 @@
     \ U = Data array which holds the selected trials
     \ V = Data array for per trial pellets
     \ X = Internal computation array
+    \ Y = Internal state holding variable
 
-    DIM A = 10
+    DIM A = 13
     DIM B = 11
-    DIM C = 12
+    DIM C = 13
     DIM D = 500 \ Should be large enough to hold max_pellets + 1
     DIM E = 500 \ Should be large enough to hold max_pellets + 1
     DIM F = 30000 \ Could be anything
@@ -133,6 +139,7 @@
     \ C(10) = Number of right presses during left trial
     \ C(11) = Number of bad left presses during right trial
     \ C(12) = Number of bad right presses during left trial
+    \ C(13) = Number of double rewards during FI
 
 \ Z Pulses
     \ Z1 = Screen update pulse
@@ -141,6 +148,7 @@
     \ Z4 = Completed a FI or FR test
     \ Z5 = Start a FI
     \ Z6 = Start a FR
+    \ Z8 = Activate Feeder twice
     \ Z32 = End the session
 
 \ Single Variables
@@ -164,6 +172,7 @@ S.S.1, \ Control flow
             SET A(^StartingRatioIdx) = 6;
             SET A(^InterResponseTimeIdx) = 4;
             SET A(^FixedIntervalIdx) = 30;
+            SET A(^FixedWindowIdx) = 3;
             SET D(0) = -987.987;
             SET E(0) = -987.987;
             SET F(0) = -987.987;
@@ -203,10 +212,14 @@ S.S.1, \ Control flow
 \                Main Program
 \***************************************************
 S.S.2, \ Trial Switching logic
+
     S1, \ Wait for start signal
         #START:
             SET A(^FixedIntervalIdx) = A(^FixedIntervalIdx) * 1";
-            SET B(^CurrentTrialIdx) = -1
+            SET B(^CurrentTrialIdx) = -1;
+            SET A(^FirstWait) = (A(^FixedIntervalIdx) - A(^FixedWindowIdx)) * 1";
+            SET A(^SecondWait) = (A(^FixedWindowIdx) * 2) * 1";
+            SET A(^FixedWindowIdx) = A(^FixedWindowIdx) * 1"
         ---> S2
     
     S2, \ Wait for a z pulse to switch
@@ -225,6 +238,7 @@ S.S.2, \ Trial Switching logic
                 @FR: Z6 ---> S2
 
 S.S.3, \ Fixed Ratio task
+
     S1, \ Wait for trial start
         #Z6:
             ON ^RightLeverOut;
@@ -297,10 +311,10 @@ S.S.4, \ Fixed interval task
             ON ^LeftLeverOut;
             ON ^LeftLight;
             ON ^RightLeverOut;
+            SET Y = 0
         ---> S2
 
     S2, \ Drop pellets
-
         1 #R ^LeftLever:
             SET L(B(^LeftLeverTimeIdx)) = T;
             ADD B(^LeftLeverTimeIdx);
@@ -320,10 +334,9 @@ S.S.4, \ Fixed interval task
         ---> SX
 
         #Z4:
-        ---> S5
+        ---> S7
 
     S3, \ Pellet has been dropped, detect left presses and handle FI
-
         1 #R ^LeftLever:
             SET M(B(^WrongLeftTimeIdx)) = T;
             ADD B(^WrongLeftTimeIdx);
@@ -338,6 +351,7 @@ S.S.4, \ Fixed interval task
             ADD C(^NosepokeCountIdxL);
             SET E(B(^NosepokeTimeIdx)) = -987.987;
             SET A(^LastNosepokeTimeIdx) = T;
+            SET Y = 0;
             Z1
         ---> S4
 
@@ -350,10 +364,62 @@ S.S.4, \ Fixed interval task
         ---> SX
 
         #Z4:
-        ---> S5
+        ---> S7
 
     S4, \ IRT starts after nosepoke
-        A(^FixedIntervalIdx)#T:
+        A(^FirstWait)#T:
+            IF Y = 0 [@Good, @Bad]
+                @Good: SET Y = T ---> S5
+                @Bad: ---> S6
+
+        1 #R ^LeftLever:
+            SET M(B(^WrongLeftTimeIdx)) = T;
+            ADD B(^WrongLeftTimeIdx);
+            ADD C(^WrongLeftCountIdx);
+            SET M(B(^WrongLeftTimeIdx)) = -987.987;
+            SET Y = 1;
+            Z1
+        ---> SX
+
+        1 #R ^RightLever:
+            SET I(B(^BRightDurLeftIdx)) = T;
+            ADD B(^BRightDurLeftIdx);
+            SET I(B(^BRightDurLeftIdx)) = -987.987;
+            ADD C(^BRightDurLeftCountIdx);
+            SET Y = 1;
+            Z1
+        ---> SX
+
+        #Z4:
+        ---> S7
+
+    S5, \In the special window for two pellets
+        A(^SecondWait)#T:
+        ---> S2
+
+        1 #R ^LeftLever:
+            SET L(B(^LeftLeverTimeIdx)) = T;
+            ADD B(^LeftLeverTimeIdx);
+            ADD C(^LeftLeverCountIdx);
+            SET L(B(^LeftLeverTimeIdx)) = -987.987;
+            SET A(^LastIRTIdx) = T - A(^LastNosepokeTimeIdx);
+            Z1;
+            Z8
+        ---> S3
+
+        1 #R ^RightLever:
+            SET I(B(^RightDurLeftIdx)) = T;
+            ADD B(^RightDurLeftIdx);
+            SET I(B(^RightDurLeftIdx)) = -987.987;
+            ADD C(^RightDurLeftCountIdx);
+            Z1;
+            SET Y = ((T - Y) * 1") - A(^FixedWindowIdx);
+            IF Y > 0 [@Enough, @More]
+                @Enough: ---> S2
+                @More: ---> S8
+
+    S6, \ Pressed the lever too early, only one pellet
+        A(^FixedWindowIdx)#T:
         ---> S2
 
         1 #R ^LeftLever:
@@ -372,15 +438,33 @@ S.S.4, \ Fixed interval task
             Z1
         ---> SX
 
-        #Z4:
-        ---> S5
-
-    S5, \ Perform any wrap up calcs after trial
+    S7, \ Perform any wrap up calcs after trial
         0.01":
             OFF ^LeftLeverOut;
             OFF ^LeftLight;
             OFF ^RightLeverOut
         ---> S1
+    
+    S8, \ Wait time if right pressed during double window
+        Y#T:
+        ---> S2
+
+        1 #R ^LeftLever:
+            SET M(B(^WrongLeftTimeIdx)) = T;
+            ADD B(^WrongLeftTimeIdx);
+            ADD C(^WrongLeftCountIdx);
+            SET M(B(^WrongLeftTimeIdx)) = -987.987;
+            Z1
+        ---> SX
+
+        1 #R ^RightLever:
+            SET I(B(^BRightDurLeftIdx)) = T;
+            ADD B(^BRightDurLeftIdx);
+            SET I(B(^BRightDurLeftIdx)) = -987.987;
+            ADD C(^BRightDurLeftCountIdx);
+            SET Y = 1;
+            Z1
+        ---> SX
 
 S.S.5, \ Detect unnecessary nosepokes and record the times
 
@@ -463,12 +547,39 @@ S.S.7, \ Drop pellets
             Z1
         ---> S2
 
+        #Z8:
+            ON ^Feeder;
+            ON ^RewardLight;
+            SET D(B(^FeederTimeIdx)) = T;
+            ADD B(^FeederTimeIdx);
+            ADD C(^FeederCountIdx);
+            ADD C(^DoubleRewardIdx);
+            SET D(B(^FeederTimeIdx)) = -987.987;
+            Z1
+        ---> S3
+
     S2, \ Turn off the feeder after dropping
         0.5": 
             OFF ^Feeder
         ---> S1
 
+    S3, \ Turn off feeder
+        0.1":
+            OFF ^Feeder
+        ---> S4
+    
+    S4, \ Turn on feeder for second reward
+        0.1":
+            ON ^Feeder;
+            SET D(B(^FeederTimeIdx)) = T;
+            ADD B(^FeederTimeIdx);
+            ADD C(^FeederCountIdx);
+            SET D(B(^FeederTimeIdx)) = -987.987;
+            Z1
+        ---> S2
+
 S.S.9, \ Generate the random set of trials.
+
     S1, \ Generate a sampling without 3 in a row
         0.01": 
             RANDD U(0) = Q;
@@ -530,10 +641,12 @@ S.S.10, \ Update the display
             SHOW 28, Trial 2 Rewards, V(2);
             SHOW 29, Trial 3 Rewards, V(3);
             SHOW 30, Trial 4 Rewards, V(4);
-            SHOW 31, Trial 5 Rewards, V(5)
+            SHOW 31, Trial 5 Rewards, V(5);
+            SHOW 32, Double Rewards, C(^DoubleRewardIdx)
         ---> S1
 
 S.S.11, \ Stop the session
+
     S1, \Wait for the stop z signal
         #Z32:
             OFF ^RightLeverOut;
