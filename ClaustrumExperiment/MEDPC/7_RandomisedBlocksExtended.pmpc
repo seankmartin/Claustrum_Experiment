@@ -24,7 +24,6 @@
     ^LastIRTIdx = 10
     ^LastSwitchTimeIdx = 11
     ^FirstWait = 12
-    ^SecondWait = 13
 
 \ Index holder locations (points into B)
     ^FeederTimeIdx = 0
@@ -106,7 +105,7 @@
     \ X = Internal computation array
     \ Y = Internal state holding variable
 
-    DIM A = 13
+    DIM A = 12
     DIM B = 11
     DIM C = 13
     DIM D = 500 \ Should be large enough to hold max_pellets + 1
@@ -215,10 +214,9 @@ S.S.2, \ Trial Switching logic
 
     S1, \ Wait for start signal
         #START:
-            SET A(^FixedIntervalIdx) = A(^FixedIntervalIdx) * 1";
             SET B(^CurrentTrialIdx) = -1;
             SET A(^FirstWait) = (A(^FixedIntervalIdx) - A(^FixedWindowIdx)) * 1";
-            SET A(^SecondWait) = (A(^FixedWindowIdx) * 2) * 1";
+            SET A(^FixedIntervalIdx) = A(^FixedIntervalIdx) * 1";
             SET A(^FixedWindowIdx) = A(^FixedWindowIdx) * 1"
         ---> S2
     
@@ -368,9 +366,7 @@ S.S.4, \ Fixed interval task
 
     S4, \ IRT starts after nosepoke
         A(^FirstWait)#T:
-            IF Y = 0 [@Good, @Bad]
-                @Good: SET Y = T ---> S5
-                @Bad: ---> S6
+        ---> S6
 
         1 #R ^LeftLever:
             SET M(B(^WrongLeftTimeIdx)) = T;
@@ -393,8 +389,8 @@ S.S.4, \ Fixed interval task
         #Z4:
         ---> S7
 
-    S5, \In the special window for two pellets
-        A(^SecondWait)#T:
+    S5, \ In the special window for two pellets
+        A(^FixedWindowIdx)#T:
         ---> S2
 
         1 #R ^LeftLever:
@@ -413,14 +409,16 @@ S.S.4, \ Fixed interval task
             SET I(B(^RightDurLeftIdx)) = -987.987;
             ADD C(^RightDurLeftCountIdx);
             Z1;
-            SET Y = ((T - Y) * 1") - A(^FixedWindowIdx);
-            IF Y > 0 [@Enough, @More]
-                @Enough: ---> S2
-                @More: ---> S8
-
-    S6, \ Pressed the lever too early, only one pellet
-        A(^FixedWindowIdx)#T:
         ---> S2
+
+        #Z4:
+        ---> S7
+
+    S6, \ Was the lever pressed too early?
+        A(^FixedWindowIdx)#T:
+            IF Y = 0 [@Good, @Bad]
+                @Good: ---> S5
+                @Bad: ---> S2
 
         1 #R ^LeftLever:
             SET M(B(^WrongLeftTimeIdx)) = T;
@@ -435,8 +433,12 @@ S.S.4, \ Fixed interval task
             ADD B(^BRightDurLeftIdx);
             SET I(B(^BRightDurLeftIdx)) = -987.987;
             ADD C(^BRightDurLeftCountIdx);
+            SET Y = 1;
             Z1
         ---> SX
+
+        #Z4:
+        ---> S7
 
     S7, \ Perform any wrap up calcs after trial
         0.01":
@@ -487,17 +489,20 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
         #Z2:
         ---> S3
 
-        #Z6:
-        ---> S4
+        #Z8:
+        ---> S6 
+
+        #Z4:
+        ---> S1
     
     S3, \ Detect correct nosepoke on FI
         1 #R ^Nosepoke:
-            OFF ^RewardLight;
-            ADD V(B(^CurrentTrialIdx))
+            OFF ^RewardLight
         ---> S2
 
-        #Z6:
-        ---> S4
+        #Z4: 
+            OFF ^RewardLight
+        ---> S1
 
     S4, \ Detect unnecessary nosepokes on FR
         1 #R ^Nosepoke:
@@ -511,17 +516,20 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
         #Z2:
         ---> S5
 
-        #Z5:
-        ---> S2
+        #Z4:
+        ---> S1
     
     S5, \ Detect correct nosepoke on FR
         1 #R ^Nosepoke:
-            OFF ^RewardLight;
-            ADD V(B(^CurrentTrialIdx))
+            OFF ^RewardLight
         ---> S4
 
-        #Z5:
-        ---> S2
+         #Z4: 
+            OFF ^RewardLight 
+         ---> S1
+
+    S6, \ Wait a bit then look for nosepoke
+        0.3": ---> S3
 
 S.S.6, \ Handle the FR IRT logic
 
@@ -544,6 +552,7 @@ S.S.7, \ Drop pellets
             ADD B(^FeederTimeIdx);
             ADD C(^FeederCountIdx);
             SET D(B(^FeederTimeIdx)) = -987.987;
+            ADD V(B(^CurrentTrialIdx));
             Z1
         ---> S2
 
@@ -555,6 +564,7 @@ S.S.7, \ Drop pellets
             ADD C(^FeederCountIdx);
             ADD C(^DoubleRewardIdx);
             SET D(B(^FeederTimeIdx)) = -987.987;
+            ADD V(B(^CurrentTrialIdx));
             Z1
         ---> S3
 
@@ -575,6 +585,7 @@ S.S.7, \ Drop pellets
             ADD B(^FeederTimeIdx);
             ADD C(^FeederCountIdx);
             SET D(B(^FeederTimeIdx)) = -987.987;
+            ADD V(B(^CurrentTrialIdx));
             Z1
         ---> S2
 

@@ -24,7 +24,6 @@
     ^LastIRTIdx = 10
     ^LastSwitchTimeIdx = 11
     ^FirstWait = 12
-    ^SecondWait = 13
 
 \ Index holder locations (points into B)
     ^FeederTimeIdx = 0
@@ -94,7 +93,7 @@
     \ X = Internal computation array
     \ Y = Internal state holding variable
 
-    DIM A = 13
+    DIM A = 12
     DIM B = 7
     DIM C = 9
     DIM D = 500 \ Should be large enough to hold max_pellets + 1
@@ -165,7 +164,7 @@ S.S.1, \ Control flow
 \***************************************************
 S.S.2, \ Trial Switching logic
     S1, \ Wait for start signal
-        #START: SET B(^CurrentTrialIdx) = -1; SET A(^FirstWait) = (A(^FixedIntervalIdx) - A(^FixedWindowIdx)) * 1"; SET A(^SecondWait) = (A(^FixedWindowIdx) * 2) * 1"; SET A(^FixedIntervalIdx) = A(^FixedIntervalIdx) * 1"; SET A(^FixedWindowIdx) = A(^FixedWindowIdx) * 1" ---> S2
+        #START: SET B(^CurrentTrialIdx) = -1; SET A(^FirstWait) = (A(^FixedIntervalIdx) - A(^FixedWindowIdx)) * 1"; SET A(^FixedIntervalIdx) = A(^FixedIntervalIdx) * 1"; SET A(^FixedWindowIdx) = A(^FixedWindowIdx) * 1" ---> S2
     
     S2, \ Wait for a z pulse to switch
         #Z4: ADD B(^CurrentTrialIdx); IF B(^CurrentTrialIdx) = 6 [@End, @Continue] 
@@ -222,14 +221,14 @@ S.S.4, \ Fixed interval task
         #Z4: ---> S7
     
 
-    S5, \In the special window for two pellets
+    S5, \ In the special window for two pellets
         A(^FixedWindowIdx)#T: ---> S2
 
         1 #R ^LeftLever: SET L(B(^LeftLeverTimeIdx)) = T; ADD B(^LeftLeverTimeIdx); ADD C(^LeftLeverCountIdx); SET L(B(^LeftLeverTimeIdx)) = -987.987; SET A(^LastIRTIdx) = T - A(^LastNosepokeTimeIdx); Z1; Z8 ---> S3
 
         #Z4: ---> S7
 
-    S6, \ Pressed the lever too early, only one pellet
+    S6, \ Was the lever pressed too early?
         A(^FixedWindowIdx)#T: IF Y = 0 [@Good, @Bad] 
                  @Good: ---> S5
                  @Bad: ---> S2
