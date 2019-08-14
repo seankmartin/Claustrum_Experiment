@@ -11,7 +11,7 @@ from adjustText import adjust_text
 from scipy import interpolate
 
 
-def plot_sessions(summary=False, single=True, timeline=True):
+def plot_sessions(summary=False, single=False, timeline=True):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
     single = True: Plots single session summaries with breakdown of single blocks
@@ -22,29 +22,49 @@ def plot_sessions(summary=False, single=True, timeline=True):
 #    sub_list = ['6']
 #    sub_list = ['1', '2', '3', '4']
 #    sub_list = ['5', '6']
-    s_list = ['7']
-    d_list = ['08-10']
-    in_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
-    out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
+    s_list = ['4', '5a', '5b', '6', '7']
+    d_list = ['08-13']
+    
+#    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
+    start_dir = r"G:\!Operant Data\Ham"
+    in_dir = start_dir + "\hdf5"
+    out_dir = start_dir + "\Plots"
+    make_dir_if_not_exists(out_dir)
+
 
     if summary:
         #  extracts hdf5 session based on specification
-        s_grp, out_name = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
-        if len(s_grp) > 6:
-            s_grp1 = s_grp[::2]
-            sum_plot(s_grp1, out_name+'_1', out_dir, IRT=False)
-            s_grp2 = s_grp[1::2]
-            sum_plot(s_grp2, out_name+'_2', out_dir, IRT=False)        
+        max_plot = 6  # Set max plots per figure
+        s_grp = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
+        idx = 0
+        if len(s_grp) > max_plot:
+            j=0
+            s_grp_split = []
+            s_grp_idx = np.arange(len(s_grp))
+            for i in s_grp_idx[max_plot-1::max_plot]:
+                s_grp_split.append(s_grp[j:i+1])
+                j = i+1
+            
+            mv = len(s_grp) % max_plot
+            if mv != 0:
+                s_grp_split.append(s_grp[-mv:])
+            for s_grp in s_grp_split:
+                idx += 1
+                sum_plot(s_grp, idx, out_dir, IRT=False)
         else:
-            sum_plot(s_grp, out_name, out_dir, IRT=False)
+            sum_plot(s_grp, idx, out_dir, IRT=False)
+
     if single and summary:
         # Single Subject Plots
         for c, sub in enumerate(sub_list):
-            s_grp, out_name = extract_hdf5s(in_dir, out_dir, sub, s_list, d_list)
+            s_grp = extract_hdf5s(in_dir, out_dir, sub, s_list, d_list)
             s_passed = []
+            d_passed = []
             for s in s_grp:
                 stage = s.get_metadata('name')[:2].replace('_', '')
                 s_passed.append(stage)
+                date = s.get_metadata("start_date").replace("/", "-")
+                d_passed.append(date[:5])
                 subject = s.get_metadata('subject')
             if '7' in s_passed:
                 size_multiplier = 5
@@ -76,7 +96,9 @@ def plot_sessions(summary=False, single=True, timeline=True):
 #                # Seperate plots w line
 #                ax1.hlines(1.13, -0, 4.9, clip_on=False,
 #                           transform=ax1.transAxes, linewidth=0.7)
-                out_name = "Sum" + out_name + ".png"
+                s_print = np.array_str(np.unique(np.array(s_passed)))
+                d_print = np.array_str(np.unique(np.array(d_passed)))
+                out_name = "Sum_" + subject + "_" + d_print + "_" + s_print + ".png"
                 print("Saved figure to {}".format(
                     os.path.join(out_dir, out_name)))
                 fig.savefig(os.path.join(out_dir, out_name), dpi=400)
@@ -94,7 +116,7 @@ def plot_sessions(summary=False, single=True, timeline=True):
             timeline_plot(sub_list, in_dir, out_dir, single_plot=single)
 
 
-def sum_plot(s_grp, out_name, out_dir, zoom=True, IRT=True, single=False):
+def sum_plot(s_grp, idx, out_dir, zoom=True, IRT=True, single=False):
     # Plots summary of day
     cols = 2
     if IRT or zoom:
@@ -110,9 +132,15 @@ def sum_plot(s_grp, out_name, out_dir, zoom=True, IRT=True, single=False):
             figsize=(cols * size_multiplier, rows * size_multiplier),
             tight_layout=False)
     gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
-
+    s_passed = []
+    d_passed = []
+    
     for i, s in enumerate(s_grp):
         subject = s.get_metadata('subject')
+        stage = s.get_metadata('name')[:2].replace('_', '')
+        date = s.get_metadata("start_date").replace("/", "-")
+        s_passed.append(stage)
+        d_passed.append(date[:5])
         if IRT or zoom:
             ax1 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2])
         else:
@@ -127,9 +155,19 @@ def sum_plot(s_grp, out_name, out_dir, zoom=True, IRT=True, single=False):
             bv_an.cumplot(s, out_dir, ax2, zoom=False, zoom_sch=True,
                           plot_error=False, plot_all=True)
         plt.tight_layout()
+    d_print = np.array_str(np.unique(np.array(d_passed)))
+    d_title = np.array2string(np.unique(np.array(d_passed)))
+    s_print = np.array_str(np.unique(np.array(s_passed)))
     if single:
         fig.suptitle(('Subject ' + subject + ' Performance'), fontsize=30)
-    out_name = "Sum" + out_name + ".png"
+        out_name = "Sum_" + subject + "_" + d_print + "_" + s_print + ".png"
+    else:
+        if idx == 0:
+            fig.suptitle(('Summary across animals '+ d_title), fontsize=30)
+            out_name = "Sum_" + d_print + "_" + s_print + ".png"
+        else:            
+            fig.suptitle(('Summary across animals '+ d_title + " p" + str(idx)), fontsize=30)
+            out_name = "Sum_" + d_print + "_" + s_print + "_" + str(idx) + ".png"
     print("Saved figure to {}".format(
         os.path.join(out_dir, out_name)))
     fig.savefig(os.path.join(out_dir, out_name), dpi=400)
@@ -146,7 +184,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
     gs = gridspec.GridSpec(rows, cols, wspace=0.4, hspace=0.5)
     for c, sub in enumerate(sub_list):
         # Plot total pellets across sessions
-        s_grp, out_name = extract_hdf5s(in_dir, out_dir, sub)
+        s_grp = extract_hdf5s(in_dir, out_dir, sub)
         s_list = []
         r_list = []
         changes = []
@@ -160,8 +198,8 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
         prev_name = '2'
         for i, s in enumerate(s_grp):
             s_type = s.get_metadata('name')[:2]
-            subject = s.get_metadata('subject')
             timestamps = s.get_arrays()
+            subject = s.get_metadata('subject')
             if s_type == '5a':
                 s_name = 'R' + str(int(timestamps["Experiment Variables"][3]))
                 c_ratio = s_name
@@ -197,7 +235,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
             rewards_t = len(timestamps["Reward"])
             s_list.append(s_name)
             r_list.append(rewards_t)
-            type_list.append('Stage '+s_type[0])
+            type_list.append('S-'+s_type[0])
             prev_ratio = c_ratio
             prev_interval = c_interval
             prev_name = s_type
@@ -210,7 +248,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
                     tight_layout=False)
             gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
             ax = fig.add_subplot(gs[0, :])
-            out_name = "Timeline" + out_name + ".png"
+            out_name = "Timeline_" + subject + ".png"
         else:
             ax = fig.add_subplot(gs[int(c), :])
 
@@ -231,10 +269,20 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
         # Annotated changes in protocol
         for i, c in enumerate(changes):
             if stage_change[i] == 1:
-                h2 = ax.annotate(type_list[i], xy=(s_idx[i], r_list[i]), xytext=(s_idx[i], r_list[i]+(0.1*max(r_list))),
+#                h2 = ax.annotate(type_list[i], xy=(s_idx[i], r_list[i]),
+#                xytext=(s_idx[i], r_list[i]+(0.1*max(r_list))),
+#                            arrowprops=dict(facecolor='blue', shrink=0.05))
+                h2 = ax.annotate(type_list[i], xy=(s_idx[i], r_list[i]),
+                                 ha = 'center', xytext=(0, (.2*max(r_list))),
+                                 textcoords='offset points',
                             arrowprops=dict(facecolor='blue', shrink=0.05))
             elif change_idx[i] == 1:
-                h3 = ax.annotate(str(c), xy=(s_idx[i], r_list[i]), xytext=(s_idx[i], r_list[i]+(0.1*max(r_list))),
+#                h3 = ax.annotate(str(c), xy=(s_idx[i], r_list[i]),
+#                xytext=(s_idx[i], r_list[i]+(0.1*max(r_list))),
+#                            arrowprops=dict(facecolor='Red', shrink=0.05))
+                h3 = ax.annotate(str(c), xy=(s_idx[i], r_list[i]),
+                                 ha = 'center', xytext=(0, (.2*max(r_list))),
+                                 textcoords='offset points',
                             arrowprops=dict(facecolor='Red', shrink=0.05))
         ax.set_xlim(0, len(s_idx))
         plt.xticks(s_idx, s_list, fontsize=13)
@@ -245,7 +293,8 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
         ax.spines['right'].set_visible(False)
         ax.set_xlabel('Sessions', fontsize=20)
         ax.set_ylabel('Total Rewards', fontsize=20)
-        plt.legend([h1, h2.arrow_patch, h3.arrow_patch], (h1.get_label(), 'Stage Changes', 'Protocol Modification'))
+        plt.legend([h1, h2.arrow_patch, h3.arrow_patch], (h1.get_label(),
+                   'Stage Changes', 'Protocol Modification'))
         ax.set_title('\nSubject {} Timeline'.format(subject), fontsize=25)
         
         if single_plot:
@@ -275,20 +324,20 @@ def extract_hdf5s(in_dir, out_dir, sub_list=None, s_list=None, d_list=None):
 
     in_files = os.listdir(in_dir)
     s_grp = []
-    name_dict = {}
-    if sub_list is not None:
-        name_dict["sub_list"] = sub_list
-    if s_list is not None:
-        name_dict["s_list"] = s_list
-    if d_list is not None:
-        name_dict["d_list"] = d_list
-    out_name = ""
-    names = ["sub_list", "d_list", "s_list"]
-    for name in names:
-        out_name = out_name + "_" + str(name_dict.get(name, ""))
-    out_name.replace("__", "_")
-    out_name.replace("__", "_")
-    out_name = out_name
+#    name_dict = {}
+#    if sub_list is not None:
+#        name_dict["sub_list"] = sub_list
+#    if s_list is not None:
+#        name_dict["s_list"] = s_list
+#    if d_list is not None:
+#        name_dict["d_list"] = d_list
+#    out_name = ""
+#    names = ["sub_list", "d_list", "s_list"]
+#    for name in names:
+#        out_name = out_name + "_" + str(name_dict.get(name, "sub_list"))
+#    out_name.replace("__", "_")
+#    out_name.replace("__", "_")
+#    out_name = out_name
     for file in in_files:
         splits = file.split('_')
         subject = splits[0]
@@ -303,7 +352,7 @@ def extract_hdf5s(in_dir, out_dir, sub_list=None, s_list=None, d_list=None):
                 session = load_hdf5(filename, out_dir)
                 s_grp.append(session)
     print('Total Files extracted: {}'.format(len(s_grp)))
-    return s_grp, out_name
+    return s_grp
 
 
 def convert_to_hdf5(filename, out_dir):
@@ -348,15 +397,23 @@ def run_mpc_file(filename, out_dir):
 
 if __name__ == "__main__":
     """Main control."""
-#    # Batch processing of sessions in folder
-#    in_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\\"
-#    out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
+#    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"  # from Ham Personal HD
+    start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
+
+##    # Batch processing of sessions in folder
+#    in_dir = start_dir
+#    out_dir = start_dir + "\hdf5"
 #    in_files = os.listdir(in_dir)
 #    for file in in_files:
 #        filename = os.path.join(in_dir, file)
 #        if os.path.isfile(filename):
-##            main(filename)  # Uncomment to run from mpc file
 #            convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
+#            main(filename)  # Uncomment to run from mpc file
+
+#    # Processing of single sessions
+#    filename = start_dir + "\!2019-08-12"
+#    out_dir = start_dir + "\hdf5"
+#    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
     
     # Processing specific sessions from hdf5
     plot_sessions()
@@ -366,15 +423,9 @@ if __name__ == "__main__":
 #     filename = r"G:\test"
 #     filename = r"/home/sean/Documents/Data/!2019-07-22"
 
-#    out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\Plots"
 #    out_dir = r"G:\out_plots"
 #    out_dir = r"/home/sean/Documents/Data/results"
     
-#    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-12"
-#    out_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\hdf5"
-#    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
 #    run_mpc_file(filename, out_dir)
-
-#    filename = r"/home/sean/Documents/Data/h5_files/1_07-22-19_11-30_5a_FixedRatio_p.h5"
 
 #    load_hdf5(filename, out_dir)
