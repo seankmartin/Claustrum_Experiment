@@ -165,7 +165,7 @@ S.S.1, \ Control flow
 \***************************************************
 S.S.2, \ Trial Switching logic
     S1, \ Wait for start signal
-        #START: SET A(^FixedIntervalIdx) = A(^FixedIntervalIdx) * 1"; SET B(^CurrentTrialIdx) = -1; SET A(^FirstWait) = (A(^FixedIntervalIdx) - A(^FixedWindowIdx)) * 1"; SET A(^SecondWait) = (A(^FixedWindowIdx) * 2) * 1"; SET A(^FixedWindowIdx) = A(^FixedWindowIdx) * 1" ---> S2
+        #START: SET A(^FixedIntervalIdx) = A(^FixedIntervalIdx) * 1"; SET B(^CurrentTrialIdx) = -1; SET A(^FirstWait) = A(^FixedIntervalIdx) - (A(^FixedWindowIdx) * 1"); SET A(^SecondWait) = (A(^FixedWindowIdx) * 2) * 1"; SET A(^FixedWindowIdx) = A(^FixedWindowIdx) * 1" ---> S2
     
     S2, \ Wait for a z pulse to switch
         #Z4: ADD B(^CurrentTrialIdx); IF B(^CurrentTrialIdx) = 6 [@End, @Continue] 
@@ -232,10 +232,14 @@ S.S.4, \ Fixed interval task
 
         1 #R ^LeftLever: SET L(B(^LeftLeverTimeIdx)) = T; ADD B(^LeftLeverTimeIdx); ADD C(^LeftLeverCountIdx); SET L(B(^LeftLeverTimeIdx)) = -987.987; SET A(^LastIRTIdx) = T - A(^LastNosepokeTimeIdx); Z1; Z8 ---> S3
 
+        #Z4: ---> S7
+
     S6, \ Pressed the lever too early, only one pellet
         A(^FixedWindowIdx)#T: ---> S2
 
         1 #R ^LeftLever: SET M(B(^WrongLeftTimeIdx)) = T; ADD B(^WrongLeftTimeIdx); ADD C(^WrongLeftCountIdx); SET M(B(^WrongLeftTimeIdx)) = -987.987; Z1 ---> SX
+
+        #Z4: ---> S7
 
     S7, \ Perform any wrap up calcs after trial
         0.01": OFF ^LeftLeverOut; OFF ^LeftLight ---> S1
@@ -253,24 +257,31 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
 
         #Z2: ---> S3
 
-        #Z6: ---> S4
+        #Z8: ---> S6 
+
+        #Z4: ---> S1
     
     S3, \ Detect correct nosepoke on FI
-        1 #R ^Nosepoke: OFF ^RewardLight; ADD V(B(^CurrentTrialIdx)) ---> S2
+        1 #R ^Nosepoke: OFF ^RewardLight ---> S2
 
         #Z6: ---> S4
+
+        #Z4: OFF ^RewardLight ---> S1
 
     S4, \ Detect unnecessary nosepokes on FR
         1 #R ^Nosepoke: SET O(B(^WrongNosepokeTimeIdx)) = T; ADD B(^WrongNosepokeTimeIdx); ADD C(^WrongNosepokeCountIdxR); SET O(B(^WrongNosepokeTimeIdx)) = -987.987; Z1 ---> SX
 
         #Z2: ---> S5
 
-        #Z5: ---> S2
+        #Z4: ---> S1
     
     S5, \ Detect correct nosepoke on FR
-        1 #R ^Nosepoke: OFF ^RewardLight; ADD V(B(^CurrentTrialIdx)) ---> S4
+        1 #R ^Nosepoke: OFF ^RewardLight ---> S4
 
-        #Z5: ---> S2
+        #Z4: OFF ^RewardLight ---> S1
+
+    S6, \ Wait a bit then look for nosepoke
+        0.3": ---> S3
 
 S.S.6, \ Handle the FR IRT logic
 
@@ -282,9 +293,9 @@ S.S.6, \ Handle the FR IRT logic
 S.S.7, \ Drop pellets
 
     S1, \ Drop the pellet
-        #Z2: ON ^Feeder; ON ^RewardLight; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
+        #Z2: ON ^Feeder; ON ^RewardLight; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; ADD V(B(^CurrentTrialIdx)); Z1 ---> S2
 
-        #Z8: ON ^Feeder; ON ^RewardLight; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); ADD C(^DoubleRewardIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S3
+        #Z8: ON ^Feeder; ON ^RewardLight; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); ADD C(^DoubleRewardIdx); SET D(B(^FeederTimeIdx)) = -987.987; ADD V(B(^CurrentTrialIdx)); Z1 ---> S3
 
     S2, \ Turn off the feeder after dropping
         0.5": OFF ^Feeder ---> S1
@@ -293,7 +304,7 @@ S.S.7, \ Drop pellets
         0.1": OFF ^Feeder ---> S4
     
     S4, \ Turn on feeder for second reward
-        0.1": ON ^Feeder; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
+        0.1": ON ^Feeder; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; ADD V(B(^CurrentTrialIdx)); Z1 ---> S2
 
 S.S.9, \ Generate the random set of trials.
     S1, \ Generate a sampling without 3 in a row
