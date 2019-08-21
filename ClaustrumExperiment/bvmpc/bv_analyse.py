@@ -50,6 +50,11 @@ def cumplot(session, out_dir, ax=None, zoom=False,
     stage = session_type[:2].replace('_', '')
     subject = session.get_metadata('subject')
     reward_times = timestamps["Nosepoke"]
+    pell_ts = timestamps["Reward"]
+    pell_double = np.nonzero(np.diff(pell_ts)<0.5)
+    if reward_times[-1] < pell_ts[-1]:
+        reward_times = np.append(reward_times, 1830)
+    reward_double = reward_times[np.searchsorted(reward_times, pell_ts[pell_double])]        
     single_plot = False
 
     if ax is None:
@@ -100,6 +105,7 @@ def cumplot(session, out_dir, ax=None, zoom=False,
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('Cumulative Lever Presses')
 
+    # Broken and plots are ugly - Plots single trials
     if zoom:
         trial_lever_ts = np.split(lever_ts,
                                   np.searchsorted(lever_ts, reward_times))
@@ -144,14 +150,18 @@ def cumplot(session, out_dir, ax=None, zoom=False,
                                 np.searchsorted(lever_ts, sch_switch))
         sch_reward_ts = np.split(reward_times,
                                  np.searchsorted(reward_times, sch_switch))
+        sch_double_r_ts = np.split(reward_double,
+                                 np.searchsorted(reward_double, sch_switch))
         norm_reward_ts = []
         norm_lever_ts = []
         norm_err_ts = []
+        norm_double_r_ts = []
         ratio_c = plt.cm.get_cmap('Wistia')
         interval_c = plt.cm.get_cmap('winter')
         for i, l in enumerate(sch_lever_ts[1:]):
             norm_lever_ts.append(np.append([0], l-sch_switch[i], axis=0))
             norm_reward_ts.append(sch_reward_ts[i+1]-sch_switch[i])
+            norm_double_r_ts.append(sch_double_r_ts[i+1]-sch_switch[i])
             if stage == '7' and plot_all: # plots all responses incl. errors
                 norm_err_ts.append(sch_err_ts[i+1]-sch_switch[i])
         ax.set_xlim(0, 305)
@@ -164,6 +174,7 @@ def cumplot(session, out_dir, ax=None, zoom=False,
                          label='B'+str(i+1)+' - FI', zorder=1)
             bins = l
             reward_y = np.digitize(norm_reward_ts[i], bins) - 1
+            double_y = np.digitize(norm_double_r_ts[i], bins) - 1
             if stage == '7' and plot_all: # plots all responses incl. errors
                     ax.scatter(norm_err_ts[i], np.isin(
                     l, norm_err_ts[i]).nonzero()[0],
@@ -171,6 +182,8 @@ def cumplot(session, out_dir, ax=None, zoom=False,
                     incl = '_All'
             plt.scatter(norm_reward_ts[i], reward_y,
                         marker="x", c="grey", s=25)
+            plt.scatter(norm_double_r_ts[i], double_y,
+                        marker="x", c="magenta", s=25)
         ax.set_title('\nSubject {}, Block-Split {}'.format(
                 subject, incl), fontsize=12)
         ax.legend()
@@ -196,17 +209,22 @@ def cumplot(session, out_dir, ax=None, zoom=False,
                                    np.searchsorted(reward_times, blocks))
         norm_reward_ts = []
         norm_lever_ts = []
+        norm_double_r_ts = []
         for i, l in enumerate(split_lever_ts[1:]):
             norm_lever_ts.append(np.append([0], l-blocks[i], axis=0))
             norm_reward_ts.append(split_reward_ts[i+1]-blocks[i])
+            norm_double_r_ts.append(sch_double_r_ts[i+1]-blocks[i])
         ax.set_xlim(0, 305)
         for i, l in enumerate(norm_lever_ts):
             ax.step(l, np.arange(l.size), c=mycolors(i), where="post",
                     label='B'+str(i+1)+' - {}'.format(sch_type))
             bins = l
             reward_y = np.digitize(norm_reward_ts[i], bins) - 1
+            double_y = np.digitize(norm_double_r_ts[i], bins) - 1
             plt.scatter(norm_reward_ts[i], reward_y,
                         marker="x", c="grey", s=25)
+            plt.scatter(norm_double_r_ts[i], double_y,
+                        marker="x", c="magenta", s=25)
         ax.legend()
         return
 
@@ -230,9 +248,12 @@ def cumplot(session, out_dir, ax=None, zoom=False,
                 c=mycolors(subject))
         bins = lever_times
         reward_y = np.digitize(reward_times, bins) - 1
+        double_y = np.digitize(reward_double, bins) - 1
 
     ax.scatter(reward_times, reward_y, marker="x", c="grey",
                 label='Reward Collected', s=25)
+    ax.scatter(reward_double, double_y, marker="x", c="magenta",
+                label='Double Reward', s=25)
     ax.legend()
 #    ax.set_xlim(0, 30 * 60 + 30)
 
@@ -242,14 +263,14 @@ def cumplot(session, out_dir, ax=None, zoom=False,
         out_name = os.path.join(out_dir, out_name)
         print("Saved figure to {}".format(out_name))
         # Text Display on Graph
-        ax.text(0.55, 0.15, 'Total # of Lever Press: {}\nTotal # of Rewards: {}'
-                .format(len(lever_ts), len(reward_times)), transform=ax.transAxes)
+        ax.text(0.55, 0.15, 'Total # of Lever Press: {}\nTotal # of Rewards: {}\nTotal # of Double Rewards: {}'
+                .format(len(lever_ts), len(reward_times), len(reward_double)), transform=ax.transAxes)
         fig.savefig(out_name, dpi=400)
         plt.close()
     else:
         # Text Display on Graph
-        ax.text(0.05, 0.85, 'Total # of Lever Press: {}\nTotal # of Rewards: {}'
-                .format(len(lever_ts), len(reward_times)), transform=ax.transAxes)
+        ax.text(0.05, 0.85, 'Total # of Lever Press: {}\nTotal # of Rewards: {}\nTotal # of Double Rewards: {}'
+                .format(len(lever_ts), len(reward_times), len(reward_double)), transform=ax.transAxes)
         return
 
 

@@ -11,7 +11,7 @@ from adjustText import adjust_text
 from scipy import interpolate
 
 
-def plot_sessions(summary=False, single=False, timeline=True):
+def plot_sessions(summary=True, single=True, timeline=False):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
     single = True: Plots single session summaries with breakdown of single blocks
@@ -23,10 +23,10 @@ def plot_sessions(summary=False, single=False, timeline=True):
 #    sub_list = ['1', '2', '3', '4']
 #    sub_list = ['5', '6']
     s_list = ['4', '5a', '5b', '6', '7']
-    d_list = ['08-13']
+    d_list = ['08-15']
     
-#    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
-    start_dir = r"G:\!Operant Data\Ham"
+    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
+#    start_dir = r"G:\!Operant Data\Ham"
     in_dir = start_dir + "\hdf5"
     out_dir = start_dir + "\Plots"
     make_dir_if_not_exists(out_dir)
@@ -34,8 +34,10 @@ def plot_sessions(summary=False, single=False, timeline=True):
 
     if summary:
         #  extracts hdf5 session based on specification
-        max_plot = 6  # Set max plots per figure
+        max_plot = 4  # Set max plots per figure
         s_grp = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
+        if s_grp == []:
+            return print("***No Files Extracted***")
         idx = 0
         if len(s_grp) > max_plot:
             j=0
@@ -58,6 +60,8 @@ def plot_sessions(summary=False, single=False, timeline=True):
         # Single Subject Plots
         for c, sub in enumerate(sub_list):
             s_grp = extract_hdf5s(in_dir, out_dir, sub, s_list, d_list)
+            if s_grp == []:
+                return print("***No Files Extracted***")
             s_passed = []
             d_passed = []
             for s in s_grp:
@@ -362,7 +366,11 @@ def convert_to_hdf5(filename, out_dir):
     s_extractor = SessionExtractor(filename, verbose=True)
 
     for s in s_extractor:  # Batch run for file
-        s.save_to_h5(out_dir)
+        stage = s.get_metadata('name')
+        if stage == 'DNMTS':
+            return
+        else:
+            s.save_to_h5(out_dir)
 
 
 def load_hdf5(filename, out_dir):
@@ -398,9 +406,9 @@ def run_mpc_file(filename, out_dir):
 if __name__ == "__main__":
     """Main control."""
 #    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"  # from Ham Personal HD
-    start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
+#    start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
 
-##    # Batch processing of sessions in folder
+#    # Batch processing of sessions in folder
 #    in_dir = start_dir
 #    out_dir = start_dir + "\hdf5"
 #    in_files = os.listdir(in_dir)

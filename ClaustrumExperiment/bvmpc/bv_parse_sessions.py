@@ -253,7 +253,7 @@ class Session:
         """Private function to save info to h5 file"""
         with h5py.File(self.h5_file, "w", libver="latest") as f:
             for key, val in self.get_metadata().items():
-                print("I'm in here! {} {}".format(key, val))
+                print("{} {}".format(key, val))
                 f.attrs[key] = val
             for key, val in f.attrs.items():
                 print(key, val)
