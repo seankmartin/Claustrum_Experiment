@@ -15,10 +15,12 @@ dim trial_rewards
 'timing delays
 dim fi_delay
 dim trial_delay
+dim fi_allow
 
 'experiment value
 dim fr_value
 dim fr_count
+dim current_trial
 
 'input pins
 dim left_lever_inpin
@@ -32,6 +34,8 @@ dim left_light_outpin
 dim right_light_outpin
 dim house_light_outpin
 dim food_outpin
+dim fan_outpin
+dim sound_outpin
 
 'store input values
 dim left_lever_value
@@ -41,11 +45,11 @@ dim right_lever_value
 dim left_lever_active
 dim right_lever_active
 dim experiment_state
-dim left_experiment
+dim pressed_wrong
 
 'timing
 dim start_time
-dim elapsed_time
+dim iv_start_time
 
 ' Optional experimenter tag
 dim tag
@@ -60,12 +64,12 @@ sub setup_pins()
 
     left_lever_outpin = 1
     right_lever_outpin = 2
-    left_light_outpin = 9
-    right_light_outpin = 10
-    house_light_outpin = 12 'TODO get exact value
-    sound_outpin = 13 'TODO get exact value
-    fan_outpin = 14 'TODO get exact value
-    food_outpin = 16
+    left_light_outpin = 4
+    right_light_outpin = 5
+    house_light_outpin = 7 'TODO get exact value
+    sound_outpin = 8 'TODO get exact value
+    fan_outpin = 16 'TODO get exact value
+    food_outpin = 9
 end sub
 
 sub init_vars()
@@ -75,6 +79,7 @@ sub init_vars()
     elapsed_time = 0
     left_lever_active = 0
     right_lever_active = 0
+    pressed_wrong = 0
 end sub
 
 sub init_arrays()
@@ -134,7 +139,6 @@ sub deliver_reward()
     SignalOut(food_outpin) = off
 end sub
 
-
 '''Maths related subroutines'''
 
 function generate_random_float(max)
@@ -179,22 +183,20 @@ sub new_experiment(first)
         elapsed_trials = elapsed_trials + 1
     end if
 
-    SignalOut(sound_outpin) = 1
-    DelayMS(5000)
-    SignalOut(sound_outpin) = 0
-    fr_count = 0
-
     if (elapsed_trials < num_trials) then
-        if (trial_sides[elapsed_trials] = 1) then
+        current_trial = trial_sides[elapsed_trials]
+        SignalOut(sound_outpin) = 1
+        DelayMS(5000)
+        SignalOut(sound_outpin) = 0
+        if (current_trial = 1) then
             set_left_side(on)
-            left_experiment = True
             side = ";FI;"
             side_nice = "fixed interval"
         else
             set_right_side(on)
-            left_experiment = False
             side = ";FR;"
             side_nice = "fixed ratio"
+            fr_count = 0
         end if
         print "Starting Trial number ", elapsed_trials+1, " Out of ", num_trials
         print "Showing the subject ", side_nice
@@ -225,6 +227,8 @@ sub full_init_before_record()
 
     ' Convert some delays to ms
     trial_delay = trial_delay * 1000 * 60
+    fi_allow = fi_allow * 1000
+    fi_delay = fi_delay * 1000
     Randomize 'Seed the rng based on the system clock
 
     'Setup the pins and turn on essential outputs
@@ -244,7 +248,7 @@ sub full_init_before_record()
     wend
 
     print "Trial order is (0 FR 1 FI):"
-    for i = half_point to num_trials - 1
+    for i = 0 to num_trials - 1
         print trial_sides[i]
     next
 end sub
@@ -258,6 +262,7 @@ sub main()
     num_trials = 6 'Number of trials is usually fixed 6
     trial_delay = 5 'How long between trials in minutes
     fi_delay = 30 'How long fi delay is in seconds
+    fi_allow = 5 'Can press 5 seconds +- to get double reward
     fr_value = 6 'Number of FR presses needed
     tag = "Optional tag" ' You may tag this experiment
     'output in the same name format as other axona files
@@ -267,26 +272,53 @@ sub main()
     StartUnitRecording
     new_experiment(1)
 
+    dim pass_time
     ' Loop the recording for the number of trials
     while (elapsed_trials < num_trials)
 
         ' End trial
         if (TrialTime - start_time > trial_delay) then
             end_experiment()
-        elseif (left_lever_active = 1) and (SignalIn(left_lever_inpin) = off) and (experiment_state = "Start") and (trial_sides[elapsed_trials] = 1) then
-            deliver_reward()
-            experiment_state = "Reward"
-        elseif (right_lever_active = 1) and (SignalIn(right_lever_inpin) = off) and (experiment_state = "Start") and (trial_sides[elapsed_trials] = 0) then
-            fr_count = fr_count + 1
-            if (fr_count = fr_value)
-                deliver_reward()
-                experiment_state = "Reward"
-                fr_count = 0
+
+        ' Detect Lever presses
+        if (experiment_state = "Start") then
+            ' Fixed Interval
+            if (current_trial = 1) then
+                if (SignalIn(left_lever_inpin) = off) then
+                    pass_time = TrialTime - iv_start_time
+                    if (pass_time < (fi_delay - fi_allow)) then
+                        pressed_wrong = 1
+                    elseif (pass_time >= (fi_delay)) then
+                        if (pressed_wrong = 1) then 
+                            deliver_reward()
+                            experiment_state = "Reward"
+                        elseif (pass_time <= (fi_delay + fi_allow)) then
+                            deliver_reward()
+                            DelayMS(10)
+                            deliver_reward()
+                            experiment_state = "Reward"
+                        end if
+                    end if
+                elseif (SignalIn(right_lever_inpin) = off) then
+                    pressed_wrong = 1
+                end if
+            ' Fixed Ratio
+            elseif (current_trial = 0) then
+                if (SignalIn(right_lever_inpin) = off) then 
+                    fr_count = fr_count + 1
+                    print "Current FR count" fr_count
+                    if (fr_count = fr_value) then
+                        deliver_reward()
+                        experiment_state = "Reward"
+                        fr_count = 0
+                    end if
+                end if
             end if
+
+        ' Detect Nosepoke
         elseif (experiment_state = "Reward") and (SignalIn(nosepoke_inpin) = on) then
-            if (trial_sides[elapsed_trials] = 1) then
-                DelayMS(fi_delay*1000)
-            end if
+            print "Nosepoke detected at ", TrialTime
+            iv_start_time = TrialTime
             experiment_state = "Start"
         end if
 
