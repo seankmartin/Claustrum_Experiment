@@ -28,8 +28,23 @@ class SessionInfo:
         self.session_info_dict = {}
 
         # Empty keys that should probably be updated at some stage
-        self.session_info_dict['2_MagazineHabituation_p'] = None
-        self.session_info_dict['3_LeverHabituation_p'] = None
+        self.session_info_dict['2_MagazineHabituation_p'] = (
+            np.array([
+                ['A:', 'B:', 'Experiment Variables'],
+                ['D:', 'E:', 'Reward'],
+                ['E:', 'END', 'Nosepoke']
+            ]))
+        self.session_info_dict['3_LeverHabituation_p'] = (
+            np.array([
+                ['A:', 'B:', 'Experiment Variables'],
+                ['D:', 'E:', 'Reward'],
+                ['E:', 'L:', 'Nosepoke'],
+                ['L:', 'M:', 'L'],
+                ['M:', 'N:', 'Un_L'],
+                ['N:', 'O:', 'Un_R'],
+                ['O:', 'R:', 'Un_Nosepoke'],
+                ['R:', 'END', 'R']
+            ]))
         self.session_info_dict['DNMTS'] = None
 
         self.session_info_dict['4_LeverTraining_p'] = (
@@ -74,11 +89,33 @@ class SessionInfo:
                 ['M:', 'N:', 'Un_L'],
                 ['N:', 'O:', 'Un_R'],
                 ['O:', 'R:', 'Un_Nosepoke'],
-                ['R:', 'Q:', 'R'],
-                ['Q:', 'U:', 'Possible Trials'],
-                ['U:', 'V:', 'Selected Trials'],
-                ['V:', 'X:', 'Per Trial Pellets']
+                ['R:', 'U:', 'R'],
+                ['U:', 'V:', 'Trial Type'],  # 1 is FR, 0 is FI
+#                ['V:', 'END', 'Per Trial Pellets']
             ]))
+
+        self.session_info_dict['7_RandomisedBlocksExtended_p'] = (
+            np.array([
+                ['A:', 'B:', 'Experiment Variables'],
+                ['D:', 'E:', 'Reward'],
+                ['E:', 'F:', 'Nosepoke'],
+                # L during FR Trial; L when R available
+                ['F:', 'G:', 'FR_Err'],
+                # R during FI Trial; R when L available
+                ['G:', 'H:', 'FI_Err'],
+                # L during FR Trial_Un; L before reward collection
+                ['H:', 'I:', 'Un_FR_Err'],
+                # R during FI Trial_Un; R during waiting time
+                ['I:', 'L:', 'Un_FI_Err'],
+                ['L:', 'M:', 'L'],
+                ['M:', 'N:', 'Un_L'],
+                ['N:', 'O:', 'Un_R'],
+                ['O:', 'R:', 'Un_Nosepoke'],
+                ['R:', 'U:', 'R'],
+                ['U:', 'V:', 'Trial Type'],
+#                ['V:', 'END', 'Per Trial Pellets']
+            ]))
+
 
     def get_session_type_info(self, key=None):
         """

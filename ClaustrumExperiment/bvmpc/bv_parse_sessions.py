@@ -59,6 +59,8 @@ class SessionExtractor:
             s_ends = np.zeros_like(s_starts)
             s_ends[:-1] = s_starts[1:]
             s_ends[-1] = lines.size
+            print((s_ends))
+            print((s_starts))
 
             for start, end in zip(s_starts, s_ends):
                 s_data = np.array(lines[start:end])
@@ -214,6 +216,28 @@ class Session:
             levers.append(self.get_arrays("Un_L"))
         return np.sort(np.concatenate(levers, axis=None))
 
+    def get_err_lever_ts(self, include_un=True):
+        """
+        Get the timestamps of the error/opposite lever presses.
+
+        Parameters
+        ----------
+        include_un : bool - Default True
+            Include lever presses that were unnecessary for the reward.
+
+        Returns
+        -------
+        np.ndarray : A numpy array of sorted timestamps.
+
+        """
+        levers = [
+            self.get_arrays("FR_Err"),
+            self.get_arrays("FI_Err")]
+        if include_un:
+            levers.append(self.get_arrays("Un_FR_Err"))
+            levers.append(self.get_arrays("Un_FI_Err"))
+        return np.sort(np.concatenate(levers, axis=None))
+
     def time_taken(self):
         """Calculate how long the Session took in mins."""
         start_time = self.get_metadata("start_time")[-8:].replace(' ', '0')
@@ -229,7 +253,7 @@ class Session:
         """Private function to save info to h5 file"""
         with h5py.File(self.h5_file, "w", libver="latest") as f:
             for key, val in self.get_metadata().items():
-                print("I'm in here! {} {}".format(key, val))
+                print("{} {}".format(key, val))
                 f.attrs[key] = val
             for key, val in f.attrs.items():
                 print(key, val)
@@ -281,10 +305,9 @@ class Session:
         if end_char == 'END':
             # Last timepoint does not have a end_char
             stop_index = [lines.size]
-
-        data_lines = lines[start_index[0] + 1:stop_index[0]]
-        if not data_lines.size:
+        if start_index[0] + 1 == stop_index[0]:
             return np.array([])
+        data_lines = lines[start_index[0] + 1:stop_index[0]]
 
         last_line = parse_line(data_lines[-1])
         arr = np.empty(
