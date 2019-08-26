@@ -33,6 +33,7 @@ dim right_lever_outpin
 dim left_light_outpin
 dim right_light_outpin
 dim house_light_outpin
+dim reward_light_outpin
 dim food_outpin
 dim fan_outpin
 dim sound_outpin
@@ -66,10 +67,11 @@ sub setup_pins()
     right_lever_outpin = 2
     left_light_outpin = 4
     right_light_outpin = 5
-    house_light_outpin = 7 'TODO get exact value
-    sound_outpin = 8 'TODO get exact value
-    fan_outpin = 16 'TODO get exact value
+    reward_light_outpin = 6
+    house_light_outpin = 7
+    sound_outpin = 8
     food_outpin = 9
+    fan_outpin = 16
 end sub
 
 sub init_vars()
@@ -137,6 +139,7 @@ sub deliver_reward()
     SignalOut(food_outpin) = on
     DelayMS(15)
     SignalOut(food_outpin) = off
+    SignalOut(reward_light_outpin) = on
 end sub
 
 '''Maths related subroutines'''
@@ -205,12 +208,14 @@ sub new_experiment(first)
         print #1, "Begin;", TrialTime
 
         start_time = TrialTime
+        iv_start_time = TrialTime
         experiment_state = "Start"
     end if
 end sub
 
 sub end_experiment()
     reset_left_right()
+    SignalOut(reward_light_outpin) = off
     print "Ending trial, num_rewards in this trial: ", trial_rewards[elapsed_trials]
     print #1, "End;", TrialTime
     print #1, ";"
@@ -222,7 +227,7 @@ sub full_init_before_record()
     dim i
 
     ' Print the csv file header
-    print #1, tag, ";", num_trials, ";", fi_delay, ";", fr_value
+    print #1, tag, ";", num_trials, ";", fi_delay, ";", fi_allow, ";", fr_value
     print #1, ";"
 
     ' Convert some delays to ms
@@ -236,7 +241,7 @@ sub full_init_before_record()
     reset()
     init_vars()
     init_arrays()
-    SingalOut(fan_outpin) = on
+    SignalOut(fan_outpin) = on
     SignalOut(house_light_outpin) = on
 
     ' Shuffle trial sides
@@ -306,7 +311,7 @@ sub main()
             elseif (current_trial = 0) then
                 if (SignalIn(right_lever_inpin) = off) then 
                     fr_count = fr_count + 1
-                    print "Current FR count" fr_count
+                    print "Current FR count", fr_count
                     if (fr_count = fr_value) then
                         deliver_reward()
                         experiment_state = "Reward"
@@ -314,12 +319,12 @@ sub main()
                     end if
                 end if
             end if
-
         ' Detect Nosepoke
         elseif (experiment_state = "Reward") and (SignalIn(nosepoke_inpin) = on) then
             print "Nosepoke detected at ", TrialTime
             iv_start_time = TrialTime
             experiment_state = "Start"
+            SignalOut(reward_light_outpin) = off
         end if
 
         ' Don't hog the CPU
