@@ -11,11 +11,12 @@ from adjustText import adjust_text
 from scipy import interpolate
 
 
-def plot_sessions(summary=True, single=True, timeline=False):
+def plot_sessions(summary=False, single=False, timeline=True, int_only=False):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
     single = True: Plots single session summaries with breakdown of single blocks
     Timeline = True: Plots total rewards from beginining of first session
+    int_only = True: Plots only interval trials in zoomed schedule plot
     '''
     # Parameters for specifying session
     sub_list = ['1', '2', '3', '4', '5', '6']
@@ -23,7 +24,7 @@ def plot_sessions(summary=True, single=True, timeline=False):
 #    sub_list = ['1', '2', '3', '4']
 #    sub_list = ['5', '6']
     s_list = ['4', '5a', '5b', '6', '7']
-    d_list = ['08-15']
+    d_list = ['08-24']
     
     start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
 #    start_dir = r"G:\!Operant Data\Ham"
@@ -81,21 +82,22 @@ def plot_sessions(summary=True, single=True, timeline=False):
                     fig.tight_layout(rect=[0, 0.03, 0.8, 0.95])
                 for i, s in enumerate(s_grp):
                     ax1 = fig.add_subplot(gs[i, 0])
-                    bv_an.cumplot(s, out_dir, ax1, zoom=False, zoom_sch=False)
+                    bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False, zoom_sch=False)
                     ax2 = fig.add_subplot(gs[i, 1])
-                    bv_an.cumplot(s, out_dir, ax2, zoom=False, zoom_sch=True,
+                    bv_an.cumplot(s, out_dir, ax2, int_only, zoom=False, zoom_sch=True,
                               plot_error=False, plot_all=True)
                     ax3 = fig.add_subplot(gs[i, 2])
-                    bv_an.cumplot(s, out_dir, ax3, zoom=False, zoom_sch=True,
+                    bv_an.cumplot(s, out_dir, ax3, int_only, zoom=False, zoom_sch=True,
                               plot_error=False, plot_all=False)
                     ax4 = fig.add_subplot(gs[i, 3])
-                    bv_an.cumplot(s, out_dir, ax4, zoom=False, zoom_sch=True,
+                    bv_an.cumplot(s, out_dir, ax4, int_only, zoom=False, zoom_sch=True,
                               plot_error=True, plot_all=False)
 #                if len(s_grp) == 1:
 #                    fig.suptitle(('Subject ' + subject + ' Performance'), y = 1.05, fontsize=30)
 #                else:
                 plt.subplots_adjust(top=0.85)
-                fig.suptitle(('Subject ' + subject + ' Performance'), fontsize=30)
+                fig.suptitle(('Subject ' + subject + ' Performance'),
+                             color=mycolors(subject), fontsize=30)
 
 #                # Seperate plots w line
 #                ax1.hlines(1.13, -0, 4.9, clip_on=False,
@@ -120,7 +122,7 @@ def plot_sessions(summary=True, single=True, timeline=False):
             timeline_plot(sub_list, in_dir, out_dir, single_plot=single)
 
 
-def sum_plot(s_grp, idx, out_dir, zoom=True, IRT=True, single=False):
+def sum_plot(s_grp, idx, out_dir, zoom=True, IRT=True, single=False, int_only=False):
     # Plots summary of day
     cols = 2
     if IRT or zoom:
@@ -149,14 +151,14 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, IRT=True, single=False):
             ax1 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2])
         else:
             ax1 = fig.add_subplot(gs[0, i])
-        bv_an.cumplot(s, out_dir, ax1, zoom=False, zoom_sch=False)
+        bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False, zoom_sch=False)
 
         if IRT:
             ax2 = fig.add_subplot(gs[i, 1])
             bv_an.IRT(s, out_dir, ax2,)
         elif zoom:
             ax2 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2+1])
-            bv_an.cumplot(s, out_dir, ax2, zoom=False, zoom_sch=True,
+            bv_an.cumplot(s, out_dir, ax2, int_only, zoom=False, zoom_sch=True,
                           plot_error=False, plot_all=True)
         plt.tight_layout()
     d_print = np.array_str(np.unique(np.array(d_passed)))
@@ -199,11 +201,17 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
         c_ratio = []
         c_interval = []
         type_list = []
+        dpell_change = []
+        dpell_old = []
         prev_name = '2'
         for i, s in enumerate(s_grp):
             s_type = s.get_metadata('name')[:2]
             timestamps = s.get_arrays()
             subject = s.get_metadata('subject')
+            pell_ts = timestamps["Reward"]
+            pell_double = np.nonzero(np.diff(pell_ts)<0.5)[0]
+            if len(pell_double):
+                dpell_change = 1
             if s_type == '5a':
                 s_name = 'R' + str(int(timestamps["Experiment Variables"][3]))
                 c_ratio = s_name
@@ -233,6 +241,9 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
                 elif not c_interval == prev_interval:
                     changes.append(c_interval)
                     change_idx.append(1)
+                elif not dpell_change == dpell_old:
+                    changes.append("DPell")
+                    change_idx.append(1)
                 else:
                     changes.append(0)
                     change_idx.append(0)
@@ -240,6 +251,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
             s_list.append(s_name)
             r_list.append(rewards_t)
             type_list.append('S-'+s_type[0])
+            dpell_old = dpell_change
             prev_ratio = c_ratio
             prev_interval = c_interval
             prev_name = s_type
@@ -405,7 +417,7 @@ def run_mpc_file(filename, out_dir):
 
 if __name__ == "__main__":
     """Main control."""
-#    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"  # from Ham Personal HD
+    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"  # from Ham Personal HD
 #    start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
 
 #    # Batch processing of sessions in folder

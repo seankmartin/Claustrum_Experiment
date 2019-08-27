@@ -40,7 +40,7 @@ def split_lever_ts(session, out_dir, ax=None):
     return ratio_lever_ts, interval_lever_ts
 
 
-def cumplot(session, out_dir, ax=None, zoom=False,
+def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
             zoom_sch=False, plot_error=False, plot_all=False):
     """Perform a cumulative plot for a Session."""
     date = session.get_metadata('start_date').replace('/', '_')
@@ -65,32 +65,32 @@ def cumplot(session, out_dir, ax=None, zoom=False,
             ratio = int(timestamps["Experiment Variables"][3])
             plt.suptitle('\nSubject {}, {} {}, {}'.format(
                 subject, session_type[:-2], ratio, date),
-                fontsize=9, y=.98, x=.51)
+                color=mycolors(subject), fontsize=9, y=.98, x=.51)
         elif session_type == '5b_FixedInterval_p':
             interval = int(timestamps["Experiment Variables"][3] / 100)
             plt.suptitle('\nSubject {}, {} {}s, {}'.format(
                 subject, session_type[:-2], interval, date),
-                fontsize=9, y=.98, x=.51)
+                color=mycolors(subject), fontsize=9, y=.98, x=.51)
         elif session_type == '6_RandomisedBlocks_p:':
             ratio = int(timestamps["Experiment Variables"][3])
             interval = int(timestamps["Experiment Variables"][5] / 100)
             plt.suptitle('\nSubject {}, {} FR{}/FI{}s, {}'.format(
                 subject, session_type[:-2], ratio, interval, date),
-                fontsize=9, y=.98, x=.51)
+                color=mycolors(subject), fontsize=9, y=.98, x=.51)
         else:
             plt.suptitle('\nSubject {}, {}, {}'.format(
-                subject, session_type[:-2], date),
+                subject, session_type[:-2], date), color=mycolors(subject),
                 fontsize=9, y=.98, x=.51)
     else:
         if session_type == '5a_FixedRatio_p':
             ratio = int(timestamps["Experiment Variables"][3])
             ax.set_title('\nSubject {}, S{}, FR{}, {}'.format(
-                subject, stage, ratio, date),
+                subject, stage, ratio, date), color=mycolors(subject),
                 fontsize=12)
         elif session_type == '5b_FixedInterval_p':
             interval = int(timestamps["Experiment Variables"][3] / 100)
             ax.set_title('\nSubject {}, S{}, FI{}s, {}'.format(
-                subject, stage, interval, date),
+                subject, stage, interval, date), color=mycolors(subject),
                 fontsize=12)
         elif session_type == '6_RandomisedBlocks_p' or stage == '7':
             switch_ts = np.arange(5, 1830, 305)
@@ -99,7 +99,7 @@ def cumplot(session, out_dir, ax=None, zoom=False,
             ratio = int(timestamps["Experiment Variables"][3])
             interval = int(timestamps["Experiment Variables"][5] / 100)
             ax.set_title('\nSubject {}, S{}, FR{}/FI{}s, {}'.format(
-                subject, stage, ratio, interval, date),
+                subject, stage, ratio, interval, date), color=mycolors(subject),
                 fontsize=12)
 
     ax.set_xlabel('Time (s)')
@@ -124,7 +124,7 @@ def cumplot(session, out_dir, ax=None, zoom=False,
             plt.scatter(norm_reward_ts[i], reward_y,
                         marker="x", c="grey", s=25)
         ax.set_title('\nSubject {}, Trial-Based'.format(
-                subject), fontsize=12)
+                subject), color=mycolors(subject), fontsize=12)
         ax.legend()
         return
 
@@ -166,10 +166,10 @@ def cumplot(session, out_dir, ax=None, zoom=False,
                 norm_err_ts.append(sch_err_ts[i+1]-sch_switch[i])
         ax.set_xlim(0, 305)
         for i, l in enumerate(norm_lever_ts):
-            if sch_type[i] == 1:
+            if sch_type[i] == 1 and not int_only:
                 ax.step(l, np.arange(l.size), c=ratio_c(i*45), where="post",
                          label='B'+str(i+1)+' - FR', zorder=1)
-            else:
+            elif sch_type[i] == 0:
                 ax.step(l, np.arange(l.size), c=interval_c(i*45), where="post",
                          label='B'+str(i+1)+' - FI', zorder=1)
             bins = l
@@ -180,12 +180,19 @@ def cumplot(session, out_dir, ax=None, zoom=False,
                     l, norm_err_ts[i]).nonzero()[0],
                     c='r', s=1, zorder=2)
                     incl = '_All'
-            plt.scatter(norm_reward_ts[i], reward_y,
+            if int_only:
+                if sch_type[i] == 0:
+                    plt.scatter(norm_reward_ts[i], reward_y,
                         marker="x", c="grey", s=25)
-            plt.scatter(norm_double_r_ts[i], double_y,
+                    plt.scatter(norm_double_r_ts[i], double_y,
+                        marker="x", c="magenta", s=25)
+            else:
+                plt.scatter(norm_reward_ts[i], reward_y,
+                        marker="x", c="grey", s=25)
+                plt.scatter(norm_double_r_ts[i], double_y,
                         marker="x", c="magenta", s=25)
         ax.set_title('\nSubject {}, Block-Split {}'.format(
-                subject, incl), fontsize=12)
+                subject, incl), color=mycolors(subject), fontsize=12)
         ax.legend()
         return
 
@@ -194,13 +201,13 @@ def cumplot(session, out_dir, ax=None, zoom=False,
             sch_type = 'FR'
             ratio = int(timestamps["Experiment Variables"][3])
             ax.set_title('\nSubject {}, FR{} Split'.format(
-                subject, ratio),
+                subject, ratio), color=mycolors(subject),
                 fontsize=12)
         elif session_type == '5b_FixedInterval_p':
             sch_type = 'FI'
             interval = int(timestamps["Experiment Variables"][3] / 100)
             ax.set_title('\nSubject {}, FI{}s Split'.format(
-                subject, interval),
+                subject, interval), color=mycolors(subject),
                 fontsize=12)
         blocks = np.arange(0, 60*30, 300)  # Change values to set division blocks
         split_lever_ts = np.split(lever_ts,
@@ -264,13 +271,13 @@ def cumplot(session, out_dir, ax=None, zoom=False,
         print("Saved figure to {}".format(out_name))
         # Text Display on Graph
         ax.text(0.55, 0.15, 'Total # of Lever Press: {}\nTotal # of Rewards: {}\nTotal # of Double Rewards: {}'
-                .format(len(lever_ts), len(reward_times), len(reward_double)), transform=ax.transAxes)
+                .format(len(lever_ts), len(reward_times) + len(reward_double), len(reward_double)), transform=ax.transAxes)
         fig.savefig(out_name, dpi=400)
         plt.close()
     else:
         # Text Display on Graph
         ax.text(0.05, 0.85, 'Total # of Lever Press: {}\nTotal # of Rewards: {}\nTotal # of Double Rewards: {}'
-                .format(len(lever_ts), len(reward_times), len(reward_double)), transform=ax.transAxes)
+                .format(len(lever_ts), len(reward_times) + len(reward_double), len(reward_double)), transform=ax.transAxes)
         return
 
 
