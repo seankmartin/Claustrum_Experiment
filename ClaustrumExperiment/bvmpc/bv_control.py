@@ -4,14 +4,24 @@ import math
 import numpy as np
 from bv_parse_sessions import SessionExtractor, Session
 import bv_analyse as bv_an
-from bv_utils import make_dir_if_not_exists, print_h5, mycolors
+from bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from adjustText import adjust_text
 from scipy import interpolate
+from datetime import date
 
+def plot_batch_sessions():
+    start_date = date(2019, 7, 15)  # date(year, mth, day)
+    end_date = date.today()
+    #end_date = date(2019, 8, 27)
+    
+    for single_date in daterange(start_date, end_date):
+        d = [single_date.isoformat()[-5:]]
+        print(d)
+        plot_sessions(d)
 
-def plot_sessions(summary=True, single=True, timeline=False,
+def plot_sessions(d_list, summary=True, single=True, timeline=False,
                   int_only=False, corr_only=True):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
@@ -26,7 +36,7 @@ def plot_sessions(summary=True, single=True, timeline=False,
 #    sub_list = ['1', '2', '3', '4']
 #    sub_list = ['5', '6']
     s_list = ['4', '5a', '5b', '6', '7']
-    d_list = ['08-27']
+#    d_list = ['08-14']
     
     start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
 #    start_dir = r"G:\!Operant Data\Ham"
@@ -85,6 +95,7 @@ def plot_sessions(summary=True, single=True, timeline=False,
 
     if single and summary:
         # Single Subject Plots
+        idx = 0
         for c, sub in enumerate(sub_list):
             s_grp = extract_hdf5s(in_dir, out_dir, sub, s_list, d_list)
             if s_grp == []:
@@ -136,7 +147,7 @@ def plot_sessions(summary=True, single=True, timeline=False,
                 fig.savefig(os.path.join(out_dir, out_name), dpi=400)
                 plt.close()
             else:
-                sum_plot(s_grp, out_name, out_dir, IRT=False, single=single)
+                sum_plot(s_grp, idx, out_dir, IRT=False, single=single)
             
     if timeline:
         if not single:
@@ -148,10 +159,9 @@ def plot_sessions(summary=True, single=True, timeline=False,
             timeline_plot(sub_list, in_dir, out_dir, single_plot=single)
 
 
-def sum_plot(s_grp, idx, out_dir, zoom=True, IRT=True, single=False,
+def sum_plot(s_grp, idx, out_dir, zoom=False, IRT=True, single=False,
              int_only=False, corr_only=False):
     # Plots summary of day
-    cols = 2
     if IRT or zoom:
         if len(s_grp) > 2:
             cols = 2*math.ceil(len(s_grp)/2)
@@ -159,7 +169,12 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, IRT=True, single=False,
         else:
             rows = len(s_grp)
     else:
-        rows = 1
+        if len(s_grp) > 4:
+            rows = math.ceil(len(s_grp)/4)
+            cols = 4
+        else:
+            cols = len(s_grp)
+            rows = 1
     size_multiplier = 5
     fig = plt.figure(
             figsize=(cols * size_multiplier, rows * size_multiplier),
@@ -174,22 +189,25 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, IRT=True, single=False,
         date = s.get_metadata("start_date").replace("/", "-")
         s_passed.append(stage)
         d_passed.append(date[:5])
+
         if IRT or zoom:
             ax1 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2])
         else:
             ax1 = fig.add_subplot(gs[0, i])
-        if corr_only:
+
+        if corr_only and stage == 7:
             bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False, 
                           zoom_sch=False, plot_all=False)
         else:
             bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False,
-                          zoom_sch=False)
+                      zoom_sch=False)
+
         if IRT:
             ax2 = fig.add_subplot(gs[i, 1])
             bv_an.IRT(s, out_dir, ax2,)
         elif zoom:
             ax2 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2+1])
-            if corr_only:
+            if corr_only and stage == 7:
                 bv_an.cumplot(s, out_dir, ax2, int_only, zoom=False, zoom_sch=True,
                               plot_error=False, plot_all=False)
             else:
@@ -199,10 +217,11 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, IRT=True, single=False,
     d_print = np.array_str(np.unique(np.array(d_passed)))
     d_title = np.array2string(np.unique(np.array(d_passed)))
     s_print = np.array_str(np.unique(np.array(s_passed)))
+    
     if single:
         fig.suptitle(('Subject ' + subject + ' Performance'), fontsize=30)
         out_name = "Sum_" + subject + "_" + d_print + "_" + s_print + ".png"
-    elif corr_only:
+    elif corr_only and stage == 7:
         if idx == 0:
             fig.suptitle(('Summary across animals '+ d_title +
                           '_Correct Only'), fontsize=30)
@@ -480,7 +499,8 @@ if __name__ == "__main__":
 #    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
     
     # Processing specific sessions from hdf5
-    plot_sessions()
+    plot_sessions(['07-17'])
+#    plot_batch_sessions()
 
     # Running single session files
 #    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-04"

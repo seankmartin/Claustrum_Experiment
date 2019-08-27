@@ -3,7 +3,11 @@
 import h5py
 import os
 import argparse
+from datetime import timedelta
 
+def daterange(start_date, end_date):
+    for n in range(int ((end_date - start_date).days)):
+        yield start_date + timedelta(n)
 
 def make_dir_if_not_exists(location):
     """Make directory structure for given location."""

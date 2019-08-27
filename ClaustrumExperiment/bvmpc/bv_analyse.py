@@ -209,6 +209,10 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
             ax.set_title('\nSubject {}, FI{}s Split'.format(
                 subject, interval), color=mycolors(subject),
                 fontsize=12)
+        elif stage == 6 or stage == 7:
+            pass
+        else:
+            return print("Unable to split session")
         blocks = np.arange(0, 60*30, 300)  # Change values to set division blocks
         split_lever_ts = np.split(lever_ts,
                                   np.searchsorted(lever_ts, blocks))
