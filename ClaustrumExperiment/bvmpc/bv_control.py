@@ -11,12 +11,14 @@ from adjustText import adjust_text
 from scipy import interpolate
 
 
-def plot_sessions(summary=True, single=True, timeline=False, int_only=False):
+def plot_sessions(summary=True, single=True, timeline=False,
+                  int_only=False, corr_only=True):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
     single = True: Plots single session summaries with breakdown of single blocks
     Timeline = True: Plots total rewards from beginining of first session
     int_only = True: Plots only interval trials in zoomed schedule plot
+    corr_only = True: Plots seperate summary plot with correct only trials
     '''
     # Parameters for specifying session
     sub_list = ['1', '2', '3', '4', '5', '6']
@@ -56,6 +58,30 @@ def plot_sessions(summary=True, single=True, timeline=False, int_only=False):
                 sum_plot(s_grp, idx, out_dir, IRT=False)
         else:
             sum_plot(s_grp, idx, out_dir, IRT=False)
+
+    if summary and corr_only:
+        #  extracts hdf5 session based on specification
+        max_plot = 4  # Set max plots per figure
+        s_grp = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
+        if s_grp == []:
+            return print("***No Files Extracted***")
+        idx = 0
+        if len(s_grp) > max_plot:
+            j=0
+            s_grp_split = []
+            s_grp_idx = np.arange(len(s_grp))
+            for i in s_grp_idx[max_plot-1::max_plot]:
+                s_grp_split.append(s_grp[j:i+1])
+                j = i+1
+            
+            mv = len(s_grp) % max_plot
+            if mv != 0:
+                s_grp_split.append(s_grp[-mv:])
+            for s_grp in s_grp_split:
+                idx += 1
+                sum_plot(s_grp, idx, out_dir, IRT=False, corr_only=True)
+        else:
+            sum_plot(s_grp, idx, out_dir, IRT=False, corr_only=True)
 
     if single and summary:
         # Single Subject Plots
@@ -122,7 +148,8 @@ def plot_sessions(summary=True, single=True, timeline=False, int_only=False):
             timeline_plot(sub_list, in_dir, out_dir, single_plot=single)
 
 
-def sum_plot(s_grp, idx, out_dir, zoom=True, IRT=True, single=False, int_only=False):
+def sum_plot(s_grp, idx, out_dir, zoom=True, IRT=True, single=False,
+             int_only=False, corr_only=False):
     # Plots summary of day
     cols = 2
     if IRT or zoom:
@@ -151,15 +178,23 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, IRT=True, single=False, int_only=Fa
             ax1 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2])
         else:
             ax1 = fig.add_subplot(gs[0, i])
-        bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False, zoom_sch=False)
-
+        if corr_only:
+            bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False, 
+                          zoom_sch=False, plot_all=False)
+        else:
+            bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False,
+                          zoom_sch=False)
         if IRT:
             ax2 = fig.add_subplot(gs[i, 1])
             bv_an.IRT(s, out_dir, ax2,)
         elif zoom:
             ax2 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2+1])
-            bv_an.cumplot(s, out_dir, ax2, int_only, zoom=False, zoom_sch=True,
-                          plot_error=False, plot_all=True)
+            if corr_only:
+                bv_an.cumplot(s, out_dir, ax2, int_only, zoom=False, zoom_sch=True,
+                              plot_error=False, plot_all=False)
+            else:
+                bv_an.cumplot(s, out_dir, ax2, int_only, zoom=False, zoom_sch=True,
+                              plot_error=False, plot_all=True)
         plt.tight_layout()
     d_print = np.array_str(np.unique(np.array(d_passed)))
     d_title = np.array2string(np.unique(np.array(d_passed)))
@@ -167,6 +202,15 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, IRT=True, single=False, int_only=Fa
     if single:
         fig.suptitle(('Subject ' + subject + ' Performance'), fontsize=30)
         out_name = "Sum_" + subject + "_" + d_print + "_" + s_print + ".png"
+    elif corr_only:
+        if idx == 0:
+            fig.suptitle(('Summary across animals '+ d_title +
+                          '_Correct Only'), fontsize=30)
+            out_name = "Sum_" + d_print + "_" + s_print + "_Corr.png"
+        else:            
+            fig.suptitle(('Summary across animals '+ d_title + 
+                          '_Correct Only' + " p" + str(idx)), fontsize=30)
+            out_name = "Sum_" + d_print + "_" + s_print + "_" + str(idx) + "_Corr.png"
     else:
         if idx == 0:
             fig.suptitle(('Summary across animals '+ d_title), fontsize=30)
