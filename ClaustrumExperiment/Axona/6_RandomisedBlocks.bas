@@ -61,7 +61,8 @@ dim tag
 sub setup_pins()
     'setup variables to pins
     left_lever_inpin = 1
-    right_lever_inpin = 2
+    right_lever_inpin = 3
+    nosepoke_inpin = 7
 
     left_lever_outpin = 1
     right_lever_outpin = 2
@@ -81,7 +82,7 @@ sub init_vars()
     elapsed_time = 0
     left_lever_active = 0
     right_lever_active = 0
-    pressed_wrong = 0
+    pressed_wrong = false
 end sub
 
 sub init_arrays()
@@ -210,6 +211,8 @@ sub new_experiment(first)
         start_time = TrialTime
         iv_start_time = TrialTime
         experiment_state = "Start"
+        pressed_wrong = false
+        npressed = true
     end if
 end sub
 
@@ -239,6 +242,7 @@ sub full_init_before_record()
     'Setup the pins and turn on essential outputs
     setup_pins()
     reset()
+    DelayMS(500)
     init_vars()
     init_arrays()
     SignalOut(fan_outpin) = on
@@ -265,11 +269,11 @@ sub main()
     ' Run the experiments and record the data
     '''NB Change important variables here'''
     num_trials = 6 'Number of trials is usually fixed 6
-    trial_delay = 5 'How long between trials in minutes
-    fi_delay = 30 'How long fi delay is in seconds
+    trial_delay = 1 'How long between trials in minutes
+    fi_delay = 10 'How long fi delay is in seconds
     fi_allow = 5 'Can press 5 seconds +- to get double reward
     fr_value = 6 'Number of FR presses needed
-    tag = "Optional tag" ' You may tag this experiment
+    tag = "Test" ' You may tag this experiment
     'output in the same name format as other axona files
     open "data.log" for output as #1
 
@@ -278,59 +282,82 @@ sub main()
     new_experiment(1)
 
     dim pass_time
+    dim npressed
+    dim nstarted
+    nstarted = true
     ' Loop the recording for the number of trials
     while (elapsed_trials < num_trials)
-
         ' End trial
         if (TrialTime - start_time > trial_delay) then
             end_experiment()
+            nstarted = true
 
         ' Detect Lever presses
-        if (experiment_state = "Start") then
+        elseif (experiment_state = "Start") then
             ' Fixed Interval
             if (current_trial = 1) then
                 if (SignalIn(left_lever_inpin) = off) then
-                    pass_time = TrialTime - iv_start_time
-                    if (pass_time < (fi_delay - fi_allow)) then
-                        pressed_wrong = 1
-                    elseif (pass_time >= (fi_delay)) then
-                        if (pressed_wrong = 1) then 
-                            deliver_reward()
-                            experiment_state = "Reward"
-                        elseif (pass_time <= (fi_delay + fi_allow)) then
-                            deliver_reward()
-                            DelayMS(10)
-                            deliver_reward()
-                            experiment_state = "Reward"
-                        end if
+                    if nstarted then
+                        nstarted = false
+                        deliver_reward()
+                        experiment_state = "Reward"
+                    elseif npressed then
+                        npressed = false
+                        pass_time = TrialTime - iv_start_time
+                        'print pass_time, ";", fi_delay - fi_allow, ";", fi_delay + fi_allow
+                        if (pass_time < (fi_delay - fi_allow)) then
+                            pressed_wrong = true
+                        elseif (pass_time >= (fi_delay)) then
+                            if (pressed_wrong) then
+                                deliver_reward()
+                                experiment_state = "Reward"
+                            elseif (pass_time <= (fi_delay + fi_allow)) then
+                                print "Delivered double reward"
+                                deliver_reward()
+                                DelayMS(500)
+                                deliver_reward()
+                                experiment_state = "Reward"
+                            else
+                                deliver_reward()
+                                experiment_state = "Reward"
+                            end if
+                         end if
                     end if
                 elseif (SignalIn(right_lever_inpin) = off) then
-                    pressed_wrong = 1
+                    pressed_wrong = true
+                else
+                    npressed = true
                 end if
             ' Fixed Ratio
             elseif (current_trial = 0) then
-                if (SignalIn(right_lever_inpin) = off) then 
-                    fr_count = fr_count + 1
-                    print "Current FR count", fr_count
+                if (SignalIn(right_lever_inpin) = off) then
+                    if npressed then
+                        fr_count = fr_count + 1
+                        npressed = false
+                    end if
                     if (fr_count = fr_value) then
                         deliver_reward()
                         experiment_state = "Reward"
                         fr_count = 0
                     end if
+                else
+                    npressed = true
                 end if
             end if
         ' Detect Nosepoke
-        elseif (experiment_state = "Reward") and (SignalIn(nosepoke_inpin) = on) then
-            print "Nosepoke detected at ", TrialTime
+        elseif ((experiment_state = "Reward") and (SignalIn(nosepoke_inpin) = off)) then
+            print "Nosepoke detected at ", (TrialTime / 60000)
             iv_start_time = TrialTime
             experiment_state = "Start"
             SignalOut(reward_light_outpin) = off
+            pressed_wrong = false
         end if
 
         ' Don't hog the CPU
         DelayMS(10)
     wend
     StopUnitRecording
+    reset()
 
     close #1 'Close the file
 end sub
