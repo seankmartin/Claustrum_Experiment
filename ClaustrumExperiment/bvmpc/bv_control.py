@@ -11,7 +11,7 @@ from adjustText import adjust_text
 from scipy import interpolate
 
 
-def plot_sessions(summary=False, single=False, timeline=True, int_only=False):
+def plot_sessions(summary=True, single=True, timeline=False, int_only=False):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
     single = True: Plots single session summaries with breakdown of single blocks
@@ -24,7 +24,7 @@ def plot_sessions(summary=False, single=False, timeline=True, int_only=False):
 #    sub_list = ['1', '2', '3', '4']
 #    sub_list = ['5', '6']
     s_list = ['4', '5a', '5b', '6', '7']
-    d_list = ['08-24']
+    d_list = ['08-27']
     
     start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
 #    start_dir = r"G:\!Operant Data\Ham"
@@ -247,7 +247,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
                 else:
                     changes.append(0)
                     change_idx.append(0)
-            rewards_t = len(timestamps["Reward"])
+            rewards_t = len(timestamps["Reward"]) + len(pell_double)
             s_list.append(s_name)
             r_list.append(rewards_t)
             type_list.append('S-'+s_type[0])
