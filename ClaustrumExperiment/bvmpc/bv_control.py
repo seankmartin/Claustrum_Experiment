@@ -12,17 +12,18 @@ from scipy import interpolate
 from datetime import date
 
 def plot_batch_sessions():
-    start_date = date(2019, 7, 15)  # date(year, mth, day)
-#    start_date = date(2019, 8, 15)  # date(year, mth, day)
-    end_date = date.today()
-#    end_date = date(2019, 8, 1)
+#    start_date = date(2019, 7, 15)  # date(year, mth, day)
+    start_date = date(2019, 7, 31)  # date(year, mth, day)
+#    start_date = date.today()
+#    end_date = date.today()
+    end_date = date(2019, 8, 1)
     
     for single_date in daterange(start_date, end_date):
         d = [single_date.isoformat()[-5:]]
         print(d)
         plot_sessions(d)
 
-def plot_sessions(d_list, summary=False, single=False, timeline=True,
+def plot_sessions(d_list, summary=True, single=False, timeline=False, recent=False,
                   int_only=False, corr_only=True):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
@@ -155,10 +156,10 @@ def plot_sessions(d_list, summary=False, single=False, timeline=True,
         if not single:
             sub_list = [['1', '2', '3', '4'], ['5', '6']]
             for l in sub_list:
-                timeline_plot(l, in_dir, out_dir, single_plot=single)
+                timeline_plot(l, in_dir, out_dir, single_plot=single, recent=recent)
         else:
             # Plots timeline for specified subjects
-            timeline_plot(sub_list, in_dir, out_dir, single_plot=single)
+            timeline_plot(sub_list, in_dir, out_dir, single_plot=single, recent=recent)
 
 
 def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
@@ -253,7 +254,7 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
     plt.close()
 
 
-def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
+def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, recent=False):
     # Plot size
     rows, cols = [len(sub_list), 4]
     size_multiplier = 5
@@ -277,6 +278,12 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
         dpell_change = []
         dpell_old = []
         prev_name = '2'
+        
+        if recent:
+            s_grp = s_grp[-20:]
+        else:
+            pass
+        
         for i, s in enumerate(s_grp):
             s_type = s.get_metadata('name')[:2]
             timestamps = s.get_arrays()
@@ -337,7 +344,10 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
                     tight_layout=False)
             gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
             ax = fig.add_subplot(gs[0, :])
-            out_name = "Timeline_" + subject + ".png"
+            if recent:
+                out_name = "Timeline_" + subject + "_recent" + ".png"
+            else:
+                out_name = "Timeline_" + subject + ".png"                
         else:
             ax = fig.add_subplot(gs[int(c), :])
 
@@ -356,6 +366,8 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
 #                    autoalign='xy', force_points=0.5, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
 
         # Annotated changes in protocol
+        h2 = None
+        h3 = None
         for i, c in enumerate(changes):
             if stage_change[i] == 1:
 #                h2 = ax.annotate(type_list[i], xy=(s_idx[i], r_list[i]),
@@ -382,8 +394,15 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
         ax.spines['right'].set_visible(False)
         ax.set_xlabel('Sessions', fontsize=20)
         ax.set_ylabel('Total Rewards', fontsize=20)
-        plt.legend([h1, h2.arrow_patch, h3.arrow_patch], (h1.get_label(),
-                   'Stage Changes', 'Protocol Modification'))
+        if h2 is not None and h3 is not None:
+            plt.legend([h1, h2.arrow_patch, h3.arrow_patch], (h1.get_label(),
+                       'Stage Changes', 'Protocol Modification'))
+        elif h2 is not None:
+            plt.legend([h1, h2.arrow_patch], (h1.get_label(),
+                       'Stage Changes'))
+        elif h3 is not None:
+            plt.legend([h1, h3.arrow_patch], (h1.get_label(),
+                       'Protocol Modification'))
         ax.set_title('\nSubject {} Timeline'.format(subject), fontsize=25)
         
         if single_plot:
@@ -393,8 +412,12 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False):
             plt.close()
             
     if not single_plot:
-        fig.suptitle('Timelines for IR ' + "-".join(sub_list), fontsize=30)
-        out_name = "Timeline_Sum_" + "-".join(sub_list) + ".png"
+        if recent:
+            fig.suptitle('Timelines for IR ' + "-".join(sub_list) + "_recent", fontsize=30)
+            out_name = "Timeline_Sum_" + "-".join(sub_list) + "_recent" + ".png"
+        else: 
+            fig.suptitle('Timelines for IR ' + "-".join(sub_list), fontsize=30)
+            out_name = "Timeline_Sum_" + "-".join(sub_list) + ".png"
         print("Saved figure to {}".format(
                 os.path.join(out_dir, out_name)))
         fig.savefig(os.path.join(out_dir, out_name), dpi=400)
@@ -510,9 +533,9 @@ if __name__ == "__main__":
     
     # Processing specific sessions from hdf5
     
-    plot_sessions([date.today().isoformat()[-5:]])
+#    plot_sessions([date.today().isoformat()[-5:]])
 #    plot_sessions(['07-17'])
-#    plot_batch_sessions()
+    plot_batch_sessions()
 
     # Running single session files
 #    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-04"

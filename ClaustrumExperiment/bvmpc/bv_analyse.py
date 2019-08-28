@@ -134,42 +134,14 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
 
     elif zoom_sch and (session_type == '6_RandomisedBlocks_p' or stage == '7'):
         # plots cum graph based on schedule type (i.e. FI/FR)
+        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl = split_sess(
+                session, plot_error=plot_error, plot_all=plot_all)
+
         sch_type = session.get_arrays('Trial Type')
-        sch_switch = np.arange(5, 1830, 305)
-        incl = ""
-        if stage == '7' and plot_error:  # plots errors only
-            incl = '_Errors_Only'
-            lever_ts = session.get_err_lever_ts()
-        elif stage == '7' and plot_all: # plots all responses incl. errors
-            incl = '_All'
-            err_lever_ts = session.get_err_lever_ts()
-            lever_ts = np.sort(np.concatenate((
-                    lever_ts, err_lever_ts), axis=None))
-            sch_err_ts = np.split(err_lever_ts,
-                                np.searchsorted(err_lever_ts, sch_switch))
-        elif stage == '7': # plots all responses exclu. errors
-            incl = '_Correct Only'
-            
-        sch_lever_ts = np.split(lever_ts,
-                                np.searchsorted(lever_ts, sch_switch))
-        sch_reward_ts = np.split(reward_times,
-                                 np.searchsorted(reward_times, sch_switch))
-        sch_double_r_ts = np.split(reward_double,
-                                 np.searchsorted(reward_double, sch_switch))
-        norm_reward_ts = []
-        norm_lever_ts = []
-        norm_err_ts = []
-        norm_double_r_ts = []
         ratio_c = plt.cm.get_cmap('Wistia')
         interval_c = plt.cm.get_cmap('winter')
-        for i, l in enumerate(sch_lever_ts[1:]):
-            norm_lever_ts.append(np.append([0], l-sch_switch[i], axis=0))
-            norm_reward_ts.append(sch_reward_ts[i+1]-sch_switch[i])
-            norm_double_r_ts.append(sch_double_r_ts[i+1]-sch_switch[i])
-            if stage == '7' and plot_all: # plots all responses incl. errors
-                norm_err_ts.append(sch_err_ts[i+1]-sch_switch[i])
         ax.set_xlim(0, 305)
-        for i, l in enumerate(norm_lever_ts):
+        for i, l in enumerate(norm_l_ts):
             if sch_type[i] == 1 and not int_only:
                 ax.step(l, np.arange(l.size), c=ratio_c(i*45), where="post",
                          label='B'+str(i+1)+' - FR', zorder=1)
@@ -177,8 +149,8 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
                 ax.step(l, np.arange(l.size), c=interval_c(i*45), where="post",
                          label='B'+str(i+1)+' - FI', zorder=1)
             bins = l
-            reward_y = np.digitize(norm_reward_ts[i], bins) - 1
-            double_y = np.digitize(norm_double_r_ts[i], bins) - 1
+            reward_y = np.digitize(norm_r_ts[i], bins) - 1
+            double_y = np.digitize(norm_dr_ts[i], bins) - 1
             if stage == '7' and plot_all: # plots all responses incl. errors
                     ax.scatter(norm_err_ts[i], np.isin(
                     l, norm_err_ts[i]).nonzero()[0],
@@ -186,18 +158,18 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
                     incl = '_All'
             if int_only:
                 if sch_type[i] == 0:
-                    plt.scatter(norm_reward_ts[i], reward_y,
+                    plt.scatter(norm_r_ts[i], reward_y,
                         marker="x", c="grey", s=25)
-                    plt.scatter(norm_double_r_ts[i], double_y,
+                    plt.scatter(norm_dr_ts[i], double_y,
                         marker="x", c="magenta", s=25)
             else:
-                plt.scatter(norm_reward_ts[i], reward_y,
+                plt.scatter(norm_r_ts[i], reward_y,
                         marker="x", c="grey", s=25)
-                plt.scatter(norm_double_r_ts[i], double_y,
+                plt.scatter(norm_dr_ts[i], double_y,
                         marker="x", c="magenta", s=25)
         ax.set_title('\nSubject {}, Block-Split {}'.format(
                 subject, incl), color=mycolors(subject), fontsize=10)
-        ax.legend(loc='lower right')
+        ax.legend(loc='upper left')
         return
 
     elif zoom_sch:  # plots cum graph based on schedule type (i.e. FI/FR)
@@ -218,31 +190,19 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         else:
             return print("Unable to split session")
         blocks = np.arange(0, 60*30, 300)  # Change values to set division blocks
-        split_lever_ts = np.split(lever_ts,
-                                  np.searchsorted(lever_ts, blocks))
-        split_reward_ts = np.split(reward_times,
-                                   np.searchsorted(reward_times, blocks))
-        split_double_r_ts = np.split(reward_double,
-                                 np.searchsorted(reward_double, blocks))
-        norm_reward_ts = []
-        norm_lever_ts = []
-        norm_double_r_ts = []
-        for i, l in enumerate(split_lever_ts[1:]):
-            norm_lever_ts.append(np.append([0], l-blocks[i], axis=0))
-            norm_reward_ts.append(split_reward_ts[i+1]-blocks[i])
-            norm_double_r_ts.append(split_double_r_ts[i+1]-blocks[i])
+        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, _ = split_sess(session, blocks)
         ax.set_xlim(0, 305)
-        for i, l in enumerate(norm_lever_ts):
+        for i, l in enumerate(norm_l_ts):
             ax.step(l, np.arange(l.size), c=mycolors(i), where="post",
                     label='B'+str(i+1)+' - {}'.format(sch_type))
             bins = l
-            reward_y = np.digitize(norm_reward_ts[i], bins) - 1
-            double_y = np.digitize(norm_double_r_ts[i], bins) - 1
-            plt.scatter(norm_reward_ts[i], reward_y,
+            reward_y = np.digitize(norm_r_ts[i], bins) - 1
+            double_y = np.digitize(norm_dr_ts[i], bins) - 1
+            plt.scatter(norm_r_ts[i], reward_y,
                         marker="x", c="grey", s=25)
-            plt.scatter(norm_double_r_ts[i], double_y,
+            plt.scatter(norm_dr_ts[i], double_y,
                         marker="x", c="magenta", s=25)
-        ax.legend(loc='lower right')
+        ax.legend(loc='upper left')
         return
 
     else:
@@ -289,6 +249,64 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         ax.text(0.05, 0.85, 'Total # of Lever Press: {}\nTotal # of Rewards: {}\nTotal # of Double Rewards: {}'
                 .format(len(lever_ts), len(reward_times) + len(reward_double), len(reward_double)), transform=ax.transAxes)
         return
+
+
+def split_sess(session, blocks=None, plot_error=False, plot_all=False):
+    '''
+    blocks: defines timepoints to split
+    
+    returns 5 outputs:
+        1) timestamps split into rows depending on blocks input
+                -> norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts
+        2) print to include in title and file name. Mainly for stage 7.
+                incl
+    '''
+    session_type = session.get_metadata('name')
+    stage = session_type[:2].replace('_', '')
+    timestamps = session.get_arrays()
+    reward_times = timestamps["Nosepoke"]
+    lever_ts = session.get_lever_ts()
+    pell_ts = timestamps["Reward"]
+    pell_double = np.nonzero(np.diff(pell_ts)<0.5)
+    if reward_times[-1] < pell_ts[-1]:
+        reward_times = np.append(reward_times, 1830)
+    reward_double = reward_times[np.searchsorted(reward_times, pell_ts[pell_double])]
+
+    if blocks is not None:
+        pass
+    else:
+        blocks = np.arange(5, 1830, 305)  # Default split into schedules
+    incl = ""
+    if stage == '7' and plot_error:  # plots errors only
+        incl = '_Errors_Only'
+        lever_ts = session.get_err_lever_ts()
+    elif stage == '7' and plot_all: # plots all responses incl. errors
+        incl = '_All'
+        err_lever_ts = session.get_err_lever_ts()
+        lever_ts = np.sort(np.concatenate((
+                lever_ts, err_lever_ts), axis=None))
+        split_err_ts = np.split(err_lever_ts,
+                            np.searchsorted(err_lever_ts, blocks))
+    elif stage == '7': # plots all responses exclu. errors
+        incl = '_Correct Only'
+        
+    split_lever_ts = np.split(lever_ts,
+                            np.searchsorted(lever_ts, blocks))
+    split_reward_ts = np.split(reward_times,
+                             np.searchsorted(reward_times, blocks))
+    split_double_r_ts = np.split(reward_double,
+                             np.searchsorted(reward_double, blocks))
+    norm_reward_ts = []
+    norm_lever_ts = []
+    norm_err_ts = []
+    norm_double_r_ts = []
+    for i, l in enumerate(split_lever_ts[1:]):
+        norm_lever_ts.append(np.append([0], l-blocks[i], axis=0))
+        norm_reward_ts.append(split_reward_ts[i+1]-blocks[i])
+        norm_double_r_ts.append(split_double_r_ts[i+1]-blocks[i])
+        if stage == '7' and plot_all: # plots all responses incl. errors
+            norm_err_ts.append(split_err_ts[i+1]-blocks[i])
+    return norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts, incl
 
 
 def IRT(session, out_dir, ax=None, showIRT=False):
