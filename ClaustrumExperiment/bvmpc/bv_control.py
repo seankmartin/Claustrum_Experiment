@@ -13,15 +13,16 @@ from datetime import date
 
 def plot_batch_sessions():
     start_date = date(2019, 7, 15)  # date(year, mth, day)
+#    start_date = date(2019, 8, 15)  # date(year, mth, day)
     end_date = date.today()
-    #end_date = date(2019, 8, 27)
+#    end_date = date(2019, 8, 1)
     
     for single_date in daterange(start_date, end_date):
         d = [single_date.isoformat()[-5:]]
         print(d)
         plot_sessions(d)
 
-def plot_sessions(d_list, summary=True, single=True, timeline=False,
+def plot_sessions(d_list, summary=False, single=False, timeline=True,
                   int_only=False, corr_only=True):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
@@ -65,16 +66,17 @@ def plot_sessions(d_list, summary=True, single=True, timeline=False,
                 s_grp_split.append(s_grp[-mv:])
             for s_grp in s_grp_split:
                 idx += 1
-                sum_plot(s_grp, idx, out_dir, IRT=False)
+                sum_plot(s_grp, idx, out_dir)
         else:
-            sum_plot(s_grp, idx, out_dir, IRT=False)
+            sum_plot(s_grp, idx, out_dir)
 
     if summary and corr_only:
-        #  extracts hdf5 session based on specification
+        # plots corr_only plots
         max_plot = 4  # Set max plots per figure
         s_grp = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
         if s_grp == []:
             return print("***No Files Extracted***")
+        
         idx = 0
         if len(s_grp) > max_plot:
             j=0
@@ -89,9 +91,9 @@ def plot_sessions(d_list, summary=True, single=True, timeline=False,
                 s_grp_split.append(s_grp[-mv:])
             for s_grp in s_grp_split:
                 idx += 1
-                sum_plot(s_grp, idx, out_dir, IRT=False, corr_only=True)
+                sum_plot(s_grp, idx, out_dir, corr_only=True)
         else:
-            sum_plot(s_grp, idx, out_dir, IRT=False, corr_only=True)
+            sum_plot(s_grp, idx, out_dir, corr_only=True)
 
     if single and summary:
         # Single Subject Plots
@@ -147,7 +149,7 @@ def plot_sessions(d_list, summary=True, single=True, timeline=False,
                 fig.savefig(os.path.join(out_dir, out_name), dpi=400)
                 plt.close()
             else:
-                sum_plot(s_grp, idx, out_dir, IRT=False, single=single)
+                sum_plot(s_grp, idx, out_dir, single=single)
             
     if timeline:
         if not single:
@@ -159,15 +161,16 @@ def plot_sessions(d_list, summary=True, single=True, timeline=False,
             timeline_plot(sub_list, in_dir, out_dir, single_plot=single)
 
 
-def sum_plot(s_grp, idx, out_dir, zoom=False, IRT=True, single=False,
+def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
              int_only=False, corr_only=False):
     # Plots summary of day
-    if IRT or zoom:
+    if zoom:
         if len(s_grp) > 2:
             cols = 2*math.ceil(len(s_grp)/2)
             rows = 2
         else:
             rows = len(s_grp)
+            cols = 2
     else:
         if len(s_grp) > 4:
             rows = math.ceil(len(s_grp)/4)
@@ -190,30 +193,37 @@ def sum_plot(s_grp, idx, out_dir, zoom=False, IRT=True, single=False,
         s_passed.append(stage)
         d_passed.append(date[:5])
 
-        if IRT or zoom:
+        if zoom:
             ax1 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2])
         else:
             ax1 = fig.add_subplot(gs[0, i])
 
-        if corr_only and stage == 7:
+        if corr_only and stage == '7':
             bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False, 
                           zoom_sch=False, plot_all=False)
         else:
             bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False,
                       zoom_sch=False)
+        
+        if stage == '2' or stage == '3' or stage == '4':
+            IRT = True
+        elif stage == '5a' or stage == '5b':
+            IRT = True  # Change to False for zoomed plot instead of IRT
+        else:
+            IRT = False
 
         if IRT:
-            ax2 = fig.add_subplot(gs[i, 1])
-            bv_an.IRT(s, out_dir, ax2,)
+            ax2 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2+1])
+            bv_an.IRT(s, out_dir, ax2)
         elif zoom:
             ax2 = fig.add_subplot(gs[(i+2) % 2, int(i/2)*2+1])
-            if corr_only and stage == 7:
+            if corr_only and stage == '7':
                 bv_an.cumplot(s, out_dir, ax2, int_only, zoom=False, zoom_sch=True,
                               plot_error=False, plot_all=False)
             else:
                 bv_an.cumplot(s, out_dir, ax2, int_only, zoom=False, zoom_sch=True,
                               plot_error=False, plot_all=True)
-        plt.tight_layout()
+        plt.subplots_adjust(top=0.85)
     d_print = np.array_str(np.unique(np.array(d_passed)))
     d_title = np.array2string(np.unique(np.array(d_passed)))
     s_print = np.array_str(np.unique(np.array(s_passed)))
@@ -221,7 +231,7 @@ def sum_plot(s_grp, idx, out_dir, zoom=False, IRT=True, single=False,
     if single:
         fig.suptitle(('Subject ' + subject + ' Performance'), fontsize=30)
         out_name = "Sum_" + subject + "_" + d_print + "_" + s_print + ".png"
-    elif corr_only and stage == 7:
+    elif corr_only and stage == '7':
         if idx == 0:
             fig.suptitle(('Summary across animals '+ d_title +
                           '_Correct Only'), fontsize=30)
@@ -499,7 +509,9 @@ if __name__ == "__main__":
 #    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
     
     # Processing specific sessions from hdf5
-    plot_sessions(['07-17'])
+    
+    plot_sessions([date.today().isoformat()[-5:]])
+#    plot_sessions(['07-17'])
 #    plot_batch_sessions()
 
     # Running single session files

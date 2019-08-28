@@ -65,33 +65,33 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
             ratio = int(timestamps["Experiment Variables"][3])
             plt.suptitle('\nSubject {}, {} {}, {}'.format(
                 subject, session_type[:-2], ratio, date),
-                color=mycolors(subject), fontsize=9, y=.98, x=.51)
+                color=mycolors(subject), fontsize=10, y=.98, x=.51)
         elif session_type == '5b_FixedInterval_p':
             interval = int(timestamps["Experiment Variables"][3] / 100)
             plt.suptitle('\nSubject {}, {} {}s, {}'.format(
                 subject, session_type[:-2], interval, date),
-                color=mycolors(subject), fontsize=9, y=.98, x=.51)
+                color=mycolors(subject), fontsize=10, y=.98, x=.51)
         elif session_type == '6_RandomisedBlocks_p:':
             ratio = int(timestamps["Experiment Variables"][3])
             interval = int(timestamps["Experiment Variables"][5] / 100)
             plt.suptitle('\nSubject {}, {} FR{}/FI{}s, {}'.format(
                 subject, session_type[:-2], ratio, interval, date),
-                color=mycolors(subject), fontsize=9, y=.98, x=.51)
+                color=mycolors(subject), fontsize=10, y=.98, x=.51)
         else:
-            plt.suptitle('\nSubject {}, {}, {}'.format(
-                subject, session_type[:-2], date), color=mycolors(subject),
-                fontsize=9, y=.98, x=.51)
+            plt.suptitle('\nSubject {}, S{}, {}'.format(
+                subject, stage, date), color=mycolors(subject),
+                fontsize=10, y=.98, x=.51)
     else:
         if session_type == '5a_FixedRatio_p':
             ratio = int(timestamps["Experiment Variables"][3])
             ax.set_title('\nSubject {}, S{}, FR{}, {}'.format(
                 subject, stage, ratio, date), color=mycolors(subject),
-                fontsize=12)
+                fontsize=10)
         elif session_type == '5b_FixedInterval_p':
             interval = int(timestamps["Experiment Variables"][3] / 100)
             ax.set_title('\nSubject {}, S{}, FI{}s, {}'.format(
                 subject, stage, interval, date), color=mycolors(subject),
-                fontsize=12)
+                fontsize=10)
         elif session_type == '6_RandomisedBlocks_p' or stage == '7':
             switch_ts = np.arange(5, 1830, 305)
             for x in switch_ts:
@@ -100,7 +100,11 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
             interval = int(timestamps["Experiment Variables"][5] / 100)
             ax.set_title('\nSubject {}, S{}, FR{}/FI{}s, {}'.format(
                 subject, stage, ratio, interval, date), color=mycolors(subject),
-                fontsize=12)
+                fontsize=10)
+        else:
+            ax.set_title('\nSubject {}, S{}, {}'.format(
+                subject, stage, date), color=mycolors(subject),
+                fontsize=10, y=1, x=.51)
 
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('Cumulative Lever Presses')
@@ -124,8 +128,8 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
             plt.scatter(norm_reward_ts[i], reward_y,
                         marker="x", c="grey", s=25)
         ax.set_title('\nSubject {}, Trial-Based'.format(
-                subject), color=mycolors(subject), fontsize=12)
-        ax.legend()
+                subject), color=mycolors(subject), fontsize=10)
+        ax.legend(loc='lower right')
         return
 
     elif zoom_sch and (session_type == '6_RandomisedBlocks_p' or stage == '7'):
@@ -192,8 +196,8 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
                 plt.scatter(norm_double_r_ts[i], double_y,
                         marker="x", c="magenta", s=25)
         ax.set_title('\nSubject {}, Block-Split {}'.format(
-                subject, incl), color=mycolors(subject), fontsize=12)
-        ax.legend()
+                subject, incl), color=mycolors(subject), fontsize=10)
+        ax.legend(loc='lower right')
         return
 
     elif zoom_sch:  # plots cum graph based on schedule type (i.e. FI/FR)
@@ -202,13 +206,13 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
             ratio = int(timestamps["Experiment Variables"][3])
             ax.set_title('\nSubject {}, FR{} Split'.format(
                 subject, ratio), color=mycolors(subject),
-                fontsize=12)
+                fontsize=10)
         elif session_type == '5b_FixedInterval_p':
             sch_type = 'FI'
             interval = int(timestamps["Experiment Variables"][3] / 100)
             ax.set_title('\nSubject {}, FI{}s Split'.format(
                 subject, interval), color=mycolors(subject),
-                fontsize=12)
+                fontsize=10)
         elif stage == 6 or stage == 7:
             pass
         else:
@@ -218,13 +222,15 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
                                   np.searchsorted(lever_ts, blocks))
         split_reward_ts = np.split(reward_times,
                                    np.searchsorted(reward_times, blocks))
+        split_double_r_ts = np.split(reward_double,
+                                 np.searchsorted(reward_double, blocks))
         norm_reward_ts = []
         norm_lever_ts = []
         norm_double_r_ts = []
         for i, l in enumerate(split_lever_ts[1:]):
             norm_lever_ts.append(np.append([0], l-blocks[i], axis=0))
             norm_reward_ts.append(split_reward_ts[i+1]-blocks[i])
-            norm_double_r_ts.append(sch_double_r_ts[i+1]-blocks[i])
+            norm_double_r_ts.append(split_double_r_ts[i+1]-blocks[i])
         ax.set_xlim(0, 305)
         for i, l in enumerate(norm_lever_ts):
             ax.step(l, np.arange(l.size), c=mycolors(i), where="post",
@@ -236,7 +242,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
                         marker="x", c="grey", s=25)
             plt.scatter(norm_double_r_ts[i], double_y,
                         marker="x", c="magenta", s=25)
-        ax.legend()
+        ax.legend(loc='lower right')
         return
 
     else:
@@ -265,7 +271,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
                 label='Reward Collected', s=25)
     ax.scatter(reward_double, double_y, marker="x", c="magenta",
                 label='Double Reward', s=25)
-    ax.legend()
+    ax.legend(loc='lower right')
 #    ax.set_xlim(0, 30 * 60 + 30)
 
     if single_plot:
@@ -285,13 +291,14 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         return
 
 
-def IRT(session, out_dir, showIRT=False, ax=None):
+def IRT(session, out_dir, ax=None, showIRT=False):
     """Perform an inter-response time plot for a Session."""
     date = session.get_metadata('start_date').replace('/', '_')
     time_taken = session.time_taken()
     timestamps = session.get_arrays()
     good_lever_ts = session.get_lever_ts(False)
     session_type = session.get_metadata('name')
+    stage = session_type[:2].replace('_', '')
     subject = session.get_metadata('subject')
     single_plot = False
 
@@ -331,22 +338,28 @@ def IRT(session, out_dir, showIRT=False, ax=None):
         if session_type == '5a_FixedRatio_p':
             plt.suptitle('\n(Subject {}, {} {}, {})'.format(
                 subject, session_type[:-2], ratio, date),
-                fontsize=9, y=.98, x=.51)
+                fontsize=10, y=.98, x=.51)
         elif session_type == '5b_FixedInterval_p':
             interval = int(timestamps["Experiment Variables"][3] / 100)
             plt.suptitle('\n(Subject {}, {} {}s, {})'.format(
                 subject, session_type[:-2], interval, date),
-                fontsize=9, y=.98, x=.51)
+                fontsize=10, y=.98, x=.51)
         else:
             plt.suptitle('\n(Subject {}, {}, {})'.format(
                 subject, session_type[:-2], date),
-                fontsize=9, y=.98, x=.51)
+                fontsize=10, y=.98, x=.51)
+    else:
+        ax.set_title('\nSubject {}, S{}, IRT'.format(
+                subject, stage, date), color=mycolors(subject),
+                fontsize=10, y=1, x=.51)
         
     ax.set_xlabel('IRT (s)')
     ax.set_ylabel('Counts')
     maxidx = np.argmax(np.array(hist_count))
     maxval = (hist_bins[maxidx + 1] - hist_bins[maxidx]) / \
         2 + hist_bins[maxidx]
+    ax.text(0.45, 0.85, 'Session Duration: {} mins\nMost Freq. IRT Bin: {} s'
+            .format(time_taken, maxval), transform=ax.transAxes)
 
     if showIRT:
         show_IRT_details(IRT, maxidx, hist_bins)
