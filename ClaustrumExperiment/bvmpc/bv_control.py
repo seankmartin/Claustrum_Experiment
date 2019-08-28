@@ -13,17 +13,18 @@ from datetime import date
 
 def plot_batch_sessions():
 #    start_date = date(2019, 7, 15)  # date(year, mth, day)
-    start_date = date(2019, 7, 31)  # date(year, mth, day)
+    start_date = date(2019, 8, 12)  # date(year, mth, day)
 #    start_date = date.today()
 #    end_date = date.today()
-    end_date = date(2019, 8, 1)
+    end_date = date(2019, 8, 14)
     
     for single_date in daterange(start_date, end_date):
         d = [single_date.isoformat()[-5:]]
         print(d)
         plot_sessions(d)
 
-def plot_sessions(d_list, summary=True, single=False, timeline=False, recent=False,
+def plot_sessions(d_list, summary=True, single=True, timeline=False,
+                  recent=False, show_date=False,
                   int_only=False, corr_only=True):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
@@ -156,10 +157,12 @@ def plot_sessions(d_list, summary=True, single=False, timeline=False, recent=Fal
         if not single:
             sub_list = [['1', '2', '3', '4'], ['5', '6']]
             for l in sub_list:
-                timeline_plot(l, in_dir, out_dir, single_plot=single, recent=recent)
+                timeline_plot(l, in_dir, out_dir, single_plot=single,
+                              recent=recent, show_date=show_date)
         else:
             # Plots timeline for specified subjects
-            timeline_plot(sub_list, in_dir, out_dir, single_plot=single, recent=recent)
+            timeline_plot(sub_list, in_dir, out_dir, single_plot=single, 
+                          recent=recent, show_date=show_date)
 
 
 def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
@@ -254,7 +257,8 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
     plt.close()
 
 
-def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, recent=False):
+def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, 
+                  recent=False, show_date=False):
     # Plot size
     rows, cols = [len(sub_list), 4]
     size_multiplier = 5
@@ -278,7 +282,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, recent=False):
         dpell_change = []
         dpell_old = []
         prev_name = '2'
-        
+        d_list = []
         if recent:
             s_grp = s_grp[-20:]
         else:
@@ -287,9 +291,11 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, recent=False):
         for i, s in enumerate(s_grp):
             s_type = s.get_metadata('name')[:2]
             timestamps = s.get_arrays()
+            date = s.get_metadata('start_date')[3:5]
             subject = s.get_metadata('subject')
             pell_ts = timestamps["Reward"]
             pell_double = np.nonzero(np.diff(pell_ts)<0.5)[0]
+            d_list.append(date)
             if len(pell_double):
                 dpell_change = 1
             if s_type == '5a':
@@ -386,7 +392,10 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, recent=False):
                                  textcoords='offset points',
                             arrowprops=dict(facecolor='Red', shrink=0.05))
         ax.set_xlim(0, len(s_idx))
-        plt.xticks(s_idx, s_list, fontsize=13)
+        if show_date:
+            plt.xticks(s_idx, d_list, fontsize=10)  # plots x-axis ticks as dates
+        else:
+            plt.xticks(s_idx, s_list, fontsize=13)  # plots x-axis ticks as stages
         ax.tick_params(axis='y', labelsize=15)
         plt.axhline(45, color='g', linestyle='-.', linewidth='.5')
         plt.axhline(90, color='r', linestyle='-.', linewidth='.5')
@@ -526,16 +535,16 @@ if __name__ == "__main__":
 #            convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
 #            main(filename)  # Uncomment to run from mpc file
 
-#    # Processing of single sessions
-#    filename = start_dir + "\!2019-08-12"
-#    out_dir = start_dir + "\hdf5"
-#    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
+    # Processing of single sessions
+    filename = start_dir + "\!2019-08-11"
+    out_dir = start_dir + "\hdf5"
+    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
     
     # Processing specific sessions from hdf5
     
 #    plot_sessions([date.today().isoformat()[-5:]])
 #    plot_sessions(['07-17'])
-    plot_batch_sessions()
+#    plot_batch_sessions()
 
     # Running single session files
 #    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-04"
