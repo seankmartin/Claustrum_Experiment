@@ -242,18 +242,18 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
 
     ax.scatter(reward_times, reward_y, marker="x", c="grey",
                 label='Reward Collected', s=25)
-    ax.scatter(reward_double, double_y, marker="x", c="magenta",
-                label='Double Reward', s=25)
-    ax.legend(loc='lower right')
-#    ax.set_xlim(0, 30 * 60 + 30)
-
     if len(reward_double) > 0:
         dr_print = "Total # of Double Rewards:" + str(len(reward_double))
     else:
         dr_print = ""
+        ax.scatter(reward_double, double_y, marker="x", c="magenta",
+                    label='Double Reward', s=25)
+    ax.legend(loc='lower right')
+#    ax.set_xlim(0, 30 * 60 + 30)
+
     
     if err_FR + err_FI > 0:
-        err_print = "FR Errors: " + str(err_FR) + "\nFI Errors: " + str(err_FI)
+        err_print = "\nFR Errors: " + str(err_FR) + "\nFI Errors: " + str(err_FI)
     else:
         err_print = ""
 
@@ -263,13 +263,13 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         out_name = os.path.join(out_dir, out_name)
         print("Saved figure to {}".format(out_name))
         # Text Display on Graph
-        ax.text(0.55, 0.15, 'Total # of Lever Press: {}\nTotal # of Rewards: {}\n{}\n{}'
+        ax.text(0.55, 0.15, 'Total # of Lever Press: {}\nTotal # of Rewards: {}{}\n{}'
                 .format(len(lever_ts), len(reward_times) + len(reward_double), err_print, dr_print), transform=ax.transAxes)
         fig.savefig(out_name, dpi=400)
         plt.close()
     else:
         # Text Display on Graph
-        ax.text(0.05, 0.72, 'Total # of Lever Press: {}\nTotal # of Rewards: {}\n{}\n{}'
+        ax.text(0.05, 0.75, 'Total # of Lever Press: {}\nTotal # of Rewards: {}{}\n{}'
                 .format(len(lever_ts), len(reward_times) + len(reward_double), err_print, dr_print), transform=ax.transAxes)
         return
 
