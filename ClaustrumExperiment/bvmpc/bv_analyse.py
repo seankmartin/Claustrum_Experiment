@@ -52,6 +52,9 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     reward_times = timestamps["Nosepoke"]
     pell_ts = timestamps["Reward"]
     pell_double = np.nonzero(np.diff(pell_ts)<0.5)
+    # for printing of error rates on graph
+    err_FI = 0
+    err_FR = 0
     if reward_times[-1] < pell_ts[-1]:
         reward_times = np.append(reward_times, 1830)
     reward_double = reward_times[np.searchsorted(reward_times, pell_ts[pell_double])]        
@@ -170,7 +173,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         ax.set_title('\nSubject {}, Block-Split {}'.format(
                 subject, incl), color=mycolors(subject), fontsize=10)
         ax.legend(loc='upper left')
-        return
+        return 
 
     elif zoom_sch:  # plots cum graph based on schedule type (i.e. FI/FR)
         if session_type == '5a_FixedRatio_p':
@@ -226,6 +229,16 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         bins = lever_times
         reward_y = np.digitize(reward_times, bins) - 1
         double_y = np.digitize(reward_double, bins) - 1
+        # for printing of error rates on graph
+        _,_, norm_err_ts, _, _ = split_sess(
+                        session, plot_all=True)
+        sch_type = session.get_arrays('Trial Type')
+        for i, l in enumerate(norm_err_ts):
+            if sch_type[i] == 1:
+                err_FR = err_FR + len(norm_err_ts[i])
+            elif sch_type[i] == 0:
+                err_FI = err_FI + len(norm_err_ts[i])
+                
 
     ax.scatter(reward_times, reward_y, marker="x", c="grey",
                 label='Reward Collected', s=25)
@@ -234,20 +247,30 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     ax.legend(loc='lower right')
 #    ax.set_xlim(0, 30 * 60 + 30)
 
+    if len(reward_double) > 0:
+        dr_print = "Total # of Double Rewards:" + str(len(reward_double))
+    else:
+        dr_print = ""
+    
+    if err_FR + err_FI > 0:
+        err_print = "FR Errors: " + str(err_FR) + "\nFI Errors: " + str(err_FI)
+    else:
+        err_print = ""
+
     if single_plot:
         out_name = (subject.zfill(3) + "_CumulativeHist_" + date +
                     "_" + session_type[:-2]  + ".png")
         out_name = os.path.join(out_dir, out_name)
         print("Saved figure to {}".format(out_name))
         # Text Display on Graph
-        ax.text(0.55, 0.15, 'Total # of Lever Press: {}\nTotal # of Rewards: {}\nTotal # of Double Rewards: {}'
-                .format(len(lever_ts), len(reward_times) + len(reward_double), len(reward_double)), transform=ax.transAxes)
+        ax.text(0.55, 0.15, 'Total # of Lever Press: {}\nTotal # of Rewards: {}\n{}\n{}'
+                .format(len(lever_ts), len(reward_times) + len(reward_double), err_print, dr_print), transform=ax.transAxes)
         fig.savefig(out_name, dpi=400)
         plt.close()
     else:
         # Text Display on Graph
-        ax.text(0.05, 0.85, 'Total # of Lever Press: {}\nTotal # of Rewards: {}\nTotal # of Double Rewards: {}'
-                .format(len(lever_ts), len(reward_times) + len(reward_double), len(reward_double)), transform=ax.transAxes)
+        ax.text(0.05, 0.72, 'Total # of Lever Press: {}\nTotal # of Rewards: {}\n{}\n{}'
+                .format(len(lever_ts), len(reward_times) + len(reward_double), err_print, dr_print), transform=ax.transAxes)
         return
 
 

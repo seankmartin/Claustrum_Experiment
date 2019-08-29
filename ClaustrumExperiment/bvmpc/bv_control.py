@@ -536,15 +536,15 @@ if __name__ == "__main__":
 #            main(filename)  # Uncomment to run from mpc file
 
     # Processing of single sessions
-    filename = start_dir + "\!2019-08-11"
-    out_dir = start_dir + "\hdf5"
-    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
+#    filename = start_dir + "\!2019-08-11"
+#    out_dir = start_dir + "\hdf5"
+#    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
     
     # Processing specific sessions from hdf5
     
 #    plot_sessions([date.today().isoformat()[-5:]])
 #    plot_sessions(['07-17'])
-#    plot_batch_sessions()
+    plot_batch_sessions()
 
     # Running single session files
 #    filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-04"
