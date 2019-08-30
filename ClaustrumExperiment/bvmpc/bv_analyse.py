@@ -246,10 +246,10 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
                label='Reward Collected', s=25)
     if len(reward_double) > 0:
         dr_print = "Total # of Double Rewards:" + str(len(reward_double))
-    else:
-        dr_print = ""
         ax.scatter(reward_double, double_y, marker="x", c="magenta",
                    label='Double Reward', s=25)
+    else:
+        dr_print = ""
     ax.legend(loc='lower right')
 #    ax.set_xlim(0, 30 * 60 + 30)
 

@@ -25,7 +25,7 @@ def plot_batch_sessions():
         plot_sessions(d)
 
 
-def plot_sessions(d_list, summary=False, single=False, timeline=True,
+def plot_sessions(d_list, summary=True, single=False, timeline=False,
                   recent=False, show_date=False,
                   int_only=False, corr_only=True):
     ''' Plots session summaries
