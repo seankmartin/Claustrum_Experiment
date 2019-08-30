@@ -91,7 +91,7 @@ class SessionInfo:
                 ['O:', 'R:', 'Un_Nosepoke'],
                 ['R:', 'U:', 'R'],
                 ['U:', 'V:', 'Trial Type'],  # 1 is FR, 0 is FI
-#                ['V:', 'END', 'Per Trial Pellets']
+                # ['V:', 'END', 'Per Trial Pellets']
             ]))
 
         self.session_info_dict['7_RandomisedBlocksExtended_p'] = (
@@ -113,9 +113,8 @@ class SessionInfo:
                 ['O:', 'R:', 'Un_Nosepoke'],
                 ['R:', 'U:', 'R'],
                 ['U:', 'V:', 'Trial Type'],
-#                ['V:', 'END', 'Per Trial Pellets']
+                # ['V:', 'END', 'Per Trial Pellets']
             ]))
-
 
     def get_session_type_info(self, key=None):
         """

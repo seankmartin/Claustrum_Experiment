@@ -2,9 +2,9 @@
 import os
 import math
 import numpy as np
-from bv_parse_sessions import SessionExtractor, Session
-import bv_analyse as bv_an
-from bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange
+from bvmpc.bv_parse_sessions import SessionExtractor, Session
+import bvmpc.bv_analyse as bv_an
+from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from adjustText import adjust_text
@@ -25,7 +25,7 @@ def plot_batch_sessions():
         plot_sessions(d)
 
 
-def plot_sessions(d_list, summary=True, single=True, timeline=False,
+def plot_sessions(d_list, summary=False, single=False, timeline=True,
                   recent=False, show_date=False,
                   int_only=False, corr_only=True):
     ''' Plots session summaries

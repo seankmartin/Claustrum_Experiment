@@ -8,7 +8,7 @@ import os
 import numpy as np
 import h5py
 from datetime import datetime
-from bv_session_config import SessionInfo
+from bvmpc.bv_session_config import SessionInfo
 
 
 class SessionExtractor:

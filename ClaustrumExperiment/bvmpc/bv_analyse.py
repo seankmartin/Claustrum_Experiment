@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 import os.path
-from bv_utils import mycolors
+from bvmpc.bv_utils import mycolors
 
 
 def split_lever_ts(session, out_dir, ax=None):
@@ -51,13 +51,14 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     subject = session.get_metadata('subject')
     reward_times = timestamps["Nosepoke"]
     pell_ts = timestamps["Reward"]
-    pell_double = np.nonzero(np.diff(pell_ts)<0.5)
+    pell_double = np.nonzero(np.diff(pell_ts) < 0.5)
     # for printing of error rates on graph
     err_FI = 0
     err_FR = 0
     if reward_times[-1] < pell_ts[-1]:
         reward_times = np.append(reward_times, 1830)
-    reward_double = reward_times[np.searchsorted(reward_times, pell_ts[pell_double])]        
+    reward_double = reward_times[np.searchsorted(
+        reward_times, pell_ts[pell_double])]
     single_plot = False
 
     if ax is None:
@@ -131,14 +132,14 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
             plt.scatter(norm_reward_ts[i], reward_y,
                         marker="x", c="grey", s=25)
         ax.set_title('\nSubject {}, Trial-Based'.format(
-                subject), color=mycolors(subject), fontsize=10)
+            subject), color=mycolors(subject), fontsize=10)
         ax.legend(loc='lower right')
         return
 
     elif zoom_sch and (session_type == '6_RandomisedBlocks_p' or stage == '7'):
         # plots cum graph based on schedule type (i.e. FI/FR)
         norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl = split_sess(
-                session, plot_error=plot_error, plot_all=plot_all)
+            session, plot_error=plot_error, plot_all=plot_all)
 
         sch_type = session.get_arrays('Trial Type')
         ratio_c = plt.cm.get_cmap('Wistia')
@@ -147,33 +148,33 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         for i, l in enumerate(norm_l_ts):
             if sch_type[i] == 1 and not int_only:
                 ax.step(l, np.arange(l.size), c=ratio_c(i*45), where="post",
-                         label='B'+str(i+1)+' - FR', zorder=1)
+                        label='B'+str(i+1)+' - FR', zorder=1)
             elif sch_type[i] == 0:
                 ax.step(l, np.arange(l.size), c=interval_c(i*45), where="post",
-                         label='B'+str(i+1)+' - FI', zorder=1)
+                        label='B'+str(i+1)+' - FI', zorder=1)
             bins = l
             reward_y = np.digitize(norm_r_ts[i], bins) - 1
             double_y = np.digitize(norm_dr_ts[i], bins) - 1
-            if stage == '7' and plot_all: # plots all responses incl. errors
-                    ax.scatter(norm_err_ts[i], np.isin(
+            if stage == '7' and plot_all:  # plots all responses incl. errors
+                ax.scatter(norm_err_ts[i], np.isin(
                     l, norm_err_ts[i]).nonzero()[0],
                     c='r', s=1, zorder=2)
-                    incl = '_All'
+                incl = '_All'
             if int_only:
                 if sch_type[i] == 0:
                     plt.scatter(norm_r_ts[i], reward_y,
-                        marker="x", c="grey", s=25)
+                                marker="x", c="grey", s=25)
                     plt.scatter(norm_dr_ts[i], double_y,
-                        marker="x", c="magenta", s=25)
+                                marker="x", c="magenta", s=25)
             else:
                 plt.scatter(norm_r_ts[i], reward_y,
-                        marker="x", c="grey", s=25)
+                            marker="x", c="grey", s=25)
                 plt.scatter(norm_dr_ts[i], double_y,
-                        marker="x", c="magenta", s=25)
+                            marker="x", c="magenta", s=25)
         ax.set_title('\nSubject {}, Block-Split {}'.format(
-                subject, incl), color=mycolors(subject), fontsize=10)
+            subject, incl), color=mycolors(subject), fontsize=10)
         ax.legend(loc='upper left')
-        return 
+        return
 
     elif zoom_sch:  # plots cum graph based on schedule type (i.e. FI/FR)
         if session_type == '5a_FixedRatio_p':
@@ -192,8 +193,10 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
             pass
         else:
             return print("Unable to split session")
-        blocks = np.arange(0, 60*30, 300)  # Change values to set division blocks
-        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, _ = split_sess(session, blocks)
+        # Change values to set division blocks
+        blocks = np.arange(0, 60*30, 300)
+        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, _ = split_sess(
+            session, blocks)
         ax.set_xlim(0, 305)
         for i, l in enumerate(norm_l_ts):
             ax.step(l, np.arange(l.size), c=mycolors(i), where="post",
@@ -212,15 +215,15 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         if stage == '7':
             err_lever_ts = session.get_err_lever_ts()
             lever_ts = np.sort(np.concatenate((
-                    lever_ts, err_lever_ts), axis=None))
+                lever_ts, err_lever_ts), axis=None))
         lever_times = np.insert(lever_ts, 0, 0, axis=0)
         ax.step(lever_times, np.arange(
             lever_times.size), c=mycolors(subject),
-                where="post", label='Animal'+subject, zorder=1)
+            where="post", label='Animal'+subject, zorder=1)
         if stage == '7':  # plots error press in red
             ax.scatter(err_lever_ts, np.isin(
-                    lever_times, err_lever_ts).nonzero()[0],
-                    c='r', label='Errors', s=1, zorder=2)
+                lever_times, err_lever_ts).nonzero()[0],
+                c='r', label='Errors', s=1, zorder=2)
         if reward_times[-1] > lever_times[-1]:
             ax.plot(
                 [lever_times[-1], reward_times[-1] + 2],
@@ -230,36 +233,35 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         reward_y = np.digitize(reward_times, bins) - 1
         double_y = np.digitize(reward_double, bins) - 1
         # for printing of error rates on graph
-        _,_, norm_err_ts, _, _ = split_sess(
-                        session, plot_all=True)
+        _, _, norm_err_ts, _, _ = split_sess(
+            session, plot_all=True)
         sch_type = session.get_arrays('Trial Type')
         for i, l in enumerate(norm_err_ts):
             if sch_type[i] == 1:
                 err_FR = err_FR + len(norm_err_ts[i])
             elif sch_type[i] == 0:
                 err_FI = err_FI + len(norm_err_ts[i])
-                
 
     ax.scatter(reward_times, reward_y, marker="x", c="grey",
-                label='Reward Collected', s=25)
+               label='Reward Collected', s=25)
     if len(reward_double) > 0:
         dr_print = "Total # of Double Rewards:" + str(len(reward_double))
     else:
         dr_print = ""
         ax.scatter(reward_double, double_y, marker="x", c="magenta",
-                    label='Double Reward', s=25)
+                   label='Double Reward', s=25)
     ax.legend(loc='lower right')
 #    ax.set_xlim(0, 30 * 60 + 30)
 
-    
     if err_FR + err_FI > 0:
-        err_print = "\nFR Errors: " + str(err_FR) + "\nFI Errors: " + str(err_FI)
+        err_print = "\nFR Errors: " + \
+            str(err_FR) + "\nFI Errors: " + str(err_FI)
     else:
         err_print = ""
 
     if single_plot:
         out_name = (subject.zfill(3) + "_CumulativeHist_" + date +
-                    "_" + session_type[:-2]  + ".png")
+                    "_" + session_type[:-2] + ".png")
         out_name = os.path.join(out_dir, out_name)
         print("Saved figure to {}".format(out_name))
         # Text Display on Graph
@@ -277,7 +279,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
 def split_sess(session, blocks=None, plot_error=False, plot_all=False):
     '''
     blocks: defines timepoints to split
-    
+
     returns 5 outputs:
         1) timestamps split into rows depending on blocks input
                 -> norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts
@@ -290,10 +292,11 @@ def split_sess(session, blocks=None, plot_error=False, plot_all=False):
     reward_times = timestamps["Nosepoke"]
     lever_ts = session.get_lever_ts()
     pell_ts = timestamps["Reward"]
-    pell_double = np.nonzero(np.diff(pell_ts)<0.5)
+    pell_double = np.nonzero(np.diff(pell_ts) < 0.5)
     if reward_times[-1] < pell_ts[-1]:
         reward_times = np.append(reward_times, 1830)
-    reward_double = reward_times[np.searchsorted(reward_times, pell_ts[pell_double])]
+    reward_double = reward_times[np.searchsorted(
+        reward_times, pell_ts[pell_double])]
 
     if blocks is not None:
         pass
@@ -303,22 +306,22 @@ def split_sess(session, blocks=None, plot_error=False, plot_all=False):
     if stage == '7' and plot_error:  # plots errors only
         incl = '_Errors_Only'
         lever_ts = session.get_err_lever_ts()
-    elif stage == '7' and plot_all: # plots all responses incl. errors
+    elif stage == '7' and plot_all:  # plots all responses incl. errors
         incl = '_All'
         err_lever_ts = session.get_err_lever_ts()
         lever_ts = np.sort(np.concatenate((
-                lever_ts, err_lever_ts), axis=None))
+            lever_ts, err_lever_ts), axis=None))
         split_err_ts = np.split(err_lever_ts,
-                            np.searchsorted(err_lever_ts, blocks))
-    elif stage == '7': # plots all responses exclu. errors
+                                np.searchsorted(err_lever_ts, blocks))
+    elif stage == '7':  # plots all responses exclu. errors
         incl = '_Correct Only'
-        
+
     split_lever_ts = np.split(lever_ts,
-                            np.searchsorted(lever_ts, blocks))
+                              np.searchsorted(lever_ts, blocks))
     split_reward_ts = np.split(reward_times,
-                             np.searchsorted(reward_times, blocks))
+                               np.searchsorted(reward_times, blocks))
     split_double_r_ts = np.split(reward_double,
-                             np.searchsorted(reward_double, blocks))
+                                 np.searchsorted(reward_double, blocks))
     norm_reward_ts = []
     norm_lever_ts = []
     norm_err_ts = []
@@ -327,7 +330,7 @@ def split_sess(session, blocks=None, plot_error=False, plot_all=False):
         norm_lever_ts.append(np.append([0], l-blocks[i], axis=0))
         norm_reward_ts.append(split_reward_ts[i+1]-blocks[i])
         norm_double_r_ts.append(split_double_r_ts[i+1]-blocks[i])
-        if stage == '7' and plot_all: # plots all responses incl. errors
+        if stage == '7' and plot_all:  # plots all responses incl. errors
             norm_err_ts.append(split_err_ts[i+1]-blocks[i])
     return norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts, incl
 
@@ -391,9 +394,9 @@ def IRT(session, out_dir, ax=None, showIRT=False):
                 fontsize=10, y=.98, x=.51)
     else:
         ax.set_title('\nSubject {}, S{}, IRT'.format(
-                subject, stage, date), color=mycolors(subject),
-                fontsize=10, y=1, x=.51)
-        
+            subject, stage), color=mycolors(subject),
+            fontsize=10, y=1, x=.51)
+
     ax.set_xlabel('IRT (s)')
     ax.set_ylabel('Counts')
     maxidx = np.argmax(np.array(hist_count))
@@ -404,7 +407,7 @@ def IRT(session, out_dir, ax=None, showIRT=False):
 
     if showIRT:
         show_IRT_details(IRT, maxidx, hist_bins)
-    if single_plot:    
+    if single_plot:
         # Text Display on Graph
         ax.text(0.55, 0.8, 'Session Duration: {} mins\nMost Freq. IRT Bin: {} s'
                 .format(time_taken, maxval), transform=ax.transAxes)
@@ -417,6 +420,7 @@ def IRT(session, out_dir, ax=None, showIRT=False):
     else:
         return ax
 
+
 def show_IRT_details(IRT, maxidx, hist_bins):
     """Display further information for an IRT."""
     plt.show()
@@ -427,4 +431,3 @@ def show_IRT_details(IRT, maxidx, hist_bins):
     print('Min IRT: {0:.2f} s'.format(np.amin(IRT)))
     print('Max IRT: {0:.2f} s'.format(np.amax(IRT)))
     print('IRTs: ', np.round(IRT, decimals=2))
-
