@@ -52,9 +52,11 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     reward_times = timestamps["Nosepoke"]
     pell_ts = timestamps["Reward"]
     pell_double = np.nonzero(np.diff(pell_ts) < 0.5)
-    # for printing of error rates on graph
+    # for printing of error rates and rewards on graph
     err_FI = 0
     err_FR = 0
+    rw_FR = 0
+    rw_FI = 0
     if reward_times[-1] < pell_ts[-1]:
         reward_times = np.append(reward_times, 1830)
     reward_double = reward_times[np.searchsorted(
@@ -233,7 +235,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         reward_y = np.digitize(reward_times, bins) - 1
         double_y = np.digitize(reward_double, bins) - 1
         # for printing of error rates on graph
-        _, _, norm_err_ts, _, _ = split_sess(
+        norm_r_ts, _, norm_err_ts, _, _ = split_sess(
             session, plot_all=True)
         sch_type = session.get_arrays('Trial Type')
         for i, l in enumerate(norm_err_ts):
@@ -241,11 +243,18 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
                 err_FR = err_FR + len(norm_err_ts[i])
             elif sch_type[i] == 0:
                 err_FI = err_FI + len(norm_err_ts[i])
+        if stage == '6' or stage == '7':
+            for i, l in enumerate(norm_r_ts):
+                if sch_type[i] == 1:
+                    rw_FR = rw_FR + len(norm_r_ts[i])
+                elif sch_type[i] == 0:
+                    rw_FI = rw_FI + len(norm_r_ts[i])
+            rw_print = "\nCorrect FR \ FI: " + str(rw_FR) + " \\ " + str(rw_FI)
 
     ax.scatter(reward_times, reward_y, marker="x", c="grey",
                label='Reward Collected', s=25)
     if len(reward_double) > 0:
-        dr_print = "Total # of Double Rewards:" + str(len(reward_double))
+        dr_print = "\nTotal # of Double Rewards:" + str(len(reward_double))
         ax.scatter(reward_double, double_y, marker="x", c="magenta",
                    label='Double Reward', s=25)
     else:
@@ -254,8 +263,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
 #    ax.set_xlim(0, 30 * 60 + 30)
 
     if err_FR + err_FI > 0:
-        err_print = "\nFR Errors: " + \
-            str(err_FR) + "\nFI Errors: " + str(err_FI)
+        err_print = "\nErrors FR \ FI: " + str(err_FR) + " \\ " + str(err_FI)
     else:
         err_print = ""
 
@@ -265,14 +273,14 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         out_name = os.path.join(out_dir, out_name)
         print("Saved figure to {}".format(out_name))
         # Text Display on Graph
-        ax.text(0.55, 0.15, 'Total # of Lever Press: {}\nTotal # of Rewards: {}{}\n{}'
-                .format(len(lever_ts), len(reward_times) + len(reward_double), err_print, dr_print), transform=ax.transAxes)
+        ax.text(0.55, 0.15, 'Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}'
+                .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
         fig.savefig(out_name, dpi=400)
         plt.close()
     else:
         # Text Display on Graph
-        ax.text(0.05, 0.75, 'Total # of Lever Press: {}\nTotal # of Rewards: {}{}\n{}'
-                .format(len(lever_ts), len(reward_times) + len(reward_double), err_print, dr_print), transform=ax.transAxes)
+        ax.text(0.05, 0.75, 'Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}'
+                .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
         return
 
 

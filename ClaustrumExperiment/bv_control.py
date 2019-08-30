@@ -14,10 +14,10 @@ from datetime import date
 
 def plot_batch_sessions():
     # start_date = date(2019, 7, 15)  # date(year, mth, day)
-    start_date = date(2019, 8, 10)  # date(year, mth, day)
+    start_date = date(2019, 8, 25)  # date(year, mth, day)
     # start_date = date.today()
     # end_date = date.today()
-    end_date = date(2019, 8, 14)
+    end_date = date(2019, 8, 28)
 
     for single_date in daterange(start_date, end_date):
         d = [single_date.isoformat()[-5:]]
@@ -25,9 +25,9 @@ def plot_batch_sessions():
         plot_sessions(d)
 
 
-def plot_sessions(d_list, summary=True, single=False, timeline=False,
+def plot_sessions(d_list, summary=True, single=True, timeline=False,
                   recent=False, show_date=False,
-                  int_only=False, corr_only=True):
+                  int_only=False, corr_only=False):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
     single = True: Plots single session summaries with breakdown of single blocks
