@@ -194,9 +194,11 @@ sub new_experiment(first)
         SignalOut(sound_outpin) = 0
         if (current_trial = 1) then
             set_left_side(on)
+            set_right_side(on)
             side = ";FI;"
             side_nice = "fixed interval"
         else
+            set_left_side(on)
             set_right_side(on)
             side = ";FR;"
             side_nice = "fixed ratio"
