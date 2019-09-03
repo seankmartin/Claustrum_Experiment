@@ -17,8 +17,6 @@ dim delay_times
 dim max_match_delay
 dim trial_delay
 dim wrong_delay
-dim reward_delay
-dim show_front_delay
 
 'input pins
 dim left_lever_inpin
@@ -67,7 +65,7 @@ sub setup_pins()
     left_light_outpin = 9
     right_light_outpin = 10
     back_light_outpin = 11
-    house_light_outpin = 12
+    house_light_outpin = 7
     food_outpin = 16
 end sub
 
@@ -108,6 +106,7 @@ end sub
 sub reset()
     'Reset all digital outputs to 0
     SignalOut(all) = 0
+    DelayMS(500)
 end sub
 
 sub set_left_side(state)
@@ -215,9 +214,8 @@ sub correct_response()
     num_correct = num_correct + 1
     set_right_side(off)
     set_left_side(off)
-    DelayMS(reward_delay)
     deliver_reward()
-    DelayMS(trial_delay - reward_delay)
+    DelayMS(trial_delay)
 end sub
 
 sub show_back_lever()
@@ -249,7 +247,6 @@ sub back_lever_pressed()
     elapsed_time = TrialTime - back_time
     print #1, "Back;", TrialTime, ";", elapsed_time
     set_back_side(off)
-    DelayMS(show_front_delay)
     set_left_side(on)
     set_right_side(on)
     back_time = TrialTime
@@ -266,6 +263,7 @@ sub end_experiment(correct)
     end if
 
     print "Ending trial, was the subject correct in this trial? ", correct
+    print "Percentage Correct ", (num_correct / elapsed_trials + 1) * 100
     print #1, "End;", TrialTime, ";", correct, ";", elapsed_time
     print #1, ";"
     new_experiment(0)
@@ -276,7 +274,7 @@ sub full_init_before_record()
     dim i
     'convert some delays to ms
     trial_delay = trial_delay * 1000
-    wrong_delay = wrong_delay * 1000
+    wrong_delay = trial_delay / 2
     Randomize 'Seed the rng based on the system clock
     setup_pins()
     reset()
@@ -291,7 +289,7 @@ sub full_init_before_record()
     next
 
     ' Print the csv file header
-    print #1, tag, ";", num_trials, ";", max_match_delay, ";", trial_delay, ";", wrong_delay
+    print #1, tag, ";", num_trials, ";", max_match_delay, ";", trial_delay
     print #1, ";"
 end sub
 
@@ -299,15 +297,11 @@ end sub
 
 sub main()
     ' Run the experiments and record the data
+
     '''NB Change important variables here'''
     num_trials = 60 'Number of trials should be divisible by 2
-    max_match_delay = 30 'Max time before the back lever comes out
-    trial_delay = 10 'How long between trials in seconds
-    wrong_delay = 5 'How long to time out on incorrect response
-    'The wrong delay is usually the trial delay/2
-    reward_delay = 200 'A small delay before dropping the reward in ms
-    show_front_delay = 1000 'Measured in ms
-    'A small delay before showing the front levers after the back in ms
+    max_match_delay = 0 'Max time before the back lever comes out
+    trial_delay = 5 'How long between trials in seconds
     tag = "Optional tag" ' You may tag this experiment if you wish
     'this should output in the same name format as other axona files
     open "data.log" for output as #1
@@ -322,9 +316,9 @@ sub main()
 
         ' Wait for the subject to start by hitting a lever
         if (experiment_state = "Start") then
-            if (left_lever_active = 1) and (SignalIn(left_lever_inpin) = off) then
+            if (SignalIn(left_lever_inpin) = off) then
                 start_lever_pressed(1)
-            elseif (right_lever_active = 1) and (SignalIn(right_lever_inpin) = off) then
+            elseif (SignalIn(right_lever_inpin) = off) then
                 start_lever_pressed(0)
             end if
         elseif (experiment_state = "Back") then
@@ -333,11 +327,11 @@ sub main()
             end if
         else 'Checking if the subject can remember the right lever
             if (SignalIn(right_lever_inpin) = off) then
-                print "Pressed ", 0, "correct ", 1-trial_sides[elapsed_trials]
+                print "Pressed ", 0, " correct ", 1-trial_sides[elapsed_trials]
                 correct = (trial_sides[elapsed_trials] = 1)
                 end_experiment(correct)
             elseif (SignalIn(left_lever_inpin) = off) then
-                print "Pressed ", 1, "correct ", 1-trial_sides[elapsed_trials]
+                print "Pressed ", 1, " correct ", 1-trial_sides[elapsed_trials]
                 correct = (trial_sides[elapsed_trials] = 0)
                 end_experiment(correct)
             end if
@@ -347,6 +341,7 @@ sub main()
         DelayMS(10)
     wend
     StopUnitRecording
+    reset()
 
     'Print summary stats
     print #1, ";"
