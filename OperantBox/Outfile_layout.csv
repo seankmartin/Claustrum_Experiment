@@ -1,4 +1,4 @@
-Tag;num_trials;max_match_delay;trial_delay;wrong_delay;
+Tag;num_trials;match_delay;trial_delay;
 FOR EACH TRIAL
 Trial_Break;Number;TrialTime
 "Begin";TrialTime;Side;DelayToFront

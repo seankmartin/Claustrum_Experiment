@@ -192,7 +192,7 @@ sub new_experiment(first)
         print "Starting Trial number ", elapsed_trials+1, " Out of ", num_trials
         print "Showing the subject ", side_nice, ", will delay ", delay_times[elapsed_trials], " seconds before the matching"
         print #1, "Trial;", elapsed_trials+1
-        print #1, "Begin;", TrialTime, side, delay_times[elapsed_trials]
+        print #1, "Begin;", (TrialTime / 1000), side, delay_times[elapsed_trials]
 
         start_time = TrialTime
         experiment_state = "Start"
@@ -231,7 +231,7 @@ end sub
 sub start_lever_pressed(side)
     ' Call after the start lever is pressed, side = 1 denotes left
     elapsed_time = TrialTime - start_time
-    print #1, "Front;", TrialTime, ";", elapsed_time
+    print #1, "Front;", (TrialTime / 1000), ";", (elapsed_time / 1000)
 
     if (side = 1) then
         set_left_side(off)
@@ -245,7 +245,7 @@ end sub
 sub back_lever_pressed()
     ' Call after the back lever is pressed
     elapsed_time = TrialTime - back_time
-    print #1, "Back;", TrialTime, ";", elapsed_time
+    print #1, "Back;", (TrialTime / 1000), ";", (elapsed_time / 1000)
     set_back_side(off)
     set_left_side(on)
     set_right_side(on)
@@ -256,16 +256,16 @@ end sub
 sub end_experiment(correct)
     elapsed_time = TrialTime - back_time
     reset_left_right()
+    print "Ending trial, was the subject correct in this trial? ", correct
+    print "Percentage Correct ", (num_correct / elapsed_trials + 1) * 100
+    print #1, "End;", (TrialTime / 1000), ";", correct, ";", (elapsed_time / 1000)
+    print #1, ";"
     if correct then
         correct_response()
     else
         incorrect_response()
     end if
 
-    print "Ending trial, was the subject correct in this trial? ", correct
-    print "Percentage Correct ", (num_correct / elapsed_trials + 1) * 100
-    print #1, "End;", TrialTime, ";", correct, ";", elapsed_time
-    print #1, ";"
     new_experiment(0)
 end sub
 
