@@ -194,21 +194,19 @@ sub new_experiment(first)
         SignalOut(sound_outpin) = 0
         if (current_trial = 1) then
             set_left_side(on)
-            set_right_side(on)
-            side = ";FI;"
+            SignalOut(right_lever_outpin) = on
+            side = "FI;"
             side_nice = "fixed interval"
         else
-            set_left_side(on)
             set_right_side(on)
-            side = ";FR;"
+            SignalOut(left_lever_outpin) = on
+            side = "FR;"
             side_nice = "fixed ratio"
             fr_count = 0
         end if
         print "Starting Trial number ", elapsed_trials+1, " Out of ", num_trials
         print "Showing the subject ", side_nice
-        print #1, "Trial;", elapsed_trials+1
-        print #1, "Type;", side
-        print #1, "Begin;", TrialTime
+        print #1, "Begin,", elapsed_trials+1, "," side, ",", (TrialTime / 1000)
 
         start_time = TrialTime
         iv_start_time = TrialTime
@@ -221,9 +219,10 @@ end sub
 sub end_experiment()
     reset_left_right()
     SignalOut(reward_light_outpin) = off
+
+    ' Could be a good idea to remove non file prints when recording - reduce lag
     print "Ending trial, num_rewards in this trial: ", trial_rewards[elapsed_trials]
-    print #1, "End;", TrialTime
-    print #1, ";"
+    print #1, "End,", trial_rewards[elapsed_trials], ",", (TrialTime / 1000)
     new_experiment(0)
 end sub
 
@@ -232,8 +231,7 @@ sub full_init_before_record()
     dim i
 
     ' Print the csv file header
-    print #1, tag, ";", num_trials, ";", fi_delay, ";", fi_allow, ";", fr_value
-    print #1, ";"
+    print #1, tag, ",", num_trials, ",", fi_delay, ",", fi_allow, ",", fr_value
 
     ' Convert some delays to ms
     trial_delay = trial_delay * 1000 * 60
@@ -360,6 +358,13 @@ sub main()
     wend
     StopUnitRecording
     reset()
+
+    dim total_rewards
+    total_rewards = 0
+    for i = 0 to num_trials - 1
+        total_rewards = total_rewards + trial_rewards[i]
+    next
+    print #1, total_rewards
 
     close #1 'Close the file
 end sub
