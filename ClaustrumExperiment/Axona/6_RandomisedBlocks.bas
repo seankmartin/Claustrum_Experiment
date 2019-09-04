@@ -194,17 +194,17 @@ sub new_experiment(first)
         SignalOut(sound_outpin) = 0
         if (current_trial = 1) then
             set_left_side(on)
-            side = "FI;"
+            side = "FI"
             side_nice = "fixed interval"
         else
             set_right_side(on)
-            side = "FR;"
+            side = "FR"
             side_nice = "fixed ratio"
             fr_count = 0
         end if
         print "Starting Trial number ", elapsed_trials+1, " Out of ", num_trials
         print "Showing the subject ", side_nice
-        print #1, "Begin,", elapsed_trials+1, "," side, ",", (TrialTime / 1000)
+        print #1, "Begin,", elapsed_trials+1, ",", side, ",", (TrialTime / 1000)
 
         start_time = TrialTime
         iv_start_time = TrialTime
@@ -344,7 +344,6 @@ sub main()
             end if
         ' Detect Nosepoke
         elseif ((experiment_state = "Reward") and (SignalIn(nosepoke_inpin) = off)) then
-            print "Nosepoke detected at ", (TrialTime / 60000)
             iv_start_time = TrialTime
             experiment_state = "Start"
             SignalOut(reward_light_outpin) = off

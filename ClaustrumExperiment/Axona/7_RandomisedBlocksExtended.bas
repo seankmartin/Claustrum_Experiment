@@ -11,6 +11,7 @@ dim elapsed_trials
 ' Store per trial information
 dim trial_sides
 dim trial_rewards
+dim trial_times
 
 'timing delays
 dim fi_delay
@@ -47,6 +48,7 @@ dim left_lever_active
 dim right_lever_active
 dim experiment_state
 dim pressed_wrong
+dim t_idx
 
 'timing
 dim start_time
@@ -83,6 +85,7 @@ sub init_vars()
     left_lever_active = 0
     right_lever_active = 0
     pressed_wrong = false
+    t_idx = 0
 end sub
 
 sub init_arrays()
@@ -91,6 +94,8 @@ sub init_arrays()
     indices = [0, num_trials-1]
     trial_sides = vararraycreate(indices, 12)
     trial_rewards = vararraycreate(indices, 12)
+    indices = [0, (2*num_trials) - 1]
+    trial_times = vararraycreate(indices, 12)
 
     dim half_point
     half_point = trunc(num_trials / 2)
@@ -195,18 +200,19 @@ sub new_experiment(first)
         if (current_trial = 1) then
             set_left_side(on)
             SignalOut(right_lever_outpin) = on
-            side = "FI;"
+            side = "FI"
             side_nice = "fixed interval"
         else
             set_right_side(on)
             SignalOut(left_lever_outpin) = on
-            side = "FR;"
+            side = "FR"
             side_nice = "fixed ratio"
             fr_count = 0
         end if
-        print "Starting Trial number ", elapsed_trials+1, " Out of ", num_trials
-        print "Showing the subject ", side_nice
-        print #1, "Begin,", elapsed_trials+1, "," side, ",", (TrialTime / 1000)
+        ' print "Starting Trial number ", elapsed_trials+1, " Out of ", num_trials
+        ' print "Showing the subject ", side_nice
+        trial_times[t_idx] = (TrialTime / 1000)
+        t_idx = t_idx + 1
 
         start_time = TrialTime
         iv_start_time = TrialTime
@@ -217,21 +223,19 @@ sub new_experiment(first)
 end sub
 
 sub end_experiment()
+    trial_times[t_idx] = (TrialTime / 1000)
+    t_idx = t_idx + 1
     reset_left_right()
     SignalOut(reward_light_outpin) = off
 
     ' Could be a good idea to remove non file prints when recording - reduce lag
-    print "Ending trial, num_rewards in this trial: ", trial_rewards[elapsed_trials]
-    print #1, "End,", trial_rewards[elapsed_trials], ",", (TrialTime / 1000)
+    ' print "Ending trial, num_rewards in this trial: ", trial_rewards[elapsed_trials]
     new_experiment(0)
 end sub
 
 sub full_init_before_record()
     ' Perform script init before recording
     dim i
-
-    ' Print the csv file header
-    print #1, tag, ",", num_trials, ",", fi_delay, ",", fi_allow, ",", fr_value
 
     ' Convert some delays to ms
     trial_delay = trial_delay * 1000 * 60
@@ -259,6 +263,7 @@ sub full_init_before_record()
     print "Trial order is (0 FR 1 FI):"
     for i = 0 to num_trials - 1
         print trial_sides[i]
+        trial_rewards[i] = 0
     next
 end sub
 
@@ -269,7 +274,7 @@ sub main()
     ' Run the experiments and record the data
     '''NB Change important variables here'''
     num_trials = 6 'Number of trials is usually fixed 6
-    trial_delay = 1 'How long between trials in minutes
+    trial_delay = 0.5 'How long between trials in minutes
     fi_delay = 10 'How long fi delay is in seconds
     fi_allow = 5 'Can press 5 seconds +- to get double reward
     fr_value = 6 'Number of FR presses needed
@@ -288,7 +293,7 @@ sub main()
     ' Loop the recording for the number of trials
     while (elapsed_trials < num_trials)
         ' End trial
-        if (TrialTime - start_time > trial_delay) then
+        if (TrialTime - start_time >= trial_delay) then
             end_experiment()
             nstarted = true
 
@@ -312,7 +317,6 @@ sub main()
                                 deliver_reward()
                                 experiment_state = "Reward"
                             elseif (pass_time <= (fi_delay + fi_allow)) then
-                                print "Delivered double reward"
                                 deliver_reward()
                                 DelayMS(500)
                                 deliver_reward()
@@ -346,7 +350,6 @@ sub main()
             end if
         ' Detect Nosepoke
         elseif ((experiment_state = "Reward") and (SignalIn(nosepoke_inpin) = off)) then
-            print "Nosepoke detected at ", (TrialTime / 60000)
             iv_start_time = TrialTime
             experiment_state = "Start"
             SignalOut(reward_light_outpin) = off
@@ -359,9 +362,13 @@ sub main()
     StopUnitRecording
     reset()
 
+    ' Print the csv file header
+    print #1, tag, ",", num_trials, ",", fi_delay, ",", fi_allow, ",", fr_value
     dim total_rewards
     total_rewards = 0
     for i = 0 to num_trials - 1
+        print #1, "Begin,", trial_sides[i], ",", trial_times[2*i]
+        print #1, "End,", trial_rewards[i], ",", trial_times[2*i + 1]
         total_rewards = total_rewards + trial_rewards[i]
     next
     print #1, total_rewards
