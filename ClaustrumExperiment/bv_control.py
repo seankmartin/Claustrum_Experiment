@@ -9,25 +9,31 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from adjustText import adjust_text
 from scipy import interpolate
-from datetime import date
+from datetime import date, timedelta
 
 
 def plot_batch_sessions():
     # start_date = date(2019, 7, 15)  # date(year, mth, day)
-    start_date = date(2019, 8, 25)  # date(year, mth, day)
-    # start_date = date.today()
-    # end_date = date.today()
-    end_date = date(2019, 8, 28)
+    # start_date = date(2019, 8, 30)  # date(year, mth, day)
+    start_date = date.today() - timedelta(days=4)
+    end_date = date.today()
+    # end_date = date(2019, 8, 28)
 
     for single_date in daterange(start_date, end_date):
         d = [single_date.isoformat()[-5:]]
-        print(d)
         plot_sessions(d)
 
+    # # Multiple dates in single plot; Doesnt work yet
+    # d = []
+    # for single_date in daterange(start_date, end_date):
+    #     d.append(single_date.isoformat()[-5:])
+    # print(d)
+    # plot_sessions(d)
 
-def plot_sessions(d_list, summary=True, single=True, timeline=False,
-                  recent=False, show_date=False,
-                  int_only=False, corr_only=False):
+
+def plot_sessions(d_list, summary=True, single=False, timeline=True,
+                  recent=True, show_date=True,
+                  int_only=False, corr_only=True):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
     single = True: Plots single session summaries with breakdown of single blocks
@@ -45,11 +51,11 @@ def plot_sessions(d_list, summary=True, single=True, timeline=False,
 
     start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
     # start_dir = r"G:\!Operant Data\Ham"
-    in_dir = start_dir + "\hdf5"
-    out_dir = start_dir + "\Plots"
+    in_dir = os.path.join(start_dir, "hdf5")
+    out_dir = os.path.join(start_dir, "Plots")
     make_dir_if_not_exists(out_dir)
 
-    if summary:
+    if summary and not corr_only:
         #  extracts hdf5 session based on specification
         max_plot = 4  # Set max plots per figure
         s_grp = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
@@ -260,7 +266,7 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
 
 
 def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
-                  recent=False, show_date=False):
+                  recent=False, show_date=True):
     # Plot size
     rows, cols = [len(sub_list), 4]
     size_multiplier = 5
@@ -286,7 +292,8 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
         prev_name = '2'
         d_list = []
         if recent:
-            s_grp = s_grp[-20:]
+            number_sessions_ago = -31  # change value to set number of sessions ago
+            s_grp = s_grp[number_sessions_ago:]
         else:
             pass
 
@@ -375,6 +382,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
         #             autoalign='xy', force_points=0.5, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
 
         # Annotated changes in protocol
+        annotate_fontsize = 12
         h2 = None
         h3 = None
         for i, c in enumerate(changes):
@@ -385,7 +393,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
                 h2 = ax.annotate(type_list[i], xy=(s_idx[i], r_list[i]),
                                  ha='center', xytext=(0, (.2*max(r_list))),
                                  textcoords='offset points',
-                                 arrowprops=dict(facecolor='blue', shrink=0.05))
+                                 arrowprops=dict(facecolor='blue', shrink=0.05), size=annotate_fontsize)
             elif change_idx[i] == 1:
                 #                h3 = ax.annotate(str(c), xy=(s_idx[i], r_list[i]),
                 #                xytext=(s_idx[i], r_list[i]+(0.1*max(r_list))),
@@ -393,30 +401,31 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
                 h3 = ax.annotate(str(c), xy=(s_idx[i], r_list[i]),
                                  ha='center', xytext=(0, (.2*max(r_list))),
                                  textcoords='offset points',
-                                 arrowprops=dict(facecolor='Red', shrink=0.05))
+                                 arrowprops=dict(facecolor='Red', shrink=0.05), size=annotate_fontsize)
         ax.set_xlim(0, len(s_idx))
         if show_date:
             # plots x-axis ticks as dates
             plt.xticks(s_idx, d_list, fontsize=10)
+            ax.set_xlabel('Sessions (Dates)', fontsize=20)
         else:
             # plots x-axis ticks as stages
             plt.xticks(s_idx, s_list, fontsize=13)
+            ax.set_xlabel('Sessions (Type)', fontsize=20)
         ax.tick_params(axis='y', labelsize=15)
         plt.axhline(45, color='g', linestyle='-.', linewidth='.5')
         plt.axhline(90, color='r', linestyle='-.', linewidth='.5')
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        ax.set_xlabel('Sessions', fontsize=20)
         ax.set_ylabel('Total Rewards', fontsize=20)
         if h2 is not None and h3 is not None:
             plt.legend([h1, h2.arrow_patch, h3.arrow_patch], (h1.get_label(),
-                                                              'Stage Changes', 'Protocol Modification'))
+                                                              'Stage Changes', 'Protocol Modification'), loc='lower right')
         elif h2 is not None:
             plt.legend([h1, h2.arrow_patch], (h1.get_label(),
-                                              'Stage Changes'))
+                                              'Stage Changes'), loc='lower right')
         elif h3 is not None:
             plt.legend([h1, h3.arrow_patch], (h1.get_label(),
-                                              'Protocol Modification'))
+                                              'Protocol Modification'), loc='lower right')
         ax.set_title('\nSubject {} Timeline'.format(subject), fontsize=25)
 
         if single_plot:
@@ -427,12 +436,12 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
 
     if not single_plot:
         if recent:
-            fig.suptitle('Timelines for IR ' +
-                         "-".join(sub_list) + "_recent", fontsize=30)
+            # fig.suptitle('Timelines for IR ' +
+            #              "-".join(sub_list) + "_recent", fontsize=30)
             out_name = "Timeline_Sum_" + \
                 "-".join(sub_list) + "_recent" + ".png"
         else:
-            fig.suptitle('Timelines for IR ' + "-".join(sub_list), fontsize=30)
+            # fig.suptitle('Timelines for IR ' + "-".join(sub_list), fontsize=30)
             out_name = "Timeline_Sum_" + "-".join(sub_list) + ".png"
         print("Saved figure to {}".format(
             os.path.join(out_dir, out_name)))
@@ -491,7 +500,7 @@ def convert_to_hdf5(filename, out_dir):
 
     for s in s_extractor:  # Batch run for file
         stage = s.get_metadata('name')
-        if stage == 'DNMTS':
+        if stage not in s.session_info.session_info_dict.keys():
             continue
         else:
             s.save_to_h5(out_dir)
@@ -532,7 +541,7 @@ if __name__ == "__main__":
     start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"  # from Ham Personal HD
     # start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
 
-    # # Batch processing of sessions in folder
+    # Batch processing of sessions in folder
     # in_dir = start_dir
     # out_dir = os.path.join(start_dir, "hdf5")
     # in_files = os.listdir(in_dir)
@@ -541,16 +550,16 @@ if __name__ == "__main__":
     #     if os.path.isfile(filename):
     #         convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
 
-    # # Processing of single sessions
-    # filename = os.path.join(start_dir, "!2019-08-11")
-    # out_dir = os.path.join(start_dir, "hdf5")
-    # convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
+    # Processing of single sessions
+    filename = os.path.join(start_dir, "!2019-08-31")
+    out_dir = os.path.join(start_dir, "hdf5")
+    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
 
     # Processing specific sessions from hdf5
 
     # plot_sessions([date.today().isoformat()[-5:]])
-    # plot_sessions(['07-17'])
-    plot_batch_sessions()
+    # plot_sessions(['09-03'])
+    # plot_batch_sessions()
 
     # # Running single session files
     # filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-04"
