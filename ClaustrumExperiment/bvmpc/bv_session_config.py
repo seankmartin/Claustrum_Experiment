@@ -45,7 +45,7 @@ class SessionInfo:
                 ['O:', 'R:', 'Un_Nosepoke'],
                 ['R:', 'END', 'R']
             ]))
-        self.session_info_dict['DNMTS'] = None
+        # self.session_info_dict['DNMTS'] = None
 
         self.session_info_dict['4_LeverTraining_p'] = (
             np.array([
