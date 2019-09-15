@@ -15,7 +15,7 @@ from datetime import date, timedelta
 def plot_batch_sessions():
     # start_date = date(2019, 7, 15)  # date(year, mth, day)
     # start_date = date(2019, 8, 30)  # date(year, mth, day)
-    start_date = date.today() - timedelta(days=4)
+    start_date = date.today() - timedelta(days=1)
     end_date = date.today()
     # end_date = date(2019, 8, 28)
 
@@ -31,8 +31,8 @@ def plot_batch_sessions():
     # plot_sessions(d)
 
 
-def plot_sessions(d_list, summary=True, single=False, timeline=True,
-                  recent=True, show_date=True,
+def plot_sessions(d_list, summary=False, single=False, timeline=True,
+                  details=False, recent=True, show_date=True,
                   int_only=False, corr_only=True):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
@@ -42,7 +42,7 @@ def plot_sessions(d_list, summary=True, single=False, timeline=True,
     corr_only = True: Plots seperate summary plot with correct only trials
     '''
     # Parameters for specifying session
-    sub_list = ['1', '2', '3', '4', '5', '6']
+    sub_list = ['1', '2', '3', '4']
     # sub_list = ['6']
     # sub_list = ['1', '2', '3', '4']
     # sub_list = ['5', '6']
@@ -163,11 +163,11 @@ def plot_sessions(d_list, summary=True, single=False, timeline=True,
             sub_list = [['1', '2', '3', '4'], ['5', '6']]
             for l in sub_list:
                 timeline_plot(l, in_dir, out_dir, single_plot=single,
-                              recent=recent, show_date=show_date)
+                              recent=recent, show_date=show_date, details=details)
         else:
             # Plots timeline for specified subjects
             timeline_plot(sub_list, in_dir, out_dir, single_plot=single,
-                          recent=recent, show_date=show_date)
+                          recent=recent, show_date=show_date, details=details)
 
 
 def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
@@ -266,7 +266,7 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
 
 
 def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
-                  recent=False, show_date=True):
+                  recent=False, show_date=True, details=False):
     # Plot size
     rows, cols = [len(sub_list), 4]
     size_multiplier = 5
@@ -279,6 +279,10 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
         s_grp = extract_hdf5s(in_dir, out_dir, sub)
         s_list = []
         r_list = []
+        err_FR_list = []
+        err_FI_list = []
+        rw_FR_list = []
+        rw_FI_list = []
         changes = []
         stage_change = []
         change_idx = []
@@ -343,15 +347,52 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
                 else:
                     changes.append(0)
                     change_idx.append(0)
+            # Calculates total reward (y axis variable)
             rewards_t = len(timestamps["Reward"]) + len(pell_double)
-            s_list.append(s_name)
             r_list.append(rewards_t)
+
+            # Calculates FR & FI rewards and errors (alternative y axis variables)
+            err_FI = 0
+            err_FR = 0
+            rw_FR = 0
+            rw_FI = 0
+            if s_type == '7_' or s_type == '6_':
+                norm_r_ts, _, norm_err_ts, _, _ = bv_an.split_sess(
+                    s, plot_all=True)
+                sch_type = s.get_arrays('Trial Type')
+                if s_type == '7_':
+                    for i, _ in enumerate(norm_err_ts):
+                        if sch_type[i] == 1:
+                            err_FR = err_FR + len(norm_err_ts[i])
+                        elif sch_type[i] == 0:
+                            err_FI = err_FI + len(norm_err_ts[i])
+                else:
+                    err_FR = None
+                    err_FI = None
+                for i, _ in enumerate(norm_r_ts):
+                    if sch_type[i] == 1:
+                        rw_FR = rw_FR + len(norm_r_ts[i])
+                    elif sch_type[i] == 0:
+                        rw_FI = rw_FI + len(norm_r_ts[i])
+            else:
+                err_FI = None
+                err_FR = None
+                rw_FR = None
+                rw_FI = None
+
+            # Updates list arrays with new session
+            rw_FR_list.append(rw_FR)
+            rw_FI_list.append(rw_FI)
+            err_FR_list.append(err_FR)
+            err_FI_list.append(err_FI)
+            s_list.append(s_name)
             type_list.append('S-'+s_type[0])
+
+            # Updates current iteration variables for next loop
             dpell_old = dpell_change
             prev_ratio = c_ratio
             prev_interval = c_interval
             prev_name = s_type
-        s_idx = np.arange(0, len(s_list))
         if single_plot:
             rows, cols = [1, 4]
             size_multiplier = 5
@@ -360,26 +401,46 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
                 tight_layout=False)
             gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
             ax = fig.add_subplot(gs[0, :])
+            out_name = "Timeline_" + subject
             if recent:
-                out_name = "Timeline_" + subject + "_recent" + ".png"
-            else:
-                out_name = "Timeline_" + subject + ".png"
+                out_name += "_recent"
+            if details:
+                out_name += "_details"
+            out_name += ".png"
         else:
             ax = fig.add_subplot(gs[int(c), :])
 
-        h1, = plt.plot(s_idx, r_list, label='Animal'+subject, linewidth='4',
-                       color=mycolors(subject))
-
-        # # Testing alterative annotation
-        # texts = []
-        # for stage, x, y, s in zip(stage_change, s_idx, r_list, type_list):
-        #     if stage == 1:
-        #         texts.append(plt.text(x, y, s))
-        # f = interpolate.interp1d(s_idx, r_list)
-        # x = np.arange(min(s_idx), max(s_idx), 0.0005)
-        # y = f(x)
-        # adjust_text(texts, x=x, y=y, only_move={'points':'xy', 'text':'xy'},
-        #             autoalign='xy', force_points=0.5, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
+        s_idx = np.arange(0, len(s_list))
+        if details:
+            ratio_c = plt.cm.get_cmap('Wistia')
+            interval_c = plt.cm.get_cmap('winter')
+            # Change value to increase height of annotation
+            # note_height = 0
+            # y_axis = np.zeros((1, len(s_idx)))[0] + note_height
+            y_axis = []
+            # Sets line on which annotations appear
+            for i, l in enumerate(rw_FR_list):
+                if l is None:
+                    y_axis.append(0)  # Hides non-stage 7 annotations
+                else:
+                    y_axis.append(l)
+            ax2 = ax.twinx()
+            h4, = ax.plot(s_idx, rw_FR_list, '*-', label='FR_Corr', linewidth='2',
+                          markersize=2, color=ratio_c(2*45))
+            h5, = ax2.plot(s_idx, err_FR_list, 'x-', label='FR_Err', linewidth='2',
+                           markersize=2, color=ratio_c(4*45))
+            h6, = ax.plot(s_idx, rw_FI_list, '*-', label='FI_Corr', linewidth='2',
+                          markersize=2, color=interval_c(2*45))
+            h7, = ax2.plot(s_idx, err_FI_list, 'x-', label='FI_Err', linewidth='2',
+                           markersize=2, color=interval_c(4*45))
+            ax.set_title('\nSubject {} Timeline_Details'.format(
+                subject), y=1.05, fontsize=25, color=mycolors(subject))
+        else:
+            y_axis = r_list
+            h1, = plt.plot(s_idx, y_axis, label='Animal'+subject, linewidth='4',
+                           color=mycolors(subject))
+            ax.set_title('\nSubject {} Timeline'.format(subject), y=1.05,
+                         fontsize=25, color=mycolors(subject))
 
         # Annotated changes in protocol
         annotate_fontsize = 12
@@ -387,19 +448,13 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
         h3 = None
         for i, c in enumerate(changes):
             if stage_change[i] == 1:
-                #                h2 = ax.annotate(type_list[i], xy=(s_idx[i], r_list[i]),
-                #                xytext=(s_idx[i], r_list[i]+(0.1*max(r_list))),
-                #                            arrowprops=dict(facecolor='blue', shrink=0.05))
-                h2 = ax.annotate(type_list[i], xy=(s_idx[i], r_list[i]),
-                                 ha='center', xytext=(0, (.2*max(r_list))),
+                h2 = ax.annotate(type_list[i], xy=(s_idx[i], y_axis[i]),
+                                 ha='center', xytext=(0, (.2*max(y_axis))),
                                  textcoords='offset points',
                                  arrowprops=dict(facecolor='blue', shrink=0.05), size=annotate_fontsize)
             elif change_idx[i] == 1:
-                #                h3 = ax.annotate(str(c), xy=(s_idx[i], r_list[i]),
-                #                xytext=(s_idx[i], r_list[i]+(0.1*max(r_list))),
-                #                            arrowprops=dict(facecolor='Red', shrink=0.05))
-                h3 = ax.annotate(str(c), xy=(s_idx[i], r_list[i]),
-                                 ha='center', xytext=(0, (.2*max(r_list))),
+                h3 = ax.annotate(str(c), xy=(s_idx[i], y_axis[i]),
+                                 ha='center', xytext=(0, (.2*max(y_axis))),
                                  textcoords='offset points',
                                  arrowprops=dict(facecolor='Red', shrink=0.05), size=annotate_fontsize)
         ax.set_xlim(0, len(s_idx))
@@ -411,22 +466,34 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
             # plots x-axis ticks as stages
             plt.xticks(s_idx, s_list, fontsize=13)
             ax.set_xlabel('Sessions (Type)', fontsize=20)
-        ax.tick_params(axis='y', labelsize=15)
-        plt.axhline(45, color='g', linestyle='-.', linewidth='.5')
-        plt.axhline(90, color='r', linestyle='-.', linewidth='.5')
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        ax.set_ylabel('Total Rewards', fontsize=20)
+        ax.tick_params(axis='y', labelsize=15)
+        if details:
+            plots = [h4, h5, h6, h7]
+            labels = [h4.get_label(), h5.get_label(),
+                      h6.get_label(), h7.get_label()]
+            loc = 'top left'
+            ax.set_ylabel('Correct Trials', fontsize=20)
+            ax2.tick_params(axis='y', labelsize=15)
+            ax2.set_ylabel('Error Presses', fontsize=20)
+        else:
+            plt.axhline(45, color='g', linestyle='-.', linewidth='.5')
+            plt.axhline(90, color='r', linestyle='-.', linewidth='.5')
+            ax.set_ylabel('Total Rewards', fontsize=20)
+            plots = [h1]
+            labels = [h1.get_label()]
+            loc = 'lower right'
         if h2 is not None and h3 is not None:
-            plt.legend([h1, h2.arrow_patch, h3.arrow_patch], (h1.get_label(),
-                                                              'Stage Changes', 'Protocol Modification'), loc='lower right')
+            plots.extend([h2.arrow_patch, h3.arrow_patch])
+            labels.extend(['Stage Changes', 'Protocol Modification'])
         elif h2 is not None:
-            plt.legend([h1, h2.arrow_patch], (h1.get_label(),
-                                              'Stage Changes'), loc='lower right')
+            plots.append(h2.arrow_patch)
+            labels.append('Stage Changes')
         elif h3 is not None:
-            plt.legend([h1, h3.arrow_patch], (h1.get_label(),
-                                              'Protocol Modification'), loc='lower right')
-        ax.set_title('\nSubject {} Timeline'.format(subject), fontsize=25)
+            plots.append(h3.arrow_patch)
+            labels.append('Protocol Modification')
+        plt.legend(plots, labels, loc=loc)
 
         if single_plot:
             print("Saved figure to {}".format(
@@ -435,14 +502,12 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
             plt.close()
 
     if not single_plot:
+        out_name = "Timeline_Sum_" + "-".join(sub_list)
         if recent:
-            # fig.suptitle('Timelines for IR ' +
-            #              "-".join(sub_list) + "_recent", fontsize=30)
-            out_name = "Timeline_Sum_" + \
-                "-".join(sub_list) + "_recent" + ".png"
-        else:
-            # fig.suptitle('Timelines for IR ' + "-".join(sub_list), fontsize=30)
-            out_name = "Timeline_Sum_" + "-".join(sub_list) + ".png"
+            out_name += "_recent"
+        if details:
+            out_name += "_details"
+        out_name += ".png"
         print("Saved figure to {}".format(
             os.path.join(out_dir, out_name)))
         fig.savefig(os.path.join(out_dir, out_name), dpi=400)
@@ -461,20 +526,6 @@ def extract_hdf5s(in_dir, out_dir, sub_list=None, s_list=None, d_list=None):
 
     in_files = os.listdir(in_dir)
     s_grp = []
-    # name_dict = {}
-    # if sub_list is not None:
-    #     name_dict["sub_list"] = sub_list
-    # if s_list is not None:
-    #     name_dict["s_list"] = s_list
-    # if d_list is not None:
-    #     name_dict["d_list"] = d_list
-    # out_name = ""
-    # names = ["sub_list", "d_list", "s_list"]
-    # for name in names:
-    #     out_name = out_name + "_" + str(name_dict.get(name, "sub_list"))
-    # out_name.replace("__", "_")
-    # out_name.replace("__", "_")
-    # out_name = out_name
     for file in in_files:
         splits = file.split('_')
         subject = splits[0]
@@ -541,7 +592,7 @@ if __name__ == "__main__":
     start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"  # from Ham Personal HD
     # start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
 
-    # Batch processing of sessions in folder
+    # # Batch processing of sessions in folder
     # in_dir = start_dir
     # out_dir = os.path.join(start_dir, "hdf5")
     # in_files = os.listdir(in_dir)
@@ -550,16 +601,16 @@ if __name__ == "__main__":
     #     if os.path.isfile(filename):
     #         convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
 
-    # Processing of single sessions
-    filename = os.path.join(start_dir, "!2019-08-31")
-    out_dir = os.path.join(start_dir, "hdf5")
-    convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
+    # # Processing of single sessions
+    # filename = os.path.join(start_dir, "!2019-08-31")
+    # out_dir = os.path.join(start_dir, "hdf5")
+    # convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
 
     # Processing specific sessions from hdf5
 
     # plot_sessions([date.today().isoformat()[-5:]])
     # plot_sessions(['09-03'])
-    # plot_batch_sessions()
+    plot_batch_sessions()
 
     # # Running single session files
     # filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-04"
