@@ -32,7 +32,7 @@ def plot_batch_sessions():
 
 
 def plot_sessions(d_list, summary=False, single=False, timeline=True,
-                  details=False, recent=True, show_date=True,
+                  details=True, recent=True, show_date=True,
                   int_only=False, corr_only=True):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
@@ -283,6 +283,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
         err_FI_list = []
         rw_FR_list = []
         rw_FI_list = []
+        rw_double_list = []
         changes = []
         stage_change = []
         change_idx = []
@@ -356,8 +357,9 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
             err_FR = 0
             rw_FR = 0
             rw_FI = 0
+            rw_double = 0
             if s_type == '7_' or s_type == '6_':
-                norm_r_ts, _, norm_err_ts, _, _ = bv_an.split_sess(
+                norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = bv_an.split_sess(
                     s, plot_all=True)
                 sch_type = s.get_arrays('Trial Type')
                 if s_type == '7_':
@@ -370,6 +372,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
                     err_FR = None
                     err_FI = None
                 for i, _ in enumerate(norm_r_ts):
+                    rw_double += len(norm_dr_ts[i])
                     if sch_type[i] == 1:
                         rw_FR = rw_FR + len(norm_r_ts[i])
                     elif sch_type[i] == 0:
@@ -379,12 +382,14 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
                 err_FR = None
                 rw_FR = None
                 rw_FI = None
+                rw_double = None
 
             # Updates list arrays with new session
             rw_FR_list.append(rw_FR)
             rw_FI_list.append(rw_FI)
             err_FR_list.append(err_FR)
             err_FI_list.append(err_FI)
+            rw_double_list.append(rw_double)
             s_list.append(s_name)
             type_list.append('S-'+s_type[0])
 
@@ -426,13 +431,15 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
                     y_axis.append(l)
             ax2 = ax.twinx()
             h4, = ax.plot(s_idx, rw_FR_list, '*-', label='FR_Corr', linewidth='2',
-                          markersize=2, color=ratio_c(2*45))
+                          markersize=10, color=ratio_c(3*45))
             h5, = ax2.plot(s_idx, err_FR_list, 'x-', label='FR_Err', linewidth='2',
-                           markersize=2, color=ratio_c(4*45))
-            h6, = ax.plot(s_idx, rw_FI_list, '*-', label='FI_Corr', linewidth='2',
-                          markersize=2, color=interval_c(2*45))
+                           markersize=10, color=ratio_c(10*45))
+            h6, = ax.plot(s_idx, rw_double_list, '*-', label='FI_doubleR', linewidth='2',
+                          markersize=10, color=interval_c(2*45))
+            # h6, = ax.plot(s_idx, rw_FI_list, '*-', label='FI_Corr', linewidth='2',
+            #               markersize=10, color=interval_c(2*45))
             h7, = ax2.plot(s_idx, err_FI_list, 'x-', label='FI_Err', linewidth='2',
-                           markersize=2, color=interval_c(4*45))
+                           markersize=10, color=interval_c(4*45))
             ax.set_title('\nSubject {} Timeline_Details'.format(
                 subject), y=1.05, fontsize=25, color=mycolors(subject))
         else:
@@ -470,6 +477,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
         ax.spines['right'].set_visible(False)
         ax.tick_params(axis='y', labelsize=15)
         if details:
+            plt.axhline(0, color='r', linestyle='-.', linewidth='.5')
             plots = [h4, h5, h6, h7]
             labels = [h4.get_label(), h5.get_label(),
                       h6.get_label(), h7.get_label()]
