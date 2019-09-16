@@ -5,20 +5,32 @@ import os
 import argparse
 from datetime import timedelta
 
+
 def daterange(start_date, end_date):
-    for n in range(int ((end_date - start_date).days)):
+    for n in range(int((end_date - start_date).days)):
         yield start_date + timedelta(n)
+
 
 def make_dir_if_not_exists(location):
     """Make directory structure for given location."""
     os.makedirs(location, exist_ok=True)
 
+
 def mycolors(subject):
+    """Colour options for subject based on number"""
     i = int(subject)
-    mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange', 
-                    'tab:brown', 'tab:pink', 'tab:olive', 
-                    'deeppink', 'steelblue', 'firebrick', 'mediumseagreen']
+    mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange',
+                'tab:brown', 'tab:pink', 'tab:o live',
+                'deeppink', 'steelblue', 'firebrick', 'mediumseagreen']
     return mycolors[i]
+
+
+def split_list(list, chunk_limit):
+    """Splits a list into small chunks based on chunk_limit"""
+    new_list = [list[i:i + chunk_limit]
+                for i in range(0, len(list), chunk_limit)]
+    return new_list
+
 
 def walk_dict(d, depth=0):
     """Walk a Dictionary."""

@@ -4,7 +4,7 @@ import math
 import numpy as np
 from bvmpc.bv_parse_sessions import SessionExtractor, Session
 import bvmpc.bv_analyse as bv_an
-from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange
+from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from adjustText import adjust_text
@@ -21,7 +21,30 @@ def plot_batch_sessions():
 
     for single_date in daterange(start_date, end_date):
         d = [single_date.isoformat()[-5:]]
-        plot_sessions(d)
+
+        # Quick control of plotting
+        timeline, summary = [1, 0]
+
+        # plot cumulative response graphs
+        if summary == 1:
+            plot_sessions(d, summary=True, single=True,
+                          corr_only=True)  # Single animal breakdown
+            # Group with corr_only breakdown
+            plot_sessions(d, summary=True, single=False, corr_only=True)
+            # plot_sessions(d, summary=True, single=False, corr_only=False)  # Group with complete breakdown
+
+        # plot all 4 timeline types
+        if timeline == 1:
+            single = False  # plots seperate graphs for each animal if True
+            show_date = True  # Sets x-axis as dates if True
+            plot_sessions(d, timeline=True, single=single, details=True, recent=True,
+                          show_date=show_date)  # Timeline_recent_details
+            plot_sessions(d, timeline=True, single=single, details=True,
+                          recent=False, show_date=show_date)  # Timeline_details
+            plot_sessions(d, timeline=True, single=single, details=False,
+                          recent=True, show_date=show_date)  # Timeline_recent
+            plot_sessions(d, timeline=True, single=single, details=False,
+                          recent=False, show_date=show_date)  # Timeline
 
     # # Multiple dates in single plot; Doesnt work yet
     # d = []
@@ -31,9 +54,9 @@ def plot_batch_sessions():
     # plot_sessions(d)
 
 
-def plot_sessions(d_list, summary=False, single=False, timeline=True,
-                  details=True, recent=True, show_date=True,
-                  int_only=False, corr_only=True):
+def plot_sessions(d_list, summary=False, single=False, timeline=False,
+                  details=False, recent=False, show_date=False,
+                  int_only=False, corr_only=False):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
     single = True: Plots single session summaries with breakdown of single blocks
@@ -160,7 +183,8 @@ def plot_sessions(d_list, summary=False, single=False, timeline=True,
 
     if timeline:
         if not single:
-            sub_list = [['1', '2', '3', '4'], ['5', '6']]
+            plot_limit = 4
+            sub_list = split_list(sub_list, plot_limit)
             for l in sub_list:
                 timeline_plot(l, in_dir, out_dir, single_plot=single,
                               recent=recent, show_date=show_date, details=details)
@@ -430,16 +454,24 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
                 else:
                     y_axis.append(l)
             ax2 = ax.twinx()
-            h4, = ax.plot(s_idx, rw_FR_list, '*-', label='FR_Corr', linewidth='2',
-                          markersize=10, color=ratio_c(3*45))
-            h5, = ax2.plot(s_idx, err_FR_list, 'x-', label='FR_Err', linewidth='2',
-                           markersize=10, color=ratio_c(10*45))
-            h6, = ax.plot(s_idx, rw_double_list, '*-', label='FI_doubleR', linewidth='2',
-                          markersize=10, color=interval_c(2*45))
-            # h6, = ax.plot(s_idx, rw_FI_list, '*-', label='FI_Corr', linewidth='2',
-            #               markersize=10, color=interval_c(2*45))
-            h7, = ax2.plot(s_idx, err_FI_list, 'x-', label='FI_Err', linewidth='2',
-                           markersize=10, color=interval_c(4*45))
+            plots = []
+            labels = []
+            # Dict controls lines to be plot. Set keys to 1 in plot_dict to include line in plot
+            plot_dict = {"FR_Corr": 1, "FR_Err": 0,
+                         "FI_Corr": 1, "FI_Err": 0, "FI_DoubleR": 1}
+            plot_styles = {
+                "FR_Corr": [rw_FR_list, '*-', ratio_c(3*45)],
+                "FR_Err": [err_FR_list, 'x-', ratio_c(10*45)],
+                "FI_Corr": [rw_FI_list, '*-', interval_c(2*45)],
+                "FI_Err": [err_FI_list, 'x-', interval_c(4*45)],
+                "FI_DoubleR": [rw_double_list, '*-', 'hotpink']}
+            for k, val in plot_dict.items():
+                if val:
+                    s = plot_styles[k]
+                    h, = ax.plot(s_idx, s[0], s[1], label=k, linewidth='2',
+                                 markersize=10, color=s[2])
+                    plots.append(h)
+                    labels.append(h.get_label())
             ax.set_title('\nSubject {} Timeline_Details'.format(
                 subject), y=1.05, fontsize=25, color=mycolors(subject))
         else:
@@ -477,10 +509,11 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
         ax.spines['right'].set_visible(False)
         ax.tick_params(axis='y', labelsize=15)
         if details:
-            plt.axhline(0, color='r', linestyle='-.', linewidth='.5')
-            plots = [h4, h5, h6, h7]
-            labels = [h4.get_label(), h5.get_label(),
-                      h6.get_label(), h7.get_label()]
+            ax.axhline(0, color='r', linestyle='-.', linewidth='.5')
+            ax.axhline(30, color=interval_c(2*45),
+                       linestyle='-.', linewidth='.5')
+            ax.text(s_idx[0], 31, ' Max FI', fontsize=8,
+                    color=interval_c(2*45), ha='left', va='bottom')
             loc = 'top left'
             ax.set_ylabel('Correct Trials', fontsize=20)
             ax2.tick_params(axis='y', labelsize=15)
@@ -494,14 +527,14 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
             loc = 'lower right'
         if h2 is not None and h3 is not None:
             plots.extend([h2.arrow_patch, h3.arrow_patch])
-            labels.extend(['Stage Changes', 'Protocol Modification'])
+            labels.extend(['Stage Changes', 'Protocol Mod.'])
         elif h2 is not None:
             plots.append(h2.arrow_patch)
             labels.append('Stage Changes')
         elif h3 is not None:
             plots.append(h3.arrow_patch)
-            labels.append('Protocol Modification')
-        plt.legend(plots, labels, loc=loc)
+            labels.append('Protocol Mod.')
+        plt.legend(plots, labels, loc=loc, ncol=2)
 
         if single_plot:
             print("Saved figure to {}".format(
