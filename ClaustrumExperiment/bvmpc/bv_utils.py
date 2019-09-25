@@ -20,8 +20,8 @@ def mycolors(subject):
     """Colour options for subject based on number"""
     i = int(subject)
     mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange',
-                'tab:brown', 'tab:pink', 'tab:o live',
-                'deeppink', 'steelblue', 'firebrick', 'mediumseagreen']
+                'tab:brown', 'deeppink', 'tab:olive', 'tab:pink',
+                'steelblue', 'firebrick', 'mediumseagreen']
     return mycolors[i]
 
 

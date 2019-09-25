@@ -2,6 +2,8 @@
 import os
 import math
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from bvmpc.bv_parse_sessions import SessionExtractor, Session
 import bvmpc.bv_analyse as bv_an
 from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list
@@ -10,6 +12,93 @@ import matplotlib.gridspec as gridspec
 from adjustText import adjust_text
 from scipy import interpolate
 from datetime import date, timedelta
+
+
+def compare_variables():
+    """ Temporary Function to plot difference between errors"""
+    # Only works for stage 7
+    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
+    # start_dir = r"G:\!Operant Data\Ham"
+    in_dir = os.path.join(start_dir, "hdf5")
+    out_dir = os.path.join(start_dir, "Plots")
+    sub_list = ['1', '2', '3', '4']
+    s_list = ['7']
+    grpA_d_list = ['08-10', '08-11', '08-12']
+    grpB_d_list = ['08-17', '08-18', '08-19']
+    grpC_d_list = ['09-15', '09-16', '09-17']
+
+    s_grpA = extract_hdf5s(in_dir, out_dir, sub_list, s_list, grpA_d_list)
+    s_grpB = extract_hdf5s(in_dir, out_dir, sub_list, s_list, grpB_d_list)
+    s_grpC = extract_hdf5s(in_dir, out_dir, sub_list, s_list, grpC_d_list)
+    s_grpA.pop()
+    s_grpA.pop(-4)
+    s_grpA.pop(-7)
+    s_grpA.pop(-10)
+    s_grps = [s_grpA, s_grpB, s_grpC]
+    FR_means = []
+    FI_means = []
+    FR_stds = []
+    FI_stds = []
+
+    for s in s_grps:
+        grp_FRerr, grp_FIerr = grp_errors(s)
+        FRerr_arr = np.array(grp_FRerr)
+        FIerr_arr = np.array(grp_FIerr)
+        FR_mean = np.mean(FRerr_arr, axis=0)
+        FI_mean = np.mean(FIerr_arr, axis=0)
+        FR_means.append(FR_mean)
+        FI_means.append(FI_mean)
+        FR_std = np.std(FRerr_arr, axis=0)
+        FI_std = np.std(FIerr_arr, axis=0)
+        FR_stds.append(FR_std)
+        FI_stds.append(FI_std)
+
+    # x_label = ['FR6_noDP-Ratio', 'FR6_NoDP-Int', 'FR8-Ratio',
+    #            'FR8-Int', 'FR18-Ratio', 'FR18-Int']
+    ratio_c = plt.cm.get_cmap('Wistia')
+    interval_c = plt.cm.get_cmap('winter')
+
+    _, ax = plt.subplots()
+    ind = np.arange(len(FR_means))  # the x locations for the groups
+    width = 0.35  # the width of the bars
+    ax.bar(ind - width/2, FR_means, width,
+           yerr=FR_stds, label='FR', color=ratio_c(10*45), align='center')
+    ax.bar(ind + width/2, FI_means, width,
+           yerr=FI_stds, label='FI', color=interval_c(4*45), align='center')
+    # ax.bar(ind - width/2, np.mean(err_arr, axis=1), tick_label=x_label,
+    #        yerr=np.std(err_arr, axis=1), align='center',
+    #        alpha=0.5, ecolor='black', capsize=10)
+    ax.set_xticks(ind)
+    ax.set_xticklabels(('FR6_noDP', 'FR8', 'FR18'))
+    ax.set_ylabel('Error Presses')
+    ax.set_xlabel('Sessions-Type')
+    ax.set_title('Errors Comparison')
+    ax.legend()
+    plt.show()
+
+
+def grp_errors(s_grp):
+    grp_FRerr = []
+    grp_FIerr = []
+    for i, s in enumerate(s_grp):
+        # timestamps = s.get_arrays()
+        # pell_ts = timestamps["Reward"]
+        # c_ratio = 'R' + str(int(timestamps["Experiment Variables"][3]))
+        # c_interval = 'I' + \
+        #     str(int(timestamps["Experiment Variables"][5] / 100))
+        err_FI = 0
+        err_FR = 0
+        _, _, norm_err_ts, _, _ = bv_an.split_sess(
+            s, plot_all=True)
+        sch_type = s.get_arrays('Trial Type')
+        for i, _ in enumerate(norm_err_ts):
+            if sch_type[i] == 1:
+                err_FR = err_FR + len(norm_err_ts[i])
+            elif sch_type[i] == 0:
+                err_FI = err_FI + len(norm_err_ts[i])
+        grp_FRerr.append(err_FR)
+        grp_FIerr.append(err_FI)
+    return grp_FRerr, grp_FIerr
 
 
 def plot_batch_sessions():
@@ -27,8 +116,8 @@ def plot_batch_sessions():
 
         # plot cumulative response graphs
         if summary == 1:
-            plot_sessions(d, summary=True, single=True,
-                          corr_only=True)  # Single animal breakdown
+            # plot_sessions(d, summary=True, single=True,
+            #               corr_only=True)  # Single animal breakdown
             # Group with corr_only breakdown
             plot_sessions(d, summary=True, single=False, corr_only=True)
             # plot_sessions(d, summary=True, single=False, corr_only=False)  # Group with complete breakdown
@@ -37,8 +126,16 @@ def plot_batch_sessions():
         if timeline == 1:
             single = False  # plots seperate graphs for each animal if True
             show_date = True  # Sets x-axis as dates if True
-            plot_sessions(d, timeline=True, single=single, details=True, recent=True,
-                          show_date=show_date)  # Timeline_recent_details
+            # plot_sessions(d, timeline=True, single=single, details=True, recent=True,
+            #               show_date=show_date)  # Timeline_recent_details
+            # plot_sessions(d, timeline=True, single=single, details=True, det_err=True, det_corr=False, recent=True,
+            #               show_date=show_date)  # Timeline_recent_details_Err **Need to fix with ax.remove() instead**
+            # plot_sessions(d, timeline=True, single=single, details=True, det_err=False, det_corr=True, recent=True,
+            #               show_date=show_date)  # Timeline_recent_details_Corr **Need to fix with ax.remove() instead**
+            plot_sessions(d, timeline=True, single=single, details=True, det_err=True, det_corr=False,
+                          show_date=show_date)  # Timeline_recent_details_Err
+            plot_sessions(d, timeline=True, single=single, details=True, det_err=False, det_corr=True,
+                          show_date=show_date)  # Timeline_recent_details_Corr
             plot_sessions(d, timeline=True, single=single, details=True,
                           recent=False, show_date=show_date)  # Timeline_details
             plot_sessions(d, timeline=True, single=single, details=False,
@@ -55,7 +152,7 @@ def plot_batch_sessions():
 
 
 def plot_sessions(d_list, summary=False, single=False, timeline=False,
-                  details=False, recent=False, show_date=False,
+                  details=False, det_err=False, det_corr=False, recent=False, show_date=False,
                   int_only=False, corr_only=False):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
@@ -65,7 +162,8 @@ def plot_sessions(d_list, summary=False, single=False, timeline=False,
     corr_only = True: Plots seperate summary plot with correct only trials
     '''
     # Parameters for specifying session
-    sub_list = ['1', '2', '3', '4']
+    # sub_list = ['1', '2']
+    sub_list = ['3', '4']
     # sub_list = ['6']
     # sub_list = ['1', '2', '3', '4']
     # sub_list = ['5', '6']
@@ -186,11 +284,11 @@ def plot_sessions(d_list, summary=False, single=False, timeline=False,
             plot_limit = 4
             sub_list = split_list(sub_list, plot_limit)
             for l in sub_list:
-                timeline_plot(l, in_dir, out_dir, single_plot=single,
+                timeline_plot(l, in_dir, out_dir, single_plot=single, det_err=det_err, det_corr=det_corr,
                               recent=recent, show_date=show_date, details=details)
         else:
             # Plots timeline for specified subjects
-            timeline_plot(sub_list, in_dir, out_dir, single_plot=single,
+            timeline_plot(sub_list, in_dir, out_dir, single_plot=single, det_err=det_err, det_corr=det_corr,
                           recent=recent, show_date=show_date, details=details)
 
 
@@ -289,7 +387,7 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
     plt.close()
 
 
-def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
+def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, det_corr=False,
                   recent=False, show_date=True, details=False):
     # Plot size
     rows, cols = [len(sub_list), 4]
@@ -382,6 +480,8 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
             rw_FR = 0
             rw_FI = 0
             rw_double = 0
+            err_plotted = 0
+            corr_plotted = 0
             if s_type == '7_' or s_type == '6_':
                 norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = bv_an.split_sess(
                     s, plot_all=True)
@@ -401,6 +501,19 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
                         rw_FR = rw_FR + len(norm_r_ts[i])
                     elif sch_type[i] == 0:
                         rw_FI = rw_FI + len(norm_r_ts[i])
+            elif s_type == '5a':
+                err_FI = None
+                err_FR = None
+                rw_FR = len(pell_ts)
+                rw_FI = None
+                rw_double = None
+            elif s_type == '5b':
+                err_FI = None
+                err_FR = None
+                rw_FR = None
+                rw_FI = len(pell_ts)
+                rw_double = None
+
             else:
                 err_FI = None
                 err_FR = None
@@ -435,7 +548,6 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
                 out_name += "_recent"
             if details:
                 out_name += "_details"
-            out_name += ".png"
         else:
             ax = fig.add_subplot(gs[int(c), :])
 
@@ -453,23 +565,47 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
                     y_axis.append(0)  # Hides non-stage 7 annotations
                 else:
                     y_axis.append(l)
-            ax2 = ax.twinx()
             plots = []
             labels = []
             # Dict controls lines to be plot. Set keys to 1 in plot_dict to include line in plot
-            plot_dict = {"FR_Corr": 1, "FR_Err": 0,
-                         "FI_Corr": 1, "FI_Err": 0, "FI_DoubleR": 1}
-            plot_styles = {
-                "FR_Corr": [rw_FR_list, '*-', ratio_c(3*45)],
-                "FR_Err": [err_FR_list, 'x-', ratio_c(10*45)],
-                "FI_Corr": [rw_FI_list, '*-', interval_c(2*45)],
-                "FI_Err": [err_FI_list, 'x-', interval_c(4*45)],
-                "FI_DoubleR": [rw_double_list, '*-', 'hotpink']}
+            if det_err:
+                plot_styles = {
+                    "FR_Corr": [rw_FR_list, '*-', ratio_c(3*45), 0],
+                    "FR_Err": [err_FR_list, 'x-', ratio_c(10*45), 1],
+                    "FI_Corr": [rw_FI_list, '*-', interval_c(2*45), 0],
+                    "FI_Err": [err_FI_list, 'x-', interval_c(4*45), 1],
+                    "FI_DoubleR": [rw_double_list, '*-', 'hotpink', 0]}
+                err_plotted = 1
+            elif det_corr:
+                plot_styles = {
+                    "FR_Corr": [rw_FR_list, '*-', ratio_c(3*45), 1],
+                    "FR_Err": [err_FR_list, 'x-', ratio_c(10*45), 0],
+                    "FI_Corr": [rw_FI_list, '*-', interval_c(2*45), 1],
+                    "FI_Err": [err_FI_list, 'x-', interval_c(4*45), 0],
+                    "FI_DoubleR": [rw_double_list, '*-', 'hotpink', 1]}
+                corr_plotted = 1
+            else:
+                plot_styles = {
+                    "FR_Corr": [rw_FR_list, '*-', ratio_c(3*45), 1],
+                    "FR_Err": [err_FR_list, 'x-', ratio_c(10*45), 1],
+                    "FI_Corr": [rw_FI_list, '*-', interval_c(2*45), 1],
+                    "FI_Err": [err_FI_list, 'x-', interval_c(4*45), 1],
+                    "FI_DoubleR": [rw_double_list, '*-', 'hotpink', 1]}
+                err_plotted = 1
+                corr_plotted = 1
+
+            plot_dict = {"FR_Corr": 1, "FR_Err": 1,
+                         "FI_Corr": 1, "FI_Err": 1, "FI_DoubleR": 1}
+            ax2 = ax.twinx()
             for k, val in plot_dict.items():
                 if val:
                     s = plot_styles[k]
-                    h, = ax.plot(s_idx, s[0], s[1], label=k, linewidth='2',
-                                 markersize=10, color=s[2])
+                    if k[-3:] == "Err":
+                        ax_used = ax2
+                    else:
+                        ax_used = ax
+                    h, = ax_used.plot(s_idx, s[0], s[1], label=k, linewidth='2',
+                                      markersize=10, color=s[2], alpha=s[3])
                     plots.append(h)
                     labels.append(h.get_label())
             ax.set_title('\nSubject {} Timeline_Details'.format(
@@ -509,13 +645,23 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
         ax.spines['right'].set_visible(False)
         ax.tick_params(axis='y', labelsize=15)
         if details:
-            ax.axhline(0, color='r', linestyle='-.', linewidth='.5')
-            ax.axhline(30, color=interval_c(2*45),
-                       linestyle='-.', linewidth='.5')
-            ax.text(s_idx[0], 31, ' Max FI', fontsize=8,
-                    color=interval_c(2*45), ha='left', va='bottom')
+            if 'S-6' in type_list:
+                ax.axhline(45, xmax=(type_list.index('S-6')/len(type_list)), color=interval_c(2*45),
+                           linestyle='-.', linewidth='.5')
+                ax.axhline(30, xmin=(type_list.index('S-6')/len(type_list)), color=interval_c(2*45),
+                           linestyle='-.', linewidth='.5')
+                ax.text(type_list.index('S-6'), 31, ' Max FI', fontsize=8,
+                        color=interval_c(2*45), ha='left', va='bottom')
+                ax.text(s_idx[0], 46, ' Max FI', fontsize=8,
+                        color=interval_c(2*45), ha='left', va='bottom')
+            else:
+                ax.axhline(30, color=interval_c(2*45),
+                           linestyle='-.', linewidth='.5')
+                ax.text(s_idx[0], 31, ' Max FI', fontsize=8,
+                        color=interval_c(2*45), ha='left', va='bottom')
             loc = 'top left'
             ax.set_ylabel('Correct Trials', fontsize=20)
+            # set second y-axis labels
             ax2.tick_params(axis='y', labelsize=15)
             ax2.set_ylabel('Error Presses', fontsize=20)
         else:
@@ -535,8 +681,8 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
             plots.append(h3.arrow_patch)
             labels.append('Protocol Mod.')
         plt.legend(plots, labels, loc=loc, ncol=2)
-
         if single_plot:
+            out_name += ".png"
             print("Saved figure to {}".format(
                 os.path.join(out_dir, out_name)))
             fig.savefig(os.path.join(out_dir, out_name), dpi=400)
@@ -548,6 +694,12 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False,
             out_name += "_recent"
         if details:
             out_name += "_details"
+            if corr_plotted == 1 and err_plotted == 1:
+                pass
+            elif corr_plotted == 1:
+                out_name += "_corr"
+            elif err_plotted == 1:
+                out_name += "_err"
         out_name += ".png"
         print("Saved figure to {}".format(
             os.path.join(out_dir, out_name)))
@@ -652,6 +804,7 @@ if __name__ == "__main__":
     # plot_sessions([date.today().isoformat()[-5:]])
     # plot_sessions(['09-03'])
     plot_batch_sessions()
+    # compare_variables()
 
     # # Running single session files
     # filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-04"
