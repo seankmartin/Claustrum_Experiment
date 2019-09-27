@@ -60,7 +60,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     if reward_times[-1] < pell_ts[-1]:
         reward_times = np.append(reward_times, 1830)
     reward_double = reward_times[np.searchsorted(
-        reward_times, pell_ts[pell_double])]
+        reward_times, pell_ts[pell_double], side='right')]
     single_plot = False
 
     if ax is None:
@@ -285,7 +285,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         return
 
 
-def split_sess(session, blocks=None, plot_error=False, plot_all=False):
+def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False):
     '''
     blocks: defines timepoints to split
 
@@ -305,7 +305,7 @@ def split_sess(session, blocks=None, plot_error=False, plot_all=False):
     if reward_times[-1] < pell_ts[-1]:
         reward_times = np.append(reward_times, 1830)
     reward_double = reward_times[np.searchsorted(
-        reward_times, pell_ts[pell_double])]
+        reward_times, pell_ts[pell_double], side='right')]  # returns reward ts after d_pell
 
     if blocks is not None:
         pass
@@ -335,12 +335,18 @@ def split_sess(session, blocks=None, plot_error=False, plot_all=False):
     norm_lever_ts = []
     norm_err_ts = []
     norm_double_r_ts = []
-    for i, l in enumerate(split_lever_ts[1:]):
-        norm_lever_ts.append(np.append([0], l-blocks[i], axis=0))
-        norm_reward_ts.append(split_reward_ts[i+1]-blocks[i])
-        norm_double_r_ts.append(split_double_r_ts[i+1]-blocks[i])
-        if stage == '7' and plot_all:  # plots all responses incl. errors
-            norm_err_ts.append(split_err_ts[i+1]-blocks[i])
+    if norm:
+        for i, l in enumerate(split_lever_ts[1:]):
+            norm_lever_ts.append(np.append([0], l-blocks[i], axis=0))
+            norm_reward_ts.append(split_reward_ts[i+1]-blocks[i])
+            norm_double_r_ts.append(split_double_r_ts[i+1]-blocks[i])
+            if stage == '7' and plot_all:  # plots all responses incl. errors
+                norm_err_ts.append(split_err_ts[i+1]-blocks[i])
+    else:
+        norm_lever_ts = split_lever_ts
+        norm_reward_ts = split_reward_ts
+        norm_err_ts = split_err_ts
+        norm_double_r_ts = split_double_r_ts
     return norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts, incl
 
 

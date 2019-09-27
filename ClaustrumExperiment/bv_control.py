@@ -14,6 +14,76 @@ from scipy import interpolate
 from datetime import date, timedelta
 
 
+def struc_session(session):
+    """ Structure sessions into a pandas dataframe based on trials"""
+    session_type = session.get_metadata('name')
+    stage = session_type[:2].replace('_', '')  # Obtain stage number w/o _
+    timestamps = session.get_arrays()
+    pell_ts = timestamps["Reward"]
+    double_log = np.diff(pell_ts) < 0.5 
+    pell_double = np.nonzero(double_log)  # Provides index for first of each double pell
+    d_pell = pell_ts[:]
+    d_pell[~np.insert(double_log, 0, [False])] = np.nan
+    # pell drop ts excluding double ts
+    pell_ts_exdouble = np.delete(pell_ts, pell_double+1)
+    reward_times = timestamps["Nosepoke"]
+    schedule_type = []
+
+    lever_ts = session.get_lever_ts(True)
+
+    
+
+    if stage == '7':
+        # Check if trial switched before reward collection -> Adds collection as switch time
+        blocks = np.arange(5, 1830, 305)
+        last_pell_ts = pell_ts_exdouble[np.searchsorted(pell_ts_exdouble, blocks)]
+        last_reward_ts = reward_times[np.searchsorted(reward_times, blocks)]
+        for i, pell, reward in enumerate(zip(last_pell_ts, last_reward_ts)):
+            if pell > reward:
+                np.insert(reward_times, np.searchsorted(reward_times, blocks)[i], blocks[i])
+
+    
+        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, _ = bv_an.split_sess(session, norm=False, plot_all=True)
+        sch_type = s.get_arrays('Trial Type')
+        for i, block in enumerate(norm_r_ts):
+            if sch_type[i] == 1:
+                b_type = 'FR'
+            elif sch_type[i] == 0:
+                b_type = 'FI'
+            for l, ts in enumerate(block):
+                schedule_type.append(b_type)
+    
+    trials_max_l = 50  # Value can be changed if array is too short
+    trials_lever_ts = numpy.empty((len(reward_times), trials_max_l,))
+    trials_lever_ts.fill(numpy.nan)
+
+    trials = np.digitize(lever_ts, bins=reward_times)
+    idx_c = 0
+    for i, l_ts, idx in enumerate(zip(lever_ts, trials)):  # Fills lever ts into trial rows
+        if col > trials_max_l:
+            print('Error: Increase size of initial matrix!')
+        else:
+            if idx > idx_c:
+                col = 0
+            trials_lever_ts[idx, col] = l_ts
+            idx_c = idx
+            col += 1
+
+    align_rw = [[0], reward_times]
+
+
+
+    session_df = {
+        'Reward (ts)': reward_times,
+        'Pellet (ts)': pell_ts_exdouble,
+        'D_Pellet (ts)': d_pell,
+        'Schedule': schedule_type
+        'Schedule': schedule_type
+    }
+
+    return session_df
+
+
 def compare_variables():
     """ Temporary Function to plot difference between errors"""
     # Only works for stage 7
@@ -471,7 +541,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
                     changes.append(0)
                     change_idx.append(0)
             # Calculates total reward (y axis variable)
-            rewards_t = len(timestamps["Reward"]) + len(pell_double)
+            rewards_t = len(timestamps["Reward"])
             r_list.append(rewards_t)
 
             # Calculates FR & FI rewards and errors (alternative y axis variables)
