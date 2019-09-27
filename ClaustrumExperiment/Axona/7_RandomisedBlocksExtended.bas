@@ -13,12 +13,6 @@ dim trial_sides
 dim trial_rewards
 dim trial_times
 
-' Store LED information
-dim led_times
-dim num_led_times
-dim curr_led
-dim last_led_time
-
 'timing delays
 dim fi_delay
 dim trial_delay
@@ -44,7 +38,6 @@ dim reward_light_outpin
 dim food_outpin
 dim fan_outpin
 dim sound_outpin
-dim led_outpin
 
 'store input values
 dim left_lever_value
@@ -79,7 +72,6 @@ sub setup_pins()
     right_light_outpin = 5
     reward_light_outpin = 6
     house_light_outpin = 7
-    led_outpin = 7
     sound_outpin = 8
     food_outpin = 9
     fan_outpin = 16
@@ -94,7 +86,6 @@ sub init_vars()
     right_lever_active = 0
     pressed_wrong = false
     t_idx = 0
-    curr_led = 0
 end sub
 
 sub init_arrays()
@@ -105,8 +96,6 @@ sub init_arrays()
     trial_rewards = vararraycreate(indices, 12)
     indices = [0, (2*num_trials) - 1]
     trial_times = vararraycreate(indices, 12)
-    indices = [0, num_led_times]
-    led_times = vararraycreate(indices, 12)
 
     dim half_point
     half_point = trunc(num_trials / 2)
@@ -192,44 +181,8 @@ function check_shuffle(in_array, array_len)
     next
 end function
 
-sub generate_led_times(byref in_array, array_len, max_val)
-    dim i 
-    for i = 0 to array_len - 1
-        in_array[i] = generate_random_float(max_val)
-    next
-    bubble_sort(in_array, array_len)
-end sub
-
-sub bubble_sort(byref in_array, array_len)
-    dim i
-    dim j
-    dim min 
-    dim temp
-    for i = 0 to array_len - 2
-        min = i
-        for j = i+1 to array_len - 1
-            if (in_array[j] < in_array[min]) then
-                min = j
-            temp = in_array[i]
-            in_array[i] = in_array[min]
-            in_array[min] = temp
-            end if
-        next
-    next
-end sub
 
 '''Experiment Control Routines'''
-
-sub check_led()
-    if(TrialTime >= led_times[curr_led]) then
-        SignalOut(led_outpin) = 1
-        curr_led = curr_led + 1
-        last_led_time = TrialTime
-    elseif (TrialTime >= last_led_time + 100) then
-        SignalOut(led_outpin) = 0
-        last_led_time = num_trials * (trial_delay + 5000)
-    end if
-end sub
 
 sub new_experiment(first)
     ' Begin a new trial
@@ -298,7 +251,6 @@ sub full_init_before_record()
     init_arrays()
     SignalOut(fan_outpin) = on
     SignalOut(house_light_outpin) = on
-    SignalOut(led_outpin) = on
 
     ' Shuffle trial sides
     dim bad
@@ -308,9 +260,6 @@ sub full_init_before_record()
         bad = check_shuffle(trial_sides, num_trials)
     wend
 
-    dim max_delay
-    max_delay = num_trials * (trial_delay + 5000)
-    generate_led_times(led_times, num_led_times, max_delay)
     print "Trial order is (0 FR 1 FI):"
     for i = 0 to num_trials - 1
         print trial_sides[i]
@@ -329,14 +278,12 @@ sub main()
     fi_delay = 10 'How long fi delay is in seconds
     fi_allow = 5 'Can press 5 seconds +- to get double reward
     fr_value = 6 'Number of FR presses needed
-    num_led_times = 100 'How many leds to show
     tag = "Test" ' You may tag this experiment
     'output in the same name format as other axona files
     open "data.log" for output as #1
 
     full_init_before_record()
     StartUnitRecording
-    SignalOut(led_outpin) = off
     new_experiment(1)
 
     dim pass_time
@@ -345,7 +292,6 @@ sub main()
     nstarted = true
     ' Loop the recording for the number of trials
     while (elapsed_trials < num_trials)
-        check_led()
         ' End trial
         if (TrialTime - start_time >= trial_delay) then
             end_experiment()
