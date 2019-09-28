@@ -343,10 +343,10 @@ def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False
             if stage == '7' and plot_all:  # plots all responses incl. errors
                 norm_err_ts.append(split_err_ts[i+1]-blocks[i])
     else:
-        norm_lever_ts = split_lever_ts
-        norm_reward_ts = split_reward_ts
-        norm_err_ts = split_err_ts
-        norm_double_r_ts = split_double_r_ts
+        norm_lever_ts = split_lever_ts[1:]
+        norm_reward_ts = split_reward_ts[1:]
+        norm_err_ts = split_err_ts[1:]
+        norm_double_r_ts = split_double_r_ts[1:]
     return norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts, incl
 
 

@@ -4,6 +4,7 @@ import h5py
 import os
 import argparse
 from datetime import timedelta
+import numpy as np
 
 
 def boolean_indexing(v, fillval=np.nan):

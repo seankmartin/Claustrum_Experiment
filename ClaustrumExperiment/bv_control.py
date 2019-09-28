@@ -14,74 +14,183 @@ from scipy import interpolate
 from datetime import date, timedelta
 
 
-def struc_session(session):
-    """ Structure sessions into a pandas dataframe based on trials"""
-    session_type = session.get_metadata('name')
-    stage = session_type[:2].replace('_', '')  # Obtain stage number w/o _
-    timestamps = session.get_arrays()
-    pell_ts = timestamps["Reward"]
-    double_log = np.diff(pell_ts) < 0.5 
-    pell_double = np.nonzero(double_log)  # Provides index for first of each double pell
-    d_pell = pell_ts[:]
-    d_pell[~np.insert(double_log, 0, [False])] = np.nan
-    # pell drop ts excluding double ts
-    pell_ts_exdouble = np.delete(pell_ts, pell_double+1)
-    reward_times = timestamps["Nosepoke"]
+def plot_raster_trials(trial_df, sub, date, start_dir, align_rw=True):
+    out_dir = os.path.join(start_dir, "Plots")
+
+    norm_lever = []
+    norm_err = []
+    norm_dr = []
+    norm_pell = []
+    norm_rw = []
     schedule_type = []
-
-    lever_ts = session.get_lever_ts(True)
-
     
+    # Extract data from pandas_df
+    norm_lever[:] = trial_df['Levers (ts)']
+    norm_err[:] = trial_df['Err (ts)']
+    norm_dr[:] = trial_df['D_Pellet (ts)']
+    norm_pell[:] = trial_df['Pellet (ts)']
+    norm_rw[:] = trial_df['Reward (ts)']
+    schedule_type[:] = trial_df['Schedule']
+        
+    color = []  
+    if align_rw:       
+        for i, _ in enumerate(norm_rw):
+            norm_lever[i] -= norm_rw[i]
+            norm_err[i] -= norm_rw[i]
+            norm_dr[i] -= norm_rw[i]
+            norm_pell[i] -= norm_rw[i]
+            norm_rw[i] -= norm_rw[i]
+            if schedule_type[i] == 'FR':
+                color.append('black')
+            elif schedule_type[i] == 'FI':
+                color.append('b')
 
-    if stage == '7':
-        # Check if trial switched before reward collection -> Adds collection as switch time
-        blocks = np.arange(5, 1830, 305)
-        last_pell_ts = pell_ts_exdouble[np.searchsorted(pell_ts_exdouble, blocks)]
-        last_reward_ts = reward_times[np.searchsorted(reward_times, blocks)]
-        for i, pell, reward in enumerate(zip(last_pell_ts, last_reward_ts)):
-            if pell > reward:
-                np.insert(reward_times, np.searchsorted(reward_times, blocks)[i], blocks[i])
+    # Figure Details
+    rows, cols = [2, 4]
+    size_multiplier = 5
+    fig = plt.figure(
+        figsize=(cols * size_multiplier, rows * size_multiplier),
+        tight_layout=False)
+    gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
+    ax = fig.add_subplot(gs[:, :])
+    out_name = "Raster_" + date + '_'+ sub
 
+    # Plotting of raster
+    plt.eventplot(norm_lever[:], color=color)
+    plt.eventplot(norm_err[:], color='red', label='Errors')
+    plt.eventplot(norm_dr[:], color='pink', label='Double Reward')
     
-        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, _ = bv_an.split_sess(session, norm=False, plot_all=True)
-        sch_type = s.get_arrays('Trial Type')
-        for i, block in enumerate(norm_r_ts):
-            if sch_type[i] == 1:
-                b_type = 'FR'
-            elif sch_type[i] == 0:
-                b_type = 'FI'
-            for l, ts in enumerate(block):
-                schedule_type.append(b_type)
+    # Figure labels
+    if align_rw:       
+        plot_name = 'Reward-Aligned'
+        plt.axvline(0, linestyle='-', color='k', linewidth='.5')
+        ax.set_xlabel('Time (s)', fontsize=20)
+        ax.set_ylabel('Trials', fontsize=20)
+
+    ax.set_title('\nSubject {} Raster ({})'.format(sub, plot_name), y=1.05, fontsize=25, color=mycolors(sub))
+    out_name += ".png"
+    print("Saved figure to {}".format(
+        os.path.join(out_dir, out_name)))
+    fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+    plt.close()
+
+def struc_session(d_list, sub_list, in_dir):
+    """ Structure sessions into a pandas dataframe based on trials"""
+    out_dir = os.path.join(start_dir, "pandas")
+    in_dir = os.path.join(start_dir, "hdf5")
+    d_list, s_list, sub_list = [['09-17'], ['7'], ['3']]
+    s_grp = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
     
-    trials_max_l = 50  # Value can be changed if array is too short
-    trials_lever_ts = numpy.empty((len(reward_times), trials_max_l,))
-    trials_lever_ts.fill(numpy.nan)
+    for s in s_grp:
+        subject = s.get_metadata('subject')
+        date = s.get_metadata("start_date").replace("/", "-")[:5]
+        session_type = s.get_metadata('name')
+        stage = session_type[:2].replace('_', '')  # Obtain stage number w/o _
+        timestamps = s.get_arrays()
+        pell_ts = timestamps["Reward"]
+        dpell_bool = np.diff(pell_ts) < 0.5
+        # Provides index of double pell in pell_ts
+        dpell_idx = np.nonzero(dpell_bool)[0] + 1
+        dpell = pell_ts[dpell_idx]
 
-    trials = np.digitize(lever_ts, bins=reward_times)
-    idx_c = 0
-    for i, l_ts, idx in enumerate(zip(lever_ts, trials)):  # Fills lever ts into trial rows
-        if col > trials_max_l:
-            print('Error: Increase size of initial matrix!')
-        else:
-            if idx > idx_c:
-                col = 0
-            trials_lever_ts[idx, col] = l_ts
-            idx_c = idx
-            col += 1
+        # pell drop ts excluding double ts
+        pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
+        reward_times = timestamps["Nosepoke"]
+        schedule_type = []
 
-    align_rw = [[0], reward_times]
+        grp_session_df = []
+        grp_trial_df = []
+        df_sub = []
+        df_date = []
 
+        if stage == '7':
+            # Check if trial switched before reward collection -> Adds collection as switch time
+            blocks = np.arange(5, 1830, 305)
+            last_pell_ts = pell_ts_exdouble[np.searchsorted(
+                pell_ts_exdouble, blocks)]
+            last_reward_ts = reward_times[np.searchsorted(
+                reward_times, blocks)]
 
+            for i, (pell, reward) in enumerate(zip(last_pell_ts, last_reward_ts)):
+                if pell > reward:
+                    np.insert(reward_times, np.searchsorted(
+                        reward_times, blocks)[i], blocks[i])
 
-    session_df = {
-        'Reward (ts)': reward_times,
-        'Pellet (ts)': pell_ts_exdouble,
-        'D_Pellet (ts)': d_pell,
-        'Schedule': schedule_type
-        'Schedule': schedule_type
-    }
+            norm_r_ts, _, _, _, _ = bv_an.split_sess(
+                s, norm=False, plot_all=True)
+            sch_type = s.get_arrays('Trial Type')
 
-    return session_df
+            for i, block in enumerate(norm_r_ts):
+                if sch_type[i] == 1:
+                    b_type = 'FR'
+                elif sch_type[i] == 0:
+                    b_type = 'FI'
+                for l, _ in enumerate(block):
+                    schedule_type.append(b_type)
+
+        # rearrange lever timestamps based on trial per row
+        lever_ts = s.get_lever_ts(True)
+        err_ts = s.get_err_lever_ts(True)
+        trial_lever_ts = np.split(lever_ts,(np.searchsorted(lever_ts, reward_times)[:-1]))
+        trial_err_ts = np.split(err_ts,(np.searchsorted(err_ts, reward_times)[:-1])) 
+        trial_dr_ts = np.split(dpell,(np.searchsorted(dpell, reward_times)[:-1])) 
+
+        # Initialize array for lever timestamps
+        trials_max_l = len(max(trial_lever_ts, key=len))  # Max lever press per trial
+        lever_arr = np.empty((len(reward_times), trials_max_l,))
+        lever_arr.fill(np.nan)
+        trials_max_err = len(max(trial_err_ts, key=len))  # Max err press per trial
+        err_arr = np.empty((len(reward_times), trials_max_err,))
+        err_arr.fill(np.nan)
+        
+        # Arrays used for normalization of timestamps to trials
+        trial_norm = np.insert(reward_times, 0, 0)
+        norm_lever = np.copy(trial_lever_ts)
+        norm_err = np.copy(trial_err_ts)
+        norm_dr = np.copy(trial_dr_ts)
+        norm_rw = np.copy(reward_times)
+        norm_pell = np.copy(pell_ts_exdouble)
+
+        # Normalize timestamps based on start of trial
+        for i, _ in enumerate(norm_rw):
+            norm_lever[i] -= trial_norm[i]
+            norm_err[i] -= trial_norm[i]
+            norm_dr[i] -= trial_norm[i]
+            norm_pell[i] -= trial_norm[i]
+            norm_rw[i] -= trial_norm[i]
+
+        # 2D array of lever timestamps
+        for i, (l, err) in enumerate(zip(trial_lever_ts, trial_err_ts)):
+            l_end = len(l)
+            lever_arr[i,:l_end] = l[:]
+            err_end = len(err)
+            err_arr[i,:err_end] = err[:]
+
+    session_dict = {
+            'Reward (ts)': reward_times,
+            'Pellet (ts)': pell_ts_exdouble,
+            'D_Pellet (ts)': trial_dr_ts,
+            'Schedule': schedule_type,
+            'Levers (ts)': trial_lever_ts,
+            'Err (ts)': trial_err_ts
+        }
+    trial_dict = {
+            'Reward (ts)': norm_rw,
+            'Pellet (ts)': norm_pell,
+            'D_Pellet (ts)': norm_dr,
+            'Schedule': schedule_type,
+            'Levers (ts)': norm_lever,
+            'Err (ts)': norm_err
+        }
+
+    session_df = pd.DataFrame(session_dict)
+    trial_df = pd.DataFrame(trial_dict)
+    grp_session_df.append(session_df)
+    grp_trial_df.append(trial_df)
+    df_sub.append(subject)
+    df_date.append(date)
+
+    return grp_session_df, grp_trial_df, df_sub, df_date
 
 
 def compare_variables():
@@ -172,6 +281,17 @@ def grp_errors(s_grp):
 
 
 def plot_batch_sessions():
+    # Folder details
+    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
+    in_dir = os.path.join(start_dir, "hdf5")
+    
+    # Parameters for specifying session
+    # sub_list = ['1', '2']
+    sub = ['3', '4']
+    # sub_list = ['6']
+    # sub_list = ['1', '2', '3', '4']
+    # sub_list = ['5', '6']
+    
     # start_date = date(2019, 7, 15)  # date(year, mth, day)
     # start_date = date(2019, 8, 30)  # date(year, mth, day)
     start_date = date.today() - timedelta(days=1)
@@ -182,35 +302,44 @@ def plot_batch_sessions():
         d = [single_date.isoformat()[-5:]]
 
         # Quick control of plotting
-        timeline, summary = [1, 0]
+        timeline, summary, raster = [0, 0, 1]
+
+        if raster:
+            grp_session_df, grp_trial_df, df_sub, df_date = struc_session(
+                d, sub, in_dir)
+            for i, t_df in enumerate(grp_trial_df):
+                plot_raster_trials(t_df, df_sub[i], df_date[i], start_dir)
+
+
+
 
         # plot cumulative response graphs
         if summary == 1:
-            # plot_sessions(d, summary=True, single=True,
+            # plot_sessions(d, sub, summary=True, single=True,
             #               corr_only=True)  # Single animal breakdown
             # Group with corr_only breakdown
-            plot_sessions(d, summary=True, single=False, corr_only=True)
-            # plot_sessions(d, summary=True, single=False, corr_only=False)  # Group with complete breakdown
+            plot_sessions(d, sub, summary=True, single=False, corr_only=True)
+            # plot_sessions(d, sub, summary=True, single=False, corr_only=False)  # Group with complete breakdown
 
         # plot all 4 timeline types
         if timeline == 1:
             single = False  # plots seperate graphs for each animal if True
             show_date = True  # Sets x-axis as dates if True
-            # plot_sessions(d, timeline=True, single=single, details=True, recent=True,
+            # plot_sessions(d, sub timeline=True, single=single, details=True, recent=True,
             #               show_date=show_date)  # Timeline_recent_details
-            # plot_sessions(d, timeline=True, single=single, details=True, det_err=True, det_corr=False, recent=True,
+            # plot_sessions(d, sub timeline=True, single=single, details=True, det_err=True, det_corr=False, recent=True,
             #               show_date=show_date)  # Timeline_recent_details_Err **Need to fix with ax.remove() instead**
-            # plot_sessions(d, timeline=True, single=single, details=True, det_err=False, det_corr=True, recent=True,
+            # plot_sessions(d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True, recent=True,
             #               show_date=show_date)  # Timeline_recent_details_Corr **Need to fix with ax.remove() instead**
-            plot_sessions(d, timeline=True, single=single, details=True, det_err=True, det_corr=False,
+            plot_sessions(d, sub, timeline=True, single=single, details=True, det_err=True, det_corr=False,
                           show_date=show_date)  # Timeline_recent_details_Err
-            plot_sessions(d, timeline=True, single=single, details=True, det_err=False, det_corr=True,
+            plot_sessions(d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True,
                           show_date=show_date)  # Timeline_recent_details_Corr
-            plot_sessions(d, timeline=True, single=single, details=True,
+            plot_sessions(d, sub, timeline=True, single=single, details=True,
                           recent=False, show_date=show_date)  # Timeline_details
-            plot_sessions(d, timeline=True, single=single, details=False,
+            plot_sessions(d, sub, timeline=True, single=single, details=False,
                           recent=True, show_date=show_date)  # Timeline_recent
-            plot_sessions(d, timeline=True, single=single, details=False,
+            plot_sessions(d, sub, timeline=True, single=single, details=False,
                           recent=False, show_date=show_date)  # Timeline
 
     # # Multiple dates in single plot; Doesnt work yet
@@ -221,7 +350,7 @@ def plot_batch_sessions():
     # plot_sessions(d)
 
 
-def plot_sessions(d_list, summary=False, single=False, timeline=False,
+def plot_sessions(d_list, sub_list, summary=False, single=False, timeline=False,
                   details=False, det_err=False, det_corr=False, recent=False, show_date=False,
                   int_only=False, corr_only=False):
     ''' Plots session summaries
@@ -231,14 +360,7 @@ def plot_sessions(d_list, summary=False, single=False, timeline=False,
     int_only = True: Plots only interval trials in zoomed schedule plot
     corr_only = True: Plots seperate summary plot with correct only trials
     '''
-    # Parameters for specifying session
-    # sub_list = ['1', '2']
-    sub_list = ['3', '4']
-    # sub_list = ['6']
-    # sub_list = ['1', '2', '3', '4']
-    # sub_list = ['5', '6']
     s_list = ['4', '5a', '5b', '6', '7']
-    #  d_list = ['08-14']
 
     start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
     # start_dir = r"G:\!Operant Data\Ham"
