@@ -128,8 +128,16 @@ def plot_raster_trials(trial_df, s, sub, date, start_dir):
     fig.savefig(os.path.join(out_dir, out_name), dpi=400)
     plt.close()
 
+
 def struc_session(d_list, sub_list, in_dir):
-    """ Structure sessions into a pandas dataframe based on trials"""
+    """ Structure sessions into a pandas dataframe based on trials
+    Returns 5 outputs: s_grp, grp_session_df, grp_trial_df, df_sub, df_date
+        s_grp           - sessions extracted from hdf5
+        grp_session_df  - array of pandas dataframe from raw extraction of ts
+        grp_trial_df    - array of pandas dataframe with ts normalized to start of each trial
+        df_sub          - array denoting the subject corresponding to each df
+        df_date         - array denoting the date corresponding to each df
+    """
     out_dir = os.path.join(start_dir, "pandas")
     in_dir = os.path.join(start_dir, "hdf5")
     # d_list, s_list, sub_list = [['09-17'], ['7'], ['3']]
@@ -146,7 +154,7 @@ def struc_session(d_list, sub_list, in_dir):
     grp_trial_df = []
     df_sub = []
     df_date = []
-    
+
     for s in s_grp:
         subject = s.get_metadata('subject')
         date = s.get_metadata("start_date").replace("/", "-")[:5]
@@ -253,6 +261,23 @@ def struc_session(d_list, sub_list, in_dir):
         df_date.append(date)
 
     return s_grp, grp_session_df, grp_trial_df, df_sub, df_date
+
+
+def struc_days(sub_list,):
+
+    session_dict = {
+                    'Reward (ts)': reward_times,
+                    'Pellet (ts)': pell_ts_exdouble,
+                    'D_Pellet (ts)': trial_dr_ts,
+                    'Schedule': schedule_type,
+                    'Levers (ts)': trial_lever_ts,
+                    'Err (ts)': trial_err_ts
+                    }
+    time_df = pd.DataFrame(session_dict)
+        grp_time_df.append(time_df)
+        df_sub.append(subject)
+
+    return grp_time_df, time_df_sub
 
 
 def compare_variables():
@@ -364,10 +389,10 @@ def plot_batch_sessions():
         d = [single_date.isoformat()[-5:]]
 
         # Quick control of plotting
-        timeline, summary, raster = [0, 0, 1]
+        timeline, summary, raster = [1, 0, 0]
 
         if raster:
-            s_grp, grp_session_df, grp_trial_df, df_sub, df_date = struc_session(
+            s_grp, _, grp_trial_df, df_sub, df_date = struc_session(
                 d, sub, start_dir)
             for i, t_df in enumerate(grp_trial_df):
                 plot_raster_trials(t_df, s_grp[i], df_sub[i], df_date[i], start_dir)
@@ -653,25 +678,14 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
     for c, sub in enumerate(sub_list):
         # Plot total pellets across sessions
         s_grp = extract_hdf5s(in_dir, out_dir, sub)
-        s_list = []
-        r_list = []
-        err_FR_list = []
-        err_FI_list = []
-        rw_FR_list = []
-        rw_FI_list = []
-        rw_double_list = []
-        changes = []
-        stage_change = []
+        s_list, r_list, type_list, d_list = [], [], [], []
+        err_FR_list, err_FI_list = [], []
+        rw_FR_list, rw_FI_list, rw_double_list = [], [], []
+        changes, stage_change, dpell_change = [], [], []
         change_idx = []
-        prev_ratio = []
-        prev_interval = []
-        c_ratio = []
-        c_interval = []
-        type_list = []
-        dpell_change = []
+        prev_ratio, prev_interval, c_ratio, c_interval = [], [], [], []
         dpell_old = []
         prev_name = '2'
-        d_list = []
         if recent:
             number_sessions_ago = -31  # change value to set number of sessions ago
             s_grp = s_grp[number_sessions_ago:]
@@ -1049,7 +1063,7 @@ if __name__ == "__main__":
     #         convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
 
     # # Processing of single sessions
-    # filename = os.path.join(start_dir, "!2019-08-31")
+    # filename = os.path.join(start_dir, "!2019-09-29")
     # out_dir = os.path.join(start_dir, "hdf5")
     # convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
 
