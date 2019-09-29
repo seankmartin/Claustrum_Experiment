@@ -14,8 +14,14 @@ from scipy import interpolate
 from datetime import date, timedelta
 
 
-def plot_raster_trials(trial_df, sub, date, start_dir, align_rw=True):
+def plot_raster_trials(trial_df, s, sub, date, start_dir):
     out_dir = os.path.join(start_dir, "Plots")
+    timestamps = s.get_arrays()
+    ratio = int(timestamps["Experiment Variables"][3])
+    interval = int(timestamps["Experiment Variables"][5] / 100)
+
+    # alignment decision
+    align_rw, align_pell, align_FI = [0, 0, 1]
 
     norm_lever = []
     norm_err = []
@@ -23,7 +29,7 @@ def plot_raster_trials(trial_df, sub, date, start_dir, align_rw=True):
     norm_pell = []
     norm_rw = []
     schedule_type = []
-    
+
     # Extract data from pandas_df
     norm_lever[:] = trial_df['Levers (ts)']
     norm_err[:] = trial_df['Err (ts)']
@@ -31,21 +37,37 @@ def plot_raster_trials(trial_df, sub, date, start_dir, align_rw=True):
     norm_pell[:] = trial_df['Pellet (ts)']
     norm_rw[:] = trial_df['Reward (ts)']
     schedule_type[:] = trial_df['Schedule']
-        
-    color = []  
-    if align_rw:       
-        for i, _ in enumerate(norm_rw):
-            norm_lever[i] -= norm_rw[i]
-            norm_err[i] -= norm_rw[i]
-            norm_dr[i] -= norm_rw[i]
-            norm_pell[i] -= norm_rw[i]
-            norm_rw[i] -= norm_rw[i]
-            if schedule_type[i] == 'FR':
-                color.append('black')
-            elif schedule_type[i] == 'FI':
-                color.append('b')
 
-    # Figure Details
+    color = []
+
+    # Alignment Specific Parameters
+    if align_rw:
+        plot_name = 'Reward-Aligned'
+        norm_arr = np.copy(norm_rw)
+    elif align_pell:
+        plot_name = 'Pell-Aligned'
+        norm_arr = np.copy(norm_pell)
+    elif align_FI:
+        plot_name = 'Interval-Aligned'
+        norm_arr = np.empty_like(norm_rw)
+        norm_arr.fill(interval)
+    else:
+        plot_name = 'Start-Aligned'
+        norm_arr = np.zeros_like(norm_rw)
+
+    for i, _ in enumerate(norm_rw):
+        # color assigment for trial type
+        if schedule_type[i] == 'FR':
+            color.append('black')
+        elif schedule_type[i] == 'FI':
+            color.append('b')
+        norm_lever[i] -= norm_arr[i]
+        norm_err[i] -= norm_arr[i]
+        norm_dr[i] -= norm_arr[i]
+        norm_pell[i] -= norm_arr[i]
+        norm_rw[i] -= norm_arr[i]
+
+    # Figure Initialization
     rows, cols = [2, 4]
     size_multiplier = 5
     fig = plt.figure(
@@ -53,21 +75,53 @@ def plot_raster_trials(trial_df, sub, date, start_dir, align_rw=True):
         tight_layout=False)
     gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
     ax = fig.add_subplot(gs[:, :])
-    out_name = "Raster_" + date + '_'+ sub
+    out_name = "Raster_" + date + '_' + sub
 
     # Plotting of raster
     plt.eventplot(norm_lever[:], color=color)
-    plt.eventplot(norm_err[:], color='red', label='Errors')
-    plt.eventplot(norm_dr[:], color='pink', label='Double Reward')
-    
-    # Figure labels
-    if align_rw:       
-        plot_name = 'Reward-Aligned'
-        plt.axvline(0, linestyle='-', color='k', linewidth='.5')
-        ax.set_xlabel('Time (s)', fontsize=20)
-        ax.set_ylabel('Trials', fontsize=20)
+    plt.eventplot(norm_err[:], color='red')
+    plt.scatter(norm_rw, np.arange(len(norm_rw)), s=5,
+                color='orange', label='Reward Collection')
+    plt.eventplot(norm_dr[:], color='magenta', label='Double Reward')
 
-    ax.set_title('\nSubject {} Raster ({})'.format(sub, plot_name), y=1.05, fontsize=25, color=mycolors(sub))
+    # Figure labels
+    xmax = None
+    xmin = None
+    ax.set_xlim(xmin, xmax)
+    plt.axvline(0, linestyle='-', color='k', linewidth='.5')
+    ax.set_xlabel('Time (s)', fontsize=20)
+    ax.set_ylabel('Trials', fontsize=20)
+    ax.set_title('\nSubject {} Raster ({})'.format(sub, plot_name),
+                 y=1.05, fontsize=25, color=mycolors(sub))
+
+    # Highlight specific trials
+    hline, h_ref = [], []
+    h_dr, h_err, h_fr = [1, 0, 0]
+
+    if h_dr:
+        c = 'pink'
+        h_ref = norm_dr
+    elif h_err:
+        c = 'magenta'
+        h_ref = norm_err
+    elif h_fr:
+        c = 'k'
+        for s in schedule_type:
+            if s == 'FR':
+                h_ref.append([1])
+            else:
+                h_ref.append([])
+    else:
+        pass
+    
+    # highlight if array is not empty
+    for i, ts in enumerate(h_ref):
+        if len(ts) > 0:
+            hline.append(i)
+    for l in hline:
+        plt.axhline(l, linestyle='-', color=c, linewidth='5', alpha=0.1)
+
+    # Save Figure
     out_name += ".png"
     print("Saved figure to {}".format(
         os.path.join(out_dir, out_name)))
@@ -78,8 +132,20 @@ def struc_session(d_list, sub_list, in_dir):
     """ Structure sessions into a pandas dataframe based on trials"""
     out_dir = os.path.join(start_dir, "pandas")
     in_dir = os.path.join(start_dir, "hdf5")
-    d_list, s_list, sub_list = [['09-17'], ['7'], ['3']]
+    # d_list, s_list, sub_list = [['09-17'], ['7'], ['3']]
+    s_list = ['7']
     s_grp = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
+    
+    # Quit program if no sessions passed
+    if s_grp == []:
+        print('No Session passed')
+        exit()
+
+    # Initialize group arrays
+    grp_session_df = []
+    grp_trial_df = []
+    df_sub = []
+    df_date = []
     
     for s in s_grp:
         subject = s.get_metadata('subject')
@@ -98,10 +164,6 @@ def struc_session(d_list, sub_list, in_dir):
         reward_times = timestamps["Nosepoke"]
         schedule_type = []
 
-        grp_session_df = []
-        grp_trial_df = []
-        df_sub = []
-        df_date = []
 
         if stage == '7':
             # Check if trial switched before reward collection -> Adds collection as switch time
@@ -166,31 +228,31 @@ def struc_session(d_list, sub_list, in_dir):
             err_end = len(err)
             err_arr[i,:err_end] = err[:]
 
-    session_dict = {
-            'Reward (ts)': reward_times,
-            'Pellet (ts)': pell_ts_exdouble,
-            'D_Pellet (ts)': trial_dr_ts,
-            'Schedule': schedule_type,
-            'Levers (ts)': trial_lever_ts,
-            'Err (ts)': trial_err_ts
-        }
-    trial_dict = {
-            'Reward (ts)': norm_rw,
-            'Pellet (ts)': norm_pell,
-            'D_Pellet (ts)': norm_dr,
-            'Schedule': schedule_type,
-            'Levers (ts)': norm_lever,
-            'Err (ts)': norm_err
-        }
+        session_dict = {
+                'Reward (ts)': reward_times,
+                'Pellet (ts)': pell_ts_exdouble,
+                'D_Pellet (ts)': trial_dr_ts,
+                'Schedule': schedule_type,
+                'Levers (ts)': trial_lever_ts,
+                'Err (ts)': trial_err_ts
+                }
+        trial_dict = {
+                'Reward (ts)': norm_rw,
+                'Pellet (ts)': norm_pell,
+                'D_Pellet (ts)': norm_dr,
+                'Schedule': schedule_type,
+                'Levers (ts)': norm_lever,
+                'Err (ts)': norm_err
+                }
 
-    session_df = pd.DataFrame(session_dict)
-    trial_df = pd.DataFrame(trial_dict)
-    grp_session_df.append(session_df)
-    grp_trial_df.append(trial_df)
-    df_sub.append(subject)
-    df_date.append(date)
+        session_df = pd.DataFrame(session_dict)
+        trial_df = pd.DataFrame(trial_dict)
+        grp_session_df.append(session_df)
+        grp_trial_df.append(trial_df)
+        df_sub.append(subject)
+        df_date.append(date)
 
-    return grp_session_df, grp_trial_df, df_sub, df_date
+    return s_grp, grp_session_df, grp_trial_df, df_sub, df_date
 
 
 def compare_variables():
@@ -293,8 +355,8 @@ def plot_batch_sessions():
     # sub_list = ['5', '6']
     
     # start_date = date(2019, 7, 15)  # date(year, mth, day)
-    # start_date = date(2019, 8, 30)  # date(year, mth, day)
-    start_date = date.today() - timedelta(days=1)
+    start_date = date(2019, 9, 16)  # date(year, mth, day)
+    # start_date = date.today() - timedelta(days=1)
     end_date = date.today()
     # end_date = date(2019, 8, 28)
 
@@ -305,10 +367,10 @@ def plot_batch_sessions():
         timeline, summary, raster = [0, 0, 1]
 
         if raster:
-            grp_session_df, grp_trial_df, df_sub, df_date = struc_session(
-                d, sub, in_dir)
+            s_grp, grp_session_df, grp_trial_df, df_sub, df_date = struc_session(
+                d, sub, start_dir)
             for i, t_df in enumerate(grp_trial_df):
-                plot_raster_trials(t_df, df_sub[i], df_date[i], start_dir)
+                plot_raster_trials(t_df, s_grp[i], df_sub[i], df_date[i], start_dir)
 
 
 
