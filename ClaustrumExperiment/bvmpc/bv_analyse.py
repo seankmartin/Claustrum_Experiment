@@ -18,7 +18,7 @@ def split_lever_ts(session, out_dir, ax=None):
     timestamps = session.get_arrays()
     lever_ts = session.get_lever_ts()
     switch_ts = np.arange(5, 1830, 305)
-    reward_times = timestamps["Nosepoke"]
+    reward_times = session.get_rw_ts()
     trial_type = session.get_arrays('Trial Type')
 
     ratio_lever_ts = []
@@ -49,7 +49,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     session_type = session.get_metadata('name')
     stage = session_type[:2].replace('_', '')
     subject = session.get_metadata('subject')
-    reward_times = timestamps["Nosepoke"]
+    reward_times = session.get_rw_ts()
     pell_ts = timestamps["Reward"]
     pell_double = np.nonzero(np.diff(pell_ts) < 0.5)
     # for printing of error rates and rewards on graph
@@ -57,8 +57,6 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     err_FR = 0
     rw_FR = 0
     rw_FI = 0
-    if reward_times[-1] < pell_ts[-1]:
-        reward_times = np.append(reward_times, 1830)
     reward_double = reward_times[np.searchsorted(
         reward_times, pell_ts[pell_double], side='right')]
     single_plot = False
@@ -297,13 +295,11 @@ def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False
     '''
     session_type = session.get_metadata('name')
     stage = session_type[:2].replace('_', '')
+    reward_times = session.get_rw_ts()
     timestamps = session.get_arrays()
-    reward_times = timestamps["Nosepoke"]
     lever_ts = session.get_lever_ts()
     pell_ts = timestamps["Reward"]
     pell_double = np.nonzero(np.diff(pell_ts) < 0.5)
-    if reward_times[-1] < pell_ts[-1]:
-        reward_times = np.append(reward_times, 1830)
     reward_double = reward_times[np.searchsorted(
         reward_times, pell_ts[pell_double], side='right')]  # returns reward ts after d_pell
 
@@ -361,7 +357,7 @@ def IRT(session, out_dir, ax=None, showIRT=False):
     subject = session.get_metadata('subject')
     single_plot = False
 
-    rewards_i = timestamps["Reward"]
+    rewards_i = session.get_rw_ts()
     nosepokes_i = timestamps["Nosepoke"]
     # Session ended w/o reward collection
     if len(rewards_i) > len(nosepokes_i):

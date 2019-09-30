@@ -12,15 +12,19 @@ import matplotlib.gridspec as gridspec
 from scipy import interpolate
 from datetime import date, timedelta
 
+# def split_df(grp_trial_df):  #TODO split trial dataframe into FR and FI only dfs
 
-def plot_raster_trials(trial_df, s, sub, date, start_dir):
-    out_dir = os.path.join(start_dir, "Plots")
+#     return 
+
+
+def plot_raster_trials(trial_df, s, sub, date, start_dir, ax):
+    
     timestamps = s.get_arrays()
     ratio = int(timestamps["Experiment Variables"][3])
     interval = int(timestamps["Experiment Variables"][5] / 100)
 
     # alignment decision
-    align_rw, align_pell, align_FI = [0, 0, 1]
+    align_rw, align_pell, align_FI = [0, 1, 0]
 
     norm_lever = []
     norm_err = []
@@ -66,32 +70,24 @@ def plot_raster_trials(trial_df, s, sub, date, start_dir):
         norm_pell[i] -= norm_arr[i]
         norm_rw[i] -= norm_arr[i]
 
-    # Figure Initialization
-    rows, cols = [2, 4]
-    size_multiplier = 5
-    fig = plt.figure(
-        figsize=(cols * size_multiplier, rows * size_multiplier),
-        tight_layout=False)
-    gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
-    ax = fig.add_subplot(gs[:, :])
-    out_name = "Raster_" + date + '_' + sub
 
     # Plotting of raster
-    plt.eventplot(norm_lever[:], color=color)
-    plt.eventplot(norm_err[:], color='red')
-    plt.scatter(norm_rw, np.arange(len(norm_rw)), s=5,
+    ax.eventplot(norm_lever[:], color=color)
+    ax.eventplot(norm_err[:], color='red')
+    ax.scatter(norm_rw, np.arange(len(norm_rw)), s=5,
                 color='orange', label='Reward Collection')
-    plt.eventplot(norm_dr[:], color='magenta', label='Double Reward')
+    ax.eventplot(norm_dr[:], color='magenta', label='Double Reward')
 
     # Figure labels
-    xmax = None
-    xmin = None
+    xmax = 5
+    xmin = -30
     ax.set_xlim(xmin, xmax)
-    plt.axvline(0, linestyle='-', color='k', linewidth='.5')
+    ax.axvline(0, linestyle='-', color='k', linewidth='.5')
+    ax.tick_params(axis='both', labelsize=15)
     ax.set_xlabel('Time (s)', fontsize=20)
     ax.set_ylabel('Trials', fontsize=20)
-    ax.set_title('\nSubject {} Raster ({})'.format(sub, plot_name),
-                 y=1.05, fontsize=25, color=mycolors(sub))
+    ax.set_title('\nSubject {} {} Raster ({})'.format(sub, date, plot_name),
+                 y=1.025, fontsize=25, color=mycolors(sub))
 
     # Highlight specific trials
     hline, h_ref = [], []
@@ -119,13 +115,8 @@ def plot_raster_trials(trial_df, s, sub, date, start_dir):
             hline.append(i)
     for l in hline:
         plt.axhline(l, linestyle='-', color=c, linewidth='5', alpha=0.1)
-
-    # Save Figure
-    out_name += ".png"
-    print("Saved figure to {}".format(
-        os.path.join(out_dir, out_name)))
-    fig.savefig(os.path.join(out_dir, out_name), dpi=400)
-    plt.close()
+    
+    return
 
 
 def struc_session(d_list, sub_list, in_dir):
@@ -137,7 +128,6 @@ def struc_session(d_list, sub_list, in_dir):
         df_sub          - array denoting the subject corresponding to each df
         df_date         - array denoting the date corresponding to each df
     """
-    out_dir = os.path.join(start_dir, "pandas")
     in_dir = os.path.join(start_dir, "hdf5")
     # d_list, s_list, sub_list = [['09-17'], ['7'], ['3']]
     s_list = ['7']
@@ -161,6 +151,7 @@ def struc_session(d_list, sub_list, in_dir):
         stage = session_type[:2].replace('_', '')  # Obtain stage number w/o _
         timestamps = s.get_arrays()
         pell_ts = timestamps["Reward"]
+        
         dpell_bool = np.diff(pell_ts) < 0.5
         # Provides index of double pell in pell_ts
         dpell_idx = np.nonzero(dpell_bool)[0] + 1
@@ -168,23 +159,10 @@ def struc_session(d_list, sub_list, in_dir):
 
         # pell drop ts excluding double ts
         pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
-        reward_times = timestamps["Nosepoke"]
+        reward_times = s.get_rw_ts()
         schedule_type = []
 
-
-        if stage == '7':
-            # Check if trial switched before reward collection -> Adds collection as switch time
-            blocks = np.arange(5, 1830, 305)
-            last_pell_ts = pell_ts_exdouble[np.searchsorted(
-                pell_ts_exdouble, blocks)]
-            last_reward_ts = reward_times[np.searchsorted(
-                reward_times, blocks)]
-
-            for i, (pell, reward) in enumerate(zip(last_pell_ts, last_reward_ts)):
-                if pell > reward:
-                    np.insert(reward_times, np.searchsorted(
-                        reward_times, blocks)[i], blocks[i])
-
+        if stage == '7' or stage == '6':
             norm_r_ts, _, _, _, _ = bv_an.split_sess(
                 s, norm=False, plot_all=True)
             sch_type = s.get_arrays('Trial Type')
@@ -197,7 +175,7 @@ def struc_session(d_list, sub_list, in_dir):
                 for l, _ in enumerate(block):
                     schedule_type.append(b_type)
 
-        # rearrange lever timestamps based on trial per row
+        # Rearrange timestamps based on trial per row
         lever_ts = s.get_lever_ts(True)
         err_ts = s.get_err_lever_ts(True)
         trial_lever_ts = np.split(lever_ts,(np.searchsorted(lever_ts, reward_times)[:-1]))
@@ -234,7 +212,8 @@ def struc_session(d_list, sub_list, in_dir):
             lever_arr[i,:l_end] = l[:]
             err_end = len(err)
             err_arr[i,:err_end] = err[:]
-
+        
+        
         session_dict = {
                 'Reward (ts)': reward_times,
                 'Pellet (ts)': pell_ts_exdouble,
@@ -251,6 +230,8 @@ def struc_session(d_list, sub_list, in_dir):
                 'Levers (ts)': norm_lever,
                 'Err (ts)': norm_err
                 }
+        for key, val in trial_dict.items():
+            print(key, ':', len(val))
 
         session_df = pd.DataFrame(session_dict)
         trial_df = pd.DataFrame(trial_dict)
@@ -285,13 +266,13 @@ def struc_timeline(sub_list, in_dir):
             subject = s.get_metadata('subject')
             date = s.get_metadata("start_date").replace("/", "-")[:5]
             session_type = s.get_metadata('name')
-            session_type = s.get_metadata('start_time')
+            time = s.get_metadata('start_time')
             stage = session_type[:2].replace('_', '')  # Obtain stage number w/o _
             timestamps = s.get_arrays()
             pell_ts = timestamps["Reward"]
             dpell_bool = np.diff(pell_ts) < 0.5
             dpell_idx = np.nonzero(dpell_bool)[0]
-            reward_times = timestamps["Nosepoke"]
+            reward_times = s.get_rw_ts()
 
             # Initialize variables used per session
             ratio, interval, sch, sch_err, sch_rw, sch_dr = [], [], [], [], [], []
@@ -478,35 +459,74 @@ def grp_errors(s_grp):
 def plot_batch_sessions():
     # Folder details
     start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
-    in_dir = os.path.join(start_dir, "hdf5")
+    out_dir = os.path.join(start_dir, "Plots")
     
     # Parameters for specifying session
     # sub_list = ['1', '2']
-    sub = ['3', '4']
+    sub = ['3']
     # sub_list = ['6']
     # sub_list = ['1', '2', '3', '4']
     # sub_list = ['5', '6']
     
     # start_date = date(2019, 7, 15)  # date(year, mth, day)
-    start_date = date(2019, 9, 16)  # date(year, mth, day)
-    # start_date = date.today() - timedelta(days=1)
-    end_date = date.today()
-    # end_date = date(2019, 8, 28)
+    # start_date = date(2019, 9, 1)  # date(year, mth, day)
+    # end_date = date(2019, 9, 6)
+    start_date = date(2019, 8, 11)  # date(year, mth, day)
+    end_date = date(2019, 8, 12)
+    # start_date = date.today() - timedelta(days=4)
+    # end_date = date.today()
+
+    # Quick control of plotting
+    timeline, summary, raster = [0, 0, 1]
+
+    if raster:
+        # d = ['08-11','08-19','09-01','09-03']
+        d = []
+        for single_date in daterange(start_date, end_date):
+            d.append(single_date.isoformat()[-5:])
+
+        s_grp, _, grp_trial_df, df_sub, df_date = struc_session(
+            d, sub, start_dir)
+        
+        df_date = ['FR6_noDP', 'FR8', 'FR8_ext', 'FR10']
+
+        plot_df = grp_trial_df
+
+        # Figure Initialization
+        n = len(plot_df)
+        if n > 4:
+            print('Too many plots')
+            quit()
+        elif n > 2:
+            rows, cols = [4, 4*math.ceil(n/2)]
+        else:
+            rows, cols = [2*n, 4*math.ceil(n/2)]
+        size_multiplier = 5
+        fig = plt.figure(
+            figsize=(cols * size_multiplier, rows * size_multiplier),
+            tight_layout=False)
+        gs = gridspec.GridSpec(rows, cols, wspace=0.5, hspace=0.5)
+
+        for i, t_df in enumerate(plot_df):
+            k = (i%2)*2
+            ax = fig.add_subplot(gs[k:k+2, 4*int(i/2):4*math.ceil((i+1)/2)])
+            plot_raster_trials(t_df, s_grp[i], df_sub[i], df_date[i], start_dir, ax)
+
+        # Save Figure
+        # plt.subplots_adjust(top=0.85)
+        # fig.suptitle(('Subject ' + subject + ' Performance'),
+        #                 color=mycolors(subject), fontsize=30)
+        d = sorted(set(df_date))
+        sub = sorted(set(df_sub))
+        out_name = "Raster_" + str(d) + '_' + str(sub)
+        out_name += ".png"
+        print("Saved figure to {}".format(
+            os.path.join(out_dir, out_name)))
+        fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+        plt.close()
 
     for single_date in daterange(start_date, end_date):
         d = [single_date.isoformat()[-5:]]
-
-        # Quick control of plotting
-        timeline, summary, raster = [1, 0, 0]
-
-        if raster:
-            s_grp, _, grp_trial_df, df_sub, df_date = struc_session(
-                d, sub, start_dir)
-            for i, t_df in enumerate(grp_trial_df):
-                plot_raster_trials(t_df, s_grp[i], df_sub[i], df_date[i], start_dir)
-
-
-
 
         # plot cumulative response graphs
         if summary == 1:
@@ -807,7 +827,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
             subject = s.get_metadata('subject')
             pell_ts = timestamps["Reward"]
             pell_double = np.nonzero(np.diff(pell_ts) < 0.5)[0]
-            reward_times = timestamps["Nosepoke"]
+            reward_times = s.get_rw_ts()
 
             d_list.append(date)
 

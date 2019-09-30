@@ -238,6 +238,42 @@ class Session:
             levers.append(self.get_arrays("Un_FI_Err"))
         return np.sort(np.concatenate(levers, axis=None))
 
+    def get_rw_ts(self):
+        """
+        Get the timestamps of rewards. Corrected for session switching/ending without collection
+
+        Returns
+        -------
+        np.ndarray : A numpy array of sorted timestamps.
+
+        """
+        session_type = self.get_metadata('name')
+        stage = session_type[:2].replace('_', '')
+        pell_ts = self.get_arrays("Reward")
+        dpell_bool = np.diff(pell_ts) < 0.5
+        # Provides index of double pell in pell_ts
+        dpell_idx = np.nonzero(dpell_bool)[0] + 1
+        pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
+
+        reward_times = self.get_arrays("Nosepoke")
+        if reward_times[-1] < pell_ts[-1]:
+            reward_times = np.append(reward_times, 1830)
+
+        if stage == '7' or stage == '6':
+            # Check if trial switched before reward collection -> Adds collection as switch time
+            blocks = np.arange(305, 1830, 305)
+            split_pell_ts = np.split(
+                pell_ts_exdouble, np.searchsorted(pell_ts_exdouble, blocks))
+            split_reward_ts = np.split(
+                reward_times, np.searchsorted(reward_times, blocks))
+
+            for i, (pell, reward) in enumerate(zip(split_pell_ts, split_reward_ts[:-1])):
+                if len(pell) > len(reward):
+                    reward_times = np.insert(reward_times, np.searchsorted(
+                        reward_times, blocks[i]), blocks[i])
+
+        return np.sort(reward_times, axis=None)
+
     def time_taken(self):
         """Calculate how long the Session took in mins."""
         start_time = self.get_metadata("start_time")[-8:].replace(' ', '0')
