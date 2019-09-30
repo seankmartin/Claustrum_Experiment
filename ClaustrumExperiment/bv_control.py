@@ -9,7 +9,6 @@ import bvmpc.bv_analyse as bv_an
 from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from adjustText import adjust_text
 from scipy import interpolate
 from datetime import date, timedelta
 
@@ -142,7 +141,7 @@ def struc_session(d_list, sub_list, in_dir):
     in_dir = os.path.join(start_dir, "hdf5")
     # d_list, s_list, sub_list = [['09-17'], ['7'], ['3']]
     s_list = ['7']
-    s_grp = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
+    s_grp = extract_hdf5s(in_dir, sub_list, s_list, d_list)
     
     # Quit program if no sessions passed
     if s_grp == []:
@@ -263,21 +262,130 @@ def struc_session(d_list, sub_list, in_dir):
     return s_grp, grp_session_df, grp_trial_df, df_sub, df_date
 
 
-def struc_days(sub_list,):
+def struc_timeline(sub_list, in_dir):
+    """ Structure sessions into a pandas dataframe based on trials
+    Returns 2 outputs: grp_timeline_df, time_df_sub
+        grp_timeline_df - array of pandas dataframe across time based on session
+        grp_timeline_df_sub     - list denoting subject corresponding to each df
+    """
+    # Initialize group variables
+    grp_timeline_df = []
+    grp_timeline_df_sub = []
 
-    session_dict = {
-                    'Reward (ts)': reward_times,
-                    'Pellet (ts)': pell_ts_exdouble,
-                    'D_Pellet (ts)': trial_dr_ts,
-                    'Schedule': schedule_type,
-                    'Levers (ts)': trial_lever_ts,
-                    'Err (ts)': trial_err_ts
-                    }
-    time_df = pd.DataFrame(session_dict)
-        grp_time_df.append(time_df)
-        df_sub.append(subject)
+    for sub in sub_list:
+        s_grp = extract_hdf5s(in_dir, sub)
+        # Initialize column arrays
+        d_list, t_list, sub_list, s_idx_list, r_list, s_list = [], [], [], [], [], []
+        err_FR_list, err_FI_list = [], []
+        rw_FR_list, rw_FI_list, dr_list = [], [], []
+        ratio_list, interval_list = [], []
+        sch_list, sch_rw_list, sch_err_list, sch_dr_list = [], [], [], []
 
-    return grp_time_df, time_df_sub
+        for i, s in enumerate(s_grp):
+            subject = s.get_metadata('subject')
+            date = s.get_metadata("start_date").replace("/", "-")[:5]
+            session_type = s.get_metadata('name')
+            session_type = s.get_metadata('start_time')
+            stage = session_type[:2].replace('_', '')  # Obtain stage number w/o _
+            timestamps = s.get_arrays()
+            pell_ts = timestamps["Reward"]
+            dpell_bool = np.diff(pell_ts) < 0.5
+            dpell_idx = np.nonzero(dpell_bool)[0]
+            reward_times = timestamps["Nosepoke"]
+
+            # Initialize variables used per session
+            ratio, interval, sch, sch_err, sch_rw, sch_dr = [], [], [], [], [], []
+            err_FI, err_FR, rw_FI, rw_FR = [], [], [], []
+
+            # Stage specific variables
+            if stage == '5a':
+                s_name = 'R' + str(int(timestamps["Experiment Variables"][3]))
+                ratio = s_name
+                rw_FR = len(reward_times)
+            elif stage == '5b':
+                s_name = 'I' + str(int(timestamps[
+                    "Experiment Variables"][3]/100))
+                interval = s_name
+                rw_FI = len(reward_times)
+            else:
+                s_name = stage.replace('_', '').replace('2', 'M').replace(
+                    '3', 'Lh').replace('4', 'Lt').replace(
+                    '6', 'B1').replace('7', 'B2')
+            if 'B' in s_name:
+                rw_FI, rw_FR = 0, 0
+                ratio = 'R' + str(int(timestamps["Experiment Variables"][3]))
+                interval = 'I' + str(int(timestamps["Experiment Variables"][5] / 100))
+                norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = bv_an.split_sess(
+                    s, plot_all=True)
+                sch_type = s.get_arrays('Trial Type')
+                # Error related variables
+                if s_name == 'B2':
+                    err_FI, err_FR = 0, 0
+                    for i, err in enumerate(norm_err_ts):
+                        if sch_type[i] == 1:
+                            err_FR =+ len(err)
+                        elif sch_type[i] == 0:
+                            err_FI += len(err)
+                        sch_err.append(len(err))
+                else:
+                    err_FR = []
+                    err_FI = []
+                
+                # Reward related variables
+                for i, (rw, dr) in enumerate(zip(norm_r_ts, norm_dr_ts)):
+                    if sch_type[i] == 1:
+                        rw_FR += len(rw)
+                        sch.append('FR')
+                        sch_dr.append([])
+                    elif sch_type[i] == 0:
+                        rw_FI += len(rw)
+                        sch.append('FI')
+                        sch_dr.append(len(dr))
+                    sch_rw.append(len(rw))
+
+            # Update list arrays with new session
+            d_list.append(date)
+            t_list.append(time)
+            s_idx_list.append('S'+stage[0])
+            s_list.append(s_name)
+            r_list.append(len(pell_ts))
+            dr_list.append(len(dpell_idx))
+            interval_list.append(interval)
+            ratio_list.append(ratio)
+            sch_list.append(sch)
+            sch_rw_list.append(sch_rw)
+            sch_err_list.append(sch_err)
+            sch_dr_list.append(sch_dr)
+            rw_FI_list.append(rw_FI)
+            rw_FR_list.append(rw_FR)
+            err_FI_list.append(err_FI)
+            err_FR_list.append(err_FR)
+        sub_list = np.full(len(d_list), sub, dtype=int)
+
+        timeline_dict = {
+                        'Subject': sub_list,
+                        'Date': d_list,
+                        'Start Time': t_list,
+                        'Stage Idx': s_idx_list,  # eg. S2, S5, S7 ...
+                        'Stage': s_list,  # eg. M, Lt, R8, I30, B1
+                        'Total Rewards': r_list,
+                        'Double Rewards': dr_list,
+                        'Interval': interval_list,
+                        'Ratio': ratio_list,
+                        'Schedule Blocks': sch_list,
+                        'Schedule Rw': sch_rw_list,
+                        'Schedule Err': sch_err_list,
+                        'Schedule DRw': sch_dr_list,
+                        'FI Corr': rw_FI_list,
+                        'FR Corr': rw_FR_list,
+                        'FI Err': err_FI_list,
+                        'FR Err': err_FR_list
+                        }
+        timeline_df = pd.DataFrame(timeline_dict)
+        grp_timeline_df.append(timeline_df)
+        grp_timeline_df_sub.append(subject)
+
+    return grp_timeline_df, grp_timeline_df_sub
 
 
 def compare_variables():
@@ -293,9 +401,9 @@ def compare_variables():
     grpB_d_list = ['08-17', '08-18', '08-19']
     grpC_d_list = ['09-15', '09-16', '09-17']
 
-    s_grpA = extract_hdf5s(in_dir, out_dir, sub_list, s_list, grpA_d_list)
-    s_grpB = extract_hdf5s(in_dir, out_dir, sub_list, s_list, grpB_d_list)
-    s_grpC = extract_hdf5s(in_dir, out_dir, sub_list, s_list, grpC_d_list)
+    s_grpA = extract_hdf5s(in_dir, sub_list, s_list, grpA_d_list)
+    s_grpB = extract_hdf5s(in_dir, sub_list, s_list, grpB_d_list)
+    s_grpC = extract_hdf5s(in_dir, sub_list, s_list, grpC_d_list)
     s_grpA.pop()
     s_grpA.pop(-4)
     s_grpA.pop(-7)
@@ -458,7 +566,7 @@ def plot_sessions(d_list, sub_list, summary=False, single=False, timeline=False,
     if summary and not corr_only:
         #  extracts hdf5 session based on specification
         max_plot = 4  # Set max plots per figure
-        s_grp = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
+        s_grp = extract_hdf5s(in_dir, sub_list, s_list, d_list)
         if s_grp == []:
             return print("***No Files Extracted***")
         idx = 0
@@ -482,7 +590,7 @@ def plot_sessions(d_list, sub_list, summary=False, single=False, timeline=False,
     if summary and corr_only:
         # plots corr_only plots
         max_plot = 4  # Set max plots per figure
-        s_grp = extract_hdf5s(in_dir, out_dir, sub_list, s_list, d_list)
+        s_grp = extract_hdf5s(in_dir, sub_list, s_list, d_list)
         if s_grp == []:
             return print("***No Files Extracted***")
 
@@ -508,7 +616,7 @@ def plot_sessions(d_list, sub_list, summary=False, single=False, timeline=False,
         # Single Subject Plots
         idx = 0
         for sub in sub_list:
-            s_grp = extract_hdf5s(in_dir, out_dir, sub, s_list, d_list)
+            s_grp = extract_hdf5s(in_dir, sub, s_list, d_list)
             if s_grp == []:
                 return print("***No Files Extracted***")
             s_passed = []
@@ -677,7 +785,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
     gs = gridspec.GridSpec(rows, cols, wspace=0.4, hspace=0.5)
     for c, sub in enumerate(sub_list):
         # Plot total pellets across sessions
-        s_grp = extract_hdf5s(in_dir, out_dir, sub)
+        s_grp = extract_hdf5s(in_dir, sub)
         s_list, r_list, type_list, d_list = [], [], [], []
         err_FR_list, err_FI_list = [], []
         rw_FR_list, rw_FI_list, rw_double_list = [], [], []
@@ -699,7 +807,10 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
             subject = s.get_metadata('subject')
             pell_ts = timestamps["Reward"]
             pell_double = np.nonzero(np.diff(pell_ts) < 0.5)[0]
+            reward_times = timestamps["Nosepoke"]
+
             d_list.append(date)
+
             if len(pell_double):
                 dpell_change = 1
             if s_type == '5a':
@@ -739,8 +850,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
                     changes.append(0)
                     change_idx.append(0)
             # Calculates total reward (y axis variable)
-            rewards_t = len(timestamps["Reward"])
-            r_list.append(rewards_t)
+            r_list.append(len(pell_ts))
 
             # Calculates FR & FI rewards and errors (alternative y axis variables)
             err_FI = 0
@@ -772,14 +882,14 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
             elif s_type == '5a':
                 err_FI = None
                 err_FR = None
-                rw_FR = len(pell_ts)
+                rw_FR = len(reward_times)
                 rw_FI = None
                 rw_double = None
             elif s_type == '5b':
                 err_FI = None
                 err_FR = None
                 rw_FR = None
-                rw_FI = len(pell_ts)
+                rw_FI = len(reward_times)
                 rw_double = None
 
             else:
@@ -975,7 +1085,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
         plt.close()
 
 
-def extract_hdf5s(in_dir, out_dir, sub_list=None, s_list=None, d_list=None):
+def extract_hdf5s(in_dir, sub_list=None, s_list=None, d_list=None):
     '''Extracts specified sessions from hdf5 files '''
 
     def should_use(val, vlist):
@@ -998,7 +1108,7 @@ def extract_hdf5s(in_dir, out_dir, sub_list=None, s_list=None, d_list=None):
         if subject_ok and type_ok and date_ok:
             filename = os.path.join(in_dir, file)
             if os.path.isfile(filename):
-                session = load_hdf5(filename, out_dir)
+                session = load_hdf5(filename)
                 s_grp.append(session)
     print('Total Files extracted: {}'.format(len(s_grp)))
     return s_grp
@@ -1018,13 +1128,11 @@ def convert_to_hdf5(filename, out_dir):
             s.save_to_h5(out_dir)
 
 
-def load_hdf5(filename, out_dir):
+def load_hdf5(filename):
     print_h5(filename)
     session = Session(h5_file=filename)
-    print(session)
+    # print(session)
 
-    # bv_an.IRT(session, out_dir, False)
-    # bv_an.cumplot(session, out_dir, False)
     return session
 
 
