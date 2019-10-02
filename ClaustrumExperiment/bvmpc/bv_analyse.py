@@ -316,10 +316,11 @@ def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False
         err_lever_ts = session.get_err_lever_ts()
         lever_ts = np.sort(np.concatenate((
             lever_ts, err_lever_ts), axis=None))
-        split_err_ts = np.split(err_lever_ts,
-                                np.searchsorted(err_lever_ts, blocks))
     elif stage == '7':  # plots all responses exclu. errors
         incl = '_Correct Only'
+        err_lever_ts = []
+    else:
+        err_lever_ts = []
 
     split_lever_ts = np.split(lever_ts,
                               np.searchsorted(lever_ts, blocks))
@@ -327,6 +328,8 @@ def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False
                                np.searchsorted(reward_times, blocks))
     split_double_r_ts = np.split(reward_double,
                                  np.searchsorted(reward_double, blocks))
+    split_err_ts = np.split(err_lever_ts,
+                            np.searchsorted(err_lever_ts, blocks))
     norm_reward_ts = []
     norm_lever_ts = []
     norm_err_ts = []

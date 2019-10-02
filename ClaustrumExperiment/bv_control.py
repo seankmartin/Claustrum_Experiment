@@ -130,7 +130,7 @@ def struc_session(d_list, sub_list, in_dir):
     """
     in_dir = os.path.join(start_dir, "hdf5")
     # d_list, s_list, sub_list = [['09-17'], ['7'], ['3']]
-    s_list = ['7']
+    s_list = ['6','7']
     s_grp = extract_hdf5s(in_dir, sub_list, s_list, d_list)
     
     # Quit program if no sessions passed
@@ -191,10 +191,11 @@ def struc_session(d_list, sub_list, in_dir):
         err_arr.fill(np.nan)
         
         # Arrays used for normalization of timestamps to trials
+        from copy import deepcopy
         trial_norm = np.insert(reward_times, 0, 0)
         norm_lever = np.copy(trial_lever_ts)
-        norm_err = np.copy(trial_err_ts)
-        norm_dr = np.copy(trial_dr_ts)
+        norm_err = deepcopy(trial_err_ts)
+        norm_dr = deepcopy(trial_dr_ts)
         norm_rw = np.copy(reward_times)
         norm_pell = np.copy(pell_ts_exdouble)
 
@@ -206,12 +207,12 @@ def struc_session(d_list, sub_list, in_dir):
             norm_pell[i] -= trial_norm[i]
             norm_rw[i] -= trial_norm[i]
 
-        # 2D array of lever timestamps
-        for i, (l, err) in enumerate(zip(trial_lever_ts, trial_err_ts)):
-            l_end = len(l)
-            lever_arr[i,:l_end] = l[:]
-            err_end = len(err)
-            err_arr[i,:err_end] = err[:]
+        # # 2D array of lever timestamps
+        # for i, (l, err) in enumerate(zip(trial_lever_ts, trial_err_ts)):
+        #     l_end = len(l)
+        #     lever_arr[i,:l_end] = l[:]
+        #     err_end = len(err)
+        #     err_arr[i,:err_end] = err[:]
         
         
         session_dict = {
@@ -463,16 +464,16 @@ def plot_batch_sessions():
     
     # Parameters for specifying session
     # sub_list = ['1', '2']
-    sub = ['3']
+    sub = ['4']
     # sub_list = ['6']
     # sub_list = ['1', '2', '3', '4']
     # sub_list = ['5', '6']
     
     # start_date = date(2019, 7, 15)  # date(year, mth, day)
-    # start_date = date(2019, 9, 1)  # date(year, mth, day)
-    # end_date = date(2019, 9, 6)
-    start_date = date(2019, 8, 11)  # date(year, mth, day)
-    end_date = date(2019, 8, 12)
+    start_date = date(2019, 8, 7)  # date(year, mth, day)
+    end_date = date(2019, 8, 9)
+    # start_date = date(2019, 8, 11)  # date(year, mth, day)
+    # end_date = date(2019, 8, 12)
     # start_date = date.today() - timedelta(days=4)
     # end_date = date.today()
 
@@ -480,17 +481,20 @@ def plot_batch_sessions():
     timeline, summary, raster = [0, 0, 1]
 
     if raster:
-        # d = ['08-11','08-19','09-01','09-03']
-        d = []
-        for single_date in daterange(start_date, end_date):
-            d.append(single_date.isoformat()[-5:])
+        d = ['08-08','08-11','08-19','09-03']
+        # d = []
+        # for single_date in daterange(start_date, end_date):
+        #     d.append(single_date.isoformat()[-5:])
 
         s_grp, _, grp_trial_df, df_sub, df_date = struc_session(
             d, sub, start_dir)
         
-        df_date = ['FR6_noDP', 'FR8', 'FR8_ext', 'FR10']
+        
+        # df_name = df_date  # Label plots by date
+        df_name = ['S6_FR6','FR6_noDP', 'FR8', 'FR10']  # Custom plot names
 
-        plot_df = grp_trial_df
+        
+        plot_df = grp_trial_df[1:]
 
         # Figure Initialization
         n = len(plot_df)
@@ -510,7 +514,7 @@ def plot_batch_sessions():
         for i, t_df in enumerate(plot_df):
             k = (i%2)*2
             ax = fig.add_subplot(gs[k:k+2, 4*int(i/2):4*math.ceil((i+1)/2)])
-            plot_raster_trials(t_df, s_grp[i], df_sub[i], df_date[i], start_dir, ax)
+            plot_raster_trials(t_df, s_grp[i], df_sub[i], df_name[i], start_dir, ax)
 
         # Save Figure
         # plt.subplots_adjust(top=0.85)
