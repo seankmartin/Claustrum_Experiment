@@ -63,7 +63,8 @@ class SessionExtractor:
             for start, end in zip(s_starts, s_ends):
                 s_data = np.array(lines[start:end])
                 self.sessions.append(
-                    Session(lines=s_data, verbose=self.verbose))
+                    Session(
+                        lines=s_data, verbose=self.verbose, file_origin=self.file_location))
             return self.sessions
 
     def __repr__(self):
@@ -95,7 +96,8 @@ class SessionExtractor:
 class Session:
     """The base class to hold MEDPC behaviour information."""
 
-    def __init__(self, h5_file=None, lines=None, verbose=False):
+    def __init__(
+            self, h5_file=None, lines=None, verbose=False, file_origin=None):
         """
         Initialise the Session with lines from a MEDPC file.
 
@@ -113,6 +115,7 @@ class Session:
         self.metadata = {}
         self.info_arrays = {}
         self.verbose = verbose
+        self.file_origin = file_origin
         self.out_dir = None
 
         a = lines is None
@@ -127,6 +130,7 @@ class Session:
             self._extract_session_arrays()
 
         elif h5_file is not None:
+            self.file_origin = h5_file
             self.h5_file = h5_file
             self._extract_h5_info()
 
@@ -138,13 +142,16 @@ class Session:
         """Save information to a h5 file"""
         location = name
         if name == None:
-            location = "{}_{}_{}_{}.h5".format(
-                self.get_metadata("subject"),
-                self.get_metadata("start_date").replace("/", "-"),
-                self.get_metadata("start_time")[:-3].replace(":", "-"),
-                self.get_metadata("name"))
+            location = self._get_hdf5_name()
         self.h5_file = os.path.join(out_dir, location)
         self._save_h5_info()
+
+    def save_to_neo(self, out_dir, name=None):
+        location = name
+        if name == None:
+            location = self._get_hdf5_name(ext="nix")
+        self.neo_file = os.path.join(out_dir, location)
+        self._save_neo_info()
 
     def get_metadata(self, key=None):
         """
@@ -294,6 +301,23 @@ class Session:
         tdelta_mins = int(tdelta.total_seconds() / 60)
         return tdelta_mins
 
+    def _save_neo_info(self):
+        """Private function to save info to neo file"""
+        from neo.core import Block, Segment, Event
+        from neo.io import NixIO
+        from quantities import s
+
+        blk = Block(
+            file_origin=self.file_origin, annotations=self.get_metadata())
+        seg = Segment()
+        # Could consider splitting by trials using index in seg
+        for key, val in self.get_arrays().items():
+            e = Event(
+                times=val * s, labels=None, name=key)
+            seg.events.append(e)
+        nio = NixIO(filename=self.neo_file)
+        nio.write_block(blk)
+
     def _save_h5_info(self):
         """Private function to save info to h5 file"""
         with h5py.File(self.h5_file, "w", libver="latest") as f:
@@ -363,6 +387,13 @@ class Session:
             st = 5 * i
             arr[st:st + len(numbers)] = numbers
         return arr
+
+    def _get_hdf5_name(self, ext="h5"):
+        return "{}_{}_{}_{}.{}".format(
+            self.get_metadata("subject"),
+            self.get_metadata("start_date").replace("/", "-"),
+            self.get_metadata("start_time")[:-3].replace(":", "-"),
+            self.get_metadata("name"), ext)
 
     def __repr__(self):
         """

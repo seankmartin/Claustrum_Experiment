@@ -1147,6 +1147,18 @@ def convert_to_hdf5(filename, out_dir):
         else:
             s.save_to_h5(out_dir)
 
+def convert_to_neo(filename, out_dir):
+    """Convert all sessions in filename to hdf5 and store in out_dir."""
+    make_dir_if_not_exists(out_dir)
+
+    s_extractor = SessionExtractor(filename, verbose=True)
+
+    for s in s_extractor:  # Batch run for file
+        stage = s.get_metadata('name')
+        if stage not in s.session_info.session_info_dict.keys():
+            continue
+        else:
+            s.save_to_neo(out_dir)
 
 def load_hdf5(filename):
     print_h5(filename)
@@ -1178,8 +1190,12 @@ def run_mpc_file(filename, out_dir):
 
 if __name__ == "__main__":
     """Main control."""
-    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"  # from Ham Personal HD
+    # start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"  # from Ham Personal HD
     # start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
+    start_dir = r"C:\Users\smartin5\TCDUD.onmicrosoft.com\Gao Xiang Ham - MEDPC"
+    filename = "!2019-09-02"
+    out_dir = r"C:\Users\smartin5\OneDrive - TCDUD.onmicrosoft.com\Claustrum\hdf5"
+    convert_to_neo(os.path.join(start_dir, filename), out_dir)
 
     # # Batch processing of sessions in folder
     # in_dir = start_dir
@@ -1199,7 +1215,7 @@ if __name__ == "__main__":
 
     # plot_sessions([date.today().isoformat()[-5:]])
     # plot_sessions(['09-03'])
-    plot_batch_sessions()
+    # plot_batch_sessions()
     # compare_variables()
 
     # # Running single session files
