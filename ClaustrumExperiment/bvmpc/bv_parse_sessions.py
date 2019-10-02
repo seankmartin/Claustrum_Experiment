@@ -59,8 +59,6 @@ class SessionExtractor:
             s_ends = np.zeros_like(s_starts)
             s_ends[:-1] = s_starts[1:]
             s_ends[-1] = lines.size
-            print((s_ends))
-            print((s_starts))
 
             for start, end in zip(s_starts, s_ends):
                 s_data = np.array(lines[start:end])
@@ -240,7 +238,9 @@ class Session:
 
     def get_rw_ts(self):
         """
-        Get the timestamps of rewards. Corrected for session switching/ending without collection
+        Get the timestamps of rewards. 
+
+        Corrected for session switching/ending without reward collection.
 
         Returns
         -------
@@ -256,12 +256,21 @@ class Session:
         pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
 
         reward_times = self.get_arrays("Nosepoke")
+        exp_var = self.get_arrays("Experiment Variables")
+        trial_len = int(exp_var[0] * 60)
+        if stage == '7' or stage == '6':
+            trial_len += 5
+            repeated_trial_len = (trial_len) * 6
+
         if reward_times[-1] < pell_ts[-1]:
-            reward_times = np.append(reward_times, 1830)
+            if stage == '7' or stage == '6':
+                reward_times = np.append(reward_times, repeated_trial_len)
+            else:
+                reward_times = np.append(reward_times, trial_len)
 
         if stage == '7' or stage == '6':
             # Check if trial switched before reward collection -> Adds collection as switch time
-            blocks = np.arange(305, 1830, 305)
+            blocks = np.arange(trial_len, repeated_trial_len, trial_len)
             split_pell_ts = np.split(
                 pell_ts_exdouble, np.searchsorted(pell_ts_exdouble, blocks))
             split_reward_ts = np.split(
