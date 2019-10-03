@@ -97,7 +97,8 @@ class Session:
     """The base class to hold MEDPC behaviour information."""
 
     def __init__(
-            self, h5_file=None, lines=None, verbose=False, file_origin=None):
+            self, h5_file=None, lines=None, neo_file=None,
+            neo_backend="nsdf", verbose=False, file_origin=None):
         """
         Initialise the Session with lines from a MEDPC file.
 
@@ -118,10 +119,11 @@ class Session:
         self.file_origin = file_origin
         self.out_dir = None
 
-        a = lines is None
-        b = h5_file is None
-        if (a and b or (not a and not b)):
-            print("Error: Do not pass lines and h5_file to Session")
+        a = 0 if lines is None else 1
+        b = 0 if h5_file is None else 1
+        c = 0 if neo_file is None else 1
+        if (a + b + c != 1):
+            print("Error: Session takes one of h5_file, lines and neo_file")
             return
 
         if lines is not None:
@@ -133,6 +135,12 @@ class Session:
             self.file_origin = h5_file
             self.h5_file = h5_file
             self._extract_h5_info()
+
+        elif neo_file is not None:
+            self.file_origin = neo_file
+            self.neo_file = neo_file
+            self.neo_backend = neo_backend
+            self._extract_neo_info()
 
         else:
             print("Error: Unknown situation in Session init")
@@ -146,10 +154,12 @@ class Session:
         self.h5_file = os.path.join(out_dir, location)
         self._save_h5_info()
 
-    def save_to_neo(self, out_dir, name=None):
+    def save_to_neo(self, out_dir, name=None, neo_backend="nsdf"):
         location = name
+        self.neo_backend = neo_backend
         if name == None:
-            location = self._get_hdf5_name(ext="nix")
+            ext = self._get_neo_io(get_ext=True)
+            location = self._get_hdf5_name(ext=ext)
         self.neo_file = os.path.join(out_dir, location)
         self._save_neo_info()
 
@@ -304,19 +314,55 @@ class Session:
     def _save_neo_info(self):
         """Private function to save info to neo file"""
         from neo.core import Block, Segment, Event
-        from neo.io import NixIO
         from quantities import s
 
-        blk = Block(
-            file_origin=self.file_origin, annotations=self.get_metadata())
-        seg = Segment()
+        # annotations=self.get_metadata())
+        seg = Segment(name="main")
+        blk.segments.append(seg)
         # Could consider splitting by trials using index in seg
         for key, val in self.get_arrays().items():
             e = Event(
                 times=val * s, labels=None, name=key)
             seg.events.append(e)
-        nio = NixIO(filename=self.neo_file)
+        if os.path.isfile(self.neo_file):
+            os.remove(self.neo_file)
+        nio = self._get_neo_io()
         nio.write_block(blk)
+        nio.close()
+
+    def _extract_neo_info(self):
+        """Private function to extract info from neo file"""
+        nio = self._get_neo_io()
+        blocks = nio.read()
+        nio.close()
+        print(blocks)
+
+    def _get_neo_io(self, get_ext=False):
+        backend = self.neo_backend
+        if backend == "nix":
+            if get_ext:
+                return "nix"
+            from neo.io import NixIO
+            nio = NixIO(filename=self.neo_file)
+        elif backend == "nsdf":
+            if get_ext:
+                return "h5"
+            from neo.io import NSDFIO
+            nio = NSDFIO(filename=self.neo_file)
+        elif backend == "matlab":
+            if get_ext:
+                return "mat"
+            from neo.io import NeoMatlabIO
+            nio = NeoMatlabIO(filename=self.neo_file)
+        else:
+            print(
+                "Backend {} not recognised, defaulting to nix".format(
+                    backend))
+            from neo.io import NixIO
+            if get_ext:
+                return "nix"
+            nio = NixIO(filename=self.neo_file)
+        return nio
 
     def _save_h5_info(self):
         """Private function to save info to h5 file"""

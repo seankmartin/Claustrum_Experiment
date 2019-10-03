@@ -1147,7 +1147,7 @@ def convert_to_hdf5(filename, out_dir):
         else:
             s.save_to_h5(out_dir)
 
-def convert_to_neo(filename, out_dir):
+def convert_to_neo(filename, out_dir, neo_backend="nsdf"):
     """Convert all sessions in filename to hdf5 and store in out_dir."""
     make_dir_if_not_exists(out_dir)
 
@@ -1158,7 +1158,7 @@ def convert_to_neo(filename, out_dir):
         if stage not in s.session_info.session_info_dict.keys():
             continue
         else:
-            s.save_to_neo(out_dir)
+            s.save_to_neo(out_dir, neo_backend=neo_backend)
 
 def load_hdf5(filename):
     print_h5(filename)
@@ -1195,7 +1195,13 @@ if __name__ == "__main__":
     start_dir = r"C:\Users\smartin5\TCDUD.onmicrosoft.com\Gao Xiang Ham - MEDPC"
     filename = "!2019-09-02"
     out_dir = r"C:\Users\smartin5\OneDrive - TCDUD.onmicrosoft.com\Claustrum\hdf5"
-    convert_to_neo(os.path.join(start_dir, filename), out_dir)
+    bk = "nix"
+    convert_to_neo(os.path.join(start_dir, filename), out_dir, neo_backend=bk)
+    session = Session(
+        neo_file=os.path.join(
+        out_dir, "1_09-02-19_16-28_7_RandomisedBlocksExtended_p.nix"),
+        neo_backend=bk)
+    print(session)
 
     # # Batch processing of sessions in folder
     # in_dir = start_dir
