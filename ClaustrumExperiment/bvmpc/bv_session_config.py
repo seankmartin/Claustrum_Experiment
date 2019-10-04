@@ -27,13 +27,13 @@ class SessionInfo:
 
         self.session_info_dict = {}
 
-        # Empty keys that should probably be updated at some stage
         self.session_info_dict['2_MagazineHabituation_p'] = (
             np.array([
                 ['A:', 'B:', 'Experiment Variables'],
                 ['D:', 'E:', 'Reward'],
                 ['E:', 'END', 'Nosepoke']
             ]))
+
         self.session_info_dict['3_LeverHabituation_p'] = (
             np.array([
                 ['A:', 'B:', 'Experiment Variables'],
@@ -45,7 +45,6 @@ class SessionInfo:
                 ['O:', 'R:', 'Un_Nosepoke'],
                 ['R:', 'END', 'R']
             ]))
-        # self.session_info_dict['DNMTS'] = None
 
         self.session_info_dict['4_LeverTraining_p'] = (
             np.array([
@@ -115,6 +114,37 @@ class SessionInfo:
                 ['U:', 'V:', 'Trial Type'],
                 # ['V:', 'END', 'Per Trial Pellets']
             ]))
+
+        base_exp_list = [
+            "trial_length (mins)", "max_pellets", "advancement_pellets",
+            "fixed_ratio", "fast_inter_response_time (secs)",
+            "fixed_interval (secs)", "double_reward_window (secs)"
+        ]
+
+        self.experiment_var_dict = {}
+
+        self.experiment_var_dict['2_MagazineHabituation_p'] = [
+            base_exp_list[0], "drop_rate (secs)"]
+
+        self.experiment_var_dict['3_LeverHabituation_p'] = [
+            base_exp_list[0], "drop_rate (secs)", base_exp_list[1],
+            "lever_presses_required"]
+
+        self.experiment_var_dict['4_LeverTraining_p'] = (
+            self.experiment_var_dict['3_LeverHabituation_p'])
+
+        self.experiment_var_dict['5a_FixedRatio_p'] = (
+            base_exp_list[:3] +
+            ["starting_ratio", "ending_ratio", "ratio_increment",
+             "max_ratio", base_exp_list[4], "fast_trials_to_advance"])
+
+        self.experiment_var_dict['5b_FixedInterval_p'] = (
+            base_exp_list[:3] + [base_exp_list[5]])
+
+        self.experiment_var_dict['6_RandomisedBlocks_p'] = base_exp_list
+
+        self.experiment_var_dict['7_RandomisedBlocksExtended_p'] = (
+            base_exp_list)
 
     def get_session_type_info(self, key=None):
         """
