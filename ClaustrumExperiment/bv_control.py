@@ -4,7 +4,8 @@ import math
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from bvmpc.bv_parse_sessions import SessionExtractor, Session
+from bvmpc.bv_session_extractor import SessionExtractor
+from bvmpc.bv_session import Session
 import bvmpc.bv_analyse as bv_an
 from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list
 import matplotlib.pyplot as plt
