@@ -316,13 +316,23 @@ class Session:
         from neo.core import Block, Segment, Event
         from quantities import s
 
-        # annotations=self.get_metadata())
-        seg = Segment(name="main")
+        anots = self.get_metadata()
+        anots["nix_name"] = "Block_Main"
+        anots["protocol"] = anots.pop("name")
+        anots["Experiment Variables"] = self.get_arrays(
+            key="Experiment Variables")
+
+        blk = Block(name="Block_Main", **anots)
+
+        seg = Segment(name="Segment_Main", nix_name="Segment_Main")
         blk.segments.append(seg)
         # Could consider splitting by trials using index in seg
         for key, val in self.get_arrays().items():
+            if key == "Experiment Variables":
+                continue
             e = Event(
-                times=val * s, labels=None, name=key)
+                times=val * s, labels=None,
+                name=key, nix_name="Event_" + key)
             seg.events.append(e)
         if os.path.isfile(self.neo_file):
             os.remove(self.neo_file)
