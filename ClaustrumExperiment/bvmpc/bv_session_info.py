@@ -167,6 +167,27 @@ class SessionInfo:
             return self.session_info_dict.get(key, None)
         return self.session_info_dict
 
+    def get_session_variable_list(self, key=None):
+        """
+        Return the mapping of Experiment variables to keys.
+
+        If key is passed as None, return a Dict of all maps.
+
+        Parameters
+        ----------
+        key: str
+            Which session type info to get, default None.
+
+        Returns
+        -------
+        np.ndarray : an array of mappings.
+        Dict: if key is None, all the mappings.
+
+        """
+        if key:
+            return self.experiment_var_dict.get(key, None)
+        return self.experiment_var_dict
+
     def get_metadata(self, key=None):
         """
         Return the metadata index of the session.

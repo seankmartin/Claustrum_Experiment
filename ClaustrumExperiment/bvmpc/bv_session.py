@@ -236,8 +236,8 @@ class Session:
         anots = self.get_metadata()
         anots["nix_name"] = "Block_Main"
         anots["protocol"] = anots.pop("name")
-        anots["Experiment Variables"] = self.get_arrays(
-            key="Experiment Variables")
+        # anots["Experiment Variables"] = self.get_arrays(
+        # key="Experiment Variables")
 
         blk = Block(name="Block_Main", **anots)
 
@@ -245,8 +245,6 @@ class Session:
         blk.segments.append(seg)
         # Could consider splitting by trials using index in seg
         for key, val in self.get_arrays().items():
-            if key == "Experiment Variables":
-                continue
             e = Event(
                 times=val * s, labels=None,
                 name=key, nix_name="Event_" + key)
@@ -260,9 +258,17 @@ class Session:
     def _extract_neo_info(self):
         """Private function to extract info from neo file"""
         nio = self._get_neo_io()
-        blocks = nio.read()
+        block = nio.read()[0]
         nio.close()
-        print(blocks)
+        annotations = block.annotations
+        for key, val in annotations.items():
+            if key == "protocol":
+                key = "name"
+            self.metadata[key] = val
+        for event in block.segments[0].events:
+            key = event.name
+            # To get an ndarray use .rescale('s').magnitude
+            self.info_arrays[key] = event.times
 
     def _get_neo_io(self, get_ext=False):
         backend = self.neo_backend
@@ -295,10 +301,7 @@ class Session:
         """Private function to save info to h5 file"""
         with h5py.File(self.h5_file, "w", libver="latest") as f:
             for key, val in self.get_metadata().items():
-                print("{} {}".format(key, val))
                 f.attrs[key] = val
-            for key, val in f.attrs.items():
-                print(key, val)
             for key, val in self.get_arrays().items():
                 f.create_dataset(key, data=val, dtype=np.float32)
 
@@ -330,6 +333,11 @@ class Session:
             print("Parameters extracted:")
         for i, (start_char, end_char, parameter) in enumerate(data_info):
             c_data = self._extract_array(self.lines, start_char, end_char)
+            if parameter == "Experiment Variables":
+                mapping = self.session_info.get_session_variable_list(
+                    self.get_metadata("name"))
+                for m, v in zip(mapping, c_data):
+                    self.metadata[m] = v
             self.info_arrays[parameter] = c_data
             if self.verbose:
                 print(i, '-> {}: {}'.format(parameter, len(c_data)))
