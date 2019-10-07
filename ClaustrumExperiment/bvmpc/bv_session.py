@@ -107,6 +107,20 @@ class Session:
         name = self.get_metadata("name")
         return 'Subject: {}, Trial Type {}'.format(subject, name)
 
+    def get_ratio(self):
+        """Return the fixed ratio as an int."""
+        ratio = self.get_metadata("fixed_ratio")
+        if ratio is not None:
+            return int(ratio)
+        return None
+
+    def get_interval(self):
+        """Return the fixed ratio as an int."""
+        interval = self.get_metadata("fixed_interval (secs)")
+        if interval is not None:
+            return int(interval)
+        return None
+
     def get_arrays(self, key=None):
         """
         Return the info arrays in the session.
@@ -272,8 +286,8 @@ class Session:
             self.metadata[key] = val
         for event in block.segments[0].events:
             key = event.name
-            # To get an ndarray use .rescale('s').magnitude
-            self.info_arrays[key] = event.times
+            self.info_arrays[key] = (
+                event.times.rescale('s').magnitude)
 
     def _get_neo_io(self, get_ext=False):
         backend = self.neo_backend

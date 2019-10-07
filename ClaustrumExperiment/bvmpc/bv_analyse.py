@@ -60,8 +60,8 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     reward_double = reward_times[np.searchsorted(
         reward_times, pell_ts[pell_double], side='right')]
     single_plot = False
-    ratio = int(session.get_metadata("starting_ratio"))
-    interval = int(session.get_metadata("fixed_interval (secs)"))
+    ratio = session.get_ratio()
+    interval = session.get_interval()
 
     if ax is None:
         single_plot = True
@@ -348,8 +348,8 @@ def IRT(session, out_dir, ax=None, showIRT=False):
     stage = session_type[:2].replace('_', '')
     subject = session.get_metadata('subject')
     single_plot = False
-    ratio = int(session.get_metadata("starting_ratio"))
-    interval = int(session.get_metadata("fixed_interval (secs)"))
+    ratio = session.get_ratio()
+    interval = session.get_interval()
 
     rewards_i = session.get_rw_ts()
     nosepokes_i = timestamps["Nosepoke"]

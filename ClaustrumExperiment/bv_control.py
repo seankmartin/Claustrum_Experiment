@@ -18,7 +18,7 @@ from datetime import date, timedelta
     # return 
 
 def plot_raster_trials(trial_df, s, sub, date, start_dir, ax): 
-    interval = int(s.get_metadata("fixed_interval (secs)"))
+    interval = s.get_interval()
 
     # alignment decision
     align_rw, align_pell, align_FI = [0, 1, 0]
@@ -273,8 +273,8 @@ def struc_timeline(sub_list, in_dir):
             ratio, interval, sch, sch_err, sch_rw, sch_dr = [], [], [], [], [], []
             err_FI, err_FR, rw_FI, rw_FR = [], [], [], []
 
-            ratio = int(s.get_metadata("starting_ratio"))
-            interval = int(s.get_metadata("fixed_interval (secs)"))
+            ratio = s.get_ratio()
+            interval = s.get_interval()
             # Stage specific variables
             if stage == '5a':
                 s_name = 'R' + str(ratio)
@@ -806,8 +806,8 @@ def timeline_plot(
             pass
 
         for i, s in enumerate(s_grp):
-            ratio = int(s.get_metadata("fixed_ratio"))
-            interval = int(s.get_metadata("fixed_interval (secs)"))
+            ratio = s.get_ratio()
+            interval = s.get_interval()
             s_type = s.get_metadata('name')[:2]
             timestamps = s.get_arrays()
             date = s.get_metadata('start_date')[3:5]
@@ -1106,6 +1106,7 @@ def extract_sessions(
     for file in in_files:
         splits = file.split('_')
         subject = splits[0]
+        # NOTE date not have year
         date = splits[1][:5]
         s_type = splits[3]
         subject_ok = should_use(subject, sub_list)
@@ -1204,24 +1205,33 @@ def main_single(filename, out_dir):
 
     # load_hdf5(filename, out_dir)
 
-def main_batch(start_dir, out_main_dir=None):
+def main_batch(
+    start_dir, analysis_flags, out_main_dir=None):
     """Main control for batch process."""
 
     # Batch processing of sessions in folder
-    if out_main_dir is None:
-        out_main_dir = start_dir
-    out_dir = os.path.join(out_main_dir, "hdf5")
-    in_files = get_all_files_in_dir(start_dir, return_absolute=True)
-    for filename in in_files:
-        try:
-            convert_to_neo(filename, out_dir, remove_existing=False)
-        except Exception as e:
-            log_exception(e, "Error during coversion to neo")
-
-    # plot_sessions(out_main_dir, [date.today().isoformat()[-5:]])
-    # plot_sessions(out_main_dir, ['09-03'])
-    # plot_batch_sessions(out_main_dir)
-    # compare_variables(out_main_dir)
+    if analysis_flags[0]:
+        if out_main_dir is None:
+            out_main_dir = start_dir
+        out_dir = os.path.join(out_main_dir, "hdf5")
+        in_files = get_all_files_in_dir(start_dir, return_absolute=True)
+        for filename in in_files:
+            try:
+                convert_to_neo(filename, out_dir, remove_existing=False)
+            except Exception as e:
+                log_exception(e, "Error during coversion to neo")
+    
+    if analysis_flags[1]:
+        d_list = ["09-03"]
+        s_list = ["1"]
+        # d_list = [date.today().isoformat()[-5:]]
+        plot_sessions(out_main_dir, d_list, s_list, summary=True)
+    
+    if analysis_flags[2]:
+        plot_batch_sessions(out_main_dir)
+    
+    if analysis_flags[3]:
+        compare_variables(out_main_dir)
 
 if __name__ == "__main__":
     # start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
@@ -1229,4 +1239,5 @@ if __name__ == "__main__":
     start_dir = r"C:\Users\smartin5\TCDUD.onmicrosoft.com\Gao Xiang Ham - MEDPC"
     out_dir = r"C:\Users\smartin5\OneDrive - TCDUD.onmicrosoft.com\Claustrum"
     # TODO set this up with a cfg file and cmd args
-    main_batch(start_dir, out_dir)
+    analysis_flags = [False, True, False, False]
+    main_batch(start_dir, analysis_flags, out_dir)

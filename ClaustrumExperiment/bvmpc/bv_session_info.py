@@ -136,7 +136,7 @@ class SessionInfo:
 
         self.experiment_var_dict['5a_FixedRatio_p'] = (
             base_exp_list[:3] +
-            ["starting_ratio", "ending_ratio", "ratio_increment",
+            ["fixed_ratio", "ending_ratio", "ratio_increment",
              "max_ratio", base_exp_list[4], "fast_trials_to_advance"])
 
         self.experiment_var_dict['5b_FixedInterval_p'] = (
