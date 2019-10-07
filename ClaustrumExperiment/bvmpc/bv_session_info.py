@@ -115,10 +115,11 @@ class SessionInfo:
                 # ['V:', 'END', 'Per Trial Pellets']
             ]))
 
+        # Note, ticks (10ms) are converted to secs
         base_exp_list = [
             "trial_length (mins)", "max_pellets", "advancement_pellets",
             "fixed_ratio", "fast_inter_response_time (secs)",
-            "fixed_interval (secs)", "double_reward_window (secs)"
+            "fixed_interval (ticks)", "double_reward_window (ticks)"
         ]
 
         self.experiment_var_dict = {}

@@ -18,11 +18,8 @@ from datetime import date, timedelta
 #     return 
 
 
-def plot_raster_trials(trial_df, s, sub, date, start_dir, ax):
-    
-    timestamps = s.get_arrays()
-    ratio = int(timestamps["Experiment Variables"][3])
-    interval = int(timestamps["Experiment Variables"][5] / 100)
+def plot_raster_trials(trial_df, s, sub, date, start_dir, ax): 
+    interval = int(s.get_metadata("fixed_interval (secs)"))
 
     # alignment decision
     align_rw, align_pell, align_FI = [0, 1, 0]
@@ -279,14 +276,15 @@ def struc_timeline(sub_list, in_dir):
             ratio, interval, sch, sch_err, sch_rw, sch_dr = [], [], [], [], [], []
             err_FI, err_FR, rw_FI, rw_FR = [], [], [], []
 
+            ratio = int(s.get_metadata("starting_ratio"))
+            interval = int(s.get_metadata("fixed_interval (secs)"))
             # Stage specific variables
             if stage == '5a':
-                s_name = 'R' + str(int(timestamps["Experiment Variables"][3]))
+                s_name = 'R' + str(ratio)
                 ratio = s_name
                 rw_FR = len(reward_times)
             elif stage == '5b':
-                s_name = 'I' + str(int(timestamps[
-                    "Experiment Variables"][3]/100))
+                s_name = 'I' + str(interval)
                 interval = s_name
                 rw_FI = len(reward_times)
             else:
@@ -295,8 +293,8 @@ def struc_timeline(sub_list, in_dir):
                     '6', 'B1').replace('7', 'B2')
             if 'B' in s_name:
                 rw_FI, rw_FR = 0, 0
-                ratio = 'R' + str(int(timestamps["Experiment Variables"][3]))
-                interval = 'I' + str(int(timestamps["Experiment Variables"][5] / 100))
+                ratio = 'R' + str(ratio)
+                interval = 'I' + str(interval)
                 norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = bv_an.split_sess(
                     s, plot_all=True)
                 sch_type = s.get_arrays('Trial Type')
@@ -376,7 +374,6 @@ def compare_variables():
     start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
     # start_dir = r"G:\!Operant Data\Ham"
     in_dir = os.path.join(start_dir, "hdf5")
-    out_dir = os.path.join(start_dir, "Plots")
     sub_list = ['1', '2', '3', '4']
     s_list = ['7']
     grpA_d_list = ['08-10', '08-11', '08-12']
@@ -437,11 +434,6 @@ def grp_errors(s_grp):
     grp_FRerr = []
     grp_FIerr = []
     for i, s in enumerate(s_grp):
-        # timestamps = s.get_arrays()
-        # pell_ts = timestamps["Reward"]
-        # c_ratio = 'R' + str(int(timestamps["Experiment Variables"][3]))
-        # c_interval = 'I' + \
-        #     str(int(timestamps["Experiment Variables"][5] / 100))
         err_FI = 0
         err_FR = 0
         _, _, norm_err_ts, _, _ = bv_an.split_sess(
@@ -804,6 +796,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
         figsize=(cols * size_multiplier, rows * size_multiplier),
         tight_layout=False)
     gs = gridspec.GridSpec(rows, cols, wspace=0.4, hspace=0.5)
+
     for c, sub in enumerate(sub_list):
         # Plot total pellets across sessions
         s_grp = extract_hdf5s(in_dir, sub)
@@ -822,6 +815,8 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
             pass
 
         for i, s in enumerate(s_grp):
+            ratio = int(s.get_metadata("fixed_ratio"))
+            interval = int(s.get_metadata("fixed_interval (secs)"))
             s_type = s.get_metadata('name')[:2]
             timestamps = s.get_arrays()
             date = s.get_metadata('start_date')[3:5]
@@ -835,20 +830,18 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
             if len(pell_double):
                 dpell_change = 1
             if s_type == '5a':
-                s_name = 'R' + str(int(timestamps["Experiment Variables"][3]))
+                s_name = 'R' + str(ratio)
                 c_ratio = s_name
             elif s_type == '5b':
-                s_name = 'I' + str(int(timestamps[
-                    "Experiment Variables"][3]/100))
+                s_name = 'I' + str(interval)
                 c_interval = s_name
             else:
                 s_name = s_type.replace('_', '').replace('2', 'M').replace(
                     '3', 'Lh').replace('4', 'Lt').replace(
                     '6', 'B1').replace('7', 'B2')
             if 'B' in s_name:
-                c_ratio = 'R' + str(int(timestamps["Experiment Variables"][3]))
-                c_interval = 'I' + \
-                    str(int(timestamps["Experiment Variables"][5] / 100))
+                c_ratio = 'R' + str(ratio)
+                c_interval = 'I' + str(interval)
             if not prev_name[0] == s_type[0]:
                 stage_change.append(1)
                 changes.append(0)

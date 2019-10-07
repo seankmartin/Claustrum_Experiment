@@ -60,24 +60,22 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     reward_double = reward_times[np.searchsorted(
         reward_times, pell_ts[pell_double], side='right')]
     single_plot = False
+    ratio = int(session.get_metadata("starting_ratio"))
+    interval = int(session.get_metadata("fixed_interval (secs)"))
 
     if ax is None:
         single_plot = True
         fig, ax = plt.subplots()
         ax.set_title('Cumulative Lever Presses\n', fontsize=15)
         if session_type == '5a_FixedRatio_p':
-            ratio = int(timestamps["Experiment Variables"][3])
             plt.suptitle('\nSubject {}, {} {}, {}'.format(
                 subject, session_type[:-2], ratio, date),
                 color=mycolors(subject), fontsize=10, y=.98, x=.51)
         elif session_type == '5b_FixedInterval_p':
-            interval = int(timestamps["Experiment Variables"][3] / 100)
             plt.suptitle('\nSubject {}, {} {}s, {}'.format(
                 subject, session_type[:-2], interval, date),
                 color=mycolors(subject), fontsize=10, y=.98, x=.51)
         elif session_type == '6_RandomisedBlocks_p:':
-            ratio = int(timestamps["Experiment Variables"][3])
-            interval = int(timestamps["Experiment Variables"][5] / 100)
             plt.suptitle('\nSubject {}, {} FR{}/FI{}s, {}'.format(
                 subject, session_type[:-2], ratio, interval, date),
                 color=mycolors(subject), fontsize=10, y=.98, x=.51)
@@ -87,21 +85,17 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
                 fontsize=10, y=.98, x=.51)
     else:
         if session_type == '5a_FixedRatio_p':
-            ratio = int(timestamps["Experiment Variables"][3])
             ax.set_title('\nSubject {}, S{}, FR{}, {}'.format(
-                subject, stage, ratio, date), color=mycolors(subject),
-                fontsize=10)
+                subject, stage, ratio, date), 
+                color=mycolors(subject), fontsize=10)
         elif session_type == '5b_FixedInterval_p':
-            interval = int(timestamps["Experiment Variables"][3] / 100)
             ax.set_title('\nSubject {}, S{}, FI{}s, {}'.format(
-                subject, stage, interval, date), color=mycolors(subject),
-                fontsize=10)
+                subject, stage, interval, date), 
+                color=mycolors(subject), fontsize=10)
         elif session_type == '6_RandomisedBlocks_p' or stage == '7':
             switch_ts = np.arange(5, 1830, 305)
             for x in switch_ts:
                 plt.axvline(x, color='g', linestyle='-.', linewidth='.4')
-            ratio = int(timestamps["Experiment Variables"][3])
-            interval = int(timestamps["Experiment Variables"][5] / 100)
             ax.set_title('\nSubject {}, S{}, FR{}/FI{}s, {}'.format(
                 subject, stage, ratio, interval, date), color=mycolors(subject),
                 fontsize=10)
@@ -179,13 +173,11 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     elif zoom_sch:  # plots cum graph based on schedule type (i.e. FI/FR)
         if session_type == '5a_FixedRatio_p':
             sch_type = 'FR'
-            ratio = int(timestamps["Experiment Variables"][3])
             ax.set_title('\nSubject {}, FR{} Split'.format(
                 subject, ratio), color=mycolors(subject),
                 fontsize=10)
         elif session_type == '5b_FixedInterval_p':
             sch_type = 'FI'
-            interval = int(timestamps["Experiment Variables"][3] / 100)
             ax.set_title('\nSubject {}, FI{}s Split'.format(
                 subject, interval), color=mycolors(subject),
                 fontsize=10)
@@ -356,6 +348,8 @@ def IRT(session, out_dir, ax=None, showIRT=False):
     stage = session_type[:2].replace('_', '')
     subject = session.get_metadata('subject')
     single_plot = False
+    ratio = int(session.get_metadata("starting_ratio"))
+    interval = int(session.get_metadata("fixed_interval (secs)"))
 
     rewards_i = session.get_rw_ts()
     nosepokes_i = timestamps["Nosepoke"]
@@ -363,7 +357,8 @@ def IRT(session, out_dir, ax=None, showIRT=False):
     if len(rewards_i) > len(nosepokes_i):
         # Assumes reward collected at end of session
         nosepokes_i = np.append(
-            nosepokes_i, [timestamps["Experiment Variables"][0] * 60])
+            nosepokes_i, 
+            [session.get_metadata("trial_length (mins)") * 60])
     # Only consider after the first lever press
     reward_idxs = np.nonzero(rewards_i >= good_lever_ts[0])
     rewards = rewards_i[reward_idxs]
@@ -372,8 +367,8 @@ def IRT(session, out_dir, ax=None, showIRT=False):
     b = np.digitize(rewards, bins=good_lever_ts)
     _, a = np.unique(b, return_index=True)  # returns index for good rewards
     good_nosepokes = nosepokes[a]  # nosepoke ts for pressing levers
+   
     if session_type == '5a_FixedRatio_p':
-        ratio = int(timestamps["Experiment Variables"][3])
         good_lever_ts = good_lever_ts[::ratio]
     if len(good_lever_ts[1:]) > len(good_nosepokes[:-1]):
         IRT = good_lever_ts[1:] - good_nosepokes[:]  # Ended sess w lever press
@@ -395,7 +390,6 @@ def IRT(session, out_dir, ax=None, showIRT=False):
                 subject, session_type[:-2], ratio, date),
                 fontsize=10, y=.98, x=.51)
         elif session_type == '5b_FixedInterval_p':
-            interval = int(timestamps["Experiment Variables"][3] / 100)
             plt.suptitle('\n(Subject {}, {} {}s, {})'.format(
                 subject, session_type[:-2], interval, date),
                 fontsize=10, y=.98, x=.51)

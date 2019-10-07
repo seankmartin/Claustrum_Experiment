@@ -97,7 +97,7 @@ class Session:
 
         """
         if key:
-            return self.metadata[key]
+            return self.metadata.get(key, None)
         return self.metadata
 
     def get_subject_type(self):
@@ -190,8 +190,7 @@ class Session:
         pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
 
         reward_times = self.get_arrays("Nosepoke")
-        exp_var = self.get_arrays("Experiment Variables")
-        trial_len = int(exp_var[0] * 60)
+        trial_len = self.get_metadata("trial_length (mins)") * 60
         if stage == '7' or stage == '6':
             trial_len += 5
             repeated_trial_len = (trial_len) * 6
@@ -236,8 +235,6 @@ class Session:
         anots = self.get_metadata()
         anots["nix_name"] = "Block_Main"
         anots["protocol"] = anots.pop("name")
-        # anots["Experiment Variables"] = self.get_arrays(
-        # key="Experiment Variables")
 
         blk = Block(name="Block_Main", **anots)
 
@@ -337,6 +334,9 @@ class Session:
                 mapping = self.session_info.get_session_variable_list(
                     self.get_metadata("name"))
                 for m, v in zip(mapping, c_data):
+                    if m.endswith("(ticks)"):
+                        m = m[:-4] + "(secs)"
+                        v = v / 100
                     self.metadata[m] = v
             self.info_arrays[parameter] = c_data
             if self.verbose:
