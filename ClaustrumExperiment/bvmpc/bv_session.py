@@ -71,14 +71,15 @@ class Session:
         self.h5_file = os.path.join(out_dir, location)
         self._save_h5_info()
 
-    def save_to_neo(self, out_dir, name=None, neo_backend="nsdf"):
+    def save_to_neo(
+            self, out_dir, name=None, neo_backend="nix", remove_existing=False):
         location = name
         self.neo_backend = neo_backend
         if name == None:
             ext = self._get_neo_io(get_ext=True)
             location = self._get_hdf5_name(ext=ext)
         self.neo_file = os.path.join(out_dir, location)
-        self._save_neo_info()
+        self._save_neo_info(remove_existing)
 
     def get_metadata(self, key=None):
         """
@@ -227,8 +228,17 @@ class Session:
         tdelta_mins = int(tdelta.total_seconds() / 60)
         return tdelta_mins
 
-    def _save_neo_info(self):
+    def _save_neo_info(self, remove_existing):
         """Private function to save info to neo file"""
+        if os.path.isfile(self.neo_file):
+            if remove_existing:
+                os.remove(self.neo_file)
+            else:
+                print("Skipping {} as it already exists".format(
+                    self.neo_file) +
+                    " - set remove_existing to True to remove")
+                return
+
         from neo.core import Block, Segment, Event
         from quantities import s
 
@@ -246,8 +256,6 @@ class Session:
                 times=val * s, labels=None,
                 name=key, nix_name="Event_" + key)
             seg.events.append(e)
-        if os.path.isfile(self.neo_file):
-            os.remove(self.neo_file)
         nio = self._get_neo_io()
         nio.write_block(blk)
         nio.close()
@@ -318,14 +326,14 @@ class Session:
 
     def _extract_session_arrays(self):
         """Private function to pull session arrays out of lines."""
-        print("Extracting arrays for {}".format(self))
         data_info = self.session_info.get_session_type_info(
             self.get_metadata("name"))
 
         if data_info is None:
-            print("Unable to parse information")
+            print("Not parsing {}".format(self))
             return
 
+        print("Parsing {}".format(self))
         if self.verbose:
             print("Parameters extracted:")
         for i, (start_char, end_char, parameter) in enumerate(data_info):

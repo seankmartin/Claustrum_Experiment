@@ -7,16 +7,15 @@ import seaborn as sns
 from bvmpc.bv_session_extractor import SessionExtractor
 from bvmpc.bv_session import Session
 import bvmpc.bv_analyse as bv_an
-from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list
+from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list, get_all_files_in_dir, log_exception
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from scipy import interpolate
 from datetime import date, timedelta
 
-# def split_df(grp_trial_df):  #TODO split trial dataframe into FR and FI only dfs
-
-#     return 
-
+# def split_df(grp_trial_df):  
+    # TODO split trial dataframe into FR and FI only dfs
+    # return 
 
 def plot_raster_trials(trial_df, s, sub, date, start_dir, ax): 
     interval = int(s.get_metadata("fixed_interval (secs)"))
@@ -115,7 +114,6 @@ def plot_raster_trials(trial_df, s, sub, date, start_dir, ax):
         plt.axhline(l, linestyle='-', color=c, linewidth='5', alpha=0.1)
     
     return
-
 
 def struc_session(d_list, sub_list, in_dir):
     """ Structure sessions into a pandas dataframe based on trials
@@ -239,7 +237,6 @@ def struc_session(d_list, sub_list, in_dir):
         df_date.append(date)
 
     return s_grp, grp_session_df, grp_trial_df, df_sub, df_date
-
 
 def struc_timeline(sub_list, in_dir):
     """ Structure sessions into a pandas dataframe based on trials
@@ -367,7 +364,6 @@ def struc_timeline(sub_list, in_dir):
 
     return grp_timeline_df, grp_timeline_df_sub
 
-
 def compare_variables(start_dir):
     """ Temporary Function to plot difference between errors"""
     # Only works for stage 7
@@ -428,7 +424,6 @@ def compare_variables(start_dir):
     ax.legend()
     plt.show()
 
-
 def grp_errors(s_grp):
     grp_FRerr = []
     grp_FIerr = []
@@ -446,7 +441,6 @@ def grp_errors(s_grp):
         grp_FRerr.append(err_FR)
         grp_FIerr.append(err_FI)
     return grp_FRerr, grp_FIerr
-
 
 def plot_batch_sessions(start_dir):
     out_dir = os.path.join(start_dir, "Plots")
@@ -553,7 +547,6 @@ def plot_batch_sessions(start_dir):
     #     d.append(single_date.isoformat()[-5:])
     # print(d)
     # plot_sessions(start_dir, d)
-
 
 def plot_sessions(
     start_dir, d_list, sub_list, 
@@ -689,7 +682,6 @@ def plot_sessions(
             timeline_plot(sub_list, in_dir, out_dir, single_plot=single, det_err=det_err, det_corr=det_corr,
                           recent=recent, show_date=show_date, details=details)
 
-
 def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
              int_only=False, corr_only=False):
     # Plots summary of day
@@ -784,9 +776,10 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
     fig.savefig(os.path.join(out_dir, out_name), dpi=400)
     plt.close()
 
-
-def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, det_corr=False,
-                  recent=False, show_date=True, details=False):
+def timeline_plot(
+    sub_list, in_dir, out_dir, single_plot=False, 
+    det_err=False, det_corr=False, recent=False, 
+    show_date=True, details=False):
     # Plot size
     rows, cols = [len(sub_list), 4]
     size_multiplier = 5
@@ -1096,7 +1089,6 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
         fig.savefig(os.path.join(out_dir, out_name), dpi=400)
         plt.close()
 
-
 def extract_sessions(
     in_dir, sub_list=None, s_list=None, d_list=None,
     load_backend="neo", neo_backend="nix"):
@@ -1135,7 +1127,6 @@ def extract_sessions(
     print('Total Files extracted: {}'.format(len(s_grp)))
     return s_grp
 
-
 def convert_to_hdf5(filename, out_dir):
     """Convert all sessions in filename to hdf5 and store in out_dir."""
     make_dir_if_not_exists(out_dir)
@@ -1149,18 +1140,22 @@ def convert_to_hdf5(filename, out_dir):
         else:
             s.save_to_h5(out_dir)
 
-def convert_to_neo(filename, out_dir, neo_backend="nsdf"):
+def convert_to_neo(filename, out_dir, neo_backend="nix", remove_existing=False):
     """Convert all sessions in filename to hdf5 and store in out_dir."""
     make_dir_if_not_exists(out_dir)
-
-    s_extractor = SessionExtractor(filename, verbose=True)
+    print("Converting files in {} to neo".format(
+        os.path.basename(filename)))
+    s_extractor = SessionExtractor(
+        filename, verbose=False)
 
     for s in s_extractor:  # Batch run for file
         stage = s.get_metadata('name')
         if stage not in s.session_info.session_info_dict.keys():
             continue
         else:
-            s.save_to_neo(out_dir, neo_backend=neo_backend)
+            s.save_to_neo(
+                out_dir, neo_backend=neo_backend,
+                remove_existing=remove_existing)
 
 def load_hdf5(filename, verbose=False):
     if verbose:
@@ -1177,7 +1172,7 @@ def run_mpc_file(filename, out_dir):
     """Take in a filename and out_dir then run the main control logic."""
     make_dir_if_not_exists(out_dir)
 
-    s_extractor = SessionExtractor(filename, verbose=True)
+    s_extractor = SessionExtractor(filename, verbose=False)
 
     for s in s_extractor:  # Batch run for file
 
@@ -1192,43 +1187,10 @@ def run_mpc_file(filename, out_dir):
         bv_an.cumplot(s, out_dir, False)
         # bv_an.IRT(s, out_dir, False)  # Doesnt work with stage 6
 
-
-if __name__ == "__main__":
-    """Main control."""
-    # start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"  # from Ham Personal HD
-    # start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
-    start_dir = r"C:\Users\smartin5\TCDUD.onmicrosoft.com\Gao Xiang Ham - MEDPC"
-    filename = "!2019-09-02"
-    out_dir = r"C:\Users\smartin5\OneDrive - TCDUD.onmicrosoft.com\Claustrum\hdf5"
-    bk = "nix"
-    convert_to_neo(os.path.join(start_dir, filename), out_dir, neo_backend=bk)
-    session = Session(
-        neo_file=os.path.join(
-        out_dir, "1_09-02-19_16-28_7_RandomisedBlocksExtended_p.nix"),
-        neo_backend=bk)
-    print(session)
-
-    # # Batch processing of sessions in folder
-    # in_dir = start_dir
-    # out_dir = os.path.join(start_dir, "hdf5")
-    # in_files = os.listdir(in_dir)
-    # for file in in_files:
-    #     filename = os.path.join(in_dir, file)
-    #     if os.path.isfile(filename):
-    #         convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
-
-    # # Processing of single sessions
-    # filename = os.path.join(start_dir, "!2019-09-29")
-    # out_dir = os.path.join(start_dir, "hdf5")
-    # convert_to_hdf5(filename, out_dir)  # Uncomment to convert to hdf5
-
-    # Processing specific sessions from hdf5
-
-    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
-    # plot_sessions(start_dir, [date.today().isoformat()[-5:]])
-    # plot_sessions(start_dir, ['09-03'])
-    # plot_batch_sessions(start_dir)
-    # compare_variables(start_dir)
+def main_single(filename, out_dir):
+    """Main control for single files."""
+    # # Converting single MPC files
+    # convert_to_neo(filename, out_dir)
 
     # # Running single session files
     # filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-04"
@@ -1241,3 +1203,30 @@ if __name__ == "__main__":
     # run_mpc_file(filename, out_dir)
 
     # load_hdf5(filename, out_dir)
+
+def main_batch(start_dir, out_main_dir=None):
+    """Main control for batch process."""
+
+    # Batch processing of sessions in folder
+    if out_main_dir is None:
+        out_main_dir = start_dir
+    out_dir = os.path.join(out_main_dir, "hdf5")
+    in_files = get_all_files_in_dir(start_dir, return_absolute=True)
+    for filename in in_files:
+        try:
+            convert_to_neo(filename, out_dir, remove_existing=False)
+        except Exception as e:
+            log_exception(e, "Error during coversion to neo")
+
+    # plot_sessions(out_main_dir, [date.today().isoformat()[-5:]])
+    # plot_sessions(out_main_dir, ['09-03'])
+    # plot_batch_sessions(out_main_dir)
+    # compare_variables(out_main_dir)
+
+if __name__ == "__main__":
+    # start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
+    # start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
+    start_dir = r"C:\Users\smartin5\TCDUD.onmicrosoft.com\Gao Xiang Ham - MEDPC"
+    out_dir = r"C:\Users\smartin5\OneDrive - TCDUD.onmicrosoft.com\Claustrum"
+    # TODO set this up with a cfg file and cmd args
+    main_batch(start_dir, out_dir)
