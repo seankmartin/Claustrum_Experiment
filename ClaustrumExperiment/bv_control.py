@@ -129,7 +129,7 @@ def struc_session(d_list, sub_list, in_dir):
     in_dir = os.path.join(start_dir, "hdf5")
     # d_list, s_list, sub_list = [['09-17'], ['7'], ['3']]
     s_list = ['7']
-    s_grp = extract_hdf5s(in_dir, sub_list, s_list, d_list)
+    s_grp = extract_sessions(in_dir, sub_list, s_list, d_list)
     
     # Quit program if no sessions passed
     if s_grp == []:
@@ -252,7 +252,7 @@ def struc_timeline(sub_list, in_dir):
     grp_timeline_df_sub = []
 
     for sub in sub_list:
-        s_grp = extract_hdf5s(in_dir, sub)
+        s_grp = extract_sessions(in_dir, sub)
         # Initialize column arrays
         d_list, t_list, sub_list, s_idx_list, r_list, s_list = [], [], [], [], [], []
         err_FR_list, err_FI_list = [], []
@@ -368,10 +368,9 @@ def struc_timeline(sub_list, in_dir):
     return grp_timeline_df, grp_timeline_df_sub
 
 
-def compare_variables():
+def compare_variables(start_dir):
     """ Temporary Function to plot difference between errors"""
     # Only works for stage 7
-    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
     # start_dir = r"G:\!Operant Data\Ham"
     in_dir = os.path.join(start_dir, "hdf5")
     sub_list = ['1', '2', '3', '4']
@@ -380,9 +379,9 @@ def compare_variables():
     grpB_d_list = ['08-17', '08-18', '08-19']
     grpC_d_list = ['09-15', '09-16', '09-17']
 
-    s_grpA = extract_hdf5s(in_dir, sub_list, s_list, grpA_d_list)
-    s_grpB = extract_hdf5s(in_dir, sub_list, s_list, grpB_d_list)
-    s_grpC = extract_hdf5s(in_dir, sub_list, s_list, grpC_d_list)
+    s_grpA = extract_sessions(in_dir, sub_list, s_list, grpA_d_list)
+    s_grpB = extract_sessions(in_dir, sub_list, s_list, grpB_d_list)
+    s_grpC = extract_sessions(in_dir, sub_list, s_list, grpC_d_list)
     s_grpA.pop()
     s_grpA.pop(-4)
     s_grpA.pop(-7)
@@ -449,9 +448,7 @@ def grp_errors(s_grp):
     return grp_FRerr, grp_FIerr
 
 
-def plot_batch_sessions():
-    # Folder details
-    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
+def plot_batch_sessions(start_dir):
     out_dir = os.path.join(start_dir, "Plots")
     
     # Parameters for specifying session
@@ -523,31 +520,31 @@ def plot_batch_sessions():
 
         # plot cumulative response graphs
         if summary == 1:
-            # plot_sessions(d, sub, summary=True, single=True,
+            # plot_sessions(start_dir, d, sub, summary=True, single=True,
             #               corr_only=True)  # Single animal breakdown
             # Group with corr_only breakdown
-            plot_sessions(d, sub, summary=True, single=False, corr_only=True)
-            # plot_sessions(d, sub, summary=True, single=False, corr_only=False)  # Group with complete breakdown
+            plot_sessions(start_dir, d, sub, summary=True, single=False, corr_only=True)
+            # plot_sessions(start_dir, d, sub, summary=True, single=False, corr_only=False)  # Group with complete breakdown
 
         # plot all 4 timeline types
         if timeline == 1:
             single = False  # plots seperate graphs for each animal if True
             show_date = True  # Sets x-axis as dates if True
-            # plot_sessions(d, sub timeline=True, single=single, details=True, recent=True,
+            # plot_sessions(start_dir, d, sub timeline=True, single=single, details=True, recent=True,
             #               show_date=show_date)  # Timeline_recent_details
-            # plot_sessions(d, sub timeline=True, single=single, details=True, det_err=True, det_corr=False, recent=True,
+            # plot_sessions(start_dir, d, sub timeline=True, single=single, details=True, det_err=True, det_corr=False, recent=True,
             #               show_date=show_date)  # Timeline_recent_details_Err **Need to fix with ax.remove() instead**
-            # plot_sessions(d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True, recent=True,
+            # plot_sessions(start_dir, d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True, recent=True,
             #               show_date=show_date)  # Timeline_recent_details_Corr **Need to fix with ax.remove() instead**
-            plot_sessions(d, sub, timeline=True, single=single, details=True, det_err=True, det_corr=False,
+            plot_sessions(start_dir, d, sub, timeline=True, single=single, details=True, det_err=True, det_corr=False,
                           show_date=show_date)  # Timeline_recent_details_Err
-            plot_sessions(d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True,
+            plot_sessions(start_dir, d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True,
                           show_date=show_date)  # Timeline_recent_details_Corr
-            plot_sessions(d, sub, timeline=True, single=single, details=True,
+            plot_sessions(start_dir, d, sub, timeline=True, single=single, details=True,
                           recent=False, show_date=show_date)  # Timeline_details
-            plot_sessions(d, sub, timeline=True, single=single, details=False,
+            plot_sessions(start_dir, d, sub, timeline=True, single=single, details=False,
                           recent=True, show_date=show_date)  # Timeline_recent
-            plot_sessions(d, sub, timeline=True, single=single, details=False,
+            plot_sessions(start_dir, d, sub, timeline=True, single=single, details=False,
                           recent=False, show_date=show_date)  # Timeline
 
     # # Multiple dates in single plot; Doesnt work yet
@@ -555,12 +552,15 @@ def plot_batch_sessions():
     # for single_date in daterange(start_date, end_date):
     #     d.append(single_date.isoformat()[-5:])
     # print(d)
-    # plot_sessions(d)
+    # plot_sessions(start_dir, d)
 
 
-def plot_sessions(d_list, sub_list, summary=False, single=False, timeline=False,
-                  details=False, det_err=False, det_corr=False, recent=False, show_date=False,
-                  int_only=False, corr_only=False):
+def plot_sessions(
+    start_dir, d_list, sub_list, 
+    summary=False, single=False, timeline=False, 
+    details=False, det_err=False, det_corr=False, 
+    recent=False, show_date=False, int_only=False, 
+    corr_only=False):
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
     single = True: Plots single session summaries with breakdown of single blocks
@@ -570,8 +570,6 @@ def plot_sessions(d_list, sub_list, summary=False, single=False, timeline=False,
     '''
     s_list = ['4', '5a', '5b', '6', '7']
 
-    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
-    # start_dir = r"G:\!Operant Data\Ham"
     in_dir = os.path.join(start_dir, "hdf5")
     out_dir = os.path.join(start_dir, "Plots")
     make_dir_if_not_exists(out_dir)
@@ -579,7 +577,7 @@ def plot_sessions(d_list, sub_list, summary=False, single=False, timeline=False,
     if summary and not corr_only:
         #  extracts hdf5 session based on specification
         max_plot = 4  # Set max plots per figure
-        s_grp = extract_hdf5s(in_dir, sub_list, s_list, d_list)
+        s_grp = extract_sessions(in_dir, sub_list, s_list, d_list)
         if s_grp == []:
             return print("***No Files Extracted***")
         idx = 0
@@ -603,7 +601,7 @@ def plot_sessions(d_list, sub_list, summary=False, single=False, timeline=False,
     if summary and corr_only:
         # plots corr_only plots
         max_plot = 4  # Set max plots per figure
-        s_grp = extract_hdf5s(in_dir, sub_list, s_list, d_list)
+        s_grp = extract_sessions(in_dir, sub_list, s_list, d_list)
         if s_grp == []:
             return print("***No Files Extracted***")
 
@@ -629,7 +627,7 @@ def plot_sessions(d_list, sub_list, summary=False, single=False, timeline=False,
         # Single Subject Plots
         idx = 0
         for sub in sub_list:
-            s_grp = extract_hdf5s(in_dir, sub, s_list, d_list)
+            s_grp = extract_sessions(in_dir, sub, s_list, d_list)
             if s_grp == []:
                 return print("***No Files Extracted***")
             s_passed = []
@@ -799,7 +797,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
 
     for c, sub in enumerate(sub_list):
         # Plot total pellets across sessions
-        s_grp = extract_hdf5s(in_dir, sub)
+        s_grp = extract_sessions(in_dir, sub)
         s_list, r_list, type_list, d_list = [], [], [], []
         err_FR_list, err_FI_list = [], []
         rw_FR_list, rw_FI_list, rw_double_list = [], [], []
@@ -1099,8 +1097,10 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
         plt.close()
 
 
-def extract_hdf5s(in_dir, sub_list=None, s_list=None, d_list=None):
-    '''Extracts specified sessions from hdf5 files '''
+def extract_sessions(
+    in_dir, sub_list=None, s_list=None, d_list=None,
+    load_backend="neo", neo_backend="nix"):
+    '''Extracts specified sessions from files '''
 
     def should_use(val, vlist):
         if vlist is None:
@@ -1122,7 +1122,15 @@ def extract_hdf5s(in_dir, sub_list=None, s_list=None, d_list=None):
         if subject_ok and type_ok and date_ok:
             filename = os.path.join(in_dir, file)
             if os.path.isfile(filename):
-                session = load_hdf5(filename)
+                if load_backend == "neo":
+                    session = load_neo(filename)
+                elif load_backend == "hdf5":
+                    session = load_hdf5(filename)
+                else:
+                    print("Backend {} invalid, using neo".format(
+                        load_backend))
+                    session = load_neo(filename)
+
                 s_grp.append(session)
     print('Total Files extracted: {}'.format(len(s_grp)))
     return s_grp
@@ -1154,13 +1162,16 @@ def convert_to_neo(filename, out_dir, neo_backend="nsdf"):
         else:
             s.save_to_neo(out_dir, neo_backend=neo_backend)
 
-def load_hdf5(filename):
-    print_h5(filename)
+def load_hdf5(filename, verbose=False):
+    if verbose:
+        print_h5(filename)
     session = Session(h5_file=filename)
-    # print(session)
 
     return session
 
+def load_neo(filename, neo_backend="nix"):
+    session = Session(neo_file=filename, neo_backend="nix")
+    return session
 
 def run_mpc_file(filename, out_dir):
     """Take in a filename and out_dir then run the main control logic."""
@@ -1213,10 +1224,11 @@ if __name__ == "__main__":
 
     # Processing specific sessions from hdf5
 
-    # plot_sessions([date.today().isoformat()[-5:]])
-    # plot_sessions(['09-03'])
-    # plot_batch_sessions()
-    # compare_variables()
+    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
+    # plot_sessions(start_dir, [date.today().isoformat()[-5:]])
+    # plot_sessions(start_dir, ['09-03'])
+    # plot_batch_sessions(start_dir)
+    # compare_variables(start_dir)
 
     # # Running single session files
     # filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-04"

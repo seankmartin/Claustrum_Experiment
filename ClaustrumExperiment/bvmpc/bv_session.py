@@ -15,7 +15,7 @@ class Session:
 
     def __init__(
             self, h5_file=None, lines=None, neo_file=None,
-            neo_backend="nsdf", verbose=False, file_origin=None):
+            neo_backend="nix", verbose=False, file_origin=None):
         """
         Initialise the Session with lines from a MEDPC file.
 
