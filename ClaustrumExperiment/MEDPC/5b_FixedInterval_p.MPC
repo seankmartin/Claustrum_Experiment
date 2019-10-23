@@ -14,7 +14,9 @@
     ^MaxTimeIdx = 0
     ^MaxPelletIdx = 1
     ^RequiredPelletsIdx = 2
-    ^InterResponseTimeIdx = 3
+    ^FixedIntervalIdx = 3
+    ^FixedWindowIdx = 4
+    ^FirstWait = 5
 
 \ Index holder locations
     ^FeederTimeIdx = 0
@@ -29,6 +31,7 @@
     ^LeftLeverCountIdx = 2
     ^WrongLeftCountIdx = 3
     ^WrongNosepokeCountIdx = 4
+    ^DoubleRewardIdx = 5
 
 \ Inputs
     ^LeftLever = 1
@@ -52,6 +55,7 @@
     VAR_ALIAS Max Pellets = A(1) \ Default 45
     VAR_ALIAS Pellets To Advance = A(2) \ Default 45
     VAR_ALIAS Fixed Interval (secs) = A(3) \ Default 30s
+    VAR_ALIAS Fixed Window (secs) = A(4) \ Default 3s
 
 \ Arrays
     \ A = Experiment variables
@@ -62,10 +66,11 @@
     \ N = Data array for unnecessary left response times
     \ O = Data array for unnecessary nosepoke times
     \ R = Data array for left lever response times
+    \ Y = Internal computation array
 
-    DIM A = 3
+    DIM A = 5
     DIM B = 4
-    DIM C = 4
+    DIM C = 5
     DIM D = 120 \ Should be large enough to hold max_pellets + 1
     DIM E = 120 \ Should be large enough to hold max_pellets + 1
     DIM N = 100000 \ Could be anything
@@ -78,10 +83,12 @@
     \ C(2) = Number of left lever presses
     \ C(3) = Number of unnecessary left lever presses
     \ C(4) = Number of unnecessary nosepokes
+    \ C(5) = Number of double rewards
 
 \ Z Pulses
     \ Z1 = Screen update pulse
     \ Z2 = Activate Feeder
+    \ Z3 = Activate Feeder twice
     \ Z32 = End the session
 
 \ Single Variables
@@ -98,10 +105,10 @@
 S.S.1, \ Control flow
 
     S1, \ Establish default values and turn on fan
-        0.01": SET A(^MaxTimeIdx) = 30; SET A(^MaxPelletIdx) = 45; SET A(^RequiredPelletsIdx) = 45; SET A(^InterResponseTimeIdx) = 30; SET D(0) = -987.987; SET E(0) = -987.987; SET N(0) = -987.987; SET O(0) = -987.987; SET R(0) = -987.987; LOCKON ^FanBox; Z1 ---> S2
+        0.01": SET A(^MaxTimeIdx) = 30; SET A(^MaxPelletIdx) = 45; SET A(^RequiredPelletsIdx) = 45; SET A(^FixedIntervalIdx) = 30; SET A(^FixedWindowIdx) = 3; SET D(0) = -987.987; SET E(0) = -987.987; SET N(0) = -987.987; SET O(0) = -987.987; SET R(0) = -987.987; LOCKON ^FanBox; Z1 ---> S2
 
     S2, \ Wait for start signal
-        #START: SET A(^InterResponseTimeIdx) = A(^InterResponseTimeIdx) * 1"; ON ^HouseLight; Z1 ---> S3
+        #START: SET A(^FirstWait) = (A(^FixedIntervalIdx) - A(^FixedWindowIdx)) * 1"; SET A(^FixedIntervalIdx) = A(^FixedIntervalIdx) * 1"; SET A(^FixedWindowIdx) = A(^FixedWindowIdx) * 1" ON ^HouseLight; Z1 ---> S3
 
     S3, \ Time the session and flag off after Max Time or condition met
         0.01": SET T = T + 0.01; IF (T-5)/60 >= A(^MaxTimeIdx) [@EndSession, @ContinueSession] 
@@ -127,7 +134,7 @@ S.S.2, \ Experiment logic
         #START: ON ^Sound; ---> S2
     
     S2, \Turn off the sound and show response levers
-        5": OFF ^Sound; ON ^LeftLeverOut; ON ^LeftLight; ---> S3
+        5": OFF ^Sound; ON ^LeftLeverOut; ON ^LeftLight; SET Y = 0 ---> S3
 
     S3, \ Drop pellets
 
@@ -140,8 +147,21 @@ S.S.2, \ Experiment logic
         1 #R ^Nosepoke: ---> S5
 
     S5, \ IRT starts after nosepoke
-        A(^InterResponseTimeIdx)#T: ---> S3
+        A(^FirstWait)#T: ---> S7
 
+        1 #R ^LeftLever: SET N(B(^WrongLeftTimeIdx)) = T; ADD B(^WrongLeftTimeIdx); ADD C(^WrongLeftCountIdx); SET N(B(^WrongLeftTimeIdx)) = -987.987; SET Y = 1; Z1 ---> SX
+
+    S6, \ In the special window for two pellets
+        A(^FixedWindowIdx)#T: ---> S3
+
+        1 #R ^LeftLever: SET R(B(^LeftLeverTimeIdx)) = T; ADD B(^LeftLeverTimeIdx); ADD C(^LeftLeverCountIdx); SET R(B(^LeftLeverTimeIdx)) = -987.987; Z1; Z3 ---> S4
+
+
+    S7, \ Was the lever pressed too early?
+        A(^FixedWindowIdx)#T: IF Y = 0 [@Good, @Bad] 
+                 @Good: ---> S6
+                 @Bad: ---> S3
+ 
         1 #R ^LeftLever: SET N(B(^WrongLeftTimeIdx)) = T; ADD B(^WrongLeftTimeIdx); ADD C(^WrongLeftCountIdx); SET N(B(^WrongLeftTimeIdx)) = -987.987; Z1 ---> SX
 
 S.S.5, \ Detect unnecessary nosepokes and record the times
@@ -153,17 +173,30 @@ S.S.5, \ Detect unnecessary nosepokes and record the times
         1 #R ^Nosepoke: SET O(B(^WrongNosepokeTimeIdx)) = T; ADD B(^WrongNosepokeTimeIdx); ADD C(^WrongNosepokeCountIdx); SET O(B(^WrongNosepokeTimeIdx)) = -987.987; Z1 ---> SX
 
         #Z2: ---> S3
-    
+
+        #Z3: ---> S4
+
     S3, \ Detect correct nosepoke
-        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; SET J = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdx); SET E(B(^NosepokeTimeIdx)) = -987.987; OFF ^RewardLight; Z1 ---> S2
+        1 #R ^Nosepoke: SET E(B(^NosepokeTimeIdx)) = T; SET J = T; ADD B(^NosepokeTimeIdx); ADD C(^NosepokeCountIdx); SET E(B(^NosepokeTimeIdx)) = -987.987; OFF ^RewardLight; SET Y = 0; Z1 ---> S2
+
+    S4, \ Wait a bit then look for nosepoke
+        0.3": ---> S3 
 
 S.S.7, \ Drop pellets
 
     S1, \ Drop the pellet
         #Z2: ON ^Feeder; ON ^RewardLight; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
 
+        #Z3: ON ^Feeder; ON ^RewardLight; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); ADD C(^DoubleRewardIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S3
+
     S2, \ Turn off the feeder after dropping
         0.5": OFF ^Feeder ---> S1
+
+    S3, \ Turn off feeder
+        0.1": OFF ^Feeder ---> S4
+    
+    S4, \ Turn on feeder for second reward
+        0.1": ON ^Feeder; SET D(B(^FeederTimeIdx)) = T; ADD B(^FeederTimeIdx); ADD C(^FeederCountIdx); SET D(B(^FeederTimeIdx)) = -987.987; Z1 ---> S2
 
 S.S.10, \ Update the display
 
@@ -173,4 +206,4 @@ S.S.10, \ Update the display
         #Z1: ---> S2
 
     S2, \ Update the screen
-        .01": SHOW 1, Experiment Time, T/60; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Correct Nosepokes, C(^NosepokeCountIdx); SHOW 4, Correct Lefts, C(^LeftLeverCountIdx); SHOW 5, Unnecessary Lefts, C(^WrongLeftCountIdx); SHOW 6, Unnecessary Nosepokes, C(^WrongNosepokeCountIdx); ---> S1
+        .01": SHOW 1, Experiment Time, T/60; SHOW 2, Pellets, C(^FeederCountIdx); SHOW 3, Correct Nosepokes, C(^NosepokeCountIdx); SHOW 4, Correct Lefts, C(^LeftLeverCountIdx); SHOW 5, Unnecessary Lefts, C(^WrongLeftCountIdx); SHOW 6, Unnecessary Nosepokes, C(^WrongNosepokeCountIdx); SHOW 7, Double Rewards, C(^DoubleRewardIdx) ---> S1
