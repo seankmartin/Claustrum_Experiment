@@ -124,7 +124,7 @@ S.S.1, \ Control flow
         #START:
             SET A(^FirstWait) = (A(^FixedIntervalIdx) - A(^FixedWindowIdx)) * 1";
             SET A(^FixedIntervalIdx) = A(^FixedIntervalIdx) * 1";
-            SET A(^FixedWindowIdx) = A(^FixedWindowIdx) * 1"
+            SET A(^FixedWindowIdx) = A(^FixedWindowIdx) * 1";
             ON ^HouseLight;
             Z1
         ---> S3
