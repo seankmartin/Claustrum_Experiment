@@ -81,7 +81,7 @@
     VAR_ALIAS Pellets To Advance = A(2) \ Default 90
     VAR_ALIAS Fixed Ratio = A(3) \ Default 6
     VAR_ALIAS Inter Response Time (secs) = A(4) \ Default 4s
-    VAR_ALIAS Fixed Interal = A(5) \ Default 30
+    VAR_ALIAS Fixed Interval = A(5) \ Default 30
     VAR_ALIAS Fixed Window = A(6) \ Default 3
 
 \ Arrays

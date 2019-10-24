@@ -31,5 +31,8 @@
     "typescriptreact",
     "yaml",
     "yml"
-  ]
+  ],
+  "python.linting.pylintEnabled": true,
+  "python.linting.enabled": true,
+  "python.pythonPath": "C:\\Users\\hamg\\.conda\\envs\\geba_c\\python.exe"
 }

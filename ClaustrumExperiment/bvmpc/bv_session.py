@@ -1,103 +1,21 @@
 """
-This module handles reading Session data from a MedPC file.
+This module is a representation of a single Operant box Session.
 
 Written by Sean Martin and Gao Xiang Ham
 """
-
 import os
 import numpy as np
 import h5py
 from datetime import datetime
-from bv_session_config import SessionInfo
-
-
-class SessionExtractor:
-    """
-    Session Extractor pulls info from MEDPC files.
-
-    This info is stored in a list of Session objects.
-    """
-
-    def __init__(self, file_location, verbose=False):
-        """
-        Initialise with an extraction location and then extract.
-
-        Parameters
-        ----------
-        file_location : str
-            Where the MEDPC file is to extract from.
-        verbose : bool
-            If this is true, print information during loading.
-
-        """
-        self.file_location = file_location
-        self.sessions = []  # sessions extracted are stored in this list
-        self.verbose = verbose
-
-        self.extract_sessions()
-
-    def get_sessions(self):
-        """Return the list of Session objects that were extracted."""
-        return self.sessions
-
-    def extract_sessions(self):
-        """
-        Extract MPC sessions.
-
-        Returns
-        -------
-        A List of sessions, one element for each session.
-
-        """
-        with open(self.file_location, 'r') as f:
-            lines = f.read().splitlines()  # reads lines into list
-            lines = np.array(
-                list(filter(None, lines)))  # removes empty space
-
-            s_starts = np.flatnonzero(
-                np.core.defchararray.find(lines, "Start Date:") != -1)
-            s_ends = np.zeros_like(s_starts)
-            s_ends[:-1] = s_starts[1:]
-            s_ends[-1] = lines.size
-            print((s_ends))
-            print((s_starts))
-
-            for start, end in zip(s_starts, s_ends):
-                s_data = np.array(lines[start:end])
-                self.sessions.append(
-                    Session(lines=s_data, verbose=self.verbose))
-            return self.sessions
-
-    def __repr__(self):
-        """Session names that will be extracted."""
-        out_str = self._get_session_names()
-        return out_str
-
-    def print_session_names(self):
-        """Print the session names."""
-        print(self._get_session_names())
-
-    def _get_session_names(self):
-        """Session names that will be extracted."""
-        str_list = []
-        str_list.append("Sessions in file:\n")
-        for i, s in enumerate(self.sessions):
-            str_list.append("{} -> {}\n".format(i, s.get_subject_type()))
-        return "".join(str_list)
-
-    def __len__(self):
-        """Return Number of sessions in the extractor."""
-        return len(self.sessions)
-
-    def __getitem__(self, i):
-        """Get the ith indexed session."""
-        return self.sessions[i]
+from bvmpc.bv_session_info import SessionInfo
 
 
 class Session:
     """The base class to hold MEDPC behaviour information."""
 
-    def __init__(self, h5_file=None, lines=None, verbose=False):
+    def __init__(
+            self, h5_file=None, lines=None, neo_file=None,
+            neo_backend="nix", verbose=False, file_origin=None):
         """
         Initialise the Session with lines from a MEDPC file.
 
@@ -115,12 +33,14 @@ class Session:
         self.metadata = {}
         self.info_arrays = {}
         self.verbose = verbose
+        self.file_origin = file_origin
         self.out_dir = None
 
-        a = lines is None
-        b = h5_file is None
-        if (a and b or (not a and not b)):
-            print("Error: Do not pass lines and h5_file to Session")
+        a = 0 if lines is None else 1
+        b = 0 if h5_file is None else 1
+        c = 0 if neo_file is None else 1
+        if (a + b + c != 1):
+            print("Error: Session takes one of h5_file, lines and neo_file")
             return
 
         if lines is not None:
@@ -129,8 +49,15 @@ class Session:
             self._extract_session_arrays()
 
         elif h5_file is not None:
+            self.file_origin = h5_file
             self.h5_file = h5_file
             self._extract_h5_info()
+
+        elif neo_file is not None:
+            self.file_origin = neo_file
+            self.neo_file = neo_file
+            self.neo_backend = neo_backend
+            self._extract_neo_info()
 
         else:
             print("Error: Unknown situation in Session init")
@@ -140,13 +67,19 @@ class Session:
         """Save information to a h5 file"""
         location = name
         if name == None:
-            location = "{}_{}_{}_{}.h5".format(
-                self.get_metadata("subject"),
-                self.get_metadata("start_date").replace("/", "-"),
-                self.get_metadata("start_time")[:-3].replace(":", "-"),
-                self.get_metadata("name"))
+            location = self._get_hdf5_name()
         self.h5_file = os.path.join(out_dir, location)
         self._save_h5_info()
+
+    def save_to_neo(
+            self, out_dir, name=None, neo_backend="nix", remove_existing=False):
+        location = name
+        self.neo_backend = neo_backend
+        if name == None:
+            ext = self._get_neo_io(get_ext=True)
+            location = self._get_hdf5_name(ext=ext)
+        self.neo_file = os.path.join(out_dir, location)
+        self._save_neo_info(remove_existing)
 
     def get_metadata(self, key=None):
         """
@@ -165,7 +98,7 @@ class Session:
 
         """
         if key:
-            return self.metadata[key]
+            return self.metadata.get(key, None)
         return self.metadata
 
     def get_subject_type(self):
@@ -173,6 +106,20 @@ class Session:
         subject = self.get_metadata("subject")
         name = self.get_metadata("name")
         return 'Subject: {}, Trial Type {}'.format(subject, name)
+
+    def get_ratio(self):
+        """Return the fixed ratio as an int."""
+        ratio = self.get_metadata("fixed_ratio")
+        if ratio is not None:
+            return int(ratio)
+        return None
+
+    def get_interval(self):
+        """Return the fixed ratio as an int."""
+        interval = self.get_metadata("fixed_interval (secs)")
+        if interval is not None:
+            return int(interval)
+        return None
 
     def get_arrays(self, key=None):
         """
@@ -238,6 +185,52 @@ class Session:
             levers.append(self.get_arrays("Un_FI_Err"))
         return np.sort(np.concatenate(levers, axis=None))
 
+    def get_rw_ts(self):
+        """
+        Get the timestamps of rewards. 
+
+        Corrected for session switching/ending without reward collection.
+
+        Returns
+        -------
+        np.ndarray : A numpy array of sorted timestamps.
+
+        """
+        session_type = self.get_metadata('name')
+        stage = session_type[:2].replace('_', '')
+        pell_ts = self.get_arrays("Reward")
+        dpell_bool = np.diff(pell_ts) < 0.5
+        # Provides index of double pell in pell_ts
+        dpell_idx = np.nonzero(dpell_bool)[0] + 1
+        pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
+
+        reward_times = self.get_arrays("Nosepoke")
+        trial_len = self.get_metadata("trial_length (mins)") * 60
+        if stage == '7' or stage == '6':
+            trial_len += 5
+            repeated_trial_len = (trial_len) * 6
+
+        if reward_times[-1] < pell_ts[-1]:
+            if stage == '7' or stage == '6':
+                reward_times = np.append(reward_times, repeated_trial_len)
+            else:
+                reward_times = np.append(reward_times, trial_len)
+
+        if stage == '7' or stage == '6':
+            # Check if trial switched before reward collection -> Adds collection as switch time
+            blocks = np.arange(trial_len, repeated_trial_len, trial_len)
+            split_pell_ts = np.split(
+                pell_ts_exdouble, np.searchsorted(pell_ts_exdouble, blocks))
+            split_reward_ts = np.split(
+                reward_times, np.searchsorted(reward_times, blocks))
+
+            for i, (pell, reward) in enumerate(zip(split_pell_ts, split_reward_ts[:-1])):
+                if len(pell) > len(reward):
+                    reward_times = np.insert(reward_times, np.searchsorted(
+                        reward_times, blocks[i]), blocks[i])
+
+        return np.sort(reward_times, axis=None)
+
     def time_taken(self):
         """Calculate how long the Session took in mins."""
         start_time = self.get_metadata("start_time")[-8:].replace(' ', '0')
@@ -249,14 +242,85 @@ class Session:
         tdelta_mins = int(tdelta.total_seconds() / 60)
         return tdelta_mins
 
+    def _save_neo_info(self, remove_existing):
+        """Private function to save info to neo file"""
+        if os.path.isfile(self.neo_file):
+            if remove_existing:
+                os.remove(self.neo_file)
+            else:
+                print("Skipping {} as it already exists".format(
+                    self.neo_file) +
+                    " - set remove_existing to True to remove")
+                return
+
+        from neo.core import Block, Segment, Event
+        from quantities import s
+
+        anots = self.get_metadata()
+        anots["nix_name"] = "Block_Main"
+        anots["protocol"] = anots.pop("name")
+
+        blk = Block(name="Block_Main", **anots)
+
+        seg = Segment(name="Segment_Main", nix_name="Segment_Main")
+        blk.segments.append(seg)
+        # Could consider splitting by trials using index in seg
+        for key, val in self.get_arrays().items():
+            e = Event(
+                times=val * s, labels=None,
+                name=key, nix_name="Event_" + key)
+            seg.events.append(e)
+        nio = self._get_neo_io()
+        nio.write_block(blk)
+        nio.close()
+
+    def _extract_neo_info(self):
+        """Private function to extract info from neo file"""
+        nio = self._get_neo_io()
+        block = nio.read()[0]
+        nio.close()
+        annotations = block.annotations
+        for key, val in annotations.items():
+            if key == "protocol":
+                key = "name"
+            self.metadata[key] = val
+        for event in block.segments[0].events:
+            key = event.name
+            self.info_arrays[key] = (
+                event.times.rescale('s').magnitude)
+
+    def _get_neo_io(self, get_ext=False):
+        backend = self.neo_backend
+        if backend == "nix":
+            if get_ext:
+                return "nix"
+            from neo.io import NixIO
+            nio = NixIO(filename=self.neo_file)
+        elif backend == "nsdf":
+            if get_ext:
+                return "h5"
+            from neo.io import NSDFIO
+            nio = NSDFIO(filename=self.neo_file)
+        elif backend == "matlab":
+            if get_ext:
+                return "mat"
+            from neo.io import NeoMatlabIO
+            nio = NeoMatlabIO(filename=self.neo_file)
+        else:
+            print(
+                "Backend {} not recognised, defaulting to nix".format(
+                    backend))
+            from neo.io import NixIO
+            if get_ext:
+                return "nix"
+            nio = NixIO(filename=self.neo_file)
+        return nio
+
     def _save_h5_info(self):
         """Private function to save info to h5 file"""
         with h5py.File(self.h5_file, "w", libver="latest") as f:
             for key, val in self.get_metadata().items():
-                print("{} {}".format(key, val))
                 f.attrs[key] = val
-            for key, val in f.attrs.items():
-                print(key, val)
             for key, val in self.get_arrays().items():
                 f.create_dataset(key, data=val, dtype=np.float32)
 
@@ -276,18 +340,26 @@ class Session:
 
     def _extract_session_arrays(self):
         """Private function to pull session arrays out of lines."""
-        print("Extracting arrays for {}".format(self))
         data_info = self.session_info.get_session_type_info(
             self.get_metadata("name"))
 
         if data_info is None:
-            print("Unable to parse information")
+            print("Not parsing {}".format(self))
             return
 
+        print("Parsing {}".format(self))
         if self.verbose:
             print("Parameters extracted:")
         for i, (start_char, end_char, parameter) in enumerate(data_info):
             c_data = self._extract_array(self.lines, start_char, end_char)
+            if parameter == "Experiment Variables":
+                mapping = self.session_info.get_session_variable_list(
+                    self.get_metadata("name"))
+                for m, v in zip(mapping, c_data):
+                    if m.endswith("(ticks)"):
+                        m = m[:-4] + "(secs)"
+                        v = v / 100
+                    self.metadata[m] = v
             self.info_arrays[parameter] = c_data
             if self.verbose:
                 print(i, '-> {}: {}'.format(parameter, len(c_data)))
@@ -318,6 +390,13 @@ class Session:
             st = 5 * i
             arr[st:st + len(numbers)] = numbers
         return arr
+
+    def _get_hdf5_name(self, ext="h5"):
+        return "{}_{}_{}_{}.{}".format(
+            self.get_metadata("subject"),
+            self.get_metadata("start_date").replace("/", "-"),
+            self.get_metadata("start_time")[:-3].replace(":", "-"),
+            self.get_metadata("name"), ext)
 
     def __repr__(self):
         """
