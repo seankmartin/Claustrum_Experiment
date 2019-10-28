@@ -463,22 +463,22 @@ def plot_batch_sessions():
     out_dir = os.path.join(start_dir, "Plots")
     
     # Parameters for specifying session
-    # sub_list = ['1', '2']
-    sub = ['4']
-    # sub_list = ['6']
-    # sub_list = ['1', '2', '3', '4']
-    # sub_list = ['5', '6']
+    # sub = ['1', '2']
+    # sub = ['4']
+    # sub = ['6']
+    # sub = ['1', '2', '3', '4']
+    sub = ['7', '8', '9', '10']
     
     # start_date = date(2019, 7, 15)  # date(year, mth, day)
-    start_date = date(2019, 8, 7)  # date(year, mth, day)
-    end_date = date(2019, 8, 9)
-    # start_date = date(2019, 8, 11)  # date(year, mth, day)
+    # start_date = date(2019, 8, 7)  # date(year, mth, day)
+    # end_date = date(2019, 8, 9)
+    start_date = date(2019, 10, 23)  # date(year, mth, day)
     # end_date = date(2019, 8, 12)
     # start_date = date.today() - timedelta(days=4)
-    # end_date = date.today()
+    end_date = date.today()
 
     # Quick control of plotting
-    timeline, summary, raster = [0, 0, 1]
+    timeline, summary, raster = [1, 0, 0]
 
     if raster:
         d = ['08-08','08-11','08-19','09-03']
@@ -540,26 +540,28 @@ def plot_batch_sessions():
             plot_sessions(d, sub, summary=True, single=False, corr_only=True)
             # plot_sessions(d, sub, summary=True, single=False, corr_only=False)  # Group with complete breakdown
 
-        # plot all 4 timeline types
-        if timeline == 1:
-            single = False  # plots seperate graphs for each animal if True
-            show_date = True  # Sets x-axis as dates if True
-            # plot_sessions(d, sub timeline=True, single=single, details=True, recent=True,
-            #               show_date=show_date)  # Timeline_recent_details
-            # plot_sessions(d, sub timeline=True, single=single, details=True, det_err=True, det_corr=False, recent=True,
-            #               show_date=show_date)  # Timeline_recent_details_Err **Need to fix with ax.remove() instead**
-            # plot_sessions(d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True, recent=True,
-            #               show_date=show_date)  # Timeline_recent_details_Corr **Need to fix with ax.remove() instead**
-            plot_sessions(d, sub, timeline=True, single=single, details=True, det_err=True, det_corr=False,
-                          show_date=show_date)  # Timeline_recent_details_Err
-            plot_sessions(d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True,
-                          show_date=show_date)  # Timeline_recent_details_Corr
-            plot_sessions(d, sub, timeline=True, single=single, details=True,
-                          recent=False, show_date=show_date)  # Timeline_details
-            plot_sessions(d, sub, timeline=True, single=single, details=False,
-                          recent=True, show_date=show_date)  # Timeline_recent
-            plot_sessions(d, sub, timeline=True, single=single, details=False,
-                          recent=False, show_date=show_date)  # Timeline
+    # plot all 4 timeline types
+    if timeline == 1:
+        d = [end_date.isoformat()[-5:]]
+        single = False  # plots seperate graphs for each animal if True
+        show_date = True  # Sets x-axis as dates if True
+        # plot_sessions(d, sub timeline=True, single=single, details=True, recent=True,
+        #               show_date=show_date)  # Timeline_recent_details
+        # plot_sessions(d, sub timeline=True, single=single, details=True, det_err=True, det_corr=False, recent=True,
+        #               show_date=show_date)  # Timeline_recent_details_Err **Need to fix with ax.remove() instead**
+        # plot_sessions(d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True, recent=True,
+        #               show_date=show_date)  # Timeline_recent_details_Corr **Need to fix with ax.remove() instead**
+        
+        # plot_sessions(d, sub, timeline=True, single=single, details=True, det_err=True, det_corr=False,
+        #               show_date=show_date)  # Timeline_recent_details_Err
+        # plot_sessions(d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True,
+        #               show_date=show_date)  # Timeline_recent_details_Corr
+        # plot_sessions(d, sub, timeline=True, single=single, details=True,
+        #               recent=False, show_date=show_date)  # Timeline_details
+        # plot_sessions(d, sub, timeline=True, single=single, details=False,
+        #               recent=True, show_date=show_date)  # Timeline_recent
+        plot_sessions(d, sub, timeline=True, single=single, details=False,
+                        recent=False, show_date=show_date)  # Timeline
 
     # # Multiple dates in single plot; Doesnt work yet
     # d = []
@@ -1115,7 +1117,7 @@ def extract_hdf5s(in_dir, sub_list=None, s_list=None, d_list=None):
     def should_use(val, vlist):
         if vlist is None:
             return True
-        if val in vlist:
+        if val == vlist:
             return True
         return False
 
