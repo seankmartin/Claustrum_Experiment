@@ -302,12 +302,14 @@ def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False
     pell_double = np.nonzero(np.diff(pell_ts) < 0.5)
     reward_double = reward_times[np.searchsorted(
         reward_times, pell_ts[pell_double], side='right')]  # returns reward ts after d_pell
+    err_lever_ts = []
 
     if blocks is not None:
         pass
     else:
         blocks = np.arange(5, 1830, 305)  # Default split into schedules
-    incl = ""
+
+    incl = ""  # Initialize print for type of extracted lever_ts
     if stage == '7' and plot_error:  # plots errors only
         incl = '_Errors_Only'
         lever_ts = session.get_err_lever_ts()
@@ -318,9 +320,6 @@ def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False
             lever_ts, err_lever_ts), axis=None))
     elif stage == '7':  # plots all responses exclu. errors
         incl = '_Correct Only'
-        err_lever_ts = []
-    else:
-        err_lever_ts = []
 
     split_lever_ts = np.split(lever_ts,
                               np.searchsorted(lever_ts, blocks))

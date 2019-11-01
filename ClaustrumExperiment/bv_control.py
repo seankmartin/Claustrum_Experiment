@@ -19,10 +19,6 @@ from datetime import date, timedelta
 
 def plot_raster_trials(trial_df, s, sub, date, start_dir, ax):
     
-    timestamps = s.get_arrays()
-    ratio = int(timestamps["Experiment Variables"][3])
-    interval = int(timestamps["Experiment Variables"][5] / 100)
-
     # alignment decision
     align_rw, align_pell, align_FI = [0, 1, 0]
 
@@ -53,7 +49,7 @@ def plot_raster_trials(trial_df, s, sub, date, start_dir, ax):
     elif align_FI:
         plot_name = 'Interval-Aligned'
         norm_arr = np.empty_like(norm_rw)
-        norm_arr.fill(interval)
+        norm_arr.fill(30)
     else:
         plot_name = 'Start-Aligned'
         norm_arr = np.zeros_like(norm_rw)
@@ -64,6 +60,8 @@ def plot_raster_trials(trial_df, s, sub, date, start_dir, ax):
             color.append('black')
         elif schedule_type[i] == 'FI':
             color.append('b')
+        else:
+            color.append('g')
         norm_lever[i] -= norm_arr[i]
         norm_err[i] -= norm_arr[i]
         norm_dr[i] -= norm_arr[i]
@@ -79,9 +77,9 @@ def plot_raster_trials(trial_df, s, sub, date, start_dir, ax):
     ax.eventplot(norm_dr[:], color='magenta', label='Double Reward')
 
     # Figure labels
-    xmax = 5
-    xmin = -30
-    ax.set_xlim(xmin, xmax)
+    xmax = 10
+    xmin = -50
+    ax.set_xlim(xmin, xmax)  # Uncomment to set x limit
     ax.axvline(0, linestyle='-', color='k', linewidth='.5')
     ax.tick_params(axis='both', labelsize=15)
     ax.set_xlabel('Time (s)', fontsize=20)
@@ -129,8 +127,7 @@ def struc_session(d_list, sub_list, in_dir):
         df_date         - array denoting the date corresponding to each df
     """
     in_dir = os.path.join(start_dir, "hdf5")
-    # d_list, s_list, sub_list = [['09-17'], ['7'], ['3']]
-    s_list = ['6','7']
+    s_list = ['4','5a','5b','6','7']
     s_grp = extract_hdf5s(in_dir, sub_list, s_list, d_list)
     
     # Quit program if no sessions passed
@@ -160,8 +157,9 @@ def struc_session(d_list, sub_list, in_dir):
         # pell drop ts excluding double ts
         pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
         reward_times = s.get_rw_ts()
-        schedule_type = []
 
+        # Assign schedule type to trials
+        schedule_type = []
         if stage == '7' or stage == '6':
             norm_r_ts, _, _, _, _ = bv_an.split_sess(
                 s, norm=False, plot_all=True)
@@ -174,6 +172,17 @@ def struc_session(d_list, sub_list, in_dir):
                     b_type = 'FI'
                 for l, _ in enumerate(block):
                     schedule_type.append(b_type)
+        else:
+            if stage == '4':
+                b_type = 'CR'
+            elif stage == '5a':
+                b_type = 'FR'
+            elif stage == '5b':
+                b_type = 'FI'
+            else:
+                b_type = 'NA'
+            for i in reward_times:
+                schedule_type.append(b_type)
 
         # Rearrange timestamps based on trial per row
         lever_ts = s.get_lever_ts(True)
@@ -193,11 +202,11 @@ def struc_session(d_list, sub_list, in_dir):
         # Arrays used for normalization of timestamps to trials
         from copy import deepcopy
         trial_norm = np.insert(reward_times, 0, 0)
-        norm_lever = np.copy(trial_lever_ts)
+        norm_lever = deepcopy(trial_lever_ts)
         norm_err = deepcopy(trial_err_ts)
         norm_dr = deepcopy(trial_dr_ts)
-        norm_rw = np.copy(reward_times)
-        norm_pell = np.copy(pell_ts_exdouble)
+        norm_rw = deepcopy(reward_times)
+        norm_pell = deepcopy(pell_ts_exdouble)
 
         # Normalize timestamps based on start of trial
         for i, _ in enumerate(norm_rw):
@@ -207,7 +216,7 @@ def struc_session(d_list, sub_list, in_dir):
             norm_pell[i] -= trial_norm[i]
             norm_rw[i] -= trial_norm[i]
 
-        # # 2D array of lever timestamps
+        # # 2D array of lever timestamps (Incomplete)
         # for i, (l, err) in enumerate(zip(trial_lever_ts, trial_err_ts)):
         #     l_end = len(l)
         #     lever_arr[i,:l_end] = l[:]
@@ -215,6 +224,7 @@ def struc_session(d_list, sub_list, in_dir):
         #     err_arr[i,:err_end] = err[:]
         
         
+        # Timestamps kept as original starting from session start
         session_dict = {
                 'Reward (ts)': reward_times,
                 'Pellet (ts)': pell_ts_exdouble,
@@ -223,6 +233,8 @@ def struc_session(d_list, sub_list, in_dir):
                 'Levers (ts)': trial_lever_ts,
                 'Err (ts)': trial_err_ts
                 }
+
+        # Timestamps normalised to each trial start
         trial_dict = {
                 'Reward (ts)': norm_rw,
                 'Pellet (ts)': norm_pell,
@@ -231,6 +243,7 @@ def struc_session(d_list, sub_list, in_dir):
                 'Levers (ts)': norm_lever,
                 'Err (ts)': norm_err
                 }
+        
         for key, val in trial_dict.items():
             print(key, ':', len(val))
 
@@ -457,44 +470,46 @@ def grp_errors(s_grp):
     return grp_FRerr, grp_FIerr
 
 
-def plot_batch_sessions():
+def plot_batch_sessions(sub):
     # Folder details
     start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
     out_dir = os.path.join(start_dir, "Plots")
     
     # Parameters for specifying session
     # sub = ['1', '2']
-    # sub = ['4']
+    # sub = ['7']
     # sub = ['6']
     # sub = ['1', '2', '3', '4']
-    sub = ['7', '8', '9', '10']
+    # sub = ['7', '8', '9', '10']
     
     # start_date = date(2019, 7, 15)  # date(year, mth, day)
     # start_date = date(2019, 8, 7)  # date(year, mth, day)
     # end_date = date(2019, 8, 9)
-    start_date = date(2019, 10, 23)  # date(year, mth, day)
+    # start_date = date(2019, 10, 23)  # date(year, mth, day)
     # end_date = date(2019, 8, 12)
-    # start_date = date.today() - timedelta(days=4)
-    end_date = date.today()
+
+    # Sets date using today as reference (Default)
+    start_date = date.today() - timedelta(days=0)
+    end_date = date.today() + timedelta(days=1)
 
     # Quick control of plotting
-    timeline, summary, raster = [1, 0, 0]
+    timeline, summary, raster = [0, 1, 0]
 
     if raster:
-        d = ['08-08','08-11','08-19','09-03']
-        # d = []
-        # for single_date in daterange(start_date, end_date):
-        #     d.append(single_date.isoformat()[-5:])
+        # d = ['08-08','08-11','08-19','09-03']  # Change dates to set desired plots
+
+        # Default conversion of date based on start_date and end_date range
+        d = []
+        for single_date in daterange(start_date, end_date):
+            d.append(single_date.isoformat()[-5:])
 
         s_grp, _, grp_trial_df, df_sub, df_date = struc_session(
             d, sub, start_dir)
         
+        df_name = df_date  # Label plots by date
+        # df_name = ['S6_FR6','FR6_noDP', 'FR8', 'FR10']  # Custom plot names
         
-        # df_name = df_date  # Label plots by date
-        df_name = ['S6_FR6','FR6_noDP', 'FR8', 'FR10']  # Custom plot names
-
-        
-        plot_df = grp_trial_df[1:]
+        plot_df = grp_trial_df[:]
 
         # Figure Initialization
         n = len(plot_df)
@@ -811,7 +826,7 @@ def timeline_plot(sub_list, in_dir, out_dir, single_plot=False, det_err=False, d
     gs = gridspec.GridSpec(rows, cols, wspace=0.4, hspace=0.5)
     for c, sub in enumerate(sub_list):
         # Plot total pellets across sessions
-        s_grp = extract_hdf5s(in_dir, sub)
+        s_grp = extract_hdf5s(in_dir, [sub])
         s_list, r_list, type_list, d_list = [], [], [], []
         err_FR_list, err_FI_list = [], []
         rw_FR_list, rw_FI_list, rw_double_list = [], [], []
@@ -1117,7 +1132,7 @@ def extract_hdf5s(in_dir, sub_list=None, s_list=None, d_list=None):
     def should_use(val, vlist):
         if vlist is None:
             return True
-        if val == vlist:
+        if val in vlist:
             return True
         return False
 
@@ -1205,7 +1220,12 @@ if __name__ == "__main__":
 
     # plot_sessions([date.today().isoformat()[-5:]])
     # plot_sessions(['09-03'])
-    plot_batch_sessions()
+
+    sub = ['7', '8', '9', '10']
+    # sub = ['3','4']
+    for s in sub:
+        plot_batch_sessions([s])
+    
     # compare_variables()
 
     # # Running single session files
