@@ -178,7 +178,7 @@ S.S.6, \ Handle the FR increment logic
                  @Slow: SET I = 0 ---> SX
  
     S2, \ Enough Successive fast trails occured
-        0.01": SET I = 0; SET A(^RatioIdx) = A(^RatioIdx) + A(^RatioIncrementIdx); Z1; SET M(^RatioSwitchIdx) = T; ADD B(^RatioSwitchIdx); SET M(^RatioSwitchIdx) = -987.987; IF A(^RatioIdx) = A(^MaxRatioIdx) [@Stay, @Increase] 
+        0.01": SET I = 0; SET A(^RatioIdx) = A(^RatioIdx) + A(^RatioIncrementIdx); Z1; SET M(B(^RatioSwitchIdx)) = T; ADD B(^RatioSwitchIdx); SET M(B(^RatioSwitchIdx)) = -987.987; IF A(^RatioIdx) = A(^MaxRatioIdx) [@Stay, @Increase] 
                  @Stay: ---> S3
                  @Increase: ---> S1
  
