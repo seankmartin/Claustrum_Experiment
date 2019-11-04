@@ -240,7 +240,7 @@ class Session:
 
     def get_rw_ts(self):
         """
-        Get the timestamps of rewards. Corrected for session switching/ending without collection
+        Get the timestamps of rewards. Corrected for session switching/ending without collection. 
 
         Returns
         -------
@@ -250,12 +250,15 @@ class Session:
         session_type = self.get_metadata('name')
         stage = session_type[:2].replace('_', '')
         pell_ts = self.get_arrays("Reward")
+        reward_times = self.get_arrays("Nosepoke")
+
+        # Check for double pellets
         dpell_bool = np.diff(pell_ts) < 0.5
         # Provides index of double pell in pell_ts
         dpell_idx = np.nonzero(dpell_bool)[0] + 1
         pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
 
-        reward_times = self.get_arrays("Nosepoke")
+        # if last reward time < last pellet dispensed, assume animal picked reward at end of session.
         if reward_times[-1] < pell_ts[-1]:
             reward_times = np.append(reward_times, 1830)
 

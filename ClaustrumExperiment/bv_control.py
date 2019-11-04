@@ -17,7 +17,7 @@ from datetime import date, timedelta
 #     return 
 
 
-def plot_raster_trials(trial_df, s, sub, date, start_dir, ax):
+def plot_raster_trials(trial_df, s, sub, date, stage, start_dir, ax):
     
     # alignment decision
     align_rw, align_pell, align_FI = [0, 1, 0]
@@ -43,9 +43,12 @@ def plot_raster_trials(trial_df, s, sub, date, start_dir, ax):
     if align_rw:
         plot_name = 'Reward-Aligned'
         norm_arr = np.copy(norm_rw)
+        
     elif align_pell:
         plot_name = 'Pell-Aligned'
         norm_arr = np.copy(norm_pell)
+        xmax = 10
+        xmin = -60
     elif align_FI:
         plot_name = 'Interval-Aligned'
         norm_arr = np.empty_like(norm_rw)
@@ -53,6 +56,8 @@ def plot_raster_trials(trial_df, s, sub, date, start_dir, ax):
     else:
         plot_name = 'Start-Aligned'
         norm_arr = np.zeros_like(norm_rw)
+        xmax = 60
+        xmin = 0
 
     for i, _ in enumerate(norm_rw):
         # color assigment for trial type
@@ -77,14 +82,12 @@ def plot_raster_trials(trial_df, s, sub, date, start_dir, ax):
     ax.eventplot(norm_dr[:], color='magenta', label='Double Reward')
 
     # Figure labels
-    xmax = 10
-    xmin = -50
     ax.set_xlim(xmin, xmax)  # Uncomment to set x limit
     ax.axvline(0, linestyle='-', color='k', linewidth='.5')
     ax.tick_params(axis='both', labelsize=15)
     ax.set_xlabel('Time (s)', fontsize=20)
     ax.set_ylabel('Trials', fontsize=20)
-    ax.set_title('\nSubject {} {} Raster ({})'.format(sub, date, plot_name),
+    ax.set_title('\nSubject {} {} {} Raster ({})'.format(sub, date, stage, plot_name),
                  y=1.025, fontsize=25, color=mycolors(sub))
 
     # Highlight specific trials
@@ -125,6 +128,7 @@ def struc_session(d_list, sub_list, in_dir):
         grp_trial_df    - array of pandas dataframe with ts normalized to start of each trial
         df_sub          - array denoting the subject corresponding to each df
         df_date         - array denoting the date corresponding to each df
+        df_stage        - array denoting the session stage corresponding to each df
     """
     in_dir = os.path.join(start_dir, "hdf5")
     s_list = ['4','5a','5b','6','7']
@@ -140,6 +144,7 @@ def struc_session(d_list, sub_list, in_dir):
     grp_trial_df = []
     df_sub = []
     df_date = []
+    df_stage = []
 
     for s in s_grp:
         subject = s.get_metadata('subject')
@@ -253,8 +258,9 @@ def struc_session(d_list, sub_list, in_dir):
         grp_trial_df.append(trial_df)
         df_sub.append(subject)
         df_date.append(date)
+        df_stage.append(stage)
 
-    return s_grp, grp_session_df, grp_trial_df, df_sub, df_date
+    return s_grp, grp_session_df, grp_trial_df, df_sub, df_date, df_stage
 
 
 def struc_timeline(sub_list, in_dir):
@@ -489,11 +495,11 @@ def plot_batch_sessions(sub):
     # end_date = date(2019, 8, 12)
 
     # Sets date using today as reference (Default)
-    start_date = date.today() - timedelta(days=0)
-    end_date = date.today() + timedelta(days=1)
+    start_date = date.today() - timedelta(days=3)
+    end_date = date.today() - timedelta(days=1)
 
     # Quick control of plotting
-    timeline, summary, raster = [0, 1, 0]
+    timeline, summary, raster = [0, 0, 1]
 
     if raster:
         # d = ['08-08','08-11','08-19','09-03']  # Change dates to set desired plots
@@ -503,7 +509,7 @@ def plot_batch_sessions(sub):
         for single_date in daterange(start_date, end_date):
             d.append(single_date.isoformat()[-5:])
 
-        s_grp, _, grp_trial_df, df_sub, df_date = struc_session(
+        s_grp, _, grp_trial_df, df_sub, df_date, df_stage = struc_session(
             d, sub, start_dir)
         
         df_name = df_date  # Label plots by date
@@ -515,7 +521,6 @@ def plot_batch_sessions(sub):
         n = len(plot_df)
         if n > 4:
             print('Too many plots')
-            quit()
         elif n > 2:
             rows, cols = [4, 4*math.ceil(n/2)]
         else:
@@ -529,7 +534,7 @@ def plot_batch_sessions(sub):
         for i, t_df in enumerate(plot_df):
             k = (i%2)*2
             ax = fig.add_subplot(gs[k:k+2, 4*int(i/2):4*math.ceil((i+1)/2)])
-            plot_raster_trials(t_df, s_grp[i], df_sub[i], df_name[i], start_dir, ax)
+            plot_raster_trials(t_df, s_grp[i], df_sub[i], df_name[i], df_stage[i], start_dir, ax)
 
         # Save Figure
         # plt.subplots_adjust(top=0.85)
@@ -537,7 +542,7 @@ def plot_batch_sessions(sub):
         #                 color=mycolors(subject), fontsize=30)
         d = sorted(set(df_date))
         sub = sorted(set(df_sub))
-        out_name = "Raster_" + str(d) + '_' + str(sub)
+        out_name = "Raster_" + str(d) + '_' + str(sub) + '_' + str(set(df_stage))
         out_name += ".png"
         print("Saved figure to {}".format(
             os.path.join(out_dir, out_name)))
@@ -1223,8 +1228,10 @@ if __name__ == "__main__":
 
     sub = ['7', '8', '9', '10']
     # sub = ['3','4']
-    for s in sub:
-        plot_batch_sessions([s])
+    for sub in sub:
+        plot_batch_sessions(sub)
+        
+    # plot_batch_sessions(sub)
     
     # compare_variables()
 
