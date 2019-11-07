@@ -6,7 +6,7 @@ import pandas as pd
 import seaborn as sns
 from bvmpc.bv_parse_sessions import SessionExtractor, Session
 import bvmpc.bv_analyse as bv_an
-from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list
+from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list, chunks
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from scipy import interpolate
@@ -495,8 +495,8 @@ def plot_batch_sessions(sub):
     # end_date = date(2019, 8, 12)
 
     # Sets date using today as reference (Default)
-    start_date = date.today() - timedelta(days=3)
-    end_date = date.today() - timedelta(days=1)
+    start_date = date.today() - timedelta(days=1)
+    end_date = date.today() - timedelta(days=0)
 
     # Quick control of plotting
     timeline, summary, raster = [0, 0, 1]
@@ -515,39 +515,41 @@ def plot_batch_sessions(sub):
         df_name = df_date  # Label plots by date
         # df_name = ['S6_FR6','FR6_noDP', 'FR8', 'FR10']  # Custom plot names
         
-        plot_df = grp_trial_df[:]
+        df_set = list(chunks(grp_trial_df, 4))
 
-        # Figure Initialization
-        n = len(plot_df)
-        if n > 4:
-            print('Too many plots')
-        elif n > 2:
-            rows, cols = [4, 4*math.ceil(n/2)]
-        else:
-            rows, cols = [2*n, 4*math.ceil(n/2)]
-        size_multiplier = 5
-        fig = plt.figure(
-            figsize=(cols * size_multiplier, rows * size_multiplier),
-            tight_layout=False)
-        gs = gridspec.GridSpec(rows, cols, wspace=0.5, hspace=0.5)
+        for j, plot_df in enumerate(df_set):
+            # Figure Initialization
+            n = len(plot_df)
+            if n > 4:
+                print('Too many plots')
+                quit()
+            elif n > 2:
+                rows, cols = [4, 4*math.ceil(n/2)]
+            else:
+                rows, cols = [2*n, 4*math.ceil(n/2)]
+            size_multiplier = 5
+            fig = plt.figure(
+                figsize=(cols * size_multiplier, rows * size_multiplier),
+                tight_layout=False)
+            gs = gridspec.GridSpec(rows, cols, wspace=0.5, hspace=0.5)
 
-        for i, t_df in enumerate(plot_df):
-            k = (i%2)*2
-            ax = fig.add_subplot(gs[k:k+2, 4*int(i/2):4*math.ceil((i+1)/2)])
-            plot_raster_trials(t_df, s_grp[i], df_sub[i], df_name[i], df_stage[i], start_dir, ax)
+            for i, t_df in enumerate(plot_df):
+                k = (i%2)*2
+                ax = fig.add_subplot(gs[k:k+2, 4*int(i/2):4*math.ceil((i+1)/2)])
+                plot_raster_trials(t_df, s_grp[i], df_sub[i], df_name[i], df_stage[i], start_dir, ax)
 
-        # Save Figure
-        # plt.subplots_adjust(top=0.85)
-        # fig.suptitle(('Subject ' + subject + ' Performance'),
-        #                 color=mycolors(subject), fontsize=30)
-        d = sorted(set(df_date))
-        sub = sorted(set(df_sub))
-        out_name = "Raster_" + str(d) + '_' + str(sub) + '_' + str(set(df_stage))
-        out_name += ".png"
-        print("Saved figure to {}".format(
-            os.path.join(out_dir, out_name)))
-        fig.savefig(os.path.join(out_dir, out_name), dpi=400)
-        plt.close()
+            # Save Figure
+            # plt.subplots_adjust(top=0.85)
+            # fig.suptitle(('Subject ' + subject + ' Performance'),
+            #                 color=mycolors(subject), fontsize=30)
+            d = sorted(set(df_date))
+            sub = sorted(set(df_sub))
+            out_name = "Raster_" + str(d) + '_' + str(sub) + '_' + str(set(df_stage)) + '_' + str(j)
+            out_name += ".png"
+            print("Saved figure to {}".format(
+                os.path.join(out_dir, out_name)))
+            fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+            plt.close()
 
     for single_date in daterange(start_date, end_date):
         d = [single_date.isoformat()[-5:]]
@@ -564,7 +566,7 @@ def plot_batch_sessions(sub):
     if timeline == 1:
         d = [end_date.isoformat()[-5:]]
         single = False  # plots seperate graphs for each animal if True
-        show_date = True  # Sets x-axis as dates if True
+        show_date = False  # Sets x-axis as dates if True
         # plot_sessions(d, sub timeline=True, single=single, details=True, recent=True,
         #               show_date=show_date)  # Timeline_recent_details
         # plot_sessions(d, sub timeline=True, single=single, details=True, det_err=True, det_corr=False, recent=True,
@@ -1228,10 +1230,10 @@ if __name__ == "__main__":
 
     sub = ['7', '8', '9', '10']
     # sub = ['3','4']
-    for sub in sub:
-        plot_batch_sessions(sub)
+    # for sub in sub:
+    #     plot_batch_sessions(sub)
         
-    # plot_batch_sessions(sub)
+    plot_batch_sessions(sub)
     
     # compare_variables()
 

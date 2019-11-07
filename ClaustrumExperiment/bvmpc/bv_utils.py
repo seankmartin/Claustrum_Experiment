@@ -74,6 +74,12 @@ def print_h5(file_location):
         print()
 
 
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
+
 if __name__ == "__main__":
     """Main entry point."""
     PARSER = argparse.ArgumentParser(
