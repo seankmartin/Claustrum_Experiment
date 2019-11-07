@@ -134,7 +134,7 @@ def struc_session(d_list, sub_list, in_dir):
     """
     in_dir = os.path.join(start_dir, "hdf5")
     # d_list, s_list, sub_list = [['09-17'], ['7'], ['3']]
-    s_list = ['7']
+    s_list = ['4','5a','5b','6','7']
     s_grp = extract_sessions(in_dir, sub_list, s_list, d_list)
     
     # Quit program if no sessions passed
@@ -1151,15 +1151,16 @@ def main_batch(
 if __name__ == "__main__":
     # TODO set this up with a cfg file and cmd args
 
-    # start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
+    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
+    out_dir = start_dir
     # start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
-    start_dir = r"C:\Users\smartin5\TCDUD.onmicrosoft.com\Gao Xiang Ham - MEDPC"
-    out_dir = r"C:\Users\smartin5\OneDrive - TCDUD.onmicrosoft.com\Claustrum"
+    # start_dir = r"C:\Users\smartin5\TCDUD.onmicrosoft.com\Gao Xiang Ham - MEDPC"
+    # out_dir = r"C:\Users\smartin5\OneDrive - TCDUD.onmicrosoft.com\Claustrum"
 
     # Description of analysis_flags
     # 0 - convert files to neo format in start_dir
     # 1 - plot sessions, d_list and s_list set in main_batch
     # 2 - plot batch sessions, sub, and dates in main_batch
     # 3 - temporary compare variables function
-    analysis_flags = [False, True, False, False]
+    analysis_flags = [False, False, True, False]
     main_batch(start_dir, analysis_flags, out_dir)
