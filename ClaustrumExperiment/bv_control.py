@@ -20,8 +20,14 @@ from datetime import date, timedelta
 #     return 
 
 
-def plot_raster_trials(trial_df, s, sub, date, stage, start_dir, ax):
+def plot_raster_trials(s, start_dir, ax):
     
+    # Retrive session related variables
+    date = s.get_metadata('start_date').replace('/', '_')
+    sub = s.get_metadata('subject')
+    stage = s.get_stage()
+    trial_df = s.get_trial_df_norm()
+
     # alignment decision
     align_rw, align_pell, align_FI = [0, 1, 0]
 
@@ -367,32 +373,28 @@ def grp_errors(s_grp):
         grp_FIerr.append(err_FI)
     return grp_FRerr, grp_FIerr
 
-def plot_batch_sessions(start_dir, sub, start_date, end_date):
+def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
     out_dir = os.path.join(start_dir, "Plots")
     
 
     # Quick control of plotting
-    timeline, summary, raster = [0, 0, 1]
+    timeline, summary, raster = [0, 1, 0]
 
     if raster:
-        # d = ['08-08','08-11','08-19','09-03']  # Change dates to set desired plots
+        in_dir = os.path.join(start_dir, "hdf5")  # Path join only present in plot_sessions
 
         # Default conversion of date based on start_date and end_date range
         d = []
         for single_date in daterange(start_date, end_date):
             d.append(single_date.isoformat()[-5:])
-
-        s_grp, _, grp_trial_df, df_sub, df_date, df_stage = struc_session(
-            d, sub, start_dir)
         
-        df_name = df_date  # Label plots by date
-        # df_name = ['S6_FR6','FR6_noDP', 'FR8', 'FR10']  # Custom plot names
-        
-        df_set = list(chunks(grp_trial_df, 4))
+        s_grp = extract_sessions(in_dir, sub_list, d_list=d)
 
-        for j, plot_df in enumerate(df_set):
+        plot_set = chunks(s_grp, 4)  # splits s_grp into groups of 4
+
+        for j, plot_grp in enumerate(plot_set):
             # Figure Initialization
-            n = len(plot_df)
+            n = len(plot_grp)
             if n > 4:
                 print('Too many plots')
                 quit()
@@ -406,18 +408,27 @@ def plot_batch_sessions(start_dir, sub, start_date, end_date):
                 tight_layout=False)
             gs = gridspec.GridSpec(rows, cols, wspace=0.5, hspace=0.5)
 
-            for i, t_df in enumerate(plot_df):
+            df_sub, df_date, df_stage = [], [], []  # Initialize plot naming parameters
+
+            for i, s in enumerate(plot_grp):  # Iterate through groups to plot rasters
+                # plot naming parameters
+                df_sub.append(s.get_metadata('subject'))
+                df_date.append(s.get_metadata('start_date').replace('/', '_'))
+                df_stage.append(s.get_stage())
+                
+                # 2x2 plotting axes
                 k = (i%2)*2
                 ax = fig.add_subplot(gs[k:k+2, 4*int(i/2):4*math.ceil((i+1)/2)])
-                plot_raster_trials(t_df, s_grp[i], df_sub[i], df_name[i], df_stage[i], start_dir, ax)
+                plot_raster_trials(s, start_dir, ax)
 
             # Save Figure
             # plt.subplots_adjust(top=0.85)
             # fig.suptitle(('Subject ' + subject + ' Performance'),
             #                 color=mycolors(subject), fontsize=30)
-            d = sorted(set(df_date))
-            sub = sorted(set(df_sub))
-            out_name = "Raster_" + str(d) + '_' + str(sub) + '_' + str(set(df_stage)) + '_' + str(j)
+            date_p = sorted(set(df_date))
+            sub_p = sorted(set(df_sub))
+            stage_p = sorted(set(df_stage))
+            out_name = "Raster_" + str(date_p) + '_' + str(sub_p) + '_' + str(stage_p) + '_' + str(j)
             out_name += ".png"
             print("Saved figure to {}".format(
                 os.path.join(out_dir, out_name)))
@@ -432,7 +443,7 @@ def plot_batch_sessions(start_dir, sub, start_date, end_date):
             # plot_sessions(start_dir, d, sub, summary=True, single=True,
             #               corr_only=True)  # Single animal breakdown
             # Group with corr_only breakdown
-            plot_sessions(start_dir, d, sub, summary=True, single=False, corr_only=True)
+            plot_sessions(start_dir, d, sub_list, summary=True, single=False, corr_only=True)
             # plot_sessions(start_dir, d, sub, summary=True, single=False, corr_only=False)  # Group with complete breakdown
 
         # plot all 4 timeline types
@@ -445,15 +456,15 @@ def plot_batch_sessions(start_dir, sub, start_date, end_date):
             #               show_date=show_date)  # Timeline_recent_details_Err **Need to fix with ax.remove() instead**
             # plot_sessions(start_dir, d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True, recent=True,
             #               show_date=show_date)  # Timeline_recent_details_Corr **Need to fix with ax.remove() instead**
-            plot_sessions(start_dir, d, sub, timeline=True, single=single, details=True, det_err=True, det_corr=False,
+            plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=True, det_err=True, det_corr=False,
                           show_date=show_date)  # Timeline_recent_details_Err
-            plot_sessions(start_dir, d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True,
+            plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=True, det_err=False, det_corr=True,
                           show_date=show_date)  # Timeline_recent_details_Corr
-            plot_sessions(start_dir, d, sub, timeline=True, single=single, details=True,
+            plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=True,
                           recent=False, show_date=show_date)  # Timeline_details
-            plot_sessions(start_dir, d, sub, timeline=True, single=single, details=False,
+            plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=False,
                           recent=True, show_date=show_date)  # Timeline_recent
-            plot_sessions(start_dir, d, sub, timeline=True, single=single, details=False,
+            plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=False,
                           recent=False, show_date=show_date)  # Timeline
 
     # # Multiple dates in single plot; Doesnt work yet
@@ -468,7 +479,7 @@ def plot_sessions(
     summary=False, single=False, timeline=False, 
     details=False, det_err=False, det_corr=False, 
     recent=False, show_date=False, int_only=False, 
-    corr_only=False):
+    corr_only=False):  #TODO Split timeline and plotting into seperate functions
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
     single = True: Plots single session summaries with breakdown of single blocks
