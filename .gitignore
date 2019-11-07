@@ -2,3 +2,4 @@ ControlScripts/ExampleScripts
 *.png
 *.pyc
 *objectdb
+*vscode/settings.json
