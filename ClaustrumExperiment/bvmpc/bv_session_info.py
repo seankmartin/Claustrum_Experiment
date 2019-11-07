@@ -115,7 +115,7 @@ class SessionInfo:
                 # ['V:', 'END', 'Per Trial Pellets']
             ]))
 
-        # Note, ticks (10ms) are converted to secs
+        # Note, ticks (10ms) are converted to seconds when parsing the file.
         base_exp_list = [
             "trial_length (mins)", "max_pellets", "advancement_pellets",
             "fixed_ratio", "fast_inter_response_time (secs)",

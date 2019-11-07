@@ -15,7 +15,6 @@ from bvmpc.bv_utils import mycolors
 def split_lever_ts(session, out_dir, ax=None):
     """Split lever ts for into schedule-based arrays of trials"""
     # still in progress
-    timestamps = session.get_arrays()
     lever_ts = session.get_lever_ts()
     switch_ts = np.arange(5, 1830, 305)
     reward_times = session.get_rw_ts()

@@ -4,10 +4,14 @@ This module is a representation of a single Operant box Session.
 Written by Sean Martin and Gao Xiang Ham
 """
 import os
+from datetime import datetime
+
 import numpy as np
 import h5py
-from datetime import datetime
+import pandas as pd
+
 from bvmpc.bv_session_info import SessionInfo
+import bvmpc.bv_analyse as bv_an
 
 
 class Session:
@@ -35,6 +39,8 @@ class Session:
         self.verbose = verbose
         self.file_origin = file_origin
         self.out_dir = None
+        self.trial_df = None
+        self.trial_df_norm = None
 
         a = 0 if lines is None else 1
         b = 0 if h5_file is None else 1
@@ -63,6 +69,10 @@ class Session:
             print("Error: Unknown situation in Session init")
             exit(-1)
 
+    # convert to trial based dataframe
+    def init_trial_dataframe(self):
+        self._init_trial_df()
+
     def save_to_h5(self, out_dir, name=None):
         """Save information to a h5 file"""
         location = name
@@ -80,6 +90,18 @@ class Session:
             location = self._get_hdf5_name(ext=ext)
         self.neo_file = os.path.join(out_dir, location)
         self._save_neo_info(remove_existing)
+
+    def get_trial_df(self):
+        """Get dataframe split into trials without normalisation (time)."""
+        if self.trial_df is None:
+            self.init_trial_dataframe()
+        return self.trial_df
+
+    def get_trial_df_norm(self):
+        """Get dataframe split into trials with normalisation (time)."""
+        if self.trial_df_norm is None:
+            self.init_trial_dataframe()
+        return self.trial_df_norm
 
     def get_metadata(self, key=None):
         """
@@ -120,6 +142,12 @@ class Session:
         if interval is not None:
             return int(interval)
         return None
+
+    def get_stage(self):
+        """Obtain the stage number (without _)"""
+        session_type = self.get_metadata('name')
+        stage = session_type[:2].replace('_', '')
+        return stage
 
     def get_arrays(self, key=None):
         """
@@ -369,6 +397,117 @@ class Session:
                 print(i, '-> {}: {}'.format(parameter, len(c_data)))
 
         return self.info_arrays
+
+    def _init_trial_df(self):
+        session_type = self.get_metadata('name')
+        stage = session_type[:2].replace('_', '')  # Obtain stage number w/o _
+        timestamps = self.get_arrays()
+        pell_ts = timestamps["Reward"]
+
+        dpell_bool = np.diff(pell_ts) < 0.5
+        # Provides index of double pell in pell_ts
+        dpell_idx = np.nonzero(dpell_bool)[0] + 1
+        dpell = pell_ts[dpell_idx]
+
+        # pell drop ts excluding double ts
+        pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
+        reward_times = self.get_rw_ts()
+
+        # Assign schedule type to trials
+        schedule_type = []
+        if stage == '7' or stage == '6':
+            norm_r_ts, _, _, _, _ = bv_an.split_sess(
+                self, norm=False, plot_all=True)
+            sch_type = self.get_arrays('Trial Type')
+
+            for i, block in enumerate(norm_r_ts):
+                if sch_type[i] == 1:
+                    b_type = 'FR'
+                elif sch_type[i] == 0:
+                    b_type = 'FI'
+                for l, _ in enumerate(block):
+                    schedule_type.append(b_type)
+        else:
+            if stage == '4':
+                b_type = 'CR'
+            elif stage == '5a':
+                b_type = 'FR'
+            elif stage == '5b':
+                b_type = 'FI'
+            else:
+                b_type = 'NA'
+            for i in reward_times:
+                schedule_type.append(b_type)
+
+        # Rearrange timestamps based on trial per row
+        lever_ts = self.get_lever_ts(True)
+        err_ts = self.get_err_lever_ts(True)
+        trial_lever_ts = np.split(
+            lever_ts, (np.searchsorted(lever_ts, reward_times)[:-1]))
+        trial_err_ts = np.split(
+            err_ts, (np.searchsorted(err_ts, reward_times)[:-1]))
+        trial_dr_ts = np.split(
+            dpell, (np.searchsorted(dpell, reward_times)[:-1]))
+
+        # Initialize array for lever timestamps
+        # Max lever press per trial
+        trials_max_l = len(max(trial_lever_ts, key=len))
+        lever_arr = np.empty((len(reward_times), trials_max_l,))
+        lever_arr.fill(np.nan)
+        trials_max_err = len(max(trial_err_ts, key=len)
+                             )  # Max err press per trial
+        err_arr = np.empty((len(reward_times), trials_max_err,))
+        err_arr.fill(np.nan)
+
+        # Arrays used for normalization of timestamps to trials
+        from copy import deepcopy
+        trial_norm = np.insert(reward_times, 0, 0)
+        norm_lever = deepcopy(trial_lever_ts)
+        norm_err = deepcopy(trial_err_ts)
+        norm_dr = deepcopy(trial_dr_ts)
+        norm_rw = deepcopy(reward_times)
+        norm_pell = deepcopy(pell_ts_exdouble)
+
+        # Normalize timestamps based on start of trial
+        for i, _ in enumerate(norm_rw):
+            norm_lever[i] -= trial_norm[i]
+            norm_err[i] -= trial_norm[i]
+            norm_dr[i] -= trial_norm[i]
+            norm_pell[i] -= trial_norm[i]
+            norm_rw[i] -= trial_norm[i]
+
+        # # 2D array of lever timestamps (Incomplete)
+        # for i, (l, err) in enumerate(zip(trial_lever_ts, trial_err_ts)):
+        #     l_end = len(l)
+        #     lever_arr[i,:l_end] = l[:]
+        #     err_end = len(err)
+        #     err_arr[i,:err_end] = err[:]
+
+        # Timestamps kept as original starting from session start
+        session_dict = {
+            'Reward (ts)': reward_times,
+            'Pellet (ts)': pell_ts_exdouble,
+            'D_Pellet (ts)': trial_dr_ts,
+            'Schedule': schedule_type,
+            'Levers (ts)': trial_lever_ts,
+            'Err (ts)': trial_err_ts
+        }
+
+        # Timestamps normalised to each trial start
+        trial_dict = {
+            'Reward (ts)': norm_rw,
+            'Pellet (ts)': norm_pell,
+            'D_Pellet (ts)': norm_dr,
+            'Schedule': schedule_type,
+            'Levers (ts)': norm_lever,
+            'Err (ts)': norm_err
+        }
+
+        for key, val in trial_dict.items():
+            print(key, ':', len(val))
+
+        self.trial_df = pd.DataFrame(session_dict)
+        self.trial_df_norm = pd.DataFrame(trial_dict)
 
     @staticmethod
     def _extract_array(lines, start_char, end_char):
