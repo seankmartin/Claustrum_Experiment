@@ -199,6 +199,9 @@ class Session:
         session_type = self.get_metadata('name')
         stage = session_type[:2].replace('_', '')
         pell_ts = self.get_arrays("Reward")
+        reward_times = self.get_arrays("Nosepoke")
+
+        # Check for double pellets
         dpell_bool = np.diff(pell_ts) < 0.5
         # Provides index of double pell in pell_ts
         dpell_idx = np.nonzero(dpell_bool)[0] + 1
@@ -210,6 +213,7 @@ class Session:
             trial_len += 5
             repeated_trial_len = (trial_len) * 6
 
+        # if last reward time < last pellet dispensed, assume animal picked reward at end of session.
         if reward_times[-1] < pell_ts[-1]:
             if stage == '7' or stage == '6':
                 reward_times = np.append(reward_times, repeated_trial_len)

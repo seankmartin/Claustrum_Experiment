@@ -52,6 +52,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     reward_times = session.get_rw_ts()
     pell_ts = timestamps["Reward"]
     pell_double = np.nonzero(np.diff(pell_ts) < 0.5)
+
     # for printing of error rates and rewards on graph
     err_FI = 0
     err_FR = 0
@@ -86,11 +87,11 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     else:
         if session_type == '5a_FixedRatio_p':
             ax.set_title('\nSubject {}, S{}, FR{}, {}'.format(
-                subject, stage, ratio, date), 
+                subject, stage, ratio, date),
                 color=mycolors(subject), fontsize=10)
         elif session_type == '5b_FixedInterval_p':
             ax.set_title('\nSubject {}, S{}, FI{}s, {}'.format(
-                subject, stage, interval, date), 
+                subject, stage, interval, date),
                 color=mycolors(subject), fontsize=10)
         elif session_type == '6_RandomisedBlocks_p' or stage == '7':
             switch_ts = np.arange(5, 1830, 305)
@@ -253,7 +254,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     ax.legend(loc='lower right')
 #    ax.set_xlim(0, 30 * 60 + 30)
 
-    if err_FR + err_FI > 0:
+    if err_FR > 0 or err_FI > 0:
         err_print = "\nErrors FR \ FI: " + str(err_FR) + r" \ " + str(err_FI)
     else:
         err_print = ""
@@ -264,14 +265,16 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         out_name = os.path.join(out_dir, out_name)
         print("Saved figure to {}".format(out_name))
         # Text Display on Graph
-        ax.text(0.55, 0.15, 'Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}'
-                .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
+        if stage == '6' or stage == '7':
+            ax.text(0.55, 0.15, 'Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}'
+                    .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
         fig.savefig(out_name, dpi=400)
         plt.close()
     else:
         # Text Display on Graph
-        ax.text(0.05, 0.75, 'Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}'
-                .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
+        if stage == '6' or stage == '7':
+            ax.text(0.05, 0.75, 'Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}'
+                    .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
         return
 
 
@@ -294,12 +297,14 @@ def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False
     pell_double = np.nonzero(np.diff(pell_ts) < 0.5)
     reward_double = reward_times[np.searchsorted(
         reward_times, pell_ts[pell_double], side='right')]  # returns reward ts after d_pell
+    err_lever_ts = []
 
     if blocks is not None:
         pass
     else:
         blocks = np.arange(5, 1830, 305)  # Default split into schedules
-    incl = ""
+
+    incl = ""  # Initialize print for type of extracted lever_ts
     if stage == '7' and plot_error:  # plots errors only
         incl = '_Errors_Only'
         lever_ts = session.get_err_lever_ts()
@@ -308,8 +313,6 @@ def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False
         err_lever_ts = session.get_err_lever_ts()
         lever_ts = np.sort(np.concatenate((
             lever_ts, err_lever_ts), axis=None))
-        split_err_ts = np.split(err_lever_ts,
-                                np.searchsorted(err_lever_ts, blocks))
     elif stage == '7':  # plots all responses exclu. errors
         incl = '_Correct Only'
 
@@ -319,6 +322,8 @@ def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False
                                np.searchsorted(reward_times, blocks))
     split_double_r_ts = np.split(reward_double,
                                  np.searchsorted(reward_double, blocks))
+    split_err_ts = np.split(err_lever_ts,
+                            np.searchsorted(err_lever_ts, blocks))
     norm_reward_ts = []
     norm_lever_ts = []
     norm_err_ts = []
@@ -339,42 +344,44 @@ def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False
 
 
 def IRT(session, out_dir, ax=None, showIRT=False):
-    """Perform an inter-response time plot for a Session."""
+    """Perform an inter-response time plot for a Session. IRT calculated from prev reward to next lever press resulting in reward"""
+    single_plot = False
+
+    # General session info
     date = session.get_metadata('start_date').replace('/', '_')
-    time_taken = session.time_taken()
-    timestamps = session.get_arrays()
-    good_lever_ts = session.get_lever_ts(False)
     session_type = session.get_metadata('name')
     stage = session_type[:2].replace('_', '')
     subject = session.get_metadata('subject')
-    single_plot = False
     ratio = session.get_ratio()
     interval = session.get_interval()
 
+    # Timestameps data extraction
+    time_taken = session.time_taken()
+    # lever ts without unnecessary presses
+    good_lever_ts = session.get_lever_ts(False)
+
+    # Only consider rewards for lever pressing
     rewards_i = session.get_rw_ts()
-    nosepokes_i = timestamps["Nosepoke"]
-    # Session ended w/o reward collection
-    if len(rewards_i) > len(nosepokes_i):
-        # Assumes reward collected at end of session
-        nosepokes_i = np.append(
-            nosepokes_i, 
-            [session.get_metadata("trial_length (mins)") * 60])
-    # Only consider after the first lever press
     reward_idxs = np.nonzero(rewards_i >= good_lever_ts[0])
     rewards = rewards_i[reward_idxs]
-    nosepokes = nosepokes_i[reward_idxs]
+
     # b assigns ascending numbers to rewards within lever presses
     b = np.digitize(rewards, bins=good_lever_ts)
     _, a = np.unique(b, return_index=True)  # returns index for good rewards
-    good_nosepokes = nosepokes[a]  # nosepoke ts for pressing levers
-   
+
+    good_rewards = rewards[a]  # nosepoke ts for pressing levers
     if session_type == '5a_FixedRatio_p':
-        good_lever_ts = good_lever_ts[::ratio]
-    if len(good_lever_ts[1:]) > len(good_nosepokes[:-1]):
-        IRT = good_lever_ts[1:] - good_nosepokes[:]  # Ended sess w lever press
+        last_lever_ts = []
+        for i in b:
+            last_lever_ts.append(good_lever_ts[i-1])
+    else:
+        last_lever_ts = good_lever_ts
+    if len(last_lever_ts[1:]) > len(good_rewards[:-1]):
+        IRT = last_lever_ts[1:] - good_rewards[:]  # Ended sess w lever press
+
     else:
         # Ended session w nosepoke
-        IRT = good_lever_ts[1:] - good_nosepokes[:-1]
+        IRT = last_lever_ts[1:] - good_rewards[:-1]
 
     hist_count, hist_bins, _ = ax.hist(
         IRT, bins=math.ceil(np.amax(IRT)),

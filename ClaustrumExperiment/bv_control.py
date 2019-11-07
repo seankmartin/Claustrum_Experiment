@@ -7,7 +7,7 @@ import seaborn as sns
 from bvmpc.bv_session_extractor import SessionExtractor
 from bvmpc.bv_session import Session
 import bvmpc.bv_analyse as bv_an
-from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list, get_all_files_in_dir, log_exception
+from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list, get_all_files_in_dir, log_exception, chunks
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from scipy import interpolate
@@ -17,9 +17,11 @@ from datetime import date, timedelta
     # TODO split trial dataframe into FR and FI only dfs
     # return 
 
-def plot_raster_trials(trial_df, s, sub, date, start_dir, ax): 
-    interval = s.get_interval()
+#     return 
 
+
+def plot_raster_trials(trial_df, s, sub, date, stage, start_dir, ax):
+    
     # alignment decision
     align_rw, align_pell, align_FI = [0, 1, 0]
 
@@ -44,16 +46,21 @@ def plot_raster_trials(trial_df, s, sub, date, start_dir, ax):
     if align_rw:
         plot_name = 'Reward-Aligned'
         norm_arr = np.copy(norm_rw)
+        
     elif align_pell:
         plot_name = 'Pell-Aligned'
         norm_arr = np.copy(norm_pell)
+        xmax = 10
+        xmin = -60
     elif align_FI:
         plot_name = 'Interval-Aligned'
         norm_arr = np.empty_like(norm_rw)
-        norm_arr.fill(interval)
+        norm_arr.fill(30)
     else:
         plot_name = 'Start-Aligned'
         norm_arr = np.zeros_like(norm_rw)
+        xmax = 60
+        xmin = 0
 
     for i, _ in enumerate(norm_rw):
         # color assigment for trial type
@@ -61,6 +68,8 @@ def plot_raster_trials(trial_df, s, sub, date, start_dir, ax):
             color.append('black')
         elif schedule_type[i] == 'FI':
             color.append('b')
+        else:
+            color.append('g')
         norm_lever[i] -= norm_arr[i]
         norm_err[i] -= norm_arr[i]
         norm_dr[i] -= norm_arr[i]
@@ -76,14 +85,12 @@ def plot_raster_trials(trial_df, s, sub, date, start_dir, ax):
     ax.eventplot(norm_dr[:], color='magenta', label='Double Reward')
 
     # Figure labels
-    xmax = 5
-    xmin = -30
-    ax.set_xlim(xmin, xmax)
+    ax.set_xlim(xmin, xmax)  # Uncomment to set x limit
     ax.axvline(0, linestyle='-', color='k', linewidth='.5')
     ax.tick_params(axis='both', labelsize=15)
     ax.set_xlabel('Time (s)', fontsize=20)
     ax.set_ylabel('Trials', fontsize=20)
-    ax.set_title('\nSubject {} {} Raster ({})'.format(sub, date, plot_name),
+    ax.set_title('\nSubject {} {} {} Raster ({})'.format(sub, date, stage, plot_name),
                  y=1.025, fontsize=25, color=mycolors(sub))
 
     # Highlight specific trials
@@ -123,6 +130,7 @@ def struc_session(d_list, sub_list, in_dir):
         grp_trial_df    - array of pandas dataframe with ts normalized to start of each trial
         df_sub          - array denoting the subject corresponding to each df
         df_date         - array denoting the date corresponding to each df
+        df_stage        - array denoting the session stage corresponding to each df
     """
     in_dir = os.path.join(start_dir, "hdf5")
     # d_list, s_list, sub_list = [['09-17'], ['7'], ['3']]
@@ -139,6 +147,7 @@ def struc_session(d_list, sub_list, in_dir):
     grp_trial_df = []
     df_sub = []
     df_date = []
+    df_stage = []
 
     for s in s_grp:
         subject = s.get_metadata('subject')
@@ -156,8 +165,9 @@ def struc_session(d_list, sub_list, in_dir):
         # pell drop ts excluding double ts
         pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
         reward_times = s.get_rw_ts()
-        schedule_type = []
 
+        # Assign schedule type to trials
+        schedule_type = []
         if stage == '7' or stage == '6':
             norm_r_ts, _, _, _, _ = bv_an.split_sess(
                 s, norm=False, plot_all=True)
@@ -170,6 +180,17 @@ def struc_session(d_list, sub_list, in_dir):
                     b_type = 'FI'
                 for l, _ in enumerate(block):
                     schedule_type.append(b_type)
+        else:
+            if stage == '4':
+                b_type = 'CR'
+            elif stage == '5a':
+                b_type = 'FR'
+            elif stage == '5b':
+                b_type = 'FI'
+            else:
+                b_type = 'NA'
+            for i in reward_times:
+                schedule_type.append(b_type)
 
         # Rearrange timestamps based on trial per row
         lever_ts = s.get_lever_ts(True)
@@ -187,12 +208,13 @@ def struc_session(d_list, sub_list, in_dir):
         err_arr.fill(np.nan)
         
         # Arrays used for normalization of timestamps to trials
+        from copy import deepcopy
         trial_norm = np.insert(reward_times, 0, 0)
-        norm_lever = np.copy(trial_lever_ts)
-        norm_err = np.copy(trial_err_ts)
-        norm_dr = np.copy(trial_dr_ts)
-        norm_rw = np.copy(reward_times)
-        norm_pell = np.copy(pell_ts_exdouble)
+        norm_lever = deepcopy(trial_lever_ts)
+        norm_err = deepcopy(trial_err_ts)
+        norm_dr = deepcopy(trial_dr_ts)
+        norm_rw = deepcopy(reward_times)
+        norm_pell = deepcopy(pell_ts_exdouble)
 
         # Normalize timestamps based on start of trial
         for i, _ in enumerate(norm_rw):
@@ -202,14 +224,15 @@ def struc_session(d_list, sub_list, in_dir):
             norm_pell[i] -= trial_norm[i]
             norm_rw[i] -= trial_norm[i]
 
-        # 2D array of lever timestamps
-        for i, (l, err) in enumerate(zip(trial_lever_ts, trial_err_ts)):
-            l_end = len(l)
-            lever_arr[i,:l_end] = l[:]
-            err_end = len(err)
-            err_arr[i,:err_end] = err[:]
+        # # 2D array of lever timestamps (Incomplete)
+        # for i, (l, err) in enumerate(zip(trial_lever_ts, trial_err_ts)):
+        #     l_end = len(l)
+        #     lever_arr[i,:l_end] = l[:]
+        #     err_end = len(err)
+        #     err_arr[i,:err_end] = err[:]
         
         
+        # Timestamps kept as original starting from session start
         session_dict = {
                 'Reward (ts)': reward_times,
                 'Pellet (ts)': pell_ts_exdouble,
@@ -218,6 +241,8 @@ def struc_session(d_list, sub_list, in_dir):
                 'Levers (ts)': trial_lever_ts,
                 'Err (ts)': trial_err_ts
                 }
+
+        # Timestamps normalised to each trial start
         trial_dict = {
                 'Reward (ts)': norm_rw,
                 'Pellet (ts)': norm_pell,
@@ -226,6 +251,7 @@ def struc_session(d_list, sub_list, in_dir):
                 'Levers (ts)': norm_lever,
                 'Err (ts)': norm_err
                 }
+        
         for key, val in trial_dict.items():
             print(key, ':', len(val))
 
@@ -235,8 +261,9 @@ def struc_session(d_list, sub_list, in_dir):
         grp_trial_df.append(trial_df)
         df_sub.append(subject)
         df_date.append(date)
+        df_stage.append(stage)
 
-    return s_grp, grp_session_df, grp_trial_df, df_sub, df_date
+    return s_grp, grp_session_df, grp_trial_df, df_sub, df_date, df_stage
 
 def struc_timeline(sub_list, in_dir):
     """ Structure sessions into a pandas dataframe based on trials
@@ -442,72 +469,62 @@ def grp_errors(s_grp):
         grp_FIerr.append(err_FI)
     return grp_FRerr, grp_FIerr
 
-def plot_batch_sessions(start_dir):
+def plot_batch_sessions(start_dir, sub, start_date, end_date):
     out_dir = os.path.join(start_dir, "Plots")
     
-    # Parameters for specifying session
-    # sub_list = ['1', '2']
-    sub = ['3']
-    # sub_list = ['6']
-    # sub_list = ['1', '2', '3', '4']
-    # sub_list = ['5', '6']
-    
-    # start_date = date(2019, 7, 15)  # date(year, mth, day)
-    # start_date = date(2019, 9, 1)  # date(year, mth, day)
-    # end_date = date(2019, 9, 6)
-    start_date = date(2019, 8, 11)  # date(year, mth, day)
-    end_date = date(2019, 8, 12)
-    # start_date = date.today() - timedelta(days=4)
-    # end_date = date.today()
 
     # Quick control of plotting
     timeline, summary, raster = [0, 0, 1]
 
     if raster:
-        # d = ['08-11','08-19','09-01','09-03']
+        # d = ['08-08','08-11','08-19','09-03']  # Change dates to set desired plots
+
+        # Default conversion of date based on start_date and end_date range
         d = []
         for single_date in daterange(start_date, end_date):
             d.append(single_date.isoformat()[-5:])
 
-        s_grp, _, grp_trial_df, df_sub, df_date = struc_session(
+        s_grp, _, grp_trial_df, df_sub, df_date, df_stage = struc_session(
             d, sub, start_dir)
         
-        df_date = ['FR6_noDP', 'FR8', 'FR8_ext', 'FR10']
+        df_name = df_date  # Label plots by date
+        # df_name = ['S6_FR6','FR6_noDP', 'FR8', 'FR10']  # Custom plot names
+        
+        df_set = list(chunks(grp_trial_df, 4))
 
-        plot_df = grp_trial_df
+        for j, plot_df in enumerate(df_set):
+            # Figure Initialization
+            n = len(plot_df)
+            if n > 4:
+                print('Too many plots')
+                quit()
+            elif n > 2:
+                rows, cols = [4, 4*math.ceil(n/2)]
+            else:
+                rows, cols = [2*n, 4*math.ceil(n/2)]
+            size_multiplier = 5
+            fig = plt.figure(
+                figsize=(cols * size_multiplier, rows * size_multiplier),
+                tight_layout=False)
+            gs = gridspec.GridSpec(rows, cols, wspace=0.5, hspace=0.5)
 
-        # Figure Initialization
-        n = len(plot_df)
-        if n > 4:
-            print('Too many plots')
-            quit()
-        elif n > 2:
-            rows, cols = [4, 4*math.ceil(n/2)]
-        else:
-            rows, cols = [2*n, 4*math.ceil(n/2)]
-        size_multiplier = 5
-        fig = plt.figure(
-            figsize=(cols * size_multiplier, rows * size_multiplier),
-            tight_layout=False)
-        gs = gridspec.GridSpec(rows, cols, wspace=0.5, hspace=0.5)
+            for i, t_df in enumerate(plot_df):
+                k = (i%2)*2
+                ax = fig.add_subplot(gs[k:k+2, 4*int(i/2):4*math.ceil((i+1)/2)])
+                plot_raster_trials(t_df, s_grp[i], df_sub[i], df_name[i], df_stage[i], start_dir, ax)
 
-        for i, t_df in enumerate(plot_df):
-            k = (i%2)*2
-            ax = fig.add_subplot(gs[k:k+2, 4*int(i/2):4*math.ceil((i+1)/2)])
-            plot_raster_trials(t_df, s_grp[i], df_sub[i], df_date[i], start_dir, ax)
-
-        # Save Figure
-        # plt.subplots_adjust(top=0.85)
-        # fig.suptitle(('Subject ' + subject + ' Performance'),
-        #                 color=mycolors(subject), fontsize=30)
-        d = sorted(set(df_date))
-        sub = sorted(set(df_sub))
-        out_name = "Raster_" + str(d) + '_' + str(sub)
-        out_name += ".png"
-        print("Saved figure to {}".format(
-            os.path.join(out_dir, out_name)))
-        fig.savefig(os.path.join(out_dir, out_name), dpi=400)
-        plt.close()
+            # Save Figure
+            # plt.subplots_adjust(top=0.85)
+            # fig.suptitle(('Subject ' + subject + ' Performance'),
+            #                 color=mycolors(subject), fontsize=30)
+            d = sorted(set(df_date))
+            sub = sorted(set(df_sub))
+            out_name = "Raster_" + str(d) + '_' + str(sub) + '_' + str(set(df_stage)) + '_' + str(j)
+            out_name += ".png"
+            print("Saved figure to {}".format(
+                os.path.join(out_dir, out_name)))
+            fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+            plt.close()
 
     for single_date in daterange(start_date, end_date):
         d = [single_date.isoformat()[-5:]]
@@ -790,7 +807,7 @@ def timeline_plot(
 
     for c, sub in enumerate(sub_list):
         # Plot total pellets across sessions
-        s_grp = extract_sessions(in_dir, sub)
+        s_grp = extract_sessions(in_dir, [sub])
         s_list, r_list, type_list, d_list = [], [], [], []
         err_FR_list, err_FI_list = [], []
         rw_FR_list, rw_FI_list, rw_double_list = [], [], []
@@ -1170,7 +1187,7 @@ def load_neo(filename, neo_backend="nix"):
     return session
 
 def run_mpc_file(filename, out_dir):
-    """Take in a filename and out_dir then run the main control logic."""
+    """Use this to work on MEDPC files without converting to HDF5."""
     make_dir_if_not_exists(out_dir)
 
     s_extractor = SessionExtractor(filename, verbose=False)
@@ -1191,19 +1208,7 @@ def run_mpc_file(filename, out_dir):
 def main_single(filename, out_dir):
     """Main control for single files."""
     # # Converting single MPC files
-    # convert_to_neo(filename, out_dir)
-
-    # # Running single session files
-    # filename = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1\!2019-08-04"
-    # filename = r"G:\test"
-    # filename = r"/home/sean/Documents/Data/!2019-07-22"
-
-    # out_dir = r"G:\out_plots"
-    # out_dir = r"/home/sean/Documents/Data/results"
-
-    # run_mpc_file(filename, out_dir)
-
-    # load_hdf5(filename, out_dir)
+    return convert_to_neo(filename, out_dir)
 
 def main_batch(
     start_dir, analysis_flags, out_main_dir=None):
@@ -1226,18 +1231,37 @@ def main_batch(
         s_list = ["1"]
         # d_list = [date.today().isoformat()[-5:]]
         plot_sessions(out_main_dir, d_list, s_list, summary=True)
-    
+
     if analysis_flags[2]:
-        plot_batch_sessions(out_main_dir)
+        sub = ['7', '8', '9', '10']
+        # sub = ['3','4']
+
+        # start_date = date(2019, 10, 23)  # date(year, mth, day)
+        # end_date = date(2019, 8, 12)
+
+        # Sets date using today as reference (Default)
+        start_date = date.today() - timedelta(days=1)
+        end_date = date.today() - timedelta(days=0)
+
+        # for sub in sub:
+            # plot_batch_sessions(out_main_dir, sub, start_date, end_date)
+        plot_batch_sessions(out_main_dir, sub, start_date, end_date)
     
     if analysis_flags[3]:
         compare_variables(out_main_dir)
 
 if __name__ == "__main__":
+    # TODO set this up with a cfg file and cmd args
+
     # start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
     # start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
     start_dir = r"C:\Users\smartin5\TCDUD.onmicrosoft.com\Gao Xiang Ham - MEDPC"
     out_dir = r"C:\Users\smartin5\OneDrive - TCDUD.onmicrosoft.com\Claustrum"
-    # TODO set this up with a cfg file and cmd args
+
+    # Description of analysis_flags
+    # 0 - convert files to neo format in start_dir
+    # 1 - plot sessions, d_list and s_list set in main_batch
+    # 2 - plot batch sessions, sub, and dates in main_batch
+    # 3 - temporary compare variables function
     analysis_flags = [False, True, False, False]
     main_batch(start_dir, analysis_flags, out_dir)
