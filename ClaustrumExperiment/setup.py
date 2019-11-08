@@ -1,0 +1,67 @@
+import os
+
+
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+
+DESCRIPTION = "bvmpc: Behavioural Med-PC analysis"
+LONG_DESCRIPTION = """bvmpc is a set of Med-PC behavioural analysis code written by Sean Martin and Gao Xiang Ham.
+"""
+
+DISTNAME = 'bvmpc'
+MAINTAINER = 'Sean Martin and Gao Xiang Ham'
+MAINTAINER_EMAIL = 'martins7@tcd.ie'
+URL = 'https://github.com/seankmartin/neuro-tools'
+DOWNLOAD_URL = 'https://github.com/seankmartin/neuro-tools'
+VERSION = '0.01'
+
+INSTALL_REQUIRES = [
+    'pandas',
+    'numpy',
+    'matplotlib',
+    'seaborn',
+    'scipy',
+    'neo >= 0.8.0',
+    'nixio >= 1.5.0b1'
+]
+
+PACKAGES = [
+    'bvmpc'
+]
+
+CLASSIFIERS = [
+    'Intended Audience :: Science/Research',
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Topic :: Scientific/Engineering :: Mathematics',
+    'Operating System :: POSIX',
+    'Operating System :: Unix',
+    'Operating System :: MacOS',
+    'Operating System :: Windows'
+]
+
+try:
+    from setuptools import setup
+    _has_setuptools = True
+except ImportError:
+    from distutils.core import setup
+
+if __name__ == "__main__":
+
+    setup(name=DISTNAME,
+          author=MAINTAINER,
+          author_email=MAINTAINER_EMAIL,
+          maintainer=MAINTAINER,
+          maintainer_email=MAINTAINER_EMAIL,
+          description=DESCRIPTION,
+          long_description=LONG_DESCRIPTION,
+          license=read('LICENSE'),
+          url=URL,
+          version=VERSION,
+          download_url=DOWNLOAD_URL,
+          install_requires=INSTALL_REQUIRES,
+          include_package_data=True,
+          packages=PACKAGES,
+          classifiers=CLASSIFIERS,
+          )
