@@ -389,7 +389,7 @@ class Session:
                     self.get_metadata("name"))
                 for m, v in zip(mapping, c_data):
                     if m.endswith("(ticks)"):
-                        m = m[:-4] + "(secs)"
+                        m = m[:-7] + "(secs)"
                         v = v / 100
                     self.metadata[m] = v
             self.info_arrays[parameter] = c_data
@@ -535,8 +535,8 @@ class Session:
         return arr
 
     def _get_hdf5_name(self, ext="h5"):
-        return "{}_{}_{}_{}.{}".format(
-            self.get_metadata("subject"),
+        return "{:03d}_{}_{}_{}.{}".format(
+            int(self.get_metadata("subject")),
             self.get_metadata("start_date").replace("/", "-"),
             self.get_metadata("start_time")[:-3].replace(":", "-"),
             self.get_metadata("name"), ext)

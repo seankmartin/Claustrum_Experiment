@@ -19,6 +19,28 @@ from datetime import date, timedelta
 
 #     return 
 
+def trial_length_hist (s):
+    ''' Plot histrogram of trial durations '''
+    trial_df = s.get_trial_df_norm()
+    plt.hist(trial_df['Reward (ts)'])
+    
+
+
+# def trial_features_df(trial_df):  #TODO complete this
+#     '''Pandas dataframe of features extracted based on trials in a session'''
+
+#     # Timestamps kept as original starting from session start
+#         trial_features = {
+#             'Reward (ts)': reward_times,
+#             'Pellet (ts)': pell_ts_exdouble,
+#             'D_Pellet (ts)': trial_dr_ts,
+#             'Schedule': schedule_type,
+#             'Levers (ts)': trial_lever_ts,
+#             'Err (ts)': trial_err_ts
+#         }
+
+#         trial_features_df = pd.DataFrame(trial_features)
+#     return trial_features_df
 
 def plot_raster_trials(s, start_dir, ax):
     
@@ -376,9 +398,8 @@ def grp_errors(s_grp):
 def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
     out_dir = os.path.join(start_dir, "Plots")
     
-
     # Quick control of plotting
-    timeline, summary, raster = [0, 1, 0]
+    timeline, summary, raster, hist = [1, 0, 0, 0]
 
     if raster:
         in_dir = os.path.join(start_dir, "hdf5")  # Path join only present in plot_sessions
@@ -435,11 +456,11 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
             fig.savefig(os.path.join(out_dir, out_name), dpi=400)
             plt.close()
 
-    for single_date in daterange(start_date, end_date):
-        d = [single_date.isoformat()[-5:]]
 
-        # plot cumulative response graphs
-        if summary == 1:
+    # plot cumulative response graphs
+    if summary == 1:
+        for single_date in daterange(start_date, end_date):
+            d = [single_date.isoformat()[-5:]]
             # plot_sessions(start_dir, d, sub, summary=True, single=True,
             #               corr_only=True)  # Single animal breakdown
             # Group with corr_only breakdown
@@ -447,25 +468,27 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
             # plot_sessions(start_dir, d, sub, summary=True, single=False, corr_only=False)  # Group with complete breakdown
 
         # plot all 4 timeline types
-        if timeline == 1:
-            single = False  # plots seperate graphs for each animal if True
-            show_date = True  # Sets x-axis as dates if True
-            # plot_sessions(start_dir, d, sub timeline=True, single=single, details=True, recent=True,
-            #               show_date=show_date)  # Timeline_recent_details
-            # plot_sessions(start_dir, d, sub timeline=True, single=single, details=True, det_err=True, det_corr=False, recent=True,
-            #               show_date=show_date)  # Timeline_recent_details_Err **Need to fix with ax.remove() instead**
-            # plot_sessions(start_dir, d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True, recent=True,
-            #               show_date=show_date)  # Timeline_recent_details_Corr **Need to fix with ax.remove() instead**
-            plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=True, det_err=True, det_corr=False,
-                          show_date=show_date)  # Timeline_recent_details_Err
-            plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=True, det_err=False, det_corr=True,
-                          show_date=show_date)  # Timeline_recent_details_Corr
-            plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=True,
-                          recent=False, show_date=show_date)  # Timeline_details
-            plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=False,
-                          recent=True, show_date=show_date)  # Timeline_recent
-            plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=False,
-                          recent=False, show_date=show_date)  # Timeline
+    if timeline == 1:
+        d = [end_date.isoformat()[-5:]]
+        single = False  # plots seperate graphs for each animal if True
+        show_date = False  # Sets x-axis as dates if True
+        # plot_sessions(start_dir, d, sub timeline=True, single=single, details=True, recent=True,
+        #               show_date=show_date)  # Timeline_recent_details
+        # plot_sessions(start_dir, d, sub timeline=True, single=single, details=True, det_err=True, det_corr=False, recent=True,
+        #               show_date=show_date)  # Timeline_recent_details_Err **Need to fix with ax.remove() instead**
+        # plot_sessions(start_dir, d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True, recent=True,
+        #               show_date=show_date)  # Timeline_recent_details_Corr **Need to fix with ax.remove() instead**
+
+        # plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=True, det_err=True, det_corr=False,
+        #               show_date=show_date)  # Timeline_recent_details_Err
+        # plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=True, det_err=False, det_corr=True,
+        #               show_date=show_date)  # Timeline_recent_details_Corr
+        # plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=True,
+        #               recent=False, show_date=show_date)  # Timeline_details
+        # plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=False,
+        #               recent=True, show_date=show_date)  # Timeline_recent
+        plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=False,
+                        recent=False, show_date=show_date)  # Timeline
 
     # # Multiple dates in single plot; Doesnt work yet
     # d = []
@@ -821,7 +844,7 @@ def timeline_plot(
                 err_FR = None
                 rw_FR = None
                 rw_FI = len(reward_times)
-                rw_double = None
+                rw_double = len(pell_double)
 
             else:
                 err_FI = None
@@ -974,8 +997,8 @@ def timeline_plot(
             ax2.tick_params(axis='y', labelsize=15)
             ax2.set_ylabel('Error Presses', fontsize=20)
         else:
-            plt.axhline(45, color='g', linestyle='-.', linewidth='.5')
-            plt.axhline(90, color='r', linestyle='-.', linewidth='.5')
+            # plt.axhline(45, color='g', linestyle='-.', linewidth='.5')
+            plt.axhline(90, color='r', linestyle='-.', linewidth='.5')  # Marks max reward
             ax.set_ylabel('Total Rewards', fontsize=20)
             plots = [h1]
             labels = [h1.get_label()]
@@ -1027,11 +1050,12 @@ def extract_sessions(
             return True
         return False
 
-    in_files = os.listdir(in_dir)
+    in_files = sorted(os.listdir(in_dir))
     s_grp = []
     for file in in_files:
         splits = file.split('_')
         subject = splits[0]
+        subject = str(int(subject))
         # NOTE date not have year
         date = splits[1][:5]
         s_type = splits[3]
@@ -1124,7 +1148,7 @@ def main_batch(
     """Main control for batch process."""
 
     # Batch processing of sessions in folder
-    if analysis_flags[0]:
+    if analysis_flags[0]:  # Convert new MEDPC files to neo
         if out_main_dir is None:
             out_main_dir = start_dir
         out_dir = os.path.join(out_main_dir, "hdf5")
@@ -1135,13 +1159,13 @@ def main_batch(
             except Exception as e:
                 log_exception(e, "Error during coversion to neo")
     
-    if analysis_flags[1]:
+    if analysis_flags[1]:  # plot_sessions
         d_list = ["09-03"]
         s_list = ["1"]
         # d_list = [date.today().isoformat()[-5:]]
         plot_sessions(out_main_dir, d_list, s_list, summary=True)
 
-    if analysis_flags[2]:
+    if analysis_flags[2]:  # plot_batch_sessions
         sub = ['7', '8', '9', '10']
         # sub = ['3','4']
 
@@ -1149,14 +1173,14 @@ def main_batch(
         # end_date = date(2019, 8, 12)
 
         # Sets date using today as reference (Default)
-        start_date = date.today() - timedelta(days=1)
+        start_date = date.today() - timedelta(days=2)
         end_date = date.today() - timedelta(days=0)
 
         # for sub in sub:
             # plot_batch_sessions(out_main_dir, sub, start_date, end_date)
         plot_batch_sessions(out_main_dir, sub, start_date, end_date)
     
-    if analysis_flags[3]:
+    if analysis_flags[3]:  # Temporary function for comparing variables (Bar Plots)
         compare_variables(out_main_dir)
 
 if __name__ == "__main__":
