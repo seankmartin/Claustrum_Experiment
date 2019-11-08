@@ -485,22 +485,22 @@ class Session:
 
         # Timestamps kept as original starting from session start
         session_dict = {
-            'Reward (ts)': reward_times,
-            'Pellet (ts)': pell_ts_exdouble,
-            'D_Pellet (ts)': trial_dr_ts,
+            'Reward_ts': reward_times,
+            'Pellet_ts': pell_ts_exdouble,
+            'D_Pellet_ts': trial_dr_ts,
             'Schedule': schedule_type,
-            'Levers (ts)': trial_lever_ts,
-            'Err (ts)': trial_err_ts
+            'Levers_ts': trial_lever_ts,
+            'Err_ts': trial_err_ts
         }
 
         # Timestamps normalised to each trial start
         trial_dict = {
-            'Reward (ts)': norm_rw,
-            'Pellet (ts)': norm_pell,
-            'D_Pellet (ts)': norm_dr,
+            'Reward_ts': norm_rw,
+            'Pellet_ts': norm_pell,
+            'D_Pellet_ts': norm_dr,
             'Schedule': schedule_type,
-            'Levers (ts)': norm_lever,
-            'Err (ts)': norm_err
+            'Levers_ts': norm_lever,
+            'Err_ts': norm_err
         }
 
         for key, val in trial_dict.items():
