@@ -3,3 +3,4 @@ ControlScripts/ExampleScripts
 *.pyc
 *objectdb
 *vscode/settings.json
+bvmpc.egg-info/

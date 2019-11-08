@@ -4,4 +4,4 @@ matplotlib
 seaborn
 scipy
 neo>=0.8.0
-nixpy>=1.5.0
+nixio>=1.5.0b1
