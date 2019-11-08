@@ -1,9 +1,10 @@
+import os
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
 class GridFig:
-    """Handles gridded figures."""
+    """ Handles gridded figures. """
 
     def __init__(
             self, rows, cols=4,
@@ -19,8 +20,39 @@ class GridFig:
         self.cols = cols
 
     def get_ax(self, row_idx, col_idx):
+        ''' Add subplot with standard 1x1 gs -> returns ax '''
         ax = self.fig.add_subplot(self.gs[row_idx, col_idx])
         return ax
+
+    def get_multi_ax(self, row_start, row_end, col_start, col_end):
+        ''' Add subplot with custom gs sizes -> returns ax '''
+        ax = self.fig.add_subplot(
+            self.gs[row_start:row_end, col_start:col_end])
+        return ax
+
+    def save_fig(self, df_date, df_sub, df_stage, plot_type, out_dir, j=None):
+        ''' Names and saves figure. Required inputs:
+            df_date - list of dates plot
+            df_sub - list of subjects plot
+            df_stage - list of stages plot
+            plot_type - name of plot type
+            out_dir - location to save figure
+            j - current figure index
+        '''
+        date_p = sorted(set(df_date))
+        sub_p = sorted(set(df_sub))
+        stage_p = sorted(set(df_stage))
+        out_name = plot_type + \
+            str(date_p) + '_' + str(sub_p) + \
+            '_' + str(stage_p)
+        if j not None:
+            out_name += '_' + str(j)
+        out_name += ".png"
+        print("Saved figure to {}".format(
+            os.path.join(out_dir, out_name)))
+        self.fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+        plt.close()
+        return
 
     def get_fig(self):
         return self.fig

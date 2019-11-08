@@ -426,7 +426,7 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
     out_dir = os.path.join(start_dir, "Plots")
     
     # Quick control of plotting
-    timeline, summary, raster, hist = [0, 1, 0, 0]
+    timeline, summary, raster, hist = [0, 0, 0, 1]
 
     if raster or hist:
         in_dir = os.path.join(start_dir, "hdf5")  # Path join only present in plot_sessions
@@ -450,11 +450,14 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
                 rows, cols = [4, 4*math.ceil(n/2)]
             else:
                 rows, cols = [2*n, 4*math.ceil(n/2)]
-            size_multiplier = 5
-            fig = plt.figure(
-                figsize=(cols * size_multiplier, rows * size_multiplier),
-                tight_layout=False)
-            gs = gridspec.GridSpec(rows, cols, wspace=0.5, hspace=0.5)
+            
+            gf = bv_plot.GridFig(rows, cols)  # Initializes GridFig Obj
+            # fig = gf.get_fig()
+            # size_multiplier = 5
+            # fig = plt.figure(
+            #     figsize=(cols * size_multiplier, rows * size_multiplier),
+            #     tight_layout=False)
+            # gs = gridspec.GridSpec(rows, cols, wspace=0.5, hspace=0.5)
 
             df_sub, df_date, df_stage = [], [], []  # Initialize plot naming parameters
 
@@ -462,19 +465,22 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
             for i, s in enumerate(plot_grp):  # Iterate through groups to plot rasters
                 # plot naming parameters
                 df_sub.append(s.get_metadata('subject'))
-                df_date.append(s.get_metadata('start_date').replace('/', '_'))
+                df_date.append(s.get_metadata('start_date').replace('/', '_')[:5])
                 df_stage.append(s.get_stage())
                 
                 # 2x2 plotting axes
                 k = (i%2)*2
-                if not plotting_sub == s.get_metadata('subject'):
-                    ax = fig.add_subplot(gs[k:k+2, 4*int(i/2):4*math.ceil((i+1)/2)])
-                    plotting_sub = s.get_metadata('subject')
-                    loop = 1
                 if raster:
+                    ax = gf.get_multi_ax(
+                        k, k+2, 4*int(i/2), 4*math.ceil((i+1)/2))
                     plot_raster_trials(s, ax)
                     plot_type = 'Raster_'  # Plot name for saving
+                    
                 if hist:
+                    if not plotting_sub == s.get_metadata('subject'):
+                        ax = gf.get_multi_ax(k, k+2, 4*int(i/2), 4*math.ceil((i+1)/2))
+                        plotting_sub = s.get_metadata('subject')
+                        loop = 1
                     trial_length_hist(s, ax, loop)
                     plot_type = 'Hist_'  # Plot name for saving
                     loop += 1
@@ -483,15 +489,17 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
             # plt.subplots_adjust(top=0.85)
             # fig.suptitle(('Subject ' + subject + ' Performance'),
             #                 color=mycolors(subject), fontsize=30)
-            date_p = sorted(set(df_date))
-            sub_p = sorted(set(df_sub))
-            stage_p = sorted(set(df_stage))
-            out_name = plot_type + str(date_p) + '_' + str(sub_p) + '_' + str(stage_p) + '_' + str(j)
-            out_name += ".png"
-            print("Saved figure to {}".format(
-                os.path.join(out_dir, out_name)))
-            fig.savefig(os.path.join(out_dir, out_name), dpi=400)
-            plt.close()
+
+            # date_p = sorted(set(df_date))
+            # sub_p = sorted(set(df_sub))
+            # stage_p = sorted(set(df_stage))
+            # out_name = plot_type + str(date_p) + '_' + str(sub_p) + '_' + str(stage_p) + '_' + str(j)
+            # out_name += ".png"
+            # print("Saved figure to {}".format(
+            #     os.path.join(out_dir, out_name)))
+            # fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+            # plt.close()
+            gf.save_fig(df_date, df_sub, df_stage, plot_type, out_dir, j)
 
 
     # plot cumulative response graphs
@@ -1197,14 +1205,14 @@ def main_batch(
         plot_sessions(out_main_dir, d_list, s_list, summary=True)
 
     if analysis_flags[2]:  # plot_batch_sessions
-        # sub = ['7', '8', '9', '10']
-        sub = ['3','4']
+        sub = ['7', '8', '9', '10']
+        # sub = ['3','4']
 
         # start_date = date(2019, 10, 23)  # date(year, mth, day)
         # end_date = date(2019, 8, 12)
 
         # Sets date using today as reference (Default)
-        start_date = date.today() - timedelta(days=20)
+        start_date = date.today() - timedelta(days=2)
         end_date = date.today() - timedelta(days=0)
 
         # for sub in sub:
