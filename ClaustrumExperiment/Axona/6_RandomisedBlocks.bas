@@ -11,6 +11,7 @@ dim elapsed_trials
 ' Store per trial information
 dim trial_sides
 dim trial_rewards
+dim trial_times
 
 'timing delays
 dim fi_delay
@@ -91,6 +92,8 @@ sub init_arrays()
     indices = [0, num_trials-1]
     trial_sides = vararraycreate(indices, 12)
     trial_rewards = vararraycreate(indices, 12)
+    indices = [0, (2*num_trials) - 1]
+    trial_times = vararraycreate(indices, 12)
 
     dim half_point
     half_point = trunc(num_trials / 2)
@@ -202,9 +205,10 @@ sub new_experiment(first)
             side_nice = "fixed ratio"
             fr_count = 0
         end if
-        print "Starting Trial number ", elapsed_trials+1, " Out of ", num_trials
-        print "Showing the subject ", side_nice
-        print #1, "Begin,", elapsed_trials+1, ",", side, ",", (TrialTime / 1000)
+        ' print "Starting Trial number ", elapsed_trials+1, " Out of ", num_trials
+        ' print "Showing the subject ", side_nice
+        trial_times[t_idx] = (TrialTime / 1000)
+        t_idx = t_idx + 1
 
         start_time = TrialTime
         iv_start_time = TrialTime
@@ -215,21 +219,20 @@ sub new_experiment(first)
 end sub
 
 sub end_experiment()
+    trial_times[t_idx] = (TrialTime / 1000)
+    t_idx = t_idx + 1
     reset_left_right()
     SignalOut(reward_light_outpin) = off
 
     ' Could be a good idea to remove non file prints when recording - reduce lag
-    print "Ending trial, num_rewards in this trial: ", trial_rewards[elapsed_trials]
-    print #1, "End,", trial_rewards[elapsed_trials], ",", (TrialTime / 1000)
+    ' print "Ending trial, num_rewards in this trial: ", trial_rewards[elapsed_trials]
+    ' print #1, "End,", trial_rewards[elapsed_trials], ",", (TrialTime / 1000)
     new_experiment(0)
 end sub
 
 sub full_init_before_record()
     ' Perform script init before recording
     dim i
-
-    ' Print the csv file header
-    print #1, tag, ",", num_trials, ",", fi_delay, ",", fi_allow, ",", fr_value
 
     ' Convert some delays to ms
     trial_delay = trial_delay * 1000 * 60
@@ -310,7 +313,6 @@ sub main()
                                 deliver_reward()
                                 experiment_state = "Reward"
                             elseif (pass_time <= (fi_delay + fi_allow)) then
-                                print "Delivered double reward"
                                 deliver_reward()
                                 DelayMS(500)
                                 deliver_reward()
@@ -356,9 +358,13 @@ sub main()
     StopUnitRecording
     reset()
 
+    ' Print the csv file header
+    print #1, tag, ",", num_trials, ",", fi_delay, ",", fi_allow, ",", fr_value
     dim total_rewards
     total_rewards = 0
     for i = 0 to num_trials - 1
+        print #1, "Begin,", trial_sides[i], ",", trial_times[2*i]
+        print #1, "End,", trial_rewards[i], ",", trial_times[2*i + 1]
         total_rewards = total_rewards + trial_rewards[i]
     next
     print #1, total_rewards
