@@ -48,6 +48,7 @@ dim left_lever_active
 dim right_lever_active
 dim experiment_state
 dim pressed_wrong
+dim t_idx
 
 'timing
 dim start_time
