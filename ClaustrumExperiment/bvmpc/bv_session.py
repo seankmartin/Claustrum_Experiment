@@ -241,13 +241,6 @@ class Session:
             trial_len += 5
             repeated_trial_len = (trial_len) * 6
 
-        # if last reward time < last pellet dispensed, assume animal picked reward at end of session.
-        if reward_times[-1] < pell_ts[-1]:
-            if stage == '7' or stage == '6':
-                reward_times = np.append(reward_times, repeated_trial_len)
-            else:
-                reward_times = np.append(reward_times, trial_len)
-
         if stage == '7' or stage == '6':
             # Check if trial switched before reward collection -> Adds collection as switch time
             blocks = np.arange(trial_len, repeated_trial_len, trial_len)
@@ -260,6 +253,14 @@ class Session:
                 if len(pell) > len(reward):
                     reward_times = np.insert(reward_times, np.searchsorted(
                         reward_times, blocks[i]), blocks[i])
+
+        # if last reward time < last pellet dispensed, assume animal picked reward at end of session.
+        # Checks if last block contains responses first
+        if reward_times[-1] < pell_ts[-1]:
+            if stage == '7' or stage == '6':
+                reward_times = np.append(reward_times, repeated_trial_len)
+            else:
+                reward_times = np.append(reward_times, trial_len)
 
         return np.sort(reward_times, axis=None)
 
@@ -401,8 +402,7 @@ class Session:
     def _init_trial_df(self):
         session_type = self.get_metadata('name')
         stage = session_type[:2].replace('_', '')  # Obtain stage number w/o _
-        timestamps = self.get_arrays()
-        pell_ts = timestamps["Reward"]
+        pell_ts = self.get_arrays("Reward")
 
         dpell_bool = np.diff(pell_ts) < 0.5
         # Provides index of double pell in pell_ts
