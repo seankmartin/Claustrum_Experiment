@@ -84,6 +84,7 @@ sub init_vars()
     elapsed_time = 0
     left_lever_active = 0
     right_lever_active = 0
+    t_idx = 0
     pressed_wrong = false
 end sub
 
@@ -271,9 +272,9 @@ sub main()
     ' Run the experiments and record the data
     '''NB Change important variables here'''
     num_trials = 6 'Number of trials is usually fixed 6
-    trial_delay = 1 'How long between trials in minutes
-    fi_delay = 10 'How long fi delay is in seconds
-    fi_allow = 5 'Can press 5 seconds +- to get double reward
+    trial_delay = 5 'How long between trials in minutes
+    fi_delay = 30 'How long fi delay is in seconds
+    fi_allow = 10 'Can press X seconds +- to get double reward
     fr_value = 6 'Number of FR presses needed
     tag = "Test" ' You may tag this experiment
     'output in the same name format as other axona files
