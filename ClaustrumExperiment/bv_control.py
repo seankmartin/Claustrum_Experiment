@@ -1207,14 +1207,14 @@ def main_batch(
 
     if analysis_flags[2]:  # plot_batch_sessions
         sub = ['7', '8', '9', '10']
-        sub = ['9']
+        # sub = ['10']
         # sub = ['3','4']
 
         # start_date = date(2019, 10, 23)  # date(year, mth, day)
         # end_date = date(2019, 8, 12)
 
         # Sets date using today as reference (Default)
-        start_date = date.today() - timedelta(days=2)
+        start_date = date.today() - timedelta(days=3)
         end_date = date.today() - timedelta(days=0)
 
         # for sub in sub:

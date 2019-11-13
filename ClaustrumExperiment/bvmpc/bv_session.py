@@ -245,9 +245,9 @@ class Session:
             # Check if trial switched before reward collection -> Adds collection as switch time
             blocks = np.arange(trial_len, repeated_trial_len, trial_len)
             split_pell_ts = np.split(
-                pell_ts_exdouble, np.searchsorted(pell_ts_exdouble, blocks))
+                pell_ts_exdouble, np.searchsorted(pell_ts_exdouble, blocks+0.1))
             split_reward_ts = np.split(
-                reward_times, np.searchsorted(reward_times, blocks))
+                reward_times, np.searchsorted(reward_times, blocks+0.1))
 
             for i, (pell, reward) in enumerate(zip(split_pell_ts, split_reward_ts[:-1])):
                 if len(pell) > len(reward):
