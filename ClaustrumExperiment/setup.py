@@ -14,7 +14,7 @@ MAINTAINER = 'Sean Martin and Gao Xiang Ham'
 MAINTAINER_EMAIL = 'martins7@tcd.ie'
 URL = 'https://github.com/seankmartin/neuro-tools'
 DOWNLOAD_URL = 'https://github.com/seankmartin/neuro-tools'
-VERSION = '0.01'
+VERSION = '0.1.0'
 
 INSTALL_REQUIRES = [
     'pandas',
@@ -22,8 +22,8 @@ INSTALL_REQUIRES = [
     'matplotlib',
     'seaborn',
     'scipy',
-    'neo >= 0.8.0',
-    'nixio >= 1.5.0b1'
+    # 'neo >= 0.8.0',
+    # 'nixio >= 1.5.0b1'
 ]
 
 PACKAGES = [

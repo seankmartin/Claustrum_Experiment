@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MedPCSplit</class>
+ <widget class="QDialog" name="MedPCSplit">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>419</width>
+    <height>201</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MedPC Split</string>
+  </property>
+  <widget class="QSpinBox" name="SplitsSpinBox">
+   <property name="geometry">
+    <rect>
+     <x>310</x>
+     <y>80</y>
+     <width>42</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="FileSelect">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>40</y>
+     <width>281</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Please select a MEDPC file...</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="FileSelectButton">
+   <property name="geometry">
+    <rect>
+     <x>310</x>
+     <y>40</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Open</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>170</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Run</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEdit">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>80</y>
+     <width>281</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Please select a number of splits:</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEdit_2">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>120</y>
+     <width>341</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>The number of splits must exactly divide the number of trials.</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
