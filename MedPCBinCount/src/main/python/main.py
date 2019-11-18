@@ -1,10 +1,13 @@
 import os
 import logging
-from bin_count import run_mpc_file, exact_split_divide
+import sys
 
+from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QFileDialog
+
+from bin_count import run_mpc_file, exact_split_divide
 
 
 def log_exception(ex, more_info=""):
@@ -31,7 +34,7 @@ def log_exception(ex, more_info=""):
 class DesignerUI:
     def __init__(self, design_location):
         Form, Window = uic.loadUiType(design_location)
-        self.app = QApplication([])
+        self.appctxt = ApplicationContext()
         self.window = Window()
         self.ui = Form()
         self.ui.setupUi(self.window)
@@ -39,10 +42,10 @@ class DesignerUI:
 
     def start(self):
         self.window.show()
-        self.app.exec_()
+        self.exit_code = self.appctxt.app.exec_()
 
     def getWidgets(self):
-        return self.app.allWidgets()
+        return self.appctxt.app.allWidgets()
 
     def getWidgetNames(self):
         return [w.objectName() for w in self.getWidgets()]
@@ -128,3 +131,4 @@ if __name__ == "__main__":
     ui = BinCountUI(ui_location)
     # print(ui.getWidgetNames())
     ui.start()
+    sys.exit(ui.exit_code)
