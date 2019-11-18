@@ -1,6 +1,5 @@
 """This holds utility functions."""
 
-import h5py
 import os
 import re
 import argparse
@@ -67,6 +66,7 @@ def get_attrs(d, depth=0):
 
 def print_h5(file_location):
     """Print a summary of a h5 file."""
+    import h5py
     with h5py.File(file_location, 'r', libver='latest') as f:
         for key, val in f.attrs.items():
             print(key, val)

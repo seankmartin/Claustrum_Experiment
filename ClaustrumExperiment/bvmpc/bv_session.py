@@ -7,7 +7,6 @@ import os
 from datetime import datetime
 
 import numpy as np
-import h5py
 import pandas as pd
 
 from bvmpc.bv_session_info import SessionInfo
@@ -350,6 +349,7 @@ class Session:
 
     def _save_h5_info(self):
         """Private function to save info to h5 file"""
+        import h5py
         with h5py.File(self.h5_file, "w", libver="latest") as f:
             for key, val in self.get_metadata().items():
                 f.attrs[key] = val
@@ -358,6 +358,7 @@ class Session:
 
     def _extract_h5_info(self):
         """Private function to pull info from h5 file"""
+        import h5py
         with h5py.File(self.h5_file, "r", libver="latest") as f:
             for key, val in f.attrs.items():
                 self.metadata[key] = val
