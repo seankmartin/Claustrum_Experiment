@@ -46,6 +46,14 @@ def run_mpc_file(filename, outname, n_splits=2):
             f.write(out_str)
 
 
+def exact_split_divide(filename, n_splits=2):
+    s_extractor = SessionExtractor(filename, verbose=False)
+
+    s1 = s_extractor.get_sessions()[0]
+    num = len(s1.get_arrays("Results"))
+    return (num % n_splits == 0), num
+
+
 if __name__ == "__main__":
     in_dir = r"C:\Users\smartin5\Google Drive\NeuroScience\Code\MPC_F"
     filename = os.path.join(in_dir, "01_09_19")
