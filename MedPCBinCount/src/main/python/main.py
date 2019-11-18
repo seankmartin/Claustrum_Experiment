@@ -32,9 +32,10 @@ def log_exception(ex, more_info=""):
 
 
 class DesignerUI:
-    def __init__(self, design_location):
-        Form, Window = uic.loadUiType(design_location)
+    def __init__(self, design_name):
         self.appctxt = ApplicationContext()
+        design_path = self.appctxt.get_resource(design_name)
+        Form, Window = uic.loadUiType(design_path)
         self.window = Window()
         self.ui = Form()
         self.ui.setupUi(self.window)
@@ -52,8 +53,8 @@ class DesignerUI:
 
 
 class BinCountUI(DesignerUI):
-    def __init__(self, design_location):
-        super().__init__(design_location)
+    def __init__(self, design_name):
+        super().__init__(design_name)
         self.selected_file = None
         self.even_split = False
         self.linkNames()
@@ -127,8 +128,6 @@ if __name__ == "__main__":
     logging.basicConfig(
         filename=os.path.join(here, 'binCount.log'),
         filemode='w', level=logging.WARNING)
-    ui_location = os.path.join(here, "MedPC_Split.ui")
-    ui = BinCountUI(ui_location)
-    # print(ui.getWidgetNames())
+    ui = BinCountUI("MedPC_Split.ui")
     ui.start()
     sys.exit(ui.exit_code)
