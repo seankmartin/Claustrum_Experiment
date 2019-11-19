@@ -4,24 +4,27 @@ from bvmpc.bv_utils import make_dir_if_not_exists
 import os
 
 
+def correct_name(name):
+    return (
+        name == 'Match_to_sample_0_delay' or
+        name == 'DNMTS_0_delay')
+
+
 def run_mpc_file(filename, outname, n_splits=2, keep_nan=True):
     """Use this to work on MEDPC files without converting to HDF5."""
     make_dir_if_not_exists(os.path.dirname(outname))
 
     s_extractor = SessionExtractor(filename, verbose=False)
 
-    def correct_name(name):
-        return (
-            name == 'Match_to_sample_0_delay' or
-            name == 'DNMTS_0_delay')
-
     # Check all session divide equally
     for s in s_extractor:
         if correct_name(s.get_metadata("name")):
             num = len(s.get_arrays("Results"))
-            if num % n_splits != 0:
+            if num == 1000:
+                continue
+            elif num % n_splits != 0:
                 print(
-                    "ERROR: {} must be divide {}, result is {}".format(
+                    "ERROR: {} must divide {}, result is {}".format(
                         n_splits, num, num / n_splits))
             s1 = s
             break
@@ -48,6 +51,8 @@ def run_mpc_file(filename, outname, n_splits=2, keep_nan=True):
                 results = np.array(
                     s.get_arrays("Results"), dtype=int)
                 if results.size != 0:
+                    if (results.size % n_splits != 0):
+                        continue
                     total = 100 * np.sum(results) / results.size
                     sub_arrs = np.split(results, n_splits)
                     for arr in sub_arrs:
@@ -65,7 +70,16 @@ def run_mpc_file(filename, outname, n_splits=2, keep_nan=True):
 def exact_split_divide(filename, n_splits=2):
     s_extractor = SessionExtractor(filename, verbose=False)
 
-    s1 = s_extractor.get_sessions()[0]
+    for s in s_extractor:
+        if correct_name(s.get_metadata("name")):
+            num = len(s.get_arrays("Results"))
+            if num % n_splits != 0:
+                print(
+                    "ERROR: {} must be divide {}, result is {}".format(
+                        n_splits, num, num / n_splits))
+            s1 = s
+            break
+
     num = len(s1.get_arrays("Results"))
     return (num % n_splits == 0), num
 
