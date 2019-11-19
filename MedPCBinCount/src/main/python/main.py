@@ -65,7 +65,7 @@ class BinCountUI(DesignerUI):
         self.file_select_button = self.ui.FileSelectButton
         self.run_button = self.ui.pushButton
         self.splits_box = self.ui.SplitsSpinBox
-        self.info_text = self.ui.lineEdit_2
+        self.info_text = self.ui.LogText
 
     def setup(self):
         self.file_select_button.clicked.connect(
@@ -74,29 +74,35 @@ class BinCountUI(DesignerUI):
             self.run)
         self.splits_box.valueChanged.connect(
             self.onSplitsChange)
-        self.splits_box.setValue(4)
+        self.splits_box.setValue(3)
+        self.splits_box.setMinimum(1)
         self.info_text.setText("Log messages will appear here...")
 
     def selectFile(self):
         self.selected_file, _filter = self.file_dialog.getOpenFileName()
         self.file_select_text.setText(self.selected_file)
-        self.onSplitsChange()
-
-    def onSplitsChange(self):
         try:
-            divides, total = exact_split_divide(
+            _, self.total_size = exact_split_divide(
                 self.selected_file, self.splits_box.value())
+            self.onSplitsChange()
         except Exception as e:
             log_exception(e, "During loading file")
             self.info_text.setText("Selected file could not be parsed")
             self.even_split = False
             return
+
+    def onSplitsChange(self):
+        if self.selected_file == None:
+            return
+        divides = (self.total_size % self.splits_box.value() == 0)
         if divides:
-            self.info_text.setText("Press Run to start...")
+            self.info_text.setText(
+                "Press Run to analyse {} sized splits".format(
+                    int(self.total_size / self.splits_box.value())))
             self.even_split = True
         else:
             self.info_text.setText("{} does not divide {} trials".format(
-                self.splits_box.value(), total))
+                self.splits_box.value(), self.total_size))
             self.even_split = False
 
     def run(self):
@@ -106,21 +112,21 @@ class BinCountUI(DesignerUI):
                 return
             if not self.even_split:
                 return
-            out_name = os.path.splitext(
-                self.selected_file)[0] + ".csv"
+            out_name = (
+                os.path.splitext(self.selected_file)[0] +
+                "_" + str(self.splits_box.value()) + "_splits" + ".csv")
             n_splits = self.splits_box.value()
             run_mpc_file(
                 self.selected_file, out_name, n_splits)
-            self.info_text.setText(
-                "Success, file saved to {}, you can run a new file".format(
-                    out_name))
+            self.info_text.setText("Successful run")
+            self.info_text.append("File saved to {}".format(out_name))
+            self.info_text.append("You can run a new file")
         except Exception as e:
             log_exception(e, "During program execution")
             here = os.path.dirname(os.path.realpath(__file__))
             filename = os.path.join(here, 'binCount.log')
-            self.info_text.setText(
-                "Error during execution, please check {}".format(
-                    filename))
+            self.info_text.setText("Error during execution")
+            self.info_text.append("Please check {}".format(filename))
 
 
 if __name__ == "__main__":
