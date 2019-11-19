@@ -5,3 +5,4 @@ ControlScripts/ExampleScripts
 *vscode/settings.json
 bvmpc.egg-info/
 MedPCBinCount/target/*
+*.log
