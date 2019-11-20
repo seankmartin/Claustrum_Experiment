@@ -12,6 +12,7 @@ import pandas as pd
 
 from bvmpc.bv_session_info import SessionInfo
 import bvmpc.bv_analyse as bv_an
+from bvmpc.bv_axona import AxonaInput
 
 
 class Session:
@@ -19,6 +20,7 @@ class Session:
 
     def __init__(
             self, h5_file=None, lines=None, neo_file=None,
+            axona_file=None, s_type=None,
             neo_backend="nix", verbose=False, file_origin=None):
         """
         Initialise the Session with lines from a MEDPC file.
@@ -27,10 +29,27 @@ class Session:
 
         Parameters
         ----------
-        lines : List of str
+        h5_file: str - Default None
+            h5 file location to load from
+        lines: List of str - Default None
             The lines in the MedPC file for this session.
+        neo_file: str - Default None
+            The location of a neo file to load from
+        axona_file: str - Default None
+            The location of a .inp file to load from
+        s_type: str - Default None
+            The type of session when using axona_file
+        neo_backend: str - Default "nix
+            If using neo_file, what backend to use
         verbose: bool - Default False
             Whether to print information while loading.
+        file_origin: str - Default None
+            Where the file originated from,
+            mostly only useful if directly passing lines
+
+        Returns
+        -------
+        None
 
         """
         self.session_info = SessionInfo()
@@ -45,8 +64,11 @@ class Session:
         a = 0 if lines is None else 1
         b = 0 if h5_file is None else 1
         c = 0 if neo_file is None else 1
-        if (a + b + c != 1):
-            print("Error: Session takes one of h5_file, lines and neo_file")
+        d = 0 if axona_file is None else 1
+        if (a + b + c + d != 1):
+            print(
+                "Error: Session takes one of" +
+                "h5_file, lines, neo_file, and axona_file")
             return
 
         if lines is not None:
@@ -64,6 +86,15 @@ class Session:
             self.neo_file = neo_file
             self.neo_backend = neo_backend
             self._extract_neo_info()
+
+        elif axona_file is not None:
+            if s_type is None:
+                print("Error: Please provide a session type (6 or 7)")
+                exit(-1)
+            self.s_type = s_type
+            self.file_origin = axona_file
+            self.axona_file = axona_file
+            self._extract_axona_info()
 
         else:
             print("Error: Unknown situation in Session init")
@@ -213,6 +244,25 @@ class Session:
             levers.append(self.get_arrays("Un_FI_Err"))
         return np.sort(np.concatenate(levers, axis=None))
 
+    def split_pell_ts(self):
+        """
+        Returns a tuple of arrays splitting up the rewards.
+
+        (Pellets without doubles, time of doubles)
+        """
+
+        pell_ts = self.get_arrays("Reward")
+
+        dpell_bool = np.diff(pell_ts) < 0.8
+        # Provides index of double pell in pell_ts
+        dpell_idx = np.nonzero(dpell_bool)[0] + 1
+        dpell = pell_ts[dpell_idx]
+
+        # pell drop ts excluding double ts
+        pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
+
+        return pell_ts_exdouble, dpell
+
     def get_rw_ts(self):
         """
         Get the timestamps of rewards. 
@@ -229,11 +279,7 @@ class Session:
         pell_ts = self.get_arrays("Reward")
         reward_times = self.get_arrays("Nosepoke")
 
-        # Check for double pellets
-        dpell_bool = np.diff(pell_ts) < 0.5
-        # Provides index of double pell in pell_ts
-        dpell_idx = np.nonzero(dpell_bool)[0] + 1
-        pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
+        pell_ts_exdouble = self.split_pell_ts()[0]
 
         reward_times = self.get_arrays("Nosepoke")
         trial_len = self.get_metadata("trial_length (mins)") * 60
@@ -364,6 +410,35 @@ class Session:
             for key in f.keys():
                 self.info_arrays[key] = f[key][()]
 
+    def _extract_axona_info(self):
+        self.axona_info = AxonaInput(self.axona_file)
+        for k, v in self.session_info.get_input_channel(self.s_type).items():
+            self.info_arrays[k] = self.axona_info.get_times(
+                "I", v[0], v[1])
+        for k, v in self.session_info.get_output_channel(self.s_type).items():
+            self.info_arrays[k] = self.axona_info.get_times(
+                "O", v[0], v[1])
+        self._convert_axona_info()
+
+    def _convert_axona_info(self):
+        left_presses = self.info_arrays.get("left_lever", [])
+        right_presses = self.info_arrays.get("right_lever", [])
+        nosepokes = self.info_arrays.get("nosepoke", [])
+        rewards = self.info_arrays.get("Reward", [])
+
+        # Extract the other information
+        pell_ts_exdouble, _ = self.split_pell_ts()
+        nosepoke_after_reward_idxs = np.searchsorted(
+            nosepokes, pell_ts_exdouble)
+        good_nosepokes = nosepokes[nosepoke_after_reward_idxs]
+        ia = np.indices(nosepokes.shape)
+        not_indices = np.setxor1d(ia, nosepoke_after_reward_idxs)
+        un_nosepokes = nosepokes[not_indices]
+        # TODO need to check if this happens at a split time
+        self.info_arrays["Nosepoke"] = good_nosepokes
+        self.info_arrays["Un_Nosepoke"] = un_nosepokes
+        # TODO make the other info_arrays needed
+
     def _extract_metadata(self):
         """Private function to pull metadata out of lines."""
         for i, name in enumerate(self.session_info.get_metadata()):
@@ -402,15 +477,8 @@ class Session:
         session_type = self.get_metadata('name')
         stage = session_type[:2].replace('_', '')  # Obtain stage number w/o _
         timestamps = self.get_arrays()
-        pell_ts = timestamps["Reward"]
 
-        dpell_bool = np.diff(pell_ts) < 0.5
-        # Provides index of double pell in pell_ts
-        dpell_idx = np.nonzero(dpell_bool)[0] + 1
-        dpell = pell_ts[dpell_idx]
-
-        # pell drop ts excluding double ts
-        pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
+        pell_ts_exdouble, dpell = self.split_pell_ts()
         reward_times = self.get_rw_ts()
 
         # Assign schedule type to trials
