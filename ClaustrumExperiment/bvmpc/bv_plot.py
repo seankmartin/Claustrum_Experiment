@@ -45,7 +45,7 @@ class GridFig:
         out_name = plot_type + \
             str(date_p) + '_' + str(sub_p) + \
             '_' + str(stage_p)
-        if j not None:
+        if j is not None:
             out_name += '_' + str(j)
         out_name += ".png"
         print("Saved figure to {}".format(
