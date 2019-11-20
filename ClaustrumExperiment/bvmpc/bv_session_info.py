@@ -163,7 +163,10 @@ class SessionInfo:
             "left_lever": (1, True),
             "right_lever": (3, True),
             "nosepoke": (7, True)}
-        output_dict = {"Reward": (9, False)}
+        output_dict = {
+            "Reward": (9, False),
+            "left_out": (1, False),
+            "right_out": (2, False)}
 
         self.io_channel_map["6"] = {
             "i": input_dict, "o": output_dict}

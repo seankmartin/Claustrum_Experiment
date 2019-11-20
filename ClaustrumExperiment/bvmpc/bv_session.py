@@ -434,9 +434,21 @@ class Session:
         ia = np.indices(nosepokes.shape)
         not_indices = np.setxor1d(ia, nosepoke_after_reward_idxs)
         un_nosepokes = nosepokes[not_indices]
-        # TODO need to check if this happens at a split time
+        # TODO need to check if there is
         self.info_arrays["Nosepoke"] = good_nosepokes
         self.info_arrays["Un_Nosepoke"] = un_nosepokes
+
+        fi_starts = self.info_arrays["left_out"]
+        fr_starts = self.info_arrays["right_out"]
+        trial_types = np.zeros(6)
+
+        # 1 is FR, 0 is FI
+        for i in range(3):
+            j = int(fi_starts[i] // 305)
+            trial_types[j] = 0
+            j = int(fr_starts[i] // 305)
+            trial_types[j] = 1
+        self.info_arrays["Trial Type"] = trial_types
         # TODO make the other info_arrays needed
 
     def _extract_metadata(self):
