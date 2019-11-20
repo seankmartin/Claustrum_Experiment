@@ -8,6 +8,12 @@ class SessionInfo:
 
     def __init__(self):
         """Init and setup the session information map."""
+        self.init_metadata_info()
+        self.init_session_info()
+        self.init_experiment_vars()
+        self.init_io_channels()
+
+    def init_metadata_info(self):
         self.metadata_info = [
             "start_date", "end_date", "subject",
             "experiment", "group",
@@ -25,6 +31,7 @@ class SessionInfo:
             len("MSN: ")
         ]
 
+    def init_session_info(self):
         self.session_info_dict = {}
 
         self.session_info_dict['2_MagazineHabituation_p'] = (
@@ -115,6 +122,7 @@ class SessionInfo:
                 # ['V:', 'END', 'Per Trial Pellets']
             ]))
 
+    def init_experiment_vars(self):
         # Note, ticks (10ms) are converted to seconds when parsing the file.
         base_exp_list = [
             "trial_length (mins)", "max_pellets", "advancement_pellets",
@@ -137,7 +145,7 @@ class SessionInfo:
         self.experiment_var_dict['5a_FixedRatio_p'] = (
             base_exp_list[:3] +
             ["fixed_ratio", "ending_ratio", "ratio_increment",
-             "max_ratio", base_exp_list[4], "fast_trials_to_advance"])
+                "max_ratio", base_exp_list[4], "fast_trials_to_advance"])
 
         self.experiment_var_dict['5b_FixedInterval_p'] = (
             base_exp_list[:3] + [base_exp_list[5]])
@@ -146,6 +154,20 @@ class SessionInfo:
 
         self.experiment_var_dict['7_RandomisedBlocksExtended_p'] = (
             base_exp_list)
+
+    def init_io_channels(self):
+        self.io_channel_map = {}
+
+        # Each tuple is the pin number and True if the value is inverted
+        input_dict = {
+            "left_lever": (1, True),
+            "right_lever": (3, True),
+            "nosepoke": (7, True)}
+        output_dict = {"Reward": (9, False)}
+
+        self.io_channel_map["6"] = {
+            "i": input_dict, "o": output_dict}
+        self.io_channel_map["7"] = self.io_channel_map["6"]
 
     def get_session_type_info(self, key=None):
         """
@@ -227,3 +249,47 @@ class SessionInfo:
         if idx is not None:
             return self.metadata_start_idx[idx]
         return self.metadata_start_idx
+
+    def get_input_channel(self, s_type, key=None):
+        """
+        Return the input channel for the given key
+
+        If key is None, return the full input channel dictionary.
+
+        Parameters
+        ----------
+        key: str, default None
+
+        Returns
+        -------
+        int: The channel for the given key
+        Dict: If key is None, the full dictionary of channels.
+        """
+
+        return self._get_channel("i", s_type, key=key)
+
+    def get_output_channel(self, s_type, key=None):
+        """
+        Return the output channel for the given key
+
+        If key is None, return the full output channel dictionary.
+
+        Parameters
+        ----------
+        key: str, default None
+
+        Returns
+        -------
+        int: The channel for the given key
+        Dict: If key is None, the full dictionary of channels.
+        """
+
+        return self._get_channel("o", s_type, key=key)
+
+    def _get_channel(self, io, s_type, key=None):
+        """Intended private function to help channel retrieval."""
+        if key is not None:
+            return self.io_channel_map.get(
+                s_type, None).get(io, None).get(key, None)
+        return self.io_channel_map.get(
+            s_type, None).get(io, None)
