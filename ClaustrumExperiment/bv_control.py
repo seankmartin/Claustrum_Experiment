@@ -426,7 +426,7 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
     out_dir = os.path.join(start_dir, "Plots")
     
     # Quick control of plotting
-    timeline, summary, raster, hist = [0, 0, 0, 1]
+    timeline, summary, raster, hist = [0, 0, 1, 0]
 
     if raster or hist:
         in_dir = os.path.join(start_dir, "hdf5")  # Path join only present in plot_sessions
@@ -451,7 +451,8 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
             else:
                 rows, cols = [2*n, 4*math.ceil(n/2)]
             
-            gf = bv_plot.GridFig(rows, cols)  # Initializes GridFig Obj
+            # Initializes GridFig Obj
+            gf = bv_plot.GridFig(rows, cols, wspace=0.5, hspace=0.5)
             # fig = gf.get_fig()
             # size_multiplier = 5
             # fig = plt.figure(
@@ -516,7 +517,7 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
     if timeline == 1:
         d = [end_date.isoformat()[-5:]]
         single = False  # plots seperate graphs for each animal if True
-        show_date = False  # Sets x-axis as dates if True
+        show_date = True  # Sets x-axis as dates if True
         # plot_sessions(start_dir, d, sub timeline=True, single=single, details=True, recent=True,
         #               show_date=show_date)  # Timeline_recent_details
         # plot_sessions(start_dir, d, sub timeline=True, single=single, details=True, det_err=True, det_corr=False, recent=True,
@@ -1206,13 +1207,14 @@ def main_batch(
 
     if analysis_flags[2]:  # plot_batch_sessions
         sub = ['7', '8', '9', '10']
+        # sub = ['10']
         # sub = ['3','4']
 
         # start_date = date(2019, 10, 23)  # date(year, mth, day)
         # end_date = date(2019, 8, 12)
 
         # Sets date using today as reference (Default)
-        start_date = date.today() - timedelta(days=2)
+        start_date = date.today() - timedelta(days=3)
         end_date = date.today() - timedelta(days=0)
 
         # for sub in sub:

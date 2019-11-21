@@ -14,7 +14,7 @@ class GridFig:
             figsize=(cols * size_multiplier,
                      rows * size_multiplier),
             tight_layout=tight_layout)
-        self.gs = gridspec.GridSpec(rows, cols, wspace=0.3, hspace=0.3)
+        self.gs = gridspec.GridSpec(rows, cols, wspace=wspace, hspace=hspace)
         self.idx = 0
         self.rows = rows
         self.cols = cols
@@ -28,6 +28,7 @@ class GridFig:
         ''' Add subplot with custom gs sizes -> returns ax '''
         ax = self.fig.add_subplot(
             self.gs[row_start:row_end, col_start:col_end])
+        plt.subplots_adjust(top=0.85)
         return ax
 
     def save_fig(self, df_date, df_sub, df_stage, plot_type, out_dir, j=None):
@@ -39,6 +40,7 @@ class GridFig:
             out_dir - location to save figure
             j - current figure index
         '''
+
         date_p = sorted(set(df_date))
         sub_p = sorted(set(df_sub))
         stage_p = sorted(set(df_stage))

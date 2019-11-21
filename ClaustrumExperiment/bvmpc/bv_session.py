@@ -289,13 +289,6 @@ class Session:
             trial_len += 5
             repeated_trial_len = (trial_len) * 6
 
-        # if last reward time < last pellet dispensed, assume animal picked reward at end of session.
-        if reward_times[-1] < pell_ts[-1]:
-            if stage == '7' or stage == '6':
-                reward_times = np.append(reward_times, repeated_trial_len)
-            else:
-                reward_times = np.append(reward_times, trial_len)
-
         if stage == '7' or stage == '6':
             # Check if trial switched before reward collection -> Adds collection as switch time
             split_pell_ts = split_into_blocks(
@@ -308,6 +301,14 @@ class Session:
                     reward_times = np.insert(
                         reward_times, np.searchsorted(
                             reward_times, blocks[i]), blocks[i])
+
+        # if last reward time < last pellet dispensed, assume animal picked reward at end of session.
+        # Checks if last block contains responses first
+        if reward_times[-1] < pell_ts[-1]:
+            if stage == '7' or stage == '6':
+                reward_times = np.append(reward_times, repeated_trial_len)
+            else:
+                reward_times = np.append(reward_times, trial_len)
 
         return np.sort(reward_times, axis=None)
 
