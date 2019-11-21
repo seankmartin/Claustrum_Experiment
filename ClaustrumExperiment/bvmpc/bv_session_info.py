@@ -162,7 +162,7 @@ class SessionInfo:
         input_dict = {
             "left_lever": (1, True),
             "right_lever": (3, True),
-            "nosepoke": (7, True)}
+            "all_nosepokes": (7, True)}
         output_dict = {
             "Reward": (9, False),
             "left_out": (1, False),

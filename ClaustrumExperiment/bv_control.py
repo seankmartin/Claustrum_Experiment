@@ -7,7 +7,7 @@ import seaborn as sns
 from bvmpc.bv_session_extractor import SessionExtractor
 from bvmpc.bv_session import Session
 import bvmpc.bv_analyse as bv_an
-from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list, get_all_files_in_dir, log_exception, chunks
+from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list, get_all_files_in_dir, log_exception, chunks, save_dict_to_csv
 import bvmpc.bv_plot as bv_plot
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -1237,4 +1237,9 @@ if __name__ == "__main__":
     # 2 - plot batch sessions, sub, and dates in main_batch
     # 3 - temporary compare variables function
     analysis_flags = [False, False, True, False]
-    main_batch(start_dir, analysis_flags, out_dir)
+    # main_batch(start_dir, analysis_flags, out_dir)
+
+    location = r"/home/sean/Downloads/CAR-S2_2019-11-18_Unit.inp"
+    s = Session(axona_file=location, s_type="6")
+    out_name = location[:-4] + "_parsed.csv"
+    save_dict_to_csv(out_name, s.info_arrays)

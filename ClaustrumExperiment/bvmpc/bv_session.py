@@ -424,7 +424,7 @@ class Session:
     def _convert_axona_info(self):
         left_presses = self.info_arrays.get("left_lever", [])
         right_presses = self.info_arrays.get("right_lever", [])
-        nosepokes = self.info_arrays.get("nosepoke", [])
+        nosepokes = self.info_arrays.get("all_nosepokes", [])
 
         # Extract nosepokes as necessary and unecessary
         pell_ts_exdouble, _ = self.split_pell_ts()
@@ -437,9 +437,12 @@ class Session:
             good_nosepokes, 305, 6)
         split_pellets = split_into_blocks(
             pell_ts_exdouble, 305, 6)
-        if split_nosepokes.shape != split_pellets.shape:
-            print("Error, nosepokes in blocks don't match pellets")
-            exit(-1)
+        for i, (b1, b2) in enumerate(zip(split_nosepokes, split_pellets)):
+            if b1.shape != b2.shape:
+                print("Error, nosepokes in blocks don't match pellets")
+                print("{} nosepokes, {} pellets, in block {}".format(
+                    len(b1), len(b2), i + 1))
+                exit(-1)
 
         self.info_arrays["Nosepoke"] = good_nosepokes
         self.info_arrays["Un_Nosepoke"] = un_nosepokes
@@ -456,21 +459,22 @@ class Session:
             trial_types[j] = 1
         self.info_arrays["Trial Type"] = trial_types
 
-        # TODO parse other file to remove fixed values
+        # TODO parse other file to remove fixed value
         self.metadata["fixed_interval (secs)"] = 30
-        self.metadata["fixed_ratio"] = 6
         fi = self.get_metadata("fixed_interval (secs)")
-        fr = self.get_metadata("fixed_ratio")
 
         # Set left presses and unnecessary left presses
         split_left_presses = split_into_blocks(
             left_presses, 305, 6)
-        left_presses_fi = split_left_presses[
-            np.nonzero(trial_types == 0)].flatten()
-        left_presses_fr = split_left_presses[
-            np.nonzero(trial_types == 1)].flatten()
+        left_presses_fi = np.concatenate(
+            split_left_presses[np.nonzero(trial_types == 0)])
+        left_presses_fr = np.concatenate(
+            split_left_presses[np.nonzero(trial_types == 1)])
+        good_nosepokes_fi = np.concatenate(
+            split_into_blocks(good_nosepokes, 305, 6)[
+                np.nonzero(trial_types == 0)])
 
-        fi_allow_times = np.add(good_nosepokes, fi)
+        fi_allow_times = np.add(good_nosepokes_fi, fi)
         good_left_presses, un_left_presses = split_array_with_another(
             left_presses_fi, fi_allow_times)
         self.info_arrays["L"] = good_left_presses
@@ -484,10 +488,10 @@ class Session:
         # set right presses and unnecessary right presses
         split_right_presses = split_into_blocks(
             right_presses, 305, 6)
-        right_presses_fr = split_right_presses[
-            np.nonzero(trial_types == 1)].flatten()
-        right_presses_fi = split_right_presses[
-            np.nonzero(trial_types == 0)].flatten()
+        right_presses_fr = np.concatenate(
+            split_right_presses[np.nonzero(trial_types == 1)])
+        right_presses_fi = np.concatenate(
+            split_right_presses[np.nonzero(trial_types == 0)])
 
         un_right_presses, good_right_presses = split_array_in_between_two(
             right_presses_fr, pell_ts_exdouble, good_nosepokes)
@@ -536,7 +540,6 @@ class Session:
     def _init_trial_df(self):
         session_type = self.get_metadata('name')
         stage = session_type[:2].replace('_', '')  # Obtain stage number w/o _
-        timestamps = self.get_arrays()
 
         pell_ts_exdouble, dpell = self.split_pell_ts()
         reward_times = self.get_rw_ts()

@@ -1,10 +1,12 @@
 """This holds utility functions."""
 
-import h5py
 import os
 import re
 import argparse
 from datetime import timedelta
+from collections.abc import Iterable
+
+import h5py
 import numpy as np
 
 
@@ -199,6 +201,23 @@ def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
         yield l[i:i + n]
+
+
+def save_dict_to_csv(filename, d):
+    """Saves d to a file"""
+    with open(filename, "w") as f:
+        for k, v in d.items():
+            out_str = k.replace(" ", "_")
+            if isinstance(v, Iterable):
+                if isinstance(v, np.ndarray):
+                    v = v.flatten()
+                else:
+                    v = np.array(v).flatten()
+                str_arr = [str(x) for x in v]
+                out_str = out_str + "," + ",".join(str_arr)
+            else:
+                out_str += "," + str(v)
+            f.write(out_str + "\n")
 
 
 if __name__ == "__main__":

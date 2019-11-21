@@ -42,6 +42,7 @@ def split_array_with_another(array, split_arr):
 
     """
     idxs = np.searchsorted(array, split_arr)
+    idxs = idxs[idxs != len(array)]
     return split_array(array, idxs)
 
 

@@ -194,8 +194,6 @@ class AxonaInpReader:
 def main(in_location):
     ai = AxonaInput(in_location)
     ai.save_to_file()
-    times = ai.get_times("I", 1, True)
-    print(times)
 
 
 def main_cmd():
