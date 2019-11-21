@@ -34,6 +34,15 @@ class SessionInfo:
     def init_session_info(self):
         self.session_info_dict = {}
 
+        self.session_info_dict['DNMTS_0_delay'] = (
+            np.array([
+                ['C:', 'D:', 'Counters'],
+                ['E:', 'F:', 'Results']
+            ]))
+
+        self.session_info_dict['Match_to_sample_0_delay'] = (
+            self.session_info_dict['DNMTS_0_delay'])
+
         self.session_info_dict['2_MagazineHabituation_p'] = (
             np.array([
                 ['A:', 'B:', 'Experiment Variables'],
