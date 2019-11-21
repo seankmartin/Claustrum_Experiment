@@ -13,6 +13,7 @@ import pandas as pd
 from bvmpc.bv_session_info import SessionInfo
 import bvmpc.bv_analyse as bv_an
 from bvmpc.bv_axona import AxonaInput
+from bvmpc.bv_array_methods import *
 
 
 class Session:
@@ -296,16 +297,16 @@ class Session:
 
         if stage == '7' or stage == '6':
             # Check if trial switched before reward collection -> Adds collection as switch time
-            blocks = np.arange(trial_len, repeated_trial_len, trial_len)
-            split_pell_ts = np.split(
-                pell_ts_exdouble, np.searchsorted(pell_ts_exdouble, blocks))
-            split_reward_ts = np.split(
-                reward_times, np.searchsorted(reward_times, blocks))
+            split_pell_ts = split_into_blocks(
+                pell_ts_exdouble, trial_len, 6)
+            split_reward_ts = split_into_blocks(
+                reward_times, trial_len, 6)
 
             for i, (pell, reward) in enumerate(zip(split_pell_ts, split_reward_ts[:-1])):
                 if len(pell) > len(reward):
-                    reward_times = np.insert(reward_times, np.searchsorted(
-                        reward_times, blocks[i]), blocks[i])
+                    reward_times = np.insert(
+                        reward_times, np.searchsorted(
+                            reward_times, blocks[i]), blocks[i])
 
         return np.sort(reward_times, axis=None)
 
@@ -424,17 +425,22 @@ class Session:
         left_presses = self.info_arrays.get("left_lever", [])
         right_presses = self.info_arrays.get("right_lever", [])
         nosepokes = self.info_arrays.get("nosepoke", [])
-        rewards = self.info_arrays.get("Reward", [])
 
-        # Extract the other information
+        # Extract nosepokes as necessary and unecessary
         pell_ts_exdouble, _ = self.split_pell_ts()
-        nosepoke_after_reward_idxs = np.searchsorted(
+        good_nosepokes, un_nosepokes = split_array_with_another(
             nosepokes, pell_ts_exdouble)
-        good_nosepokes = nosepokes[nosepoke_after_reward_idxs]
-        ia = np.indices(nosepokes.shape)
-        not_indices = np.setxor1d(ia, nosepoke_after_reward_idxs)
-        un_nosepokes = nosepokes[not_indices]
-        # TODO need to check if there is
+
+        # TODO make sure that nosepoke occurs before trial switch if reward before trial switch - Ham has idea for this already in another function
+        # For now, just a check!
+        split_nosepokes = split_into_blocks(
+            good_nosepokes, 305, 6)
+        split_pellets = split_into_blocks(
+            pell_ts_exdouble, 305, 6)
+        if split_nosepokes.shape != split_pellets.shape:
+            print("Error, nosepokes in blocks don't match pellets")
+            exit(-1)
+
         self.info_arrays["Nosepoke"] = good_nosepokes
         self.info_arrays["Un_Nosepoke"] = un_nosepokes
 
@@ -442,14 +448,56 @@ class Session:
         fr_starts = self.info_arrays["right_out"]
         trial_types = np.zeros(6)
 
-        # 1 is FR, 0 is FI
+        # set trial types - 1 is FR, 0 is FI
         for i in range(3):
             j = int(fi_starts[i] // 305)
             trial_types[j] = 0
             j = int(fr_starts[i] // 305)
             trial_types[j] = 1
         self.info_arrays["Trial Type"] = trial_types
-        # TODO make the other info_arrays needed
+
+        # TODO parse other file to remove fixed values
+        self.metadata["fixed_interval (secs)"] = 30
+        self.metadata["fixed_ratio"] = 6
+        fi = self.get_metadata("fixed_interval (secs)")
+        fr = self.get_metadata("fixed_ratio")
+
+        # Set left presses and unnecessary left presses
+        split_left_presses = split_into_blocks(
+            left_presses, 305, 6)
+        left_presses_fi = split_left_presses[
+            np.nonzero(trial_types == 0)].flatten()
+        left_presses_fr = split_left_presses[
+            np.nonzero(trial_types == 1)].flatten()
+
+        fi_allow_times = np.add(good_nosepokes, fi)
+        good_left_presses, un_left_presses = split_array_with_another(
+            left_presses_fi, fi_allow_times)
+        self.info_arrays["L"] = good_left_presses
+        self.info_arrays["Un_L"] = un_left_presses
+
+        un_fr_err, fr_err = split_array_in_between_two(
+            left_presses_fr, pell_ts_exdouble, good_nosepokes)
+        self.info_arrays["Un_FR_Err"] = un_fr_err
+        self.info_arrays["FR_Err"] = fr_err
+
+        # set right presses and unnecessary right presses
+        split_right_presses = split_into_blocks(
+            right_presses, 305, 6)
+        right_presses_fr = split_right_presses[
+            np.nonzero(trial_types == 1)].flatten()
+        right_presses_fi = split_right_presses[
+            np.nonzero(trial_types == 0)].flatten()
+
+        un_right_presses, good_right_presses = split_array_in_between_two(
+            right_presses_fr, pell_ts_exdouble, good_nosepokes)
+        self.info_arrays["R"] = good_right_presses
+        self.info_arrays["Un_R"] = un_right_presses
+
+        un_fi_err, fi_err = split_array_in_between_two(
+            right_presses_fi, pell_ts_exdouble, good_nosepokes)
+        self.info_arrays["Un_FI_Err"] = un_fi_err
+        self.info_arrays["FI_Err"] = fi_err
 
     def _extract_metadata(self):
         """Private function to pull metadata out of lines."""

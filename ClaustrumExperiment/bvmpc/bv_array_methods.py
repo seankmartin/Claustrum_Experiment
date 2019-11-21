@@ -9,7 +9,7 @@ def split_into_blocks(array, block_max, num_blocks):
     """
     blocks = np.arange(
         block_max + 0.001, block_max * num_blocks + 0.001, block_max + 0.001)
-    return np.split(array, np.searchsorted(array, blocks))
+    return np.array(np.split(array, np.searchsorted(array, blocks)))
 
 
 def split_array(array, idxs):
