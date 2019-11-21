@@ -21,7 +21,7 @@ class Session:
 
     def __init__(
             self, h5_file=None, lines=None, neo_file=None,
-            axona_file=None, s_type=None,
+            axona_file=None, s_type="6",
             neo_backend="nix", verbose=False, file_origin=None):
         """
         Initialise the Session with lines from a MEDPC file.
@@ -40,6 +40,7 @@ class Session:
             The location of a .inp file to load from
         s_type: str - Default None
             The type of session when using axona_file
+            For now, leaving as 6 will work for everything.
         neo_backend: str - Default "nix
             If using neo_file, what backend to use
         verbose: bool - Default False

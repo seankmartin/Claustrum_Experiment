@@ -1240,6 +1240,6 @@ if __name__ == "__main__":
     # main_batch(start_dir, analysis_flags, out_dir)
 
     location = r"/home/sean/Downloads/CAR-S2_2019-11-18_Unit.inp"
-    s = Session(axona_file=location, s_type="6")
+    s = Session(axona_file=location)
     out_name = location[:-4] + "_parsed.csv"
     save_dict_to_csv(out_name, s.info_arrays)
