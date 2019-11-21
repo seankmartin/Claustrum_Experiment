@@ -414,6 +414,11 @@ class Session:
 
     def _extract_axona_info(self):
         self.axona_info = AxonaInput(self.axona_file)
+        # TODO Metadata extract from set file for standard metadata
+        # TODO Numerical metadata extract from log file
+        # Need "fixed_interval (ticks)", "double_reward_window (ticks)"
+        # AND "trial_length (mins)", "fixed_ratio"
+        # "num_trials" should be added too
         for k, v in self.session_info.get_input_channel(self.s_type).items():
             self.info_arrays[k] = self.axona_info.get_times(
                 "I", v[0], v[1])
@@ -448,8 +453,8 @@ class Session:
         self.info_arrays["Nosepoke"] = good_nosepokes
         self.info_arrays["Un_Nosepoke"] = un_nosepokes
 
-        fi_starts = self.info_arrays["left_out"]
-        fr_starts = self.info_arrays["right_out"]
+        fi_starts = self.info_arrays["left_light"]
+        fr_starts = self.info_arrays["right_light"]
         trial_types = np.zeros(6)
 
         # set trial types - 1 is FR, 0 is FI

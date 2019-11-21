@@ -166,7 +166,9 @@ class SessionInfo:
         output_dict = {
             "Reward": (9, False),
             "left_out": (1, False),
-            "right_out": (2, False)}
+            "right_out": (2, False),
+            "left_light": (4, False),
+            "right_light": (5, False)}
 
         self.io_channel_map["6"] = {
             "i": input_dict, "o": output_dict}

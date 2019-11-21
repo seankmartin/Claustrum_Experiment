@@ -276,9 +276,9 @@ sub main()
     fi_delay = 30 'How long fi delay is in seconds
     fi_allow = 10 'Can press X seconds +- to get double reward
     fr_value = 6 'Number of FR presses needed
-    tag = "Test" ' You may tag this experiment
+    tag = "6" ' You may tag this experiment
     'output in the same name format as other axona files
-    open "data.log" for output as #1
+    open "exp6.log" for output as #1
 
     full_init_before_record()
     StartUnitRecording
@@ -361,7 +361,7 @@ sub main()
     reset()
 
     ' Print the csv file header
-    print #1, tag, ",", num_trials, ",", fi_delay, ",", fi_allow, ",", fr_value
+    print #1, tag, ",", num_trials, ",", fi_delay, ",", fi_allow, ",", fr_value, ",", trial_delay
     dim total_rewards
     total_rewards = 0
     for i = 0 to num_trials - 1
