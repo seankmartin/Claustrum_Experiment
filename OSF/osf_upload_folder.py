@@ -54,17 +54,17 @@ def upload_folder(folder, recursive=True):
     with open(os.path.join(folder, "uploaded_files.txt"), "w") as f:
         for local, remote in zip(file_list, remote_list):
             if should_use_file(local, ignore_list):
-            if not remote in current_remote:
-                upload_file(local, remote)
-                f.write("Uploaded {} to {}\n".format(
-                    local, remote))
-                print("Uploaded {} to {}".format(
-                    local, remote))
-            else:
-                f.write("Skipped upload of {} to {} - already in OSF\n".format(
-                    local, remote))
-                print("Skipped upload of {} to {} - already in OSF".format(
-                    local, remote))
+                if not remote in current_remote:
+                    upload_file(local, remote)
+                    f.write("Uploaded {} to {}\n".format(
+                        local, remote))
+                    print("Uploaded {} to {}".format(
+                        local, remote))
+                else:
+                    f.write("Skipped upload of {} to {} - already in OSF\n".format(
+                        local, remote))
+                    print("Skipped upload of {} to {} - already in OSF".format(
+                        local, remote))
 
 
 def main(location):
