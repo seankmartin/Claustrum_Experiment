@@ -36,13 +36,24 @@ def get_osf_files():
         for line in result.splitlines()]
 
 
+def should_use_file(filename, ext_ignore_list):
+    ext = os.path.splitext(filename)[1][1:]
+    for ignore in ext_ignore_list:
+        if ext.startswith(ignore):
+            return False
+    return True
+
+
 def upload_folder(folder, recursive=True):
     file_list = get_all_files_in_dir(folder, recursive=recursive)
     remote_list = [fname[len(folder + os.sep):] for fname in file_list]
     current_remote = get_osf_files()
-    print("Beginning upload process")
+    ignore_list = ["inp", "eeg", "egf", "plx"]
+    print("Beginning upload process ignoring extensions {}".format(
+        ignore_list))
     with open(os.path.join(folder, "uploaded_files.txt"), "w") as f:
         for local, remote in zip(file_list, remote_list):
+            if should_use_file(local, ignore_list):
             if not remote in current_remote:
                 upload_file(local, remote)
                 f.write("Uploaded {} to {}\n".format(
