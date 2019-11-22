@@ -36,6 +36,12 @@ def get_osf_files():
         for line in result.splitlines()]
 
 
+def empty_osf():
+    for file in get_osf_files():
+        print("Removing {}".format(file))
+        remove_file(file)
+
+
 def upload_folder(folder, recursive=True):
     file_list = get_all_files_in_dir(folder, recursive=recursive)
     remote_list = [fname[len(folder + os.sep):] for fname in file_list]
