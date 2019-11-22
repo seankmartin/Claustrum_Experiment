@@ -44,9 +44,6 @@ def upload_folder(folder, recursive=True):
     with open(os.path.join(folder, "uploaded_files.txt"), "w") as f:
         for local, remote in zip(file_list, remote_list):
             if not remote in current_remote:
-                print(remote)
-                print(current_remote)
-                exit(-1)
                 upload_file(local, remote)
                 f.write("Uploaded {} to {}\n".format(
                     local, remote))
