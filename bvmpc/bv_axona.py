@@ -1,9 +1,13 @@
+"""Module to read Axona .inp files."""
+
 import os
 import argparse
 import numpy as np
 
 
 class AxonaInput:
+    """Class which decodes Axona .inp files."""
+
     def __init__(self, location):
         """
         Initialise an axona input holder.
@@ -18,6 +22,7 @@ class AxonaInput:
         Returns
         -------
         None
+
         """
         if location is not None:
             self.location = location
@@ -38,8 +43,8 @@ class AxonaInput:
         Returns
         -------
         None
-        """
 
+        """
         if location is None:
             if self.location is not None:
                 location = os.path.splitext(self.location)[0] + ".csv"
@@ -77,6 +82,7 @@ class AxonaInput:
         Returns
         -------
         None
+
         """
         self.timestamps = t_arr
         self.channels = c_arr
@@ -96,6 +102,12 @@ class AxonaInput:
             Which pin to retrieve, 1 indexed
         inverted: bool - default False
             if True, 1 is off and 0 is on
+
+        Returns
+        -------
+        np.ndarray:
+            The times that the value of pin changes
+
         """
         if inverted:
             on = 0
@@ -114,12 +126,12 @@ class AxonaInput:
 
 
 class AxonaInpReader:
-    """Axona .inp reader - this class is completely static"""
+    """Axona .inp reader - this class is completely static."""
 
     @classmethod
     def load(cls, in_location, axona_input):
         """
-        Extract a information from an Axona inp file
+        Extract information from an Axona inp file.
 
         Parameters
         ----------
@@ -191,29 +203,7 @@ class AxonaInpReader:
         return out_dict
 
 
-def main(in_location):
+if __name__ == "__main__":
+    in_location = r"/home/sean/Downloads/CAR-S2_2019-11-18_Unit.inp"
     ai = AxonaInput(in_location)
     ai.save_to_file()
-
-
-def main_cmd():
-    parser = argparse.ArgumentParser(description="Parse a program location")
-    parser.add_argument("--loc", "-l", type=str, help="inp file location")
-    parsed = parser.parse_args()
-    if parsed.loc is None:
-        print("Please enter a location through cmd with -l LOCATION")
-        exit(-1)
-    main(parsed.loc)
-
-
-def main_py():
-    location = r"/home/sean/Downloads/CAR-S2_2019-11-18_Unit.inp"
-    # location = os.path.join(
-    #     r"C:\Users\smartin5\Downloads",
-    #     "CLA1_2019-09-28.inp")
-    main(location)
-
-
-if __name__ == "__main__":
-    # main_cmd()
-    main_py()

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.3" />
 <title>bvmpc.bv_plot API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Plotting functions for the bvmpc module." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,20 +20,29 @@
 <h1 class="title">Module <code>bvmpc.bv_plot</code></h1>
 </header>
 <section id="section-intro">
+<p>Plotting functions for the bvmpc module.</p>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import os
+<pre><code class="python">&#34;&#34;&#34;Plotting functions for the bvmpc module.&#34;&#34;&#34;
+
+import os
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
 class GridFig:
-    &#34;&#34;&#34; Handles gridded figures. &#34;&#34;&#34;
+    &#34;&#34;&#34;Handles gridded figures.&#34;&#34;&#34;
 
     def __init__(
             self, rows, cols=4,
             size_multiplier=5, wspace=0.3, hspace=0.3,
             tight_layout=False):
+        &#34;&#34;&#34;
+        Set up the grid specifications.
+
+        size_multiplier, wspace, and hspace are used for spacing
+
+        &#34;&#34;&#34;
         self.fig = plt.figure(
             figsize=(cols * size_multiplier,
                      rows * size_multiplier),
@@ -44,27 +53,31 @@ class GridFig:
         self.cols = cols
 
     def get_ax(self, row_idx, col_idx):
-        &#39;&#39;&#39; Add subplot with standard 1x1 gs -&gt; returns ax &#39;&#39;&#39;
+        &#34;&#34;&#34;Add subplot with standard 1x1 gs -&gt; returns ax.&#34;&#34;&#34;
         ax = self.fig.add_subplot(self.gs[row_idx, col_idx])
         return ax
 
     def get_multi_ax(self, row_start, row_end, col_start, col_end):
-        &#39;&#39;&#39; Add subplot with custom gs sizes -&gt; returns ax &#39;&#39;&#39;
+        &#34;&#34;&#34;Add subplot with custom gs sizes -&gt; returns ax.&#34;&#34;&#34;
         ax = self.fig.add_subplot(
             self.gs[row_start:row_end, col_start:col_end])
         plt.subplots_adjust(top=0.85)
         return ax
 
     def save_fig(self, df_date, df_sub, df_stage, plot_type, out_dir, j=None):
-        &#39;&#39;&#39; Names and saves figure. Required inputs:
-            df_date - list of dates plot
-            df_sub - list of subjects plot
-            df_stage - list of stages plot
-            plot_type - name of plot type
-            out_dir - location to save figure
-            j - current figure index
-        &#39;&#39;&#39;
+        &#34;&#34;&#34;
+        Names and saves figure.
 
+        Parameters
+        ----------
+        df_date - list of dates plot
+        df_sub - list of subjects plot
+        df_stage - list of stages plot
+        plot_type - name of plot type
+        out_dir - location to save figure
+        j - current figure index
+
+        &#34;&#34;&#34;
         date_p = sorted(set(df_date))
         sub_p = sorted(set(df_sub))
         stage_p = sorted(set(df_stage))
@@ -81,10 +94,13 @@ class GridFig:
         return
 
     def get_fig(self):
+        &#34;&#34;&#34;Return the figure object in this class.&#34;&#34;&#34;
         return self.fig
 
     def get_next(self, along_rows=True):
-        &#34;&#34;&#34;Moves like this:
+        &#34;&#34;&#34;
+        Get next index along rows or columns.
+
         along rows:
         1   2   3   4   5   6
         7   8   9   10  11  12  ...
@@ -92,6 +108,7 @@ class GridFig:
         else:
         1   3   5   7   9   11
         2   3   6   8   10  12  ...
+
         &#34;&#34;&#34;
         if along_rows:
             row_idx = (self.idx // self.cols)
@@ -109,10 +126,12 @@ class GridFig:
         return ax
 
     def get_next_snake(self):
-        &#34;&#34;&#34;Moves like this:
+        &#34;&#34;&#34;
+        Get the next index in a snake like pattern.
 
         1   2   5   6   9   10  ...
-        3   4   7   8   11  12  ...
+        3   4   7   8   11  12  ..
+
         &#34;&#34;&#34;
         if self.rows != 2:
             print(&#34;ERROR: Can&#39;t get snake unless there are two rows&#34;)
@@ -124,6 +143,7 @@ class GridFig:
         return ax
 
     def _increment(self):
+        &#34;&#34;&#34;Private function to increase the internal idx counter.&#34;&#34;&#34;
         self.idx = self.idx + 1
         if self.idx == self.rows * self.cols:
             print(&#34;Looping&#34;)
@@ -144,16 +164,24 @@ class GridFig:
 <span>(</span><span>rows, cols=4, size_multiplier=5, wspace=0.3, hspace=0.3, tight_layout=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Handles gridded figures.</p></section>
+<section class="desc"><p>Handles gridded figures.</p>
+<p>Set up the grid specifications.</p>
+<p>size_multiplier, wspace, and hspace are used for spacing</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class GridFig:
-    &#34;&#34;&#34; Handles gridded figures. &#34;&#34;&#34;
+    &#34;&#34;&#34;Handles gridded figures.&#34;&#34;&#34;
 
     def __init__(
             self, rows, cols=4,
             size_multiplier=5, wspace=0.3, hspace=0.3,
             tight_layout=False):
+        &#34;&#34;&#34;
+        Set up the grid specifications.
+
+        size_multiplier, wspace, and hspace are used for spacing
+
+        &#34;&#34;&#34;
         self.fig = plt.figure(
             figsize=(cols * size_multiplier,
                      rows * size_multiplier),
@@ -164,27 +192,31 @@ class GridFig:
         self.cols = cols
 
     def get_ax(self, row_idx, col_idx):
-        &#39;&#39;&#39; Add subplot with standard 1x1 gs -&gt; returns ax &#39;&#39;&#39;
+        &#34;&#34;&#34;Add subplot with standard 1x1 gs -&gt; returns ax.&#34;&#34;&#34;
         ax = self.fig.add_subplot(self.gs[row_idx, col_idx])
         return ax
 
     def get_multi_ax(self, row_start, row_end, col_start, col_end):
-        &#39;&#39;&#39; Add subplot with custom gs sizes -&gt; returns ax &#39;&#39;&#39;
+        &#34;&#34;&#34;Add subplot with custom gs sizes -&gt; returns ax.&#34;&#34;&#34;
         ax = self.fig.add_subplot(
             self.gs[row_start:row_end, col_start:col_end])
         plt.subplots_adjust(top=0.85)
         return ax
 
     def save_fig(self, df_date, df_sub, df_stage, plot_type, out_dir, j=None):
-        &#39;&#39;&#39; Names and saves figure. Required inputs:
-            df_date - list of dates plot
-            df_sub - list of subjects plot
-            df_stage - list of stages plot
-            plot_type - name of plot type
-            out_dir - location to save figure
-            j - current figure index
-        &#39;&#39;&#39;
+        &#34;&#34;&#34;
+        Names and saves figure.
 
+        Parameters
+        ----------
+        df_date - list of dates plot
+        df_sub - list of subjects plot
+        df_stage - list of stages plot
+        plot_type - name of plot type
+        out_dir - location to save figure
+        j - current figure index
+
+        &#34;&#34;&#34;
         date_p = sorted(set(df_date))
         sub_p = sorted(set(df_sub))
         stage_p = sorted(set(df_stage))
@@ -201,10 +233,13 @@ class GridFig:
         return
 
     def get_fig(self):
+        &#34;&#34;&#34;Return the figure object in this class.&#34;&#34;&#34;
         return self.fig
 
     def get_next(self, along_rows=True):
-        &#34;&#34;&#34;Moves like this:
+        &#34;&#34;&#34;
+        Get next index along rows or columns.
+
         along rows:
         1   2   3   4   5   6
         7   8   9   10  11  12  ...
@@ -212,6 +247,7 @@ class GridFig:
         else:
         1   3   5   7   9   11
         2   3   6   8   10  12  ...
+
         &#34;&#34;&#34;
         if along_rows:
             row_idx = (self.idx // self.cols)
@@ -229,10 +265,12 @@ class GridFig:
         return ax
 
     def get_next_snake(self):
-        &#34;&#34;&#34;Moves like this:
+        &#34;&#34;&#34;
+        Get the next index in a snake like pattern.
 
         1   2   5   6   9   10  ...
-        3   4   7   8   11  12  ...
+        3   4   7   8   11  12  ..
+
         &#34;&#34;&#34;
         if self.rows != 2:
             print(&#34;ERROR: Can&#39;t get snake unless there are two rows&#34;)
@@ -244,6 +282,7 @@ class GridFig:
         return ax
 
     def _increment(self):
+        &#34;&#34;&#34;Private function to increase the internal idx counter.&#34;&#34;&#34;
         self.idx = self.idx + 1
         if self.idx == self.rows * self.cols:
             print(&#34;Looping&#34;)
@@ -255,11 +294,11 @@ class GridFig:
 <span>def <span class="ident">get_ax</span></span>(<span>self, row_idx, col_idx)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Add subplot with standard 1x1 gs -&gt; returns ax</p></section>
+<section class="desc"><p>Add subplot with standard 1x1 gs -&gt; returns ax.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_ax(self, row_idx, col_idx):
-    &#39;&#39;&#39; Add subplot with standard 1x1 gs -&gt; returns ax &#39;&#39;&#39;
+    &#34;&#34;&#34;Add subplot with standard 1x1 gs -&gt; returns ax.&#34;&#34;&#34;
     ax = self.fig.add_subplot(self.gs[row_idx, col_idx])
     return ax</code></pre>
 </details>
@@ -268,10 +307,11 @@ class GridFig:
 <span>def <span class="ident">get_fig</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Return the figure object in this class.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_fig(self):
+    &#34;&#34;&#34;Return the figure object in this class.&#34;&#34;&#34;
     return self.fig</code></pre>
 </details>
 </dd>
@@ -279,11 +319,11 @@ class GridFig:
 <span>def <span class="ident">get_multi_ax</span></span>(<span>self, row_start, row_end, col_start, col_end)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Add subplot with custom gs sizes -&gt; returns ax</p></section>
+<section class="desc"><p>Add subplot with custom gs sizes -&gt; returns ax.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_multi_ax(self, row_start, row_end, col_start, col_end):
-    &#39;&#39;&#39; Add subplot with custom gs sizes -&gt; returns ax &#39;&#39;&#39;
+    &#34;&#34;&#34;Add subplot with custom gs sizes -&gt; returns ax.&#34;&#34;&#34;
     ax = self.fig.add_subplot(
         self.gs[row_start:row_end, col_start:col_end])
     plt.subplots_adjust(top=0.85)
@@ -294,8 +334,8 @@ class GridFig:
 <span>def <span class="ident">get_next</span></span>(<span>self, along_rows=True)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Moves like this:
-along rows:
+<section class="desc"><p>Get next index along rows or columns.</p>
+<p>along rows:
 1
 2
 3
@@ -326,7 +366,9 @@ along rows:
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_next(self, along_rows=True):
-    &#34;&#34;&#34;Moves like this:
+    &#34;&#34;&#34;
+    Get next index along rows or columns.
+
     along rows:
     1   2   3   4   5   6
     7   8   9   10  11  12  ...
@@ -334,6 +376,7 @@ along rows:
     else:
     1   3   5   7   9   11
     2   3   6   8   10  12  ...
+
     &#34;&#34;&#34;
     if along_rows:
         row_idx = (self.idx // self.cols)
@@ -355,7 +398,7 @@ along rows:
 <span>def <span class="ident">get_next_snake</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Moves like this:</p>
+<section class="desc"><p>Get the next index in a snake like pattern.</p>
 <p>1
 2
 5
@@ -369,14 +412,16 @@ along rows:
 8
 11
 12
-&hellip;</p></section>
+..</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_next_snake(self):
-    &#34;&#34;&#34;Moves like this:
+    &#34;&#34;&#34;
+    Get the next index in a snake like pattern.
 
     1   2   5   6   9   10  ...
-    3   4   7   8   11  12  ...
+    3   4   7   8   11  12  ..
+
     &#34;&#34;&#34;
     if self.rows != 2:
         print(&#34;ERROR: Can&#39;t get snake unless there are two rows&#34;)
@@ -392,8 +437,9 @@ along rows:
 <span>def <span class="ident">save_fig</span></span>(<span>self, df_date, df_sub, df_stage, plot_type, out_dir, j=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Names and saves figure. Required inputs:
-df_date - list of dates plot
+<section class="desc"><p>Names and saves figure.</p>
+<h2 id="parameters">Parameters</h2>
+<p>df_date - list of dates plot
 df_sub - list of subjects plot
 df_stage - list of stages plot
 plot_type - name of plot type
@@ -402,15 +448,19 @@ j - current figure index</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def save_fig(self, df_date, df_sub, df_stage, plot_type, out_dir, j=None):
-    &#39;&#39;&#39; Names and saves figure. Required inputs:
-        df_date - list of dates plot
-        df_sub - list of subjects plot
-        df_stage - list of stages plot
-        plot_type - name of plot type
-        out_dir - location to save figure
-        j - current figure index
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
+    Names and saves figure.
 
+    Parameters
+    ----------
+    df_date - list of dates plot
+    df_sub - list of subjects plot
+    df_stage - list of stages plot
+    plot_type - name of plot type
+    out_dir - location to save figure
+    j - current figure index
+
+    &#34;&#34;&#34;
     date_p = sorted(set(df_date))
     sub_p = sorted(set(df_sub))
     stage_p = sorted(set(df_stage))

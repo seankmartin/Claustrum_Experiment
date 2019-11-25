@@ -1,11 +1,20 @@
+"""Assorted helper functions to split timestamp numpy arrays up."""
+
 import numpy as np
 
 
 def split_into_blocks(array, block_max, num_blocks):
     """
-    Splits a sorted array into num_blocks
-    where each block has a value of at most block_max
+    Split a sorted array into num_blocks.
+
+    Each block has a value of at most block_max
     greater than the previous block.
+
+    Returns
+    -------
+    List:
+        A list of size num_blocks
+
     """
     blocks = np.arange(
         block_max + 0.001, block_max * num_blocks + 0.001, block_max + 0.001)
@@ -33,8 +42,9 @@ def split_array(array, idxs):
 
 def split_array_with_another(array, split_arr):
     """
-    Split a sorted one d array into two with
-    one array being the values directly after splt_arr.
+    Split a sorted one d array into two.
+
+    First array is the values directly after splt_arr.
 
     Returns
     -------
@@ -48,15 +58,24 @@ def split_array_with_another(array, split_arr):
 
 def split_array_in_between_two(array, left, right):
     """
-    Split a sorted one d array into two with
-    one array being the values in between left and right
+    Split a sorted one d array into two.
+
+    One array is the values in between left and right
     left and right should be the same size
+
+    Returns
+    -------
+    (array values between left and right, other values)
+
+    Raises
+    ------
+    ValueError
+        If 'left' is not the same size as 'right'
+
     """
     if len(left) != len(right):
-        print(
-            "ERROR! left and right should have the same size in" +
-            " split_array_in_between_two")
-        exit(-1)
+        raise(ValueError(
+            'left and right must have the same number of elements'))
     good_idxs = []
     for i, val in enumerate(array):
         bigger = (left <= val)

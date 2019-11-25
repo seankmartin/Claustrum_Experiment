@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.3" />
 <title>bvmpc.bv_axona API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Module to read Axona .inp files." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,14 +20,19 @@
 <h1 class="title">Module <code>bvmpc.bv_axona</code></h1>
 </header>
 <section id="section-intro">
+<p>Module to read Axona .inp files.</p>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import os
+<pre><code class="python">&#34;&#34;&#34;Module to read Axona .inp files.&#34;&#34;&#34;
+
+import os
 import argparse
 import numpy as np
 
 
 class AxonaInput:
+    &#34;&#34;&#34;Class which decodes Axona .inp files.&#34;&#34;&#34;
+
     def __init__(self, location):
         &#34;&#34;&#34;
         Initialise an axona input holder.
@@ -42,6 +47,7 @@ class AxonaInput:
         Returns
         -------
         None
+
         &#34;&#34;&#34;
         if location is not None:
             self.location = location
@@ -62,8 +68,8 @@ class AxonaInput:
         Returns
         -------
         None
-        &#34;&#34;&#34;
 
+        &#34;&#34;&#34;
         if location is None:
             if self.location is not None:
                 location = os.path.splitext(self.location)[0] + &#34;.csv&#34;
@@ -101,6 +107,7 @@ class AxonaInput:
         Returns
         -------
         None
+
         &#34;&#34;&#34;
         self.timestamps = t_arr
         self.channels = c_arr
@@ -120,6 +127,12 @@ class AxonaInput:
             Which pin to retrieve, 1 indexed
         inverted: bool - default False
             if True, 1 is off and 0 is on
+
+        Returns
+        -------
+        np.ndarray:
+            The times that the value of pin changes
+
         &#34;&#34;&#34;
         if inverted:
             on = 0
@@ -138,12 +151,12 @@ class AxonaInput:
 
 
 class AxonaInpReader:
-    &#34;&#34;&#34;Axona .inp reader - this class is completely static&#34;&#34;&#34;
+    &#34;&#34;&#34;Axona .inp reader - this class is completely static.&#34;&#34;&#34;
 
     @classmethod
     def load(cls, in_location, axona_input):
         &#34;&#34;&#34;
-        Extract a information from an Axona inp file
+        Extract information from an Axona inp file.
 
         Parameters
         ----------
@@ -215,86 +228,17 @@ class AxonaInpReader:
         return out_dict
 
 
-def main(in_location):
-    ai = AxonaInput(in_location)
-    ai.save_to_file()
-
-
-def main_cmd():
-    parser = argparse.ArgumentParser(description=&#34;Parse a program location&#34;)
-    parser.add_argument(&#34;--loc&#34;, &#34;-l&#34;, type=str, help=&#34;inp file location&#34;)
-    parsed = parser.parse_args()
-    if parsed.loc == None:
-        print(&#34;Please enter a location through cmd with -l LOCATION&#34;)
-        exit(-1)
-    main(parsed.loc)
-
-
-def main_py():
-    location = r&#34;/home/sean/Downloads/CAR-S2_2019-11-18_Unit.inp&#34;
-    # location = os.path.join(
-    #     r&#34;C:\Users\smartin5\Downloads&#34;,
-    #     &#34;CLA1_2019-09-28.inp&#34;)
-    main(location)
-
-
 if __name__ == &#34;__main__&#34;:
-    # main_cmd()
-    main_py()</code></pre>
-</details>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="bvmpc.bv_axona.main"><code class="name flex">
-<span>def <span class="ident">main</span></span>(<span>in_location)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def main(in_location):
+    in_location = r&#34;/home/sean/Downloads/CAR-S2_2019-11-18_Unit.inp&#34;
     ai = AxonaInput(in_location)
     ai.save_to_file()</code></pre>
 </details>
-</dd>
-<dt id="bvmpc.bv_axona.main_cmd"><code class="name flex">
-<span>def <span class="ident">main_cmd</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def main_cmd():
-    parser = argparse.ArgumentParser(description=&#34;Parse a program location&#34;)
-    parser.add_argument(&#34;--loc&#34;, &#34;-l&#34;, type=str, help=&#34;inp file location&#34;)
-    parsed = parser.parse_args()
-    if parsed.loc == None:
-        print(&#34;Please enter a location through cmd with -l LOCATION&#34;)
-        exit(-1)
-    main(parsed.loc)</code></pre>
-</details>
-</dd>
-<dt id="bvmpc.bv_axona.main_py"><code class="name flex">
-<span>def <span class="ident">main_py</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def main_py():
-    location = r&#34;/home/sean/Downloads/CAR-S2_2019-11-18_Unit.inp&#34;
-    # location = os.path.join(
-    #     r&#34;C:\Users\smartin5\Downloads&#34;,
-    #     &#34;CLA1_2019-09-28.inp&#34;)
-    main(location)</code></pre>
-</details>
-</dd>
-</dl>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -304,16 +248,16 @@ if __name__ == &#34;__main__&#34;:
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Axona .inp reader - this class is completely static</p></section>
+<section class="desc"><p>Axona .inp reader - this class is completely static.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class AxonaInpReader:
-    &#34;&#34;&#34;Axona .inp reader - this class is completely static&#34;&#34;&#34;
+    &#34;&#34;&#34;Axona .inp reader - this class is completely static.&#34;&#34;&#34;
 
     @classmethod
     def load(cls, in_location, axona_input):
         &#34;&#34;&#34;
-        Extract a information from an Axona inp file
+        Extract information from an Axona inp file.
 
         Parameters
         ----------
@@ -390,7 +334,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">load</span></span>(<span>in_location, axona_input)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Extract a information from an Axona inp file</p>
+<section class="desc"><p>Extract information from an Axona inp file.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>in_location</code></strong> :&ensp;<code>str</code></dt>
@@ -408,7 +352,7 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">@classmethod
 def load(cls, in_location, axona_input):
     &#34;&#34;&#34;
-    Extract a information from an Axona inp file
+    Extract information from an Axona inp file.
 
     Parameters
     ----------
@@ -449,7 +393,8 @@ def load(cls, in_location, axona_input):
 <span>(</span><span>location)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Initialise an axona input holder.</p>
+<section class="desc"><p>Class which decodes Axona .inp files.</p>
+<p>Initialise an axona input holder.</p>
 <p>Can be initialised with a location.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -464,6 +409,8 @@ def load(cls, in_location, axona_input):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class AxonaInput:
+    &#34;&#34;&#34;Class which decodes Axona .inp files.&#34;&#34;&#34;
+
     def __init__(self, location):
         &#34;&#34;&#34;
         Initialise an axona input holder.
@@ -478,6 +425,7 @@ def load(cls, in_location, axona_input):
         Returns
         -------
         None
+
         &#34;&#34;&#34;
         if location is not None:
             self.location = location
@@ -498,8 +446,8 @@ def load(cls, in_location, axona_input):
         Returns
         -------
         None
-        &#34;&#34;&#34;
 
+        &#34;&#34;&#34;
         if location is None:
             if self.location is not None:
                 location = os.path.splitext(self.location)[0] + &#34;.csv&#34;
@@ -537,6 +485,7 @@ def load(cls, in_location, axona_input):
         Returns
         -------
         None
+
         &#34;&#34;&#34;
         self.timestamps = t_arr
         self.channels = c_arr
@@ -556,6 +505,12 @@ def load(cls, in_location, axona_input):
             Which pin to retrieve, 1 indexed
         inverted: bool - default False
             if True, 1 is off and 0 is on
+
+        Returns
+        -------
+        np.ndarray:
+            The times that the value of pin changes
+
         &#34;&#34;&#34;
         if inverted:
             on = 0
@@ -587,6 +542,11 @@ def load(cls, in_location, axona_input):
 <dd>Which pin to retrieve, 1 indexed</dd>
 <dt><strong><code>inverted</code></strong> :&ensp;<code>bool</code> - default <code>False</code></dt>
 <dd>if True, 1 is off and 0 is on</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code>:</dt>
+<dd>The times that the value of pin changes</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
@@ -602,6 +562,12 @@ def load(cls, in_location, axona_input):
         Which pin to retrieve, 1 indexed
     inverted: bool - default False
         if True, 1 is off and 0 is on
+
+    Returns
+    -------
+    np.ndarray:
+        The times that the value of pin changes
+
     &#34;&#34;&#34;
     if inverted:
         on = 0
@@ -658,6 +624,7 @@ represented as a little endian 16 bit unsigned int</dd>
     Returns
     -------
     None
+
     &#34;&#34;&#34;
     self.timestamps = t_arr
     self.channels = c_arr
@@ -701,8 +668,8 @@ if None, determines the name from input file</dd>
     Returns
     -------
     None
-    &#34;&#34;&#34;
 
+    &#34;&#34;&#34;
     if location is None:
         if self.location is not None:
             location = os.path.splitext(self.location)[0] + &#34;.csv&#34;
@@ -738,13 +705,6 @@ if None, determines the name from input file</dd>
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="bvmpc" href="index.html">bvmpc</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="bvmpc.bv_axona.main" href="#bvmpc.bv_axona.main">main</a></code></li>
-<li><code><a title="bvmpc.bv_axona.main_cmd" href="#bvmpc.bv_axona.main_cmd">main_cmd</a></code></li>
-<li><code><a title="bvmpc.bv_axona.main_py" href="#bvmpc.bv_axona.main_py">main_py</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

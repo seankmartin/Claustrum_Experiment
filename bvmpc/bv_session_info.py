@@ -8,12 +8,12 @@ class SessionInfo:
 
     def __init__(self):
         """Init and setup the session information map."""
-        self.init_metadata_info()
-        self.init_session_info()
-        self.init_experiment_vars()
-        self.init_io_channels()
+        self._init_metadata_info()
+        self._init_session_info()
+        self._init_experiment_vars()
+        self._init_io_channels()
 
-    def init_metadata_info(self):
+    def _init_metadata_info(self):
         self.metadata_info = [
             "start_date", "end_date", "subject",
             "experiment", "group",
@@ -31,7 +31,7 @@ class SessionInfo:
             len("MSN: ")
         ]
 
-    def init_session_info(self):
+    def _init_session_info(self):
         self.session_info_dict = {}
 
         self.session_info_dict['DNMTS_0_delay'] = (
@@ -131,7 +131,7 @@ class SessionInfo:
                 # ['V:', 'END', 'Per Trial Pellets']
             ]))
 
-    def init_experiment_vars(self):
+    def _init_experiment_vars(self):
         # Note, ticks (10ms) are converted to seconds when parsing the file.
         base_exp_list = [
             "trial_length (mins)", "max_pellets", "advancement_pellets",
@@ -164,7 +164,7 @@ class SessionInfo:
         self.experiment_var_dict['7_RandomisedBlocksExtended_p'] = (
             base_exp_list)
 
-    def init_io_channels(self):
+    def _init_io_channels(self):
         self.io_channel_map = {}
 
         # Each tuple is the pin number and True if the value is inverted
@@ -259,6 +259,7 @@ class SessionInfo:
         -------
         int : The start index for the information
         List : If idx is None, all the start indices.
+
         """
         if idx is not None:
             return self.metadata_start_idx[idx]
@@ -266,7 +267,7 @@ class SessionInfo:
 
     def get_input_channel(self, s_type, key=None):
         """
-        Return the input channel for the given key
+        Return the input channel for the given key.
 
         If key is None, return the full input channel dictionary.
 
@@ -278,13 +279,13 @@ class SessionInfo:
         -------
         int: The channel for the given key
         Dict: If key is None, the full dictionary of channels.
-        """
 
+        """
         return self._get_channel("i", s_type, key=key)
 
     def get_output_channel(self, s_type, key=None):
         """
-        Return the output channel for the given key
+        Return the output channel for the given key.
 
         If key is None, return the full output channel dictionary.
 
@@ -296,8 +297,8 @@ class SessionInfo:
         -------
         int: The channel for the given key
         Dict: If key is None, the full dictionary of channels.
-        """
 
+        """
         return self._get_channel("o", s_type, key=key)
 
     def _get_channel(self, io, s_type, key=None):

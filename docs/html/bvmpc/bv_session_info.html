@@ -33,12 +33,12 @@ class SessionInfo:
 
     def __init__(self):
         &#34;&#34;&#34;Init and setup the session information map.&#34;&#34;&#34;
-        self.init_metadata_info()
-        self.init_session_info()
-        self.init_experiment_vars()
-        self.init_io_channels()
+        self._init_metadata_info()
+        self._init_session_info()
+        self._init_experiment_vars()
+        self._init_io_channels()
 
-    def init_metadata_info(self):
+    def _init_metadata_info(self):
         self.metadata_info = [
             &#34;start_date&#34;, &#34;end_date&#34;, &#34;subject&#34;,
             &#34;experiment&#34;, &#34;group&#34;,
@@ -56,7 +56,7 @@ class SessionInfo:
             len(&#34;MSN: &#34;)
         ]
 
-    def init_session_info(self):
+    def _init_session_info(self):
         self.session_info_dict = {}
 
         self.session_info_dict[&#39;DNMTS_0_delay&#39;] = (
@@ -156,7 +156,7 @@ class SessionInfo:
                 # [&#39;V:&#39;, &#39;END&#39;, &#39;Per Trial Pellets&#39;]
             ]))
 
-    def init_experiment_vars(self):
+    def _init_experiment_vars(self):
         # Note, ticks (10ms) are converted to seconds when parsing the file.
         base_exp_list = [
             &#34;trial_length (mins)&#34;, &#34;max_pellets&#34;, &#34;advancement_pellets&#34;,
@@ -189,7 +189,7 @@ class SessionInfo:
         self.experiment_var_dict[&#39;7_RandomisedBlocksExtended_p&#39;] = (
             base_exp_list)
 
-    def init_io_channels(self):
+    def _init_io_channels(self):
         self.io_channel_map = {}
 
         # Each tuple is the pin number and True if the value is inverted
@@ -284,6 +284,7 @@ class SessionInfo:
         -------
         int : The start index for the information
         List : If idx is None, all the start indices.
+
         &#34;&#34;&#34;
         if idx is not None:
             return self.metadata_start_idx[idx]
@@ -291,7 +292,7 @@ class SessionInfo:
 
     def get_input_channel(self, s_type, key=None):
         &#34;&#34;&#34;
-        Return the input channel for the given key
+        Return the input channel for the given key.
 
         If key is None, return the full input channel dictionary.
 
@@ -303,13 +304,13 @@ class SessionInfo:
         -------
         int: The channel for the given key
         Dict: If key is None, the full dictionary of channels.
-        &#34;&#34;&#34;
 
+        &#34;&#34;&#34;
         return self._get_channel(&#34;i&#34;, s_type, key=key)
 
     def get_output_channel(self, s_type, key=None):
         &#34;&#34;&#34;
-        Return the output channel for the given key
+        Return the output channel for the given key.
 
         If key is None, return the full output channel dictionary.
 
@@ -321,8 +322,8 @@ class SessionInfo:
         -------
         int: The channel for the given key
         Dict: If key is None, the full dictionary of channels.
-        &#34;&#34;&#34;
 
+        &#34;&#34;&#34;
         return self._get_channel(&#34;o&#34;, s_type, key=key)
 
     def _get_channel(self, io, s_type, key=None):
@@ -356,12 +357,12 @@ class SessionInfo:
 
     def __init__(self):
         &#34;&#34;&#34;Init and setup the session information map.&#34;&#34;&#34;
-        self.init_metadata_info()
-        self.init_session_info()
-        self.init_experiment_vars()
-        self.init_io_channels()
+        self._init_metadata_info()
+        self._init_session_info()
+        self._init_experiment_vars()
+        self._init_io_channels()
 
-    def init_metadata_info(self):
+    def _init_metadata_info(self):
         self.metadata_info = [
             &#34;start_date&#34;, &#34;end_date&#34;, &#34;subject&#34;,
             &#34;experiment&#34;, &#34;group&#34;,
@@ -379,7 +380,7 @@ class SessionInfo:
             len(&#34;MSN: &#34;)
         ]
 
-    def init_session_info(self):
+    def _init_session_info(self):
         self.session_info_dict = {}
 
         self.session_info_dict[&#39;DNMTS_0_delay&#39;] = (
@@ -479,7 +480,7 @@ class SessionInfo:
                 # [&#39;V:&#39;, &#39;END&#39;, &#39;Per Trial Pellets&#39;]
             ]))
 
-    def init_experiment_vars(self):
+    def _init_experiment_vars(self):
         # Note, ticks (10ms) are converted to seconds when parsing the file.
         base_exp_list = [
             &#34;trial_length (mins)&#34;, &#34;max_pellets&#34;, &#34;advancement_pellets&#34;,
@@ -512,7 +513,7 @@ class SessionInfo:
         self.experiment_var_dict[&#39;7_RandomisedBlocksExtended_p&#39;] = (
             base_exp_list)
 
-    def init_io_channels(self):
+    def _init_io_channels(self):
         self.io_channel_map = {}
 
         # Each tuple is the pin number and True if the value is inverted
@@ -607,6 +608,7 @@ class SessionInfo:
         -------
         int : The start index for the information
         List : If idx is None, all the start indices.
+
         &#34;&#34;&#34;
         if idx is not None:
             return self.metadata_start_idx[idx]
@@ -614,7 +616,7 @@ class SessionInfo:
 
     def get_input_channel(self, s_type, key=None):
         &#34;&#34;&#34;
-        Return the input channel for the given key
+        Return the input channel for the given key.
 
         If key is None, return the full input channel dictionary.
 
@@ -626,13 +628,13 @@ class SessionInfo:
         -------
         int: The channel for the given key
         Dict: If key is None, the full dictionary of channels.
-        &#34;&#34;&#34;
 
+        &#34;&#34;&#34;
         return self._get_channel(&#34;i&#34;, s_type, key=key)
 
     def get_output_channel(self, s_type, key=None):
         &#34;&#34;&#34;
-        Return the output channel for the given key
+        Return the output channel for the given key.
 
         If key is None, return the full output channel dictionary.
 
@@ -644,8 +646,8 @@ class SessionInfo:
         -------
         int: The channel for the given key
         Dict: If key is None, the full dictionary of channels.
-        &#34;&#34;&#34;
 
+        &#34;&#34;&#34;
         return self._get_channel(&#34;o&#34;, s_type, key=key)
 
     def _get_channel(self, io, s_type, key=None):
@@ -662,7 +664,7 @@ class SessionInfo:
 <span>def <span class="ident">get_input_channel</span></span>(<span>self, s_type, key=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Return the input channel for the given key</p>
+<section class="desc"><p>Return the input channel for the given key.</p>
 <p>If key is None, return the full input channel dictionary.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -679,7 +681,7 @@ class SessionInfo:
 <summary>Source code</summary>
 <pre><code class="python">def get_input_channel(self, s_type, key=None):
     &#34;&#34;&#34;
-    Return the input channel for the given key
+    Return the input channel for the given key.
 
     If key is None, return the full input channel dictionary.
 
@@ -691,8 +693,8 @@ class SessionInfo:
     -------
     int: The channel for the given key
     Dict: If key is None, the full dictionary of channels.
-    &#34;&#34;&#34;
 
+    &#34;&#34;&#34;
     return self._get_channel(&#34;i&#34;, s_type, key=key)</code></pre>
 </details>
 </dd>
@@ -765,6 +767,7 @@ List : if key is None, all the keys.</p></section>
     -------
     int : The start index for the information
     List : If idx is None, all the start indices.
+
     &#34;&#34;&#34;
     if idx is not None:
         return self.metadata_start_idx[idx]
@@ -775,7 +778,7 @@ List : if key is None, all the keys.</p></section>
 <span>def <span class="ident">get_output_channel</span></span>(<span>self, s_type, key=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Return the output channel for the given key</p>
+<section class="desc"><p>Return the output channel for the given key.</p>
 <p>If key is None, return the full output channel dictionary.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -792,7 +795,7 @@ List : if key is None, all the keys.</p></section>
 <summary>Source code</summary>
 <pre><code class="python">def get_output_channel(self, s_type, key=None):
     &#34;&#34;&#34;
-    Return the output channel for the given key
+    Return the output channel for the given key.
 
     If key is None, return the full output channel dictionary.
 
@@ -804,8 +807,8 @@ List : if key is None, all the keys.</p></section>
     -------
     int: The channel for the given key
     Dict: If key is None, the full dictionary of channels.
-    &#34;&#34;&#34;
 
+    &#34;&#34;&#34;
     return self._get_channel(&#34;o&#34;, s_type, key=key)</code></pre>
 </details>
 </dd>
@@ -885,208 +888,6 @@ Dict: if key is None, all the mappings.</p></section>
     return self.experiment_var_dict</code></pre>
 </details>
 </dd>
-<dt id="bvmpc.bv_session_info.SessionInfo.init_experiment_vars"><code class="name flex">
-<span>def <span class="ident">init_experiment_vars</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def init_experiment_vars(self):
-    # Note, ticks (10ms) are converted to seconds when parsing the file.
-    base_exp_list = [
-        &#34;trial_length (mins)&#34;, &#34;max_pellets&#34;, &#34;advancement_pellets&#34;,
-        &#34;fixed_ratio&#34;, &#34;fast_inter_response_time (secs)&#34;,
-        &#34;fixed_interval (ticks)&#34;, &#34;double_reward_window (ticks)&#34;
-    ]
-
-    self.experiment_var_dict = {}
-
-    self.experiment_var_dict[&#39;2_MagazineHabituation_p&#39;] = [
-        base_exp_list[0], &#34;drop_rate (secs)&#34;]
-
-    self.experiment_var_dict[&#39;3_LeverHabituation_p&#39;] = [
-        base_exp_list[0], &#34;drop_rate (secs)&#34;, base_exp_list[1],
-        &#34;lever_presses_required&#34;]
-
-    self.experiment_var_dict[&#39;4_LeverTraining_p&#39;] = (
-        self.experiment_var_dict[&#39;3_LeverHabituation_p&#39;])
-
-    self.experiment_var_dict[&#39;5a_FixedRatio_p&#39;] = (
-        base_exp_list[:3] +
-        [&#34;fixed_ratio&#34;, &#34;ending_ratio&#34;, &#34;ratio_increment&#34;,
-            &#34;max_ratio&#34;, base_exp_list[4], &#34;fast_trials_to_advance&#34;])
-
-    self.experiment_var_dict[&#39;5b_FixedInterval_p&#39;] = (
-        base_exp_list[:3] + [base_exp_list[5]])
-
-    self.experiment_var_dict[&#39;6_RandomisedBlocks_p&#39;] = base_exp_list
-
-    self.experiment_var_dict[&#39;7_RandomisedBlocksExtended_p&#39;] = (
-        base_exp_list)</code></pre>
-</details>
-</dd>
-<dt id="bvmpc.bv_session_info.SessionInfo.init_io_channels"><code class="name flex">
-<span>def <span class="ident">init_io_channels</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def init_io_channels(self):
-    self.io_channel_map = {}
-
-    # Each tuple is the pin number and True if the value is inverted
-    input_dict = {
-        &#34;left_lever&#34;: (1, True),
-        &#34;right_lever&#34;: (3, True),
-        &#34;all_nosepokes&#34;: (7, True)}
-    output_dict = {
-        &#34;Reward&#34;: (9, False),
-        &#34;left_out&#34;: (1, False),
-        &#34;right_out&#34;: (2, False),
-        &#34;left_light&#34;: (4, False),
-        &#34;right_light&#34;: (5, False)}
-
-    self.io_channel_map[&#34;6&#34;] = {
-        &#34;i&#34;: input_dict, &#34;o&#34;: output_dict}
-    self.io_channel_map[&#34;7&#34;] = self.io_channel_map[&#34;6&#34;]</code></pre>
-</details>
-</dd>
-<dt id="bvmpc.bv_session_info.SessionInfo.init_metadata_info"><code class="name flex">
-<span>def <span class="ident">init_metadata_info</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def init_metadata_info(self):
-    self.metadata_info = [
-        &#34;start_date&#34;, &#34;end_date&#34;, &#34;subject&#34;,
-        &#34;experiment&#34;, &#34;group&#34;,
-        &#34;box&#34;, &#34;start_time&#34;, &#34;end_time&#34;, &#34;name&#34;]
-
-    self.metadata_start_idx = [
-        len(&#34;Start Date: &#34;),
-        len(&#34;End Date: &#34;),
-        len(&#34;Subject: &#34;),
-        len(&#34;Experiment: &#34;),
-        len(&#34;Group: &#34;),
-        len(&#34;Box: &#34;),
-        len(&#34;Start Time: &#34;),
-        len(&#34;End Time: &#34;),
-        len(&#34;MSN: &#34;)
-    ]</code></pre>
-</details>
-</dd>
-<dt id="bvmpc.bv_session_info.SessionInfo.init_session_info"><code class="name flex">
-<span>def <span class="ident">init_session_info</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def init_session_info(self):
-    self.session_info_dict = {}
-
-    self.session_info_dict[&#39;DNMTS_0_delay&#39;] = (
-        np.array([
-            [&#39;C:&#39;, &#39;D:&#39;, &#39;Counters&#39;],
-            [&#39;E:&#39;, &#39;F:&#39;, &#39;Results&#39;]
-        ]))
-
-    self.session_info_dict[&#39;Match_to_sample_0_delay&#39;] = (
-        self.session_info_dict[&#39;DNMTS_0_delay&#39;])
-
-    self.session_info_dict[&#39;2_MagazineHabituation_p&#39;] = (
-        np.array([
-            [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-            [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-            [&#39;E:&#39;, &#39;END&#39;, &#39;Nosepoke&#39;]
-        ]))
-
-    self.session_info_dict[&#39;3_LeverHabituation_p&#39;] = (
-        np.array([
-            [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-            [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-            [&#39;E:&#39;, &#39;L:&#39;, &#39;Nosepoke&#39;],
-            [&#39;L:&#39;, &#39;M:&#39;, &#39;L&#39;],
-            [&#39;M:&#39;, &#39;N:&#39;, &#39;Un_L&#39;],
-            [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-            [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-            [&#39;R:&#39;, &#39;END&#39;, &#39;R&#39;]
-        ]))
-
-    self.session_info_dict[&#39;4_LeverTraining_p&#39;] = (
-        np.array([
-            [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-            [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-            [&#39;E:&#39;, &#39;L:&#39;, &#39;Nosepoke&#39;],
-            [&#39;L:&#39;, &#39;M:&#39;, &#39;L&#39;],
-            [&#39;M:&#39;, &#39;N:&#39;, &#39;Un_L&#39;],
-            [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-            [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-            [&#39;R:&#39;, &#39;END&#39;, &#39;R&#39;]
-        ]))
-
-    self.session_info_dict[&#39;5a_FixedRatio_p&#39;] = (
-        np.array([
-            [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-            [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-            [&#39;E:&#39;, &#39;M:&#39;, &#39;Nosepoke&#39;],
-            [&#39;M:&#39;, &#39;N:&#39;, &#39;FR Changes&#39;],
-            [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-            [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-            [&#39;R:&#39;, &#39;END&#39;, &#39;R&#39;]
-        ]))
-
-    self.session_info_dict[&#39;5b_FixedInterval_p&#39;] = (
-        np.array([
-            [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-            [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-            [&#39;E:&#39;, &#39;N:&#39;, &#39;Nosepoke&#39;],
-            [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_L&#39;],
-            [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-            [&#39;R:&#39;, &#39;END&#39;, &#39;L&#39;]
-        ]))
-
-    self.session_info_dict[&#39;6_RandomisedBlocks_p&#39;] = (
-        np.array([
-            [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-            [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-            [&#39;E:&#39;, &#39;L:&#39;, &#39;Nosepoke&#39;],
-            [&#39;L:&#39;, &#39;M:&#39;, &#39;L&#39;],
-            [&#39;M:&#39;, &#39;N:&#39;, &#39;Un_L&#39;],
-            [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-            [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-            [&#39;R:&#39;, &#39;U:&#39;, &#39;R&#39;],
-            [&#39;U:&#39;, &#39;V:&#39;, &#39;Trial Type&#39;],  # 1 is FR, 0 is FI
-            # [&#39;V:&#39;, &#39;END&#39;, &#39;Per Trial Pellets&#39;]
-        ]))
-
-    self.session_info_dict[&#39;7_RandomisedBlocksExtended_p&#39;] = (
-        np.array([
-            [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-            [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-            [&#39;E:&#39;, &#39;F:&#39;, &#39;Nosepoke&#39;],
-            # L during FR Trial; L when R available
-            [&#39;F:&#39;, &#39;G:&#39;, &#39;FR_Err&#39;],
-            # R during FI Trial; R when L available
-            [&#39;G:&#39;, &#39;H:&#39;, &#39;FI_Err&#39;],
-            # L during FR Trial_Un; L before reward collection
-            [&#39;H:&#39;, &#39;I:&#39;, &#39;Un_FR_Err&#39;],
-            # R during FI Trial_Un; R during waiting time
-            [&#39;I:&#39;, &#39;L:&#39;, &#39;Un_FI_Err&#39;],
-            [&#39;L:&#39;, &#39;M:&#39;, &#39;L&#39;],
-            [&#39;M:&#39;, &#39;N:&#39;, &#39;Un_L&#39;],
-            [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-            [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-            [&#39;R:&#39;, &#39;U:&#39;, &#39;R&#39;],
-            [&#39;U:&#39;, &#39;V:&#39;, &#39;Trial Type&#39;],
-            # [&#39;V:&#39;, &#39;END&#39;, &#39;Per Trial Pellets&#39;]
-        ]))</code></pre>
-</details>
-</dd>
 </dl>
 </dd>
 </dl>
@@ -1114,10 +915,6 @@ Dict: if key is None, all the mappings.</p></section>
 <li><code><a title="bvmpc.bv_session_info.SessionInfo.get_output_channel" href="#bvmpc.bv_session_info.SessionInfo.get_output_channel">get_output_channel</a></code></li>
 <li><code><a title="bvmpc.bv_session_info.SessionInfo.get_session_type_info" href="#bvmpc.bv_session_info.SessionInfo.get_session_type_info">get_session_type_info</a></code></li>
 <li><code><a title="bvmpc.bv_session_info.SessionInfo.get_session_variable_list" href="#bvmpc.bv_session_info.SessionInfo.get_session_variable_list">get_session_variable_list</a></code></li>
-<li><code><a title="bvmpc.bv_session_info.SessionInfo.init_experiment_vars" href="#bvmpc.bv_session_info.SessionInfo.init_experiment_vars">init_experiment_vars</a></code></li>
-<li><code><a title="bvmpc.bv_session_info.SessionInfo.init_io_channels" href="#bvmpc.bv_session_info.SessionInfo.init_io_channels">init_io_channels</a></code></li>
-<li><code><a title="bvmpc.bv_session_info.SessionInfo.init_metadata_info" href="#bvmpc.bv_session_info.SessionInfo.init_metadata_info">init_metadata_info</a></code></li>
-<li><code><a title="bvmpc.bv_session_info.SessionInfo.init_session_info" href="#bvmpc.bv_session_info.SessionInfo.init_session_info">init_session_info</a></code></li>
 </ul>
 </li>
 </ul>

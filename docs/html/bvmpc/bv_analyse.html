@@ -38,9 +38,25 @@ import os.path
 from bvmpc.bv_utils import mycolors
 
 
-def split_lever_ts(session, out_dir, ax=None):
-    &#34;&#34;&#34;Split lever ts for into schedule-based arrays of trials&#34;&#34;&#34;
-    # still in progress
+def split_lever_ts(session):
+    &#34;&#34;&#34;
+    Split lever timestamps into schedule-based arrays of trials.
+
+    Note
+    ----
+    Still in progress!
+
+    Parameters
+    ----------
+    session : bvmpc.bv_session.Session
+        The session to split lever timestamps of
+
+    Returns
+    -------
+    (List, List)
+        (Split up list of ratio trials, Split up list of interval trials)
+
+    &#34;&#34;&#34;
     lever_ts = session.get_lever_ts()
     switch_ts = np.arange(5, 1830, 305)
     reward_times = session.get_rw_ts()
@@ -123,8 +139,8 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
             for x in switch_ts:
                 plt.axvline(x, color=&#39;g&#39;, linestyle=&#39;-.&#39;, linewidth=&#39;.4&#39;)
             ax.set_title(&#39;\nSubject {}, S{}, FR{}/FI{}s, {}&#39;.format(
-                subject, stage, ratio, interval, date), color=mycolors(subject),
-                fontsize=10)
+                subject, stage, ratio, interval, date),
+                color=mycolors(subject), fontsize=10)
         else:
             ax.set_title(&#39;\nSubject {}, S{}, {}&#39;.format(
                 subject, stage, date), color=mycolors(subject),
@@ -291,28 +307,38 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         print(&#34;Saved figure to {}&#34;.format(out_name))
         # Text Display on Graph
         if stage == &#39;6&#39; or stage == &#39;7&#39;:
-            ax.text(0.55, 0.15, &#39;Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}&#39;
-                    .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
+            text = (
+                &#39;Total # of Lever Press: &#39; +
+                &#39;{}\nTotal # of Rewards: {}{}{}{}&#39;.format(
+                    len(lever_ts), len(reward_times) + len(reward_double),
+                    dr_print, rw_print, err_print))
+            ax.text(0.55, 0.15, text, transform=ax.transAxes)
         fig.savefig(out_name, dpi=400)
         plt.close()
     else:
         # Text Display on Graph
         if stage == &#39;6&#39; or stage == &#39;7&#39;:
-            ax.text(0.05, 0.75, &#39;Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}&#39;
-                    .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
+            text = (
+                &#39;Total # of Lever Press: &#39; +
+                &#39;{}\nTotal # of Rewards: {}{}{}{}&#39;.format(
+                    len(lever_ts), len(reward_times) + len(reward_double),
+                    dr_print, rw_print, err_print))
+            ax.text(0.05, 0.75, text, transform=ax.transAxes)
         return
 
 
-def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False):
-    &#39;&#39;&#39;
-    blocks: defines timepoints to split
+def split_sess(
+        session, norm=True, blocks=None, plot_error=False, plot_all=False):
+    &#34;&#34;&#34;
+    Split a session up into multiple blocks.
+
+    blocks: defines timepoints to split.
 
     returns 5 outputs:
         1) timestamps split into rows depending on blocks input
                 -&gt; norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts
         2) print to include in title and file name. Mainly for stage 7.
-                incl
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     session_type = session.get_metadata(&#39;name&#39;)
     stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
     reward_times = session.get_rw_ts()
@@ -320,8 +346,10 @@ def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False
     lever_ts = session.get_lever_ts()
     pell_ts = timestamps[&#34;Reward&#34;]
     pell_double = np.nonzero(np.diff(pell_ts) &lt; 0.5)
-    reward_double = reward_times[np.searchsorted(
-        reward_times, pell_ts[pell_double], side=&#39;right&#39;)]  # returns reward ts after d_pell
+    # returns reward ts after d_pell
+    reward_double = reward_times[
+        np.searchsorted(
+            reward_times, pell_ts[pell_double], side=&#39;right&#39;)]
     err_lever_ts = []
 
     if blocks is not None:
@@ -369,7 +397,11 @@ def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False
 
 
 def IRT(session, out_dir, ax=None, showIRT=False):
-    &#34;&#34;&#34;Perform an inter-response time plot for a Session. IRT calculated from prev reward to next lever press resulting in reward&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Perform an inter-response time plot for a Session.
+
+    IRT calculated from prev reward to next lever press resulting in reward
+    &#34;&#34;&#34;
     single_plot = False
 
     # General session info
@@ -446,8 +478,11 @@ def IRT(session, out_dir, ax=None, showIRT=False):
         show_IRT_details(IRT, maxidx, hist_bins)
     if single_plot:
         # Text Display on Graph
-        ax.text(0.55, 0.8, &#39;Session Duration: {} mins\nMost Freq. IRT Bin: {} s&#39;
-                .format(time_taken, maxval), transform=ax.transAxes)
+        text = (
+            &#39;Session Duration: &#39; +
+            &#39;{} mins\nMost Freq. IRT Bin: {} s&#39;.format(
+                time_taken, maxval))
+        ax.text(0.55, 0.8, text, transform=ax.transAxes)
         out_name = (subject.zfill(3) + &#34;_IRT_Hist_&#34; +
                     session_type[:-2] + &#34;_&#34; + date + &#34;.png&#34;)
         print(&#34;Saved figure to {}&#34;.format(
@@ -461,8 +496,8 @@ def IRT(session, out_dir, ax=None, showIRT=False):
 def show_IRT_details(IRT, maxidx, hist_bins):
     &#34;&#34;&#34;Display further information for an IRT.&#34;&#34;&#34;
     plt.show()
-    print(&#39;Most Freq. IRT Bin: {} s&#39;.format((hist_bins[maxidx + 1] -
-                                             hist_bins[maxidx]) / 2 + hist_bins[maxidx]))
+    print(&#39;Most Freq. IRT Bin: {} s&#39;.format(
+        ((hist_bins[maxidx + 1] - hist_bins[maxidx]) / 2) + hist_bins[maxidx]))
     print(
         &#39;Median Inter-Response Time (IRT): {0:.2f} s&#39;.format(np.median(IRT)))
     print(&#39;Min IRT: {0:.2f} s&#39;.format(np.amin(IRT)))
@@ -481,11 +516,16 @@ def show_IRT_details(IRT, maxidx, hist_bins):
 <span>def <span class="ident">IRT</span></span>(<span>session, out_dir, ax=None, showIRT=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Perform an inter-response time plot for a Session. IRT calculated from prev reward to next lever press resulting in reward</p></section>
+<section class="desc"><p>Perform an inter-response time plot for a Session.</p>
+<p>IRT calculated from prev reward to next lever press resulting in reward</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def IRT(session, out_dir, ax=None, showIRT=False):
-    &#34;&#34;&#34;Perform an inter-response time plot for a Session. IRT calculated from prev reward to next lever press resulting in reward&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Perform an inter-response time plot for a Session.
+
+    IRT calculated from prev reward to next lever press resulting in reward
+    &#34;&#34;&#34;
     single_plot = False
 
     # General session info
@@ -562,8 +602,11 @@ def show_IRT_details(IRT, maxidx, hist_bins):
         show_IRT_details(IRT, maxidx, hist_bins)
     if single_plot:
         # Text Display on Graph
-        ax.text(0.55, 0.8, &#39;Session Duration: {} mins\nMost Freq. IRT Bin: {} s&#39;
-                .format(time_taken, maxval), transform=ax.transAxes)
+        text = (
+            &#39;Session Duration: &#39; +
+            &#39;{} mins\nMost Freq. IRT Bin: {} s&#39;.format(
+                time_taken, maxval))
+        ax.text(0.55, 0.8, text, transform=ax.transAxes)
         out_name = (subject.zfill(3) + &#34;_IRT_Hist_&#34; +
                     session_type[:-2] + &#34;_&#34; + date + &#34;.png&#34;)
         print(&#34;Saved figure to {}&#34;.format(
@@ -639,8 +682,8 @@ def show_IRT_details(IRT, maxidx, hist_bins):
             for x in switch_ts:
                 plt.axvline(x, color=&#39;g&#39;, linestyle=&#39;-.&#39;, linewidth=&#39;.4&#39;)
             ax.set_title(&#39;\nSubject {}, S{}, FR{}/FI{}s, {}&#39;.format(
-                subject, stage, ratio, interval, date), color=mycolors(subject),
-                fontsize=10)
+                subject, stage, ratio, interval, date),
+                color=mycolors(subject), fontsize=10)
         else:
             ax.set_title(&#39;\nSubject {}, S{}, {}&#39;.format(
                 subject, stage, date), color=mycolors(subject),
@@ -807,15 +850,23 @@ def show_IRT_details(IRT, maxidx, hist_bins):
         print(&#34;Saved figure to {}&#34;.format(out_name))
         # Text Display on Graph
         if stage == &#39;6&#39; or stage == &#39;7&#39;:
-            ax.text(0.55, 0.15, &#39;Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}&#39;
-                    .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
+            text = (
+                &#39;Total # of Lever Press: &#39; +
+                &#39;{}\nTotal # of Rewards: {}{}{}{}&#39;.format(
+                    len(lever_ts), len(reward_times) + len(reward_double),
+                    dr_print, rw_print, err_print))
+            ax.text(0.55, 0.15, text, transform=ax.transAxes)
         fig.savefig(out_name, dpi=400)
         plt.close()
     else:
         # Text Display on Graph
         if stage == &#39;6&#39; or stage == &#39;7&#39;:
-            ax.text(0.05, 0.75, &#39;Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}&#39;
-                    .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
+            text = (
+                &#39;Total # of Lever Press: &#39; +
+                &#39;{}\nTotal # of Rewards: {}{}{}{}&#39;.format(
+                    len(lever_ts), len(reward_times) + len(reward_double),
+                    dr_print, rw_print, err_print))
+            ax.text(0.05, 0.75, text, transform=ax.transAxes)
         return</code></pre>
 </details>
 </dd>
@@ -829,8 +880,8 @@ def show_IRT_details(IRT, maxidx, hist_bins):
 <pre><code class="python">def show_IRT_details(IRT, maxidx, hist_bins):
     &#34;&#34;&#34;Display further information for an IRT.&#34;&#34;&#34;
     plt.show()
-    print(&#39;Most Freq. IRT Bin: {} s&#39;.format((hist_bins[maxidx + 1] -
-                                             hist_bins[maxidx]) / 2 + hist_bins[maxidx]))
+    print(&#39;Most Freq. IRT Bin: {} s&#39;.format(
+        ((hist_bins[maxidx + 1] - hist_bins[maxidx]) / 2) + hist_bins[maxidx]))
     print(
         &#39;Median Inter-Response Time (IRT): {0:.2f} s&#39;.format(np.median(IRT)))
     print(&#39;Min IRT: {0:.2f} s&#39;.format(np.amin(IRT)))
@@ -839,15 +890,41 @@ def show_IRT_details(IRT, maxidx, hist_bins):
 </details>
 </dd>
 <dt id="bvmpc.bv_analyse.split_lever_ts"><code class="name flex">
-<span>def <span class="ident">split_lever_ts</span></span>(<span>session, out_dir, ax=None)</span>
+<span>def <span class="ident">split_lever_ts</span></span>(<span>session)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Split lever ts for into schedule-based arrays of trials</p></section>
+<section class="desc"><p>Split lever timestamps into schedule-based arrays of trials.</p>
+<h2 id="note">Note</h2>
+<p>Still in progress!</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>session</code></strong> :&ensp;<a title="bvmpc.bv_session.Session" href="bv_session.html#bvmpc.bv_session.Session"><code>Session</code></a></dt>
+<dd>The session to split lever timestamps of</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>(List, List)
+(Split up list of ratio trials, Split up list of interval trials)</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def split_lever_ts(session, out_dir, ax=None):
-    &#34;&#34;&#34;Split lever ts for into schedule-based arrays of trials&#34;&#34;&#34;
-    # still in progress
+<pre><code class="python">def split_lever_ts(session):
+    &#34;&#34;&#34;
+    Split lever timestamps into schedule-based arrays of trials.
+
+    Note
+    ----
+    Still in progress!
+
+    Parameters
+    ----------
+    session : bvmpc.bv_session.Session
+        The session to split lever timestamps of
+
+    Returns
+    -------
+    (List, List)
+        (Split up list of ratio trials, Split up list of interval trials)
+
+    &#34;&#34;&#34;
     lever_ts = session.get_lever_ts()
     switch_ts = np.arange(5, 1830, 305)
     reward_times = session.get_rw_ts()
@@ -876,24 +953,26 @@ def show_IRT_details(IRT, maxidx, hist_bins):
 <span>def <span class="ident">split_sess</span></span>(<span>session, norm=True, blocks=None, plot_error=False, plot_all=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>blocks: defines timepoints to split</p>
+<section class="desc"><p>Split a session up into multiple blocks.</p>
+<p>blocks: defines timepoints to split.</p>
 <p>returns 5 outputs:
 1) timestamps split into rows depending on blocks input
 -&gt; norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts
-2) print to include in title and file name. Mainly for stage 7.
-incl</p></section>
+2) print to include in title and file name. Mainly for stage 7.</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False):
-    &#39;&#39;&#39;
-    blocks: defines timepoints to split
+<pre><code class="python">def split_sess(
+        session, norm=True, blocks=None, plot_error=False, plot_all=False):
+    &#34;&#34;&#34;
+    Split a session up into multiple blocks.
+
+    blocks: defines timepoints to split.
 
     returns 5 outputs:
         1) timestamps split into rows depending on blocks input
                 -&gt; norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts
         2) print to include in title and file name. Mainly for stage 7.
-                incl
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     session_type = session.get_metadata(&#39;name&#39;)
     stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
     reward_times = session.get_rw_ts()
@@ -901,8 +980,10 @@ incl</p></section>
     lever_ts = session.get_lever_ts()
     pell_ts = timestamps[&#34;Reward&#34;]
     pell_double = np.nonzero(np.diff(pell_ts) &lt; 0.5)
-    reward_double = reward_times[np.searchsorted(
-        reward_times, pell_ts[pell_double], side=&#39;right&#39;)]  # returns reward ts after d_pell
+    # returns reward ts after d_pell
+    reward_double = reward_times[
+        np.searchsorted(
+            reward_times, pell_ts[pell_double], side=&#39;right&#39;)]
     err_lever_ts = []
 
     if blocks is not None:

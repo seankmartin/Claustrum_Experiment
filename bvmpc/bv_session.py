@@ -12,7 +12,10 @@ import pandas as pd
 from bvmpc.bv_session_info import SessionInfo
 import bvmpc.bv_analyse as bv_an
 from bvmpc.bv_axona import AxonaInput
-from bvmpc.bv_array_methods import *
+from bvmpc.bv_array_methods import split_into_blocks
+from bvmpc.bv_array_methods import split_array
+from bvmpc.bv_array_methods import split_array_with_another
+from bvmpc.bv_array_methods import split_array_in_between_two
 
 
 class Session:
@@ -101,12 +104,12 @@ class Session:
             print("Error: Unknown situation in Session init")
             exit(-1)
 
-    # convert to trial based dataframe
     def init_trial_dataframe(self):
+        """Initialise the trial based Pandas dataframe for this session."""
         self._init_trial_df()
 
     def save_to_h5(self, out_dir, name=None):
-        """Save information to a h5 file"""
+        """Save information to a h5 file."""
         location = name
         if name is None:
             location = self._get_hdf5_name()
@@ -116,6 +119,7 @@ class Session:
     def save_to_neo(
             self, out_dir, name=None,
             neo_backend="nix", remove_existing=False):
+        """Save information to a neo file."""
         location = name
         self.neo_backend = neo_backend
         if name is None:
@@ -177,7 +181,7 @@ class Session:
         return None
 
     def get_stage(self):
-        """Obtain the stage number (without _)"""
+        """Obtain the stage number (without _)."""
         session_type = self.get_metadata('name')
         stage = session_type[:2].replace('_', '')
         return stage
@@ -248,11 +252,11 @@ class Session:
 
     def split_pell_ts(self):
         """
-        Returns a tuple of arrays splitting up the rewards.
+        Return a tuple of arrays splitting up the rewards.
 
         (Pellets without doubles, time of doubles)
-        """
 
+        """
         pell_ts = self.get_arrays("Reward")
 
         dpell_bool = np.diff(pell_ts) < 0.8
@@ -327,7 +331,7 @@ class Session:
         return tdelta_mins
 
     def _save_neo_info(self, remove_existing):
-        """Private function to save info to neo file"""
+        """Private function to save info to neo file."""
         if os.path.isfile(self.neo_file):
             if remove_existing:
                 os.remove(self.neo_file)
@@ -359,7 +363,7 @@ class Session:
         nio.close()
 
     def _extract_neo_info(self):
-        """Private function to extract info from neo file"""
+        """Private function to extract info from neo file."""
         nio = self._get_neo_io()
         block = nio.read()[0]
         nio.close()
@@ -401,7 +405,7 @@ class Session:
         return nio
 
     def _save_h5_info(self):
-        """Private function to save info to h5 file"""
+        """Private function to save info to h5 file."""
         import h5py
         with h5py.File(self.h5_file, "w", libver="latest") as f:
             for key, val in self.get_metadata().items():
@@ -410,7 +414,7 @@ class Session:
                 f.create_dataset(key, data=val, dtype=np.float32)
 
     def _extract_h5_info(self):
-        """Private function to pull info from h5 file"""
+        """Private function to pull info from h5 file."""
         import h5py
         with h5py.File(self.h5_file, "r", libver="latest") as f:
             for key, val in f.attrs.items():

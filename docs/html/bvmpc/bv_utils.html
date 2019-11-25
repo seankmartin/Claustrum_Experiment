@@ -36,6 +36,7 @@ import numpy as np
 
 
 def boolean_indexing(v, fillval=np.nan):
+    &#34;&#34;&#34;Index a numpy array using a boolean mask.&#34;&#34;&#34;
     lens = np.array([len(item) for item in v])
     mask = lens[:, None] &gt; np.arange(lens.max())
     out = np.full(mask.shape, fillval)
@@ -44,6 +45,7 @@ def boolean_indexing(v, fillval=np.nan):
 
 
 def daterange(start_date, end_date):
+    &#34;&#34;&#34;Yield a generator of dates between start and end date.&#34;&#34;&#34;
     for n in range(int((end_date - start_date).days)):
         yield start_date + timedelta(n)
 
@@ -54,7 +56,7 @@ def make_dir_if_not_exists(location):
 
 
 def mycolors(subject):
-    &#34;&#34;&#34;Colour options for subject based on number&#34;&#34;&#34;
+    &#34;&#34;&#34;Colour options for subject based on number.&#34;&#34;&#34;
     i = int(subject)
     mycolors = [&#39;tab:red&#39;, &#39;tab:blue&#39;, &#39;tab:green&#39;, &#39;tab:orange&#39;,
                 &#39;tab:brown&#39;, &#39;deeppink&#39;, &#39;tab:olive&#39;, &#39;tab:pink&#39;,
@@ -63,7 +65,7 @@ def mycolors(subject):
 
 
 def split_list(list, chunk_limit):
-    &#34;&#34;&#34;Splits a list into small chunks based on chunk_limit&#34;&#34;&#34;
+    &#34;&#34;&#34;Split a list into small chunks based on chunk_limit.&#34;&#34;&#34;
     new_list = [list[i:i + chunk_limit]
                 for i in range(0, len(list), chunk_limit)]
     return new_list
@@ -105,7 +107,7 @@ def print_h5(file_location):
 
 def has_ext(filename, ext):
     &#34;&#34;&#34;
-    Check if the filename ends in the extension
+    Check if the filename ends in the extension.
 
     Parameters
     ----------
@@ -119,7 +121,7 @@ def has_ext(filename, ext):
     bool indicating if the filename has the extension
 
     &#34;&#34;&#34;
-    if ext == None:
+    if ext is None:
         return True
     if ext[0] != &#34;.&#34;:
         ext = &#34;.&#34; + ext
@@ -148,6 +150,7 @@ def get_all_files_in_dir(
     Returns
     -------
     List : A list of filenames
+
     &#34;&#34;&#34;
     if not os.path.isdir(in_dir):
         print(&#34;Non existant directory &#34; + str(in_dir))
@@ -203,13 +206,13 @@ def get_all_files_in_dir(
 
 def log_exception(ex, more_info=&#34;&#34;):
     &#34;&#34;&#34;
-    Log an expection and additional info
+    Log an expection and additional info.
 
     Parameters
     ----------
     ex : Exception
         The python exception that occured
-    more_info : 
+    more_info :
         Additional string to log
 
     Returns
@@ -217,7 +220,6 @@ def log_exception(ex, more_info=&#34;&#34;):
     None
 
     &#34;&#34;&#34;
-
     template = &#34;{0} because exception of type {1} occurred. Arguments:\n{2!r}&#34;
     message = template.format(more_info, type(ex).__name__, ex.args)
     print(message)
@@ -230,7 +232,7 @@ def chunks(l, n):
 
 
 def save_dict_to_csv(filename, d):
-    &#34;&#34;&#34;Saves d to a file&#34;&#34;&#34;
+    &#34;&#34;&#34;Save d to a file.&#34;&#34;&#34;
     with open(filename, &#34;w&#34;) as f:
         for k, v in d.items():
             out_str = k.replace(&#34; &#34;, &#34;_&#34;)
@@ -269,10 +271,11 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">boolean_indexing</span></span>(<span>v, fillval=nan)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Index a numpy array using a boolean mask.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def boolean_indexing(v, fillval=np.nan):
+    &#34;&#34;&#34;Index a numpy array using a boolean mask.&#34;&#34;&#34;
     lens = np.array([len(item) for item in v])
     mask = lens[:, None] &gt; np.arange(lens.max())
     out = np.full(mask.shape, fillval)
@@ -297,10 +300,11 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">daterange</span></span>(<span>start_date, end_date)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Yield a generator of dates between start and end date.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def daterange(start_date, end_date):
+    &#34;&#34;&#34;Yield a generator of dates between start and end date.&#34;&#34;&#34;
     for n in range(int((end_date - start_date).days)):
         yield start_date + timedelta(n)</code></pre>
 </details>
@@ -352,6 +356,7 @@ Whether to print the files found.</p>
     Returns
     -------
     List : A list of filenames
+
     &#34;&#34;&#34;
     if not os.path.isdir(in_dir):
         print(&#34;Non existant directory &#34; + str(in_dir))
@@ -428,7 +433,7 @@ Whether to print the files found.</p>
 <span>def <span class="ident">has_ext</span></span>(<span>filename, ext)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Check if the filename ends in the extension</p>
+<section class="desc"><p>Check if the filename ends in the extension.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
@@ -445,7 +450,7 @@ Whether to print the files found.</p>
 <summary>Source code</summary>
 <pre><code class="python">def has_ext(filename, ext):
     &#34;&#34;&#34;
-    Check if the filename ends in the extension
+    Check if the filename ends in the extension.
 
     Parameters
     ----------
@@ -459,7 +464,7 @@ Whether to print the files found.</p>
     bool indicating if the filename has the extension
 
     &#34;&#34;&#34;
-    if ext == None:
+    if ext is None:
         return True
     if ext[0] != &#34;.&#34;:
         ext = &#34;.&#34; + ext
@@ -470,14 +475,14 @@ Whether to print the files found.</p>
 <span>def <span class="ident">log_exception</span></span>(<span>ex, more_info='')</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Log an expection and additional info</p>
+<section class="desc"><p>Log an expection and additional info.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>ex</code></strong> :&ensp;<code>Exception</code></dt>
 <dd>The python exception that occured</dd>
-<dt><strong><code>more_info</code></strong></dt>
-<dd>Additional string to log</dd>
 </dl>
+<p>more_info :
+Additional string to log</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>None</code></dt>
@@ -487,13 +492,13 @@ Whether to print the files found.</p>
 <summary>Source code</summary>
 <pre><code class="python">def log_exception(ex, more_info=&#34;&#34;):
     &#34;&#34;&#34;
-    Log an expection and additional info
+    Log an expection and additional info.
 
     Parameters
     ----------
     ex : Exception
         The python exception that occured
-    more_info : 
+    more_info :
         Additional string to log
 
     Returns
@@ -501,7 +506,6 @@ Whether to print the files found.</p>
     None
 
     &#34;&#34;&#34;
-
     template = &#34;{0} because exception of type {1} occurred. Arguments:\n{2!r}&#34;
     message = template.format(more_info, type(ex).__name__, ex.args)
     print(message)</code></pre>
@@ -523,11 +527,11 @@ Whether to print the files found.</p>
 <span>def <span class="ident">mycolors</span></span>(<span>subject)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Colour options for subject based on number</p></section>
+<section class="desc"><p>Colour options for subject based on number.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def mycolors(subject):
-    &#34;&#34;&#34;Colour options for subject based on number&#34;&#34;&#34;
+    &#34;&#34;&#34;Colour options for subject based on number.&#34;&#34;&#34;
     i = int(subject)
     mycolors = [&#39;tab:red&#39;, &#39;tab:blue&#39;, &#39;tab:green&#39;, &#39;tab:orange&#39;,
                 &#39;tab:brown&#39;, &#39;deeppink&#39;, &#39;tab:olive&#39;, &#39;tab:pink&#39;,
@@ -557,11 +561,11 @@ Whether to print the files found.</p>
 <span>def <span class="ident">save_dict_to_csv</span></span>(<span>filename, d)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Saves d to a file</p></section>
+<section class="desc"><p>Save d to a file.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def save_dict_to_csv(filename, d):
-    &#34;&#34;&#34;Saves d to a file&#34;&#34;&#34;
+    &#34;&#34;&#34;Save d to a file.&#34;&#34;&#34;
     with open(filename, &#34;w&#34;) as f:
         for k, v in d.items():
             out_str = k.replace(&#34; &#34;, &#34;_&#34;)
@@ -581,11 +585,11 @@ Whether to print the files found.</p>
 <span>def <span class="ident">split_list</span></span>(<span>list, chunk_limit)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Splits a list into small chunks based on chunk_limit</p></section>
+<section class="desc"><p>Split a list into small chunks based on chunk_limit.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def split_list(list, chunk_limit):
-    &#34;&#34;&#34;Splits a list into small chunks based on chunk_limit&#34;&#34;&#34;
+    &#34;&#34;&#34;Split a list into small chunks based on chunk_limit.&#34;&#34;&#34;
     new_list = [list[i:i + chunk_limit]
                 for i in range(0, len(list), chunk_limit)]
     return new_list</code></pre>

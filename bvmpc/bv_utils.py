@@ -11,6 +11,7 @@ import numpy as np
 
 
 def boolean_indexing(v, fillval=np.nan):
+    """Index a numpy array using a boolean mask."""
     lens = np.array([len(item) for item in v])
     mask = lens[:, None] > np.arange(lens.max())
     out = np.full(mask.shape, fillval)
@@ -19,6 +20,7 @@ def boolean_indexing(v, fillval=np.nan):
 
 
 def daterange(start_date, end_date):
+    """Yield a generator of dates between start and end date."""
     for n in range(int((end_date - start_date).days)):
         yield start_date + timedelta(n)
 
@@ -29,7 +31,7 @@ def make_dir_if_not_exists(location):
 
 
 def mycolors(subject):
-    """Colour options for subject based on number"""
+    """Colour options for subject based on number."""
     i = int(subject)
     mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange',
                 'tab:brown', 'deeppink', 'tab:olive', 'tab:pink',
@@ -38,7 +40,7 @@ def mycolors(subject):
 
 
 def split_list(list, chunk_limit):
-    """Splits a list into small chunks based on chunk_limit"""
+    """Split a list into small chunks based on chunk_limit."""
     new_list = [list[i:i + chunk_limit]
                 for i in range(0, len(list), chunk_limit)]
     return new_list
@@ -80,7 +82,7 @@ def print_h5(file_location):
 
 def has_ext(filename, ext):
     """
-    Check if the filename ends in the extension
+    Check if the filename ends in the extension.
 
     Parameters
     ----------
@@ -123,6 +125,7 @@ def get_all_files_in_dir(
     Returns
     -------
     List : A list of filenames
+
     """
     if not os.path.isdir(in_dir):
         print("Non existant directory " + str(in_dir))
@@ -178,7 +181,7 @@ def get_all_files_in_dir(
 
 def log_exception(ex, more_info=""):
     """
-    Log an expection and additional info
+    Log an expection and additional info.
 
     Parameters
     ----------
@@ -192,7 +195,6 @@ def log_exception(ex, more_info=""):
     None
 
     """
-
     template = "{0} because exception of type {1} occurred. Arguments:\n{2!r}"
     message = template.format(more_info, type(ex).__name__, ex.args)
     print(message)
@@ -205,7 +207,7 @@ def chunks(l, n):
 
 
 def save_dict_to_csv(filename, d):
-    """Saves d to a file"""
+    """Save d to a file."""
     with open(filename, "w") as f:
         for k, v in d.items():
             out_str = k.replace(" ", "_")

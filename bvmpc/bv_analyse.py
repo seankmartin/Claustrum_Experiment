@@ -12,9 +12,25 @@ import os.path
 from bvmpc.bv_utils import mycolors
 
 
-def split_lever_ts(session, out_dir, ax=None):
-    """Split lever ts for into schedule-based arrays of trials"""
-    # still in progress
+def split_lever_ts(session):
+    """
+    Split lever timestamps into schedule-based arrays of trials.
+
+    Note
+    ----
+    Still in progress!
+
+    Parameters
+    ----------
+    session : bvmpc.bv_session.Session
+        The session to split lever timestamps of
+
+    Returns
+    -------
+    (List, List)
+        (Split up list of ratio trials, Split up list of interval trials)
+
+    """
     lever_ts = session.get_lever_ts()
     switch_ts = np.arange(5, 1830, 305)
     reward_times = session.get_rw_ts()
@@ -287,15 +303,16 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
 
 def split_sess(
         session, norm=True, blocks=None, plot_error=False, plot_all=False):
-    '''
-    blocks: defines timepoints to split
+    """
+    Split a session up into multiple blocks.
+
+    blocks: defines timepoints to split.
 
     returns 5 outputs:
         1) timestamps split into rows depending on blocks input
                 -> norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts
         2) print to include in title and file name. Mainly for stage 7.
-                incl
-    '''
+    """
     session_type = session.get_metadata('name')
     stage = session_type[:2].replace('_', '')
     reward_times = session.get_rw_ts()
@@ -357,7 +374,8 @@ def IRT(session, out_dir, ax=None, showIRT=False):
     """
     Perform an inter-response time plot for a Session.
 
-    IRT calculated from prev reward to next lever press resulting in reward"""
+    IRT calculated from prev reward to next lever press resulting in reward
+    """
     single_plot = False
 
     # General session info

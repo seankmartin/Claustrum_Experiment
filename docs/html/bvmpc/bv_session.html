@@ -38,7 +38,10 @@ import pandas as pd
 from bvmpc.bv_session_info import SessionInfo
 import bvmpc.bv_analyse as bv_an
 from bvmpc.bv_axona import AxonaInput
-from bvmpc.bv_array_methods import *
+from bvmpc.bv_array_methods import split_into_blocks
+from bvmpc.bv_array_methods import split_array
+from bvmpc.bv_array_methods import split_array_with_another
+from bvmpc.bv_array_methods import split_array_in_between_two
 
 
 class Session:
@@ -127,23 +130,25 @@ class Session:
             print(&#34;Error: Unknown situation in Session init&#34;)
             exit(-1)
 
-    # convert to trial based dataframe
     def init_trial_dataframe(self):
+        &#34;&#34;&#34;Initialise the trial based Pandas dataframe for this session.&#34;&#34;&#34;
         self._init_trial_df()
 
     def save_to_h5(self, out_dir, name=None):
-        &#34;&#34;&#34;Save information to a h5 file&#34;&#34;&#34;
+        &#34;&#34;&#34;Save information to a h5 file.&#34;&#34;&#34;
         location = name
-        if name == None:
+        if name is None:
             location = self._get_hdf5_name()
         self.h5_file = os.path.join(out_dir, location)
         self._save_h5_info()
 
     def save_to_neo(
-            self, out_dir, name=None, neo_backend=&#34;nix&#34;, remove_existing=False):
+            self, out_dir, name=None,
+            neo_backend=&#34;nix&#34;, remove_existing=False):
+        &#34;&#34;&#34;Save information to a neo file.&#34;&#34;&#34;
         location = name
         self.neo_backend = neo_backend
-        if name == None:
+        if name is None:
             ext = self._get_neo_io(get_ext=True)
             location = self._get_hdf5_name(ext=ext)
         self.neo_file = os.path.join(out_dir, location)
@@ -202,7 +207,7 @@ class Session:
         return None
 
     def get_stage(self):
-        &#34;&#34;&#34;Obtain the stage number (without _)&#34;&#34;&#34;
+        &#34;&#34;&#34;Obtain the stage number (without _).&#34;&#34;&#34;
         session_type = self.get_metadata(&#39;name&#39;)
         stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
         return stage
@@ -273,11 +278,11 @@ class Session:
 
     def split_pell_ts(self):
         &#34;&#34;&#34;
-        Returns a tuple of arrays splitting up the rewards.
+        Return a tuple of arrays splitting up the rewards.
 
         (Pellets without doubles, time of doubles)
-        &#34;&#34;&#34;
 
+        &#34;&#34;&#34;
         pell_ts = self.get_arrays(&#34;Reward&#34;)
 
         dpell_bool = np.diff(pell_ts) &lt; 0.8
@@ -292,7 +297,7 @@ class Session:
 
     def get_rw_ts(self):
         &#34;&#34;&#34;
-        Get the timestamps of rewards. 
+        Get the timestamps of rewards.
 
         Corrected for session switching/ending without reward collection.
 
@@ -315,19 +320,22 @@ class Session:
             repeated_trial_len = (trial_len) * 6
 
         if stage == &#39;7&#39; or stage == &#39;6&#39;:
-            # Check if trial switched before reward collection -&gt; Adds collection as switch time
+            # Check if trial switched before reward collection
+            # -&gt; Adds collection as switch time
             split_pell_ts = split_into_blocks(
                 pell_ts_exdouble, trial_len, 6)
             split_reward_ts = split_into_blocks(
                 reward_times, trial_len, 6)
 
-            for i, (pell, reward) in enumerate(zip(split_pell_ts, split_reward_ts[:-1])):
+            for i, (pell, reward) in enumerate(
+                    zip(split_pell_ts, split_reward_ts[:-1])):
                 if len(pell) &gt; len(reward):
                     reward_times = np.insert(
                         reward_times, np.searchsorted(
                             reward_times, blocks[i]), blocks[i])
 
-        # if last reward time &lt; last pellet dispensed, assume animal picked reward at end of session.
+        # if last reward time &lt; last pellet dispensed,
+        # assume animal picked reward at end of session.
         # Checks if last block contains responses first
         if reward_times[-1] &lt; pell_ts[-1]:
             if stage == &#39;7&#39; or stage == &#39;6&#39;:
@@ -349,7 +357,7 @@ class Session:
         return tdelta_mins
 
     def _save_neo_info(self, remove_existing):
-        &#34;&#34;&#34;Private function to save info to neo file&#34;&#34;&#34;
+        &#34;&#34;&#34;Private function to save info to neo file.&#34;&#34;&#34;
         if os.path.isfile(self.neo_file):
             if remove_existing:
                 os.remove(self.neo_file)
@@ -381,7 +389,7 @@ class Session:
         nio.close()
 
     def _extract_neo_info(self):
-        &#34;&#34;&#34;Private function to extract info from neo file&#34;&#34;&#34;
+        &#34;&#34;&#34;Private function to extract info from neo file.&#34;&#34;&#34;
         nio = self._get_neo_io()
         block = nio.read()[0]
         nio.close()
@@ -423,7 +431,7 @@ class Session:
         return nio
 
     def _save_h5_info(self):
-        &#34;&#34;&#34;Private function to save info to h5 file&#34;&#34;&#34;
+        &#34;&#34;&#34;Private function to save info to h5 file.&#34;&#34;&#34;
         import h5py
         with h5py.File(self.h5_file, &#34;w&#34;, libver=&#34;latest&#34;) as f:
             for key, val in self.get_metadata().items():
@@ -432,7 +440,7 @@ class Session:
                 f.create_dataset(key, data=val, dtype=np.float32)
 
     def _extract_h5_info(self):
-        &#34;&#34;&#34;Private function to pull info from h5 file&#34;&#34;&#34;
+        &#34;&#34;&#34;Private function to pull info from h5 file.&#34;&#34;&#34;
         import h5py
         with h5py.File(self.h5_file, &#34;r&#34;, libver=&#34;latest&#34;) as f:
             for key, val in f.attrs.items():
@@ -465,8 +473,11 @@ class Session:
         good_nosepokes, un_nosepokes = split_array_with_another(
             nosepokes, pell_ts_exdouble)
 
-        # TODO make sure that nosepoke occurs before trial switch if reward before trial switch - Ham has idea for this already in another function
-        # For now, just a check!
+        &#34;&#34;&#34;
+        TODO make sure that nosepoke occurs before trial switch if reward
+        before trial switch - Ham has idea for this already in another function
+        For now, just a check!
+        &#34;&#34;&#34;
         split_nosepokes = split_into_blocks(
             good_nosepokes, 305, 6)
         split_pellets = split_into_blocks(
@@ -847,23 +858,25 @@ mostly only useful if directly passing lines</dd>
             print(&#34;Error: Unknown situation in Session init&#34;)
             exit(-1)
 
-    # convert to trial based dataframe
     def init_trial_dataframe(self):
+        &#34;&#34;&#34;Initialise the trial based Pandas dataframe for this session.&#34;&#34;&#34;
         self._init_trial_df()
 
     def save_to_h5(self, out_dir, name=None):
-        &#34;&#34;&#34;Save information to a h5 file&#34;&#34;&#34;
+        &#34;&#34;&#34;Save information to a h5 file.&#34;&#34;&#34;
         location = name
-        if name == None:
+        if name is None:
             location = self._get_hdf5_name()
         self.h5_file = os.path.join(out_dir, location)
         self._save_h5_info()
 
     def save_to_neo(
-            self, out_dir, name=None, neo_backend=&#34;nix&#34;, remove_existing=False):
+            self, out_dir, name=None,
+            neo_backend=&#34;nix&#34;, remove_existing=False):
+        &#34;&#34;&#34;Save information to a neo file.&#34;&#34;&#34;
         location = name
         self.neo_backend = neo_backend
-        if name == None:
+        if name is None:
             ext = self._get_neo_io(get_ext=True)
             location = self._get_hdf5_name(ext=ext)
         self.neo_file = os.path.join(out_dir, location)
@@ -922,7 +935,7 @@ mostly only useful if directly passing lines</dd>
         return None
 
     def get_stage(self):
-        &#34;&#34;&#34;Obtain the stage number (without _)&#34;&#34;&#34;
+        &#34;&#34;&#34;Obtain the stage number (without _).&#34;&#34;&#34;
         session_type = self.get_metadata(&#39;name&#39;)
         stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
         return stage
@@ -993,11 +1006,11 @@ mostly only useful if directly passing lines</dd>
 
     def split_pell_ts(self):
         &#34;&#34;&#34;
-        Returns a tuple of arrays splitting up the rewards.
+        Return a tuple of arrays splitting up the rewards.
 
         (Pellets without doubles, time of doubles)
-        &#34;&#34;&#34;
 
+        &#34;&#34;&#34;
         pell_ts = self.get_arrays(&#34;Reward&#34;)
 
         dpell_bool = np.diff(pell_ts) &lt; 0.8
@@ -1012,7 +1025,7 @@ mostly only useful if directly passing lines</dd>
 
     def get_rw_ts(self):
         &#34;&#34;&#34;
-        Get the timestamps of rewards. 
+        Get the timestamps of rewards.
 
         Corrected for session switching/ending without reward collection.
 
@@ -1035,19 +1048,22 @@ mostly only useful if directly passing lines</dd>
             repeated_trial_len = (trial_len) * 6
 
         if stage == &#39;7&#39; or stage == &#39;6&#39;:
-            # Check if trial switched before reward collection -&gt; Adds collection as switch time
+            # Check if trial switched before reward collection
+            # -&gt; Adds collection as switch time
             split_pell_ts = split_into_blocks(
                 pell_ts_exdouble, trial_len, 6)
             split_reward_ts = split_into_blocks(
                 reward_times, trial_len, 6)
 
-            for i, (pell, reward) in enumerate(zip(split_pell_ts, split_reward_ts[:-1])):
+            for i, (pell, reward) in enumerate(
+                    zip(split_pell_ts, split_reward_ts[:-1])):
                 if len(pell) &gt; len(reward):
                     reward_times = np.insert(
                         reward_times, np.searchsorted(
                             reward_times, blocks[i]), blocks[i])
 
-        # if last reward time &lt; last pellet dispensed, assume animal picked reward at end of session.
+        # if last reward time &lt; last pellet dispensed,
+        # assume animal picked reward at end of session.
         # Checks if last block contains responses first
         if reward_times[-1] &lt; pell_ts[-1]:
             if stage == &#39;7&#39; or stage == &#39;6&#39;:
@@ -1069,7 +1085,7 @@ mostly only useful if directly passing lines</dd>
         return tdelta_mins
 
     def _save_neo_info(self, remove_existing):
-        &#34;&#34;&#34;Private function to save info to neo file&#34;&#34;&#34;
+        &#34;&#34;&#34;Private function to save info to neo file.&#34;&#34;&#34;
         if os.path.isfile(self.neo_file):
             if remove_existing:
                 os.remove(self.neo_file)
@@ -1101,7 +1117,7 @@ mostly only useful if directly passing lines</dd>
         nio.close()
 
     def _extract_neo_info(self):
-        &#34;&#34;&#34;Private function to extract info from neo file&#34;&#34;&#34;
+        &#34;&#34;&#34;Private function to extract info from neo file.&#34;&#34;&#34;
         nio = self._get_neo_io()
         block = nio.read()[0]
         nio.close()
@@ -1143,7 +1159,7 @@ mostly only useful if directly passing lines</dd>
         return nio
 
     def _save_h5_info(self):
-        &#34;&#34;&#34;Private function to save info to h5 file&#34;&#34;&#34;
+        &#34;&#34;&#34;Private function to save info to h5 file.&#34;&#34;&#34;
         import h5py
         with h5py.File(self.h5_file, &#34;w&#34;, libver=&#34;latest&#34;) as f:
             for key, val in self.get_metadata().items():
@@ -1152,7 +1168,7 @@ mostly only useful if directly passing lines</dd>
                 f.create_dataset(key, data=val, dtype=np.float32)
 
     def _extract_h5_info(self):
-        &#34;&#34;&#34;Private function to pull info from h5 file&#34;&#34;&#34;
+        &#34;&#34;&#34;Private function to pull info from h5 file.&#34;&#34;&#34;
         import h5py
         with h5py.File(self.h5_file, &#34;r&#34;, libver=&#34;latest&#34;) as f:
             for key, val in f.attrs.items():
@@ -1185,8 +1201,11 @@ mostly only useful if directly passing lines</dd>
         good_nosepokes, un_nosepokes = split_array_with_another(
             nosepokes, pell_ts_exdouble)
 
-        # TODO make sure that nosepoke occurs before trial switch if reward before trial switch - Ham has idea for this already in another function
-        # For now, just a check!
+        &#34;&#34;&#34;
+        TODO make sure that nosepoke occurs before trial switch if reward
+        before trial switch - Ham has idea for this already in another function
+        For now, just a check!
+        &#34;&#34;&#34;
         split_nosepokes = split_into_blocks(
             good_nosepokes, 305, 6)
         split_pellets = split_into_blocks(
@@ -1619,7 +1638,7 @@ Dict : If key is None, all the metadata.</p></section>
 <span>def <span class="ident">get_rw_ts</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get the timestamps of rewards. </p>
+<section class="desc"><p>Get the timestamps of rewards.</p>
 <p>Corrected for session switching/ending without reward collection.</p>
 <h2 id="returns">Returns</h2>
 <p>np.ndarray : A numpy array of sorted timestamps.</p></section>
@@ -1627,7 +1646,7 @@ Dict : If key is None, all the metadata.</p></section>
 <summary>Source code</summary>
 <pre><code class="python">def get_rw_ts(self):
     &#34;&#34;&#34;
-    Get the timestamps of rewards. 
+    Get the timestamps of rewards.
 
     Corrected for session switching/ending without reward collection.
 
@@ -1650,19 +1669,22 @@ Dict : If key is None, all the metadata.</p></section>
         repeated_trial_len = (trial_len) * 6
 
     if stage == &#39;7&#39; or stage == &#39;6&#39;:
-        # Check if trial switched before reward collection -&gt; Adds collection as switch time
+        # Check if trial switched before reward collection
+        # -&gt; Adds collection as switch time
         split_pell_ts = split_into_blocks(
             pell_ts_exdouble, trial_len, 6)
         split_reward_ts = split_into_blocks(
             reward_times, trial_len, 6)
 
-        for i, (pell, reward) in enumerate(zip(split_pell_ts, split_reward_ts[:-1])):
+        for i, (pell, reward) in enumerate(
+                zip(split_pell_ts, split_reward_ts[:-1])):
             if len(pell) &gt; len(reward):
                 reward_times = np.insert(
                     reward_times, np.searchsorted(
                         reward_times, blocks[i]), blocks[i])
 
-    # if last reward time &lt; last pellet dispensed, assume animal picked reward at end of session.
+    # if last reward time &lt; last pellet dispensed,
+    # assume animal picked reward at end of session.
     # Checks if last block contains responses first
     if reward_times[-1] &lt; pell_ts[-1]:
         if stage == &#39;7&#39; or stage == &#39;6&#39;:
@@ -1677,11 +1699,11 @@ Dict : If key is None, all the metadata.</p></section>
 <span>def <span class="ident">get_stage</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Obtain the stage number (without _)</p></section>
+<section class="desc"><p>Obtain the stage number (without _).</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_stage(self):
-    &#34;&#34;&#34;Obtain the stage number (without _)&#34;&#34;&#34;
+    &#34;&#34;&#34;Obtain the stage number (without _).&#34;&#34;&#34;
     session_type = self.get_metadata(&#39;name&#39;)
     stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
     return stage</code></pre>
@@ -1733,10 +1755,11 @@ Dict : If key is None, all the metadata.</p></section>
 <span>def <span class="ident">init_trial_dataframe</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Initialise the trial based Pandas dataframe for this session.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def init_trial_dataframe(self):
+    &#34;&#34;&#34;Initialise the trial based Pandas dataframe for this session.&#34;&#34;&#34;
     self._init_trial_df()</code></pre>
 </details>
 </dd>
@@ -1744,13 +1767,13 @@ Dict : If key is None, all the metadata.</p></section>
 <span>def <span class="ident">save_to_h5</span></span>(<span>self, out_dir, name=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Save information to a h5 file</p></section>
+<section class="desc"><p>Save information to a h5 file.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def save_to_h5(self, out_dir, name=None):
-    &#34;&#34;&#34;Save information to a h5 file&#34;&#34;&#34;
+    &#34;&#34;&#34;Save information to a h5 file.&#34;&#34;&#34;
     location = name
-    if name == None:
+    if name is None:
         location = self._get_hdf5_name()
     self.h5_file = os.path.join(out_dir, location)
     self._save_h5_info()</code></pre>
@@ -1760,14 +1783,16 @@ Dict : If key is None, all the metadata.</p></section>
 <span>def <span class="ident">save_to_neo</span></span>(<span>self, out_dir, name=None, neo_backend='nix', remove_existing=False)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Save information to a neo file.</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def save_to_neo(
-        self, out_dir, name=None, neo_backend=&#34;nix&#34;, remove_existing=False):
+        self, out_dir, name=None,
+        neo_backend=&#34;nix&#34;, remove_existing=False):
+    &#34;&#34;&#34;Save information to a neo file.&#34;&#34;&#34;
     location = name
     self.neo_backend = neo_backend
-    if name == None:
+    if name is None:
         ext = self._get_neo_io(get_ext=True)
         location = self._get_hdf5_name(ext=ext)
     self.neo_file = os.path.join(out_dir, location)
@@ -1778,17 +1803,17 @@ Dict : If key is None, all the metadata.</p></section>
 <span>def <span class="ident">split_pell_ts</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Returns a tuple of arrays splitting up the rewards.</p>
+<section class="desc"><p>Return a tuple of arrays splitting up the rewards.</p>
 <p>(Pellets without doubles, time of doubles)</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def split_pell_ts(self):
     &#34;&#34;&#34;
-    Returns a tuple of arrays splitting up the rewards.
+    Return a tuple of arrays splitting up the rewards.
 
     (Pellets without doubles, time of doubles)
-    &#34;&#34;&#34;
 
+    &#34;&#34;&#34;
     pell_ts = self.get_arrays(&#34;Reward&#34;)
 
     dpell_bool = np.diff(pell_ts) &lt; 0.8
