@@ -1,0 +1,1 @@
+pdoc --html -o "docs\html" bvmpc --force

@@ -239,7 +239,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
                     rw_FR = rw_FR + len(norm_r_ts[i])
                 elif sch_type[i] == 0:
                     rw_FI = rw_FI + len(norm_r_ts[i])
-            rw_print = "\nCorrect FR \ FI: " + \
+            rw_print = "\nCorrect FR \\ FI: " + \
                 str(rw_FR) + r" \ " + str(rw_FI)
 
     ax.scatter(reward_times, reward_y, marker="x", c="grey",
@@ -254,7 +254,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
 #    ax.set_xlim(0, 30 * 60 + 30)
 
     if err_FR > 0 or err_FI > 0:
-        err_print = "\nErrors FR \ FI: " + str(err_FR) + r" \ " + str(err_FI)
+        err_print = "\nErrors FR \\ FI: " + str(err_FR) + r" \ " + str(err_FI)
     else:
         err_print = ""
 

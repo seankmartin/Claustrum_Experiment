@@ -35,147 +35,427 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 import os.path
+from bvmpc.bv_utils import mycolors
 
 
-def cumplot(session, out_dir, smooth=False, ax=None):
+def split_lever_ts(session, out_dir, ax=None):
+    &#34;&#34;&#34;Split lever ts for into schedule-based arrays of trials&#34;&#34;&#34;
+    # still in progress
+    lever_ts = session.get_lever_ts()
+    switch_ts = np.arange(5, 1830, 305)
+    reward_times = session.get_rw_ts()
+    trial_type = session.get_arrays(&#39;Trial Type&#39;)
+
+    ratio_lever_ts = []
+    interval_lever_ts = []
+    block_lever_ts = np.split(lever_ts, np.searchsorted(lever_ts, switch_ts))
+    block_reward_ts = np.split(reward_times,
+                               np.searchsorted(reward_times, switch_ts))
+    for i, (l, r) in enumerate(zip(block_lever_ts, block_reward_ts)):
+        if trial_type[i] == 1:  # FR Block
+            split_lever_ts = np.split(l, np.searchsorted(l, r))
+            ratio_lever_ts.append(split_lever_ts)
+        elif trial_type[i] == 0:  # FR Block
+            split_lever_ts = np.split(l, np.searchsorted(l, r))
+            interval_lever_ts.append(split_lever_ts)
+        else:
+            print(&#39;Not Ready for analysis!&#39;)
+    print(&#39;len of ratio_l&#39;+len(ratio_lever_ts))
+    print(&#39;len of interval_l&#39;+len(interval_lever_ts))
+    return ratio_lever_ts, interval_lever_ts
+
+
+def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
+            zoom_sch=False, plot_error=False, plot_all=False):
     &#34;&#34;&#34;Perform a cumulative plot for a Session.&#34;&#34;&#34;
-    date = session.get_metadata(&#39;start_date&#39;)[-8:].replace(&#39;/&#39;, &#39;_&#39;)
+    date = session.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
     timestamps = session.get_arrays()
     lever_ts = session.get_lever_ts()
     session_type = session.get_metadata(&#39;name&#39;)
+    stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
     subject = session.get_metadata(&#39;subject&#39;)
+    reward_times = session.get_rw_ts()
+    pell_ts = timestamps[&#34;Reward&#34;]
+    pell_double = np.nonzero(np.diff(pell_ts) &lt; 0.5)
 
-    # You have the array sorted, no need to histogram
-    reward_times = timestamps[&#34;Nosepoke&#34;]
-    fig, ax = plt.subplots()
-    ax.set_title(&#39;Cumulative Lever Presses\n&#39;, fontsize=15)
-    if session_type == &#39;MSN: 5a_FixedRatio_p&#39;:
-        ratio = int(timestamps[&#34;Experiment Variables&#34;][3])
-        plt.suptitle(&#39;\n(Subject {}, {} {}, {})&#39;.format(
-            subject[9:], session_type[5:-2], ratio, date),
-            fontsize=9, y=.98, x=.51)
-    elif session_type == &#39;MSN: 5b_FixedInterval_p&#39;:
-        interval = int(timestamps[&#34;Experiment Variables&#34;][3] / 100)
-        plt.suptitle(&#39;\n(Subject {}, {} {}s, {})&#39;.format(
-            subject[9:], session_type[5:-2], interval, date),
-            fontsize=9, y=.98, x=.51)
+    # for printing of error rates and rewards on graph
+    err_FI = 0
+    err_FR = 0
+    rw_FR = 0
+    rw_FI = 0
+    reward_double = reward_times[np.searchsorted(
+        reward_times, pell_ts[pell_double], side=&#39;right&#39;)]
+    single_plot = False
+    ratio = session.get_ratio()
+    interval = session.get_interval()
+
+    if ax is None:
+        single_plot = True
+        fig, ax = plt.subplots()
+        ax.set_title(&#39;Cumulative Lever Presses\n&#39;, fontsize=15)
+        if session_type == &#39;5a_FixedRatio_p&#39;:
+            plt.suptitle(&#39;\nSubject {}, {} {}, {}&#39;.format(
+                subject, session_type[:-2], ratio, date),
+                color=mycolors(subject), fontsize=10, y=.98, x=.51)
+        elif session_type == &#39;5b_FixedInterval_p&#39;:
+            plt.suptitle(&#39;\nSubject {}, {} {}s, {}&#39;.format(
+                subject, session_type[:-2], interval, date),
+                color=mycolors(subject), fontsize=10, y=.98, x=.51)
+        elif session_type == &#39;6_RandomisedBlocks_p:&#39;:
+            plt.suptitle(&#39;\nSubject {}, {} FR{}/FI{}s, {}&#39;.format(
+                subject, session_type[:-2], ratio, interval, date),
+                color=mycolors(subject), fontsize=10, y=.98, x=.51)
+        else:
+            plt.suptitle(&#39;\nSubject {}, S{}, {}&#39;.format(
+                subject, stage, date), color=mycolors(subject),
+                fontsize=10, y=.98, x=.51)
     else:
-        plt.suptitle(&#39;\n(Subject {}, {}, {})&#39;.format(
-            subject[9:], session_type[5:-2], date),
-            fontsize=9, y=.98, x=.51)
+        if session_type == &#39;5a_FixedRatio_p&#39;:
+            ax.set_title(&#39;\nSubject {}, S{}, FR{}, {}&#39;.format(
+                subject, stage, ratio, date),
+                color=mycolors(subject), fontsize=10)
+        elif session_type == &#39;5b_FixedInterval_p&#39;:
+            ax.set_title(&#39;\nSubject {}, S{}, FI{}s, {}&#39;.format(
+                subject, stage, interval, date),
+                color=mycolors(subject), fontsize=10)
+        elif session_type == &#39;6_RandomisedBlocks_p&#39; or stage == &#39;7&#39;:
+            switch_ts = np.arange(5, 1830, 305)
+            for x in switch_ts:
+                plt.axvline(x, color=&#39;g&#39;, linestyle=&#39;-.&#39;, linewidth=&#39;.4&#39;)
+            ax.set_title(&#39;\nSubject {}, S{}, FR{}/FI{}s, {}&#39;.format(
+                subject, stage, ratio, interval, date), color=mycolors(subject),
+                fontsize=10)
+        else:
+            ax.set_title(&#39;\nSubject {}, S{}, {}&#39;.format(
+                subject, stage, date), color=mycolors(subject),
+                fontsize=10, y=1, x=.51)
+
     ax.set_xlabel(&#39;Time (s)&#39;)
     ax.set_ylabel(&#39;Cumulative Lever Presses&#39;)
 
-    if smooth:
-        values, base = np.histogram(lever_ts, bins=len(lever_ts) * 4)
-        cumulative = np.cumsum(values)
-        plot_arr_x = np.append(base[:-1], base[-1] + 50)
-        plot_arr_y = np.append(cumulative, cumulative[-1])
-        ax.plot(plot_arr_x, plot_arr_y, c=&#39;blue&#39;)
-        bins = base[:-1]
+    # Broken and plots are ugly - Plots single trials
+    if zoom:
+        trial_lever_ts = np.split(lever_ts,
+                                  np.searchsorted(lever_ts, reward_times))
+        norm_reward_ts = []
+        norm_lever_ts = []
+        reward_times_0 = np.append([0], reward_times, axis=0)
+        for i, l in enumerate(trial_lever_ts[:-1]):
+            norm_lever_ts.append(np.append([0], l-reward_times_0[i], axis=0))
+            norm_reward_ts.append(reward_times[i]-reward_times_0[i])
+        ax.set_xlim(0, np.max(norm_reward_ts))
+        color = plt.cm.get_cmap(&#39;autumn&#39;)
+        for i, l in enumerate(norm_lever_ts):
+            ax.step(l, np.arange(l.size), c=color(i*20), where=&#34;post&#34;)
+            bins = l
+            reward_y = np.digitize(norm_reward_ts[i], bins) - 1
+            plt.scatter(norm_reward_ts[i], reward_y,
+                        marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+        ax.set_title(&#39;\nSubject {}, Trial-Based&#39;.format(
+            subject), color=mycolors(subject), fontsize=10)
+        ax.legend(loc=&#39;lower right&#39;)
+        return
+
+    elif zoom_sch and (session_type == &#39;6_RandomisedBlocks_p&#39; or stage == &#39;7&#39;):
+        # plots cum graph based on schedule type (i.e. FI/FR)
+        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl = split_sess(
+            session, plot_error=plot_error, plot_all=plot_all)
+
+        sch_type = session.get_arrays(&#39;Trial Type&#39;)
+        ratio_c = plt.cm.get_cmap(&#39;Wistia&#39;)
+        interval_c = plt.cm.get_cmap(&#39;winter&#39;)
+        ax.set_xlim(0, 305)
+        for i, l in enumerate(norm_l_ts):
+            if sch_type[i] == 1 and not int_only:
+                ax.step(l, np.arange(l.size), c=ratio_c(i*45), where=&#34;post&#34;,
+                        label=&#39;B&#39;+str(i+1)+&#39; - FR&#39;, zorder=1)
+            elif sch_type[i] == 0:
+                ax.step(l, np.arange(l.size), c=interval_c(i*45), where=&#34;post&#34;,
+                        label=&#39;B&#39;+str(i+1)+&#39; - FI&#39;, zorder=1)
+            bins = l
+            reward_y = np.digitize(norm_r_ts[i], bins) - 1
+            double_y = np.digitize(norm_dr_ts[i], bins) - 1
+            if stage == &#39;7&#39; and plot_all:  # plots all responses incl. errors
+                ax.scatter(norm_err_ts[i], np.isin(
+                    l, norm_err_ts[i]).nonzero()[0],
+                    c=&#39;r&#39;, s=1, zorder=2)
+                incl = &#39;_All&#39;
+            if int_only:
+                if sch_type[i] == 0:
+                    plt.scatter(norm_r_ts[i], reward_y,
+                                marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+                    plt.scatter(norm_dr_ts[i], double_y,
+                                marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
+            else:
+                plt.scatter(norm_r_ts[i], reward_y,
+                            marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+                plt.scatter(norm_dr_ts[i], double_y,
+                            marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
+        ax.set_title(&#39;\nSubject {}, Block-Split {}&#39;.format(
+            subject, incl), color=mycolors(subject), fontsize=10)
+        ax.legend(loc=&#39;upper left&#39;)
+        return
+
+    elif zoom_sch:  # plots cum graph based on schedule type (i.e. FI/FR)
+        if session_type == &#39;5a_FixedRatio_p&#39;:
+            sch_type = &#39;FR&#39;
+            ax.set_title(&#39;\nSubject {}, FR{} Split&#39;.format(
+                subject, ratio), color=mycolors(subject),
+                fontsize=10)
+        elif session_type == &#39;5b_FixedInterval_p&#39;:
+            sch_type = &#39;FI&#39;
+            ax.set_title(&#39;\nSubject {}, FI{}s Split&#39;.format(
+                subject, interval), color=mycolors(subject),
+                fontsize=10)
+        elif stage == 6 or stage == 7:
+            pass
+        else:
+            return print(&#34;Unable to split session&#34;)
+        # Change values to set division blocks
+        blocks = np.arange(0, 60*30, 300)
+        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, _ = split_sess(
+            session, blocks)
+        ax.set_xlim(0, 305)
+        for i, l in enumerate(norm_l_ts):
+            ax.step(l, np.arange(l.size), c=mycolors(i), where=&#34;post&#34;,
+                    label=&#39;B&#39;+str(i+1)+&#39; - {}&#39;.format(sch_type))
+            bins = l
+            reward_y = np.digitize(norm_r_ts[i], bins) - 1
+            double_y = np.digitize(norm_dr_ts[i], bins) - 1
+            plt.scatter(norm_r_ts[i], reward_y,
+                        marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+            plt.scatter(norm_dr_ts[i], double_y,
+                        marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
+        ax.legend(loc=&#39;upper left&#39;)
+        return
 
     else:
+        if stage == &#39;7&#39;:
+            err_lever_ts = session.get_err_lever_ts()
+            lever_ts = np.sort(np.concatenate((
+                lever_ts, err_lever_ts), axis=None))
         lever_times = np.insert(lever_ts, 0, 0, axis=0)
         ax.step(lever_times, np.arange(
-            lever_times.size), c=&#39;blue&#39;, where=&#34;post&#34;)
-        ax.plot(
-            [lever_times[-1], lever_times[-1] + 40],
-            [lever_times.size - 1, lever_times.size - 1],
-            c=&#39;blue&#39;, label=&#39;Lever Response&#39;)
+            lever_times.size), c=mycolors(subject),
+            where=&#34;post&#34;, label=&#39;Animal&#39;+subject, zorder=1)
+        if stage == &#39;7&#39;:  # plots error press in red
+            ax.scatter(err_lever_ts, np.isin(
+                lever_times, err_lever_ts).nonzero()[0],
+                c=&#39;r&#39;, label=&#39;Errors&#39;, s=1, zorder=2)
+        if reward_times[-1] &gt; lever_times[-1]:
+            ax.plot(
+                [lever_times[-1], reward_times[-1] + 2],
+                [lever_times.size - 1, lever_times.size - 1],
+                c=mycolors(subject))
         bins = lever_times
+        reward_y = np.digitize(reward_times, bins) - 1
+        double_y = np.digitize(reward_double, bins) - 1
+        # for printing of error rates on graph
+        norm_r_ts, _, norm_err_ts, _, _ = split_sess(
+            session, plot_all=True)
+        sch_type = session.get_arrays(&#39;Trial Type&#39;)
+        for i, l in enumerate(norm_err_ts):
+            if sch_type[i] == 1:
+                err_FR = err_FR + len(norm_err_ts[i])
+            elif sch_type[i] == 0:
+                err_FI = err_FI + len(norm_err_ts[i])
+        if stage == &#39;6&#39; or stage == &#39;7&#39;:
+            for i, l in enumerate(norm_r_ts):
+                if sch_type[i] == 1:
+                    rw_FR = rw_FR + len(norm_r_ts[i])
+                elif sch_type[i] == 0:
+                    rw_FI = rw_FI + len(norm_r_ts[i])
+            rw_print = &#34;\nCorrect FR \\ FI: &#34; + \
+                str(rw_FR) + r&#34; \ &#34; + str(rw_FI)
 
-    reward_y = np.digitize(reward_times, bins) - 1
+    ax.scatter(reward_times, reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;,
+               label=&#39;Reward Collected&#39;, s=25)
+    if len(reward_double) &gt; 0:
+        dr_print = &#34;\nTotal # of Double Rewards:&#34; + str(len(reward_double))
+        ax.scatter(reward_double, double_y, marker=&#34;x&#34;, c=&#34;magenta&#34;,
+                   label=&#39;Double Reward&#39;, s=25)
+    else:
+        dr_print = &#34;&#34;
+    ax.legend(loc=&#39;lower right&#39;)
+#    ax.set_xlim(0, 30 * 60 + 30)
 
-    if smooth:
-        reward_y = cumulative[reward_y]
+    if err_FR &gt; 0 or err_FI &gt; 0:
+        err_print = &#34;\nErrors FR \\ FI: &#34; + str(err_FR) + r&#34; \ &#34; + str(err_FI)
+    else:
+        err_print = &#34;&#34;
 
-    out_name = (subject[9:].zfill(3) + &#34;_CumulativeHist_&#34; +
-                session_type[5:-2] + &#34;_&#34; + date + &#34;.png&#34;)
-    out_name = os.path.join(out_dir, out_name)
-    print(&#34;Saved figure to {}&#34;.format(out_name))
-    plt.scatter(reward_times, reward_y, marker=&#34;x&#34;, c=&#34;r&#34;,
-                label=&#39;Reward Collected&#39;)
-    # Text Display on Graph
-    ax.text(0.55, 0.15, &#39;Total # of Lever Press: {}\nTotal # of Rewards: {}&#39;
-            .format(len(lever_ts), len(reward_times)), transform=ax.transAxes)
+    if single_plot:
+        out_name = (subject.zfill(3) + &#34;_CumulativeHist_&#34; + date +
+                    &#34;_&#34; + session_type[:-2] + &#34;.png&#34;)
+        out_name = os.path.join(out_dir, out_name)
+        print(&#34;Saved figure to {}&#34;.format(out_name))
+        # Text Display on Graph
+        if stage == &#39;6&#39; or stage == &#39;7&#39;:
+            ax.text(0.55, 0.15, &#39;Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}&#39;
+                    .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
+        fig.savefig(out_name, dpi=400)
+        plt.close()
+    else:
+        # Text Display on Graph
+        if stage == &#39;6&#39; or stage == &#39;7&#39;:
+            ax.text(0.05, 0.75, &#39;Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}&#39;
+                    .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
+        return
 
-    ax.legend()
-    ax.set_xlim(0, 30 * 60)
-    fig.savefig(out_name, dpi=400)
-    plt.close()
 
+def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False):
+    &#39;&#39;&#39;
+    blocks: defines timepoints to split
 
-def IRT(session, out_dir, showIRT=False, ax=None):
-    &#34;&#34;&#34;Perform an inter-response time plot for a Session.&#34;&#34;&#34;
-    date = session.get_metadata(&#39;start_date&#39;)[-8:].replace(&#39;/&#39;, &#39;_&#39;)
-    time_taken = session.time_taken()
-    timestamps = session.get_arrays()
-    good_lever_ts = session.get_lever_ts(False)
+    returns 5 outputs:
+        1) timestamps split into rows depending on blocks input
+                -&gt; norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts
+        2) print to include in title and file name. Mainly for stage 7.
+                incl
+    &#39;&#39;&#39;
     session_type = session.get_metadata(&#39;name&#39;)
-    subject = session.get_metadata(&#39;subject&#39;)
+    stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
+    reward_times = session.get_rw_ts()
+    timestamps = session.get_arrays()
+    lever_ts = session.get_lever_ts()
+    pell_ts = timestamps[&#34;Reward&#34;]
+    pell_double = np.nonzero(np.diff(pell_ts) &lt; 0.5)
+    reward_double = reward_times[np.searchsorted(
+        reward_times, pell_ts[pell_double], side=&#39;right&#39;)]  # returns reward ts after d_pell
+    err_lever_ts = []
 
-    rewards_i = timestamps[&#34;Reward&#34;]
-    nosepokes_i = timestamps[&#34;Nosepoke&#34;]
-    # Session ended w/o reward collection
-    if len(rewards_i) &gt; len(nosepokes_i):
-        # Assumes reward collected at end of session
-        nosepokes_i = np.append(
-            nosepokes_i, [timestamps[&#34;Experiment Variables&#34;][0] * 60])
-    # Only consider after the first lever press
+    if blocks is not None:
+        pass
+    else:
+        blocks = np.arange(5, 1830, 305)  # Default split into schedules
+
+    incl = &#34;&#34;  # Initialize print for type of extracted lever_ts
+    if stage == &#39;7&#39; and plot_error:  # plots errors only
+        incl = &#39;_Errors_Only&#39;
+        lever_ts = session.get_err_lever_ts()
+    elif stage == &#39;7&#39; and plot_all:  # plots all responses incl. errors
+        incl = &#39;_All&#39;
+        err_lever_ts = session.get_err_lever_ts()
+        lever_ts = np.sort(np.concatenate((
+            lever_ts, err_lever_ts), axis=None))
+    elif stage == &#39;7&#39;:  # plots all responses exclu. errors
+        incl = &#39;_Correct Only&#39;
+
+    split_lever_ts = np.split(lever_ts,
+                              np.searchsorted(lever_ts, blocks))
+    split_reward_ts = np.split(reward_times,
+                               np.searchsorted(reward_times, blocks))
+    split_double_r_ts = np.split(reward_double,
+                                 np.searchsorted(reward_double, blocks))
+    split_err_ts = np.split(err_lever_ts,
+                            np.searchsorted(err_lever_ts, blocks))
+    norm_reward_ts = []
+    norm_lever_ts = []
+    norm_err_ts = []
+    norm_double_r_ts = []
+    if norm:
+        for i, l in enumerate(split_lever_ts[1:]):
+            norm_lever_ts.append(np.append([0], l-blocks[i], axis=0))
+            norm_reward_ts.append(split_reward_ts[i+1]-blocks[i])
+            norm_double_r_ts.append(split_double_r_ts[i+1]-blocks[i])
+            if stage == &#39;7&#39; and plot_all:  # plots all responses incl. errors
+                norm_err_ts.append(split_err_ts[i+1]-blocks[i])
+    else:
+        norm_lever_ts = split_lever_ts[1:]
+        norm_reward_ts = split_reward_ts[1:]
+        norm_err_ts = split_err_ts[1:]
+        norm_double_r_ts = split_double_r_ts[1:]
+    return norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts, incl
+
+
+def IRT(session, out_dir, ax=None, showIRT=False):
+    &#34;&#34;&#34;Perform an inter-response time plot for a Session. IRT calculated from prev reward to next lever press resulting in reward&#34;&#34;&#34;
+    single_plot = False
+
+    # General session info
+    date = session.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
+    session_type = session.get_metadata(&#39;name&#39;)
+    stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
+    subject = session.get_metadata(&#39;subject&#39;)
+    ratio = session.get_ratio()
+    interval = session.get_interval()
+
+    # Timestameps data extraction
+    time_taken = session.time_taken()
+    # lever ts without unnecessary presses
+    good_lever_ts = session.get_lever_ts(False)
+
+    # Only consider rewards for lever pressing
+    rewards_i = session.get_rw_ts()
     reward_idxs = np.nonzero(rewards_i &gt;= good_lever_ts[0])
     rewards = rewards_i[reward_idxs]
-    nosepokes = nosepokes_i[reward_idxs]
+
     # b assigns ascending numbers to rewards within lever presses
     b = np.digitize(rewards, bins=good_lever_ts)
     _, a = np.unique(b, return_index=True)  # returns index for good rewards
-    good_nosepokes = nosepokes[a]  # nosepoke ts for pressing levers
-    if session_type == &#39;MSN: 5a_FixedRatio_p&#39;:
-        ratio = int(timestamps[&#34;Experiment Variables&#34;][3])
-        good_lever_ts = good_lever_ts[::ratio]
-    if len(good_lever_ts[1:]) &gt; len(good_nosepokes[:-1]):
-        IRT = good_lever_ts[1:] - good_nosepokes[:]  # Ended sess w lever press
+
+    good_rewards = rewards[a]  # nosepoke ts for pressing levers
+    if session_type == &#39;5a_FixedRatio_p&#39;:
+        last_lever_ts = []
+        for i in b:
+            last_lever_ts.append(good_lever_ts[i-1])
+    else:
+        last_lever_ts = good_lever_ts
+    if len(last_lever_ts[1:]) &gt; len(good_rewards[:-1]):
+        IRT = last_lever_ts[1:] - good_rewards[:]  # Ended sess w lever press
+
     else:
         # Ended session w nosepoke
-        IRT = good_lever_ts[1:] - good_nosepokes[:-1]
-    fig, ax = plt.subplots()
+        IRT = last_lever_ts[1:] - good_rewards[:-1]
+
     hist_count, hist_bins, _ = ax.hist(
         IRT, bins=math.ceil(np.amax(IRT)),
-        range=(0, math.ceil(np.amax(IRT))))
+        range=(0, math.ceil(np.amax(IRT))), color=mycolors(subject))
 
     # Plotting of IRT Graphs
-    ax.set_title(&#39;Inter-Response Time\n&#39;, fontsize=15)
-    if session_type == &#39;MSN: 5a_FixedRatio_p&#39;:
-        fig.suptitle(&#39;\n(Subject {}, {} {}, {})&#39;.format(
-            subject[9:], session_type[5:-2], ratio, date),
-            fontsize=9, y=.98, x=.51)
-    elif session_type == &#39;MSN: 5b_FixedInterval_p&#39;:
-        interval = int(timestamps[&#34;Experiment Variables&#34;][3] / 100)
-        fig.suptitle(&#39;\n(Subject {}, {} {}s, {})&#39;.format(
-            subject[9:], session_type[5:-2], interval, date),
-            fontsize=9, y=.98, x=.51)
+    if ax is None:
+        single_plot = True
+        fig, ax = plt.subplots()
+        ax.set_title(&#39;Inter-Response Time\n&#39;, fontsize=15)
+        if session_type == &#39;5a_FixedRatio_p&#39;:
+            plt.suptitle(&#39;\n(Subject {}, {} {}, {})&#39;.format(
+                subject, session_type[:-2], ratio, date),
+                fontsize=10, y=.98, x=.51)
+        elif session_type == &#39;5b_FixedInterval_p&#39;:
+            plt.suptitle(&#39;\n(Subject {}, {} {}s, {})&#39;.format(
+                subject, session_type[:-2], interval, date),
+                fontsize=10, y=.98, x=.51)
+        else:
+            plt.suptitle(&#39;\n(Subject {}, {}, {})&#39;.format(
+                subject, session_type[:-2], date),
+                fontsize=10, y=.98, x=.51)
     else:
-        fig.suptitle(&#39;\n(Subject {}, {}, {})&#39;.format(
-            subject[9:], session_type[5:-2], date),
-            fontsize=9, y=.98, x=.51)
+        ax.set_title(&#39;\nSubject {}, S{}, IRT&#39;.format(
+            subject, stage), color=mycolors(subject),
+            fontsize=10, y=1, x=.51)
+
     ax.set_xlabel(&#39;IRT (s)&#39;)
     ax.set_ylabel(&#39;Counts&#39;)
     maxidx = np.argmax(np.array(hist_count))
     maxval = (hist_bins[maxidx + 1] - hist_bins[maxidx]) / \
         2 + hist_bins[maxidx]
-
-    # Text Display on Graph
-    ax.text(0.55, 0.8, &#39;Session Duration: {} mins\nMost Freq. IRT Bin: {} s&#39;
+    ax.text(0.45, 0.85, &#39;Session Duration: {} mins\nMost Freq. IRT Bin: {} s&#39;
             .format(time_taken, maxval), transform=ax.transAxes)
 
-    out_name = (subject[9:].zfill(3) + &#34;_IRT_Hist_&#34; +
-                session_type[5:-2] + &#34;_&#34; + date + &#34;.png&#34;)
-    print(&#34;Saved figure to {}&#34;.format(
-        os.path.join(out_dir, out_name)))
-    fig.savefig(os.path.join(out_dir, out_name), dpi=400)
     if showIRT:
         show_IRT_details(IRT, maxidx, hist_bins)
-#    plt.show()
-    plt.close()
+    if single_plot:
+        # Text Display on Graph
+        ax.text(0.55, 0.8, &#39;Session Duration: {} mins\nMost Freq. IRT Bin: {} s&#39;
+                .format(time_taken, maxval), transform=ax.transAxes)
+        out_name = (subject.zfill(3) + &#34;_IRT_Hist_&#34; +
+                    session_type[:-2] + &#34;_&#34; + date + &#34;.png&#34;)
+        print(&#34;Saved figure to {}&#34;.format(
+            os.path.join(out_dir, out_name)))
+        fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+        plt.close()
+    else:
+        return ax
 
 
 def show_IRT_details(IRT, maxidx, hist_bins):
@@ -198,158 +478,345 @@ def show_IRT_details(IRT, maxidx, hist_bins):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="bvmpc.bv_analyse.IRT"><code class="name flex">
-<span>def <span class="ident">IRT</span></span>(<span>session, out_dir, showIRT=False, ax=None)</span>
+<span>def <span class="ident">IRT</span></span>(<span>session, out_dir, ax=None, showIRT=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Perform an inter-response time plot for a Session.</p></section>
+<section class="desc"><p>Perform an inter-response time plot for a Session. IRT calculated from prev reward to next lever press resulting in reward</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def IRT(session, out_dir, showIRT=False, ax=None):
-    &#34;&#34;&#34;Perform an inter-response time plot for a Session.&#34;&#34;&#34;
-    date = session.get_metadata(&#39;start_date&#39;)[-8:].replace(&#39;/&#39;, &#39;_&#39;)
-    time_taken = session.time_taken()
-    timestamps = session.get_arrays()
-    good_lever_ts = session.get_lever_ts(False)
-    session_type = session.get_metadata(&#39;name&#39;)
-    subject = session.get_metadata(&#39;subject&#39;)
+<pre><code class="python">def IRT(session, out_dir, ax=None, showIRT=False):
+    &#34;&#34;&#34;Perform an inter-response time plot for a Session. IRT calculated from prev reward to next lever press resulting in reward&#34;&#34;&#34;
+    single_plot = False
 
-    rewards_i = timestamps[&#34;Reward&#34;]
-    nosepokes_i = timestamps[&#34;Nosepoke&#34;]
-    # Session ended w/o reward collection
-    if len(rewards_i) &gt; len(nosepokes_i):
-        # Assumes reward collected at end of session
-        nosepokes_i = np.append(
-            nosepokes_i, [timestamps[&#34;Experiment Variables&#34;][0] * 60])
-    # Only consider after the first lever press
+    # General session info
+    date = session.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
+    session_type = session.get_metadata(&#39;name&#39;)
+    stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
+    subject = session.get_metadata(&#39;subject&#39;)
+    ratio = session.get_ratio()
+    interval = session.get_interval()
+
+    # Timestameps data extraction
+    time_taken = session.time_taken()
+    # lever ts without unnecessary presses
+    good_lever_ts = session.get_lever_ts(False)
+
+    # Only consider rewards for lever pressing
+    rewards_i = session.get_rw_ts()
     reward_idxs = np.nonzero(rewards_i &gt;= good_lever_ts[0])
     rewards = rewards_i[reward_idxs]
-    nosepokes = nosepokes_i[reward_idxs]
+
     # b assigns ascending numbers to rewards within lever presses
     b = np.digitize(rewards, bins=good_lever_ts)
     _, a = np.unique(b, return_index=True)  # returns index for good rewards
-    good_nosepokes = nosepokes[a]  # nosepoke ts for pressing levers
-    if session_type == &#39;MSN: 5a_FixedRatio_p&#39;:
-        ratio = int(timestamps[&#34;Experiment Variables&#34;][3])
-        good_lever_ts = good_lever_ts[::ratio]
-    if len(good_lever_ts[1:]) &gt; len(good_nosepokes[:-1]):
-        IRT = good_lever_ts[1:] - good_nosepokes[:]  # Ended sess w lever press
+
+    good_rewards = rewards[a]  # nosepoke ts for pressing levers
+    if session_type == &#39;5a_FixedRatio_p&#39;:
+        last_lever_ts = []
+        for i in b:
+            last_lever_ts.append(good_lever_ts[i-1])
+    else:
+        last_lever_ts = good_lever_ts
+    if len(last_lever_ts[1:]) &gt; len(good_rewards[:-1]):
+        IRT = last_lever_ts[1:] - good_rewards[:]  # Ended sess w lever press
+
     else:
         # Ended session w nosepoke
-        IRT = good_lever_ts[1:] - good_nosepokes[:-1]
-    fig, ax = plt.subplots()
+        IRT = last_lever_ts[1:] - good_rewards[:-1]
+
     hist_count, hist_bins, _ = ax.hist(
         IRT, bins=math.ceil(np.amax(IRT)),
-        range=(0, math.ceil(np.amax(IRT))))
+        range=(0, math.ceil(np.amax(IRT))), color=mycolors(subject))
 
     # Plotting of IRT Graphs
-    ax.set_title(&#39;Inter-Response Time\n&#39;, fontsize=15)
-    if session_type == &#39;MSN: 5a_FixedRatio_p&#39;:
-        fig.suptitle(&#39;\n(Subject {}, {} {}, {})&#39;.format(
-            subject[9:], session_type[5:-2], ratio, date),
-            fontsize=9, y=.98, x=.51)
-    elif session_type == &#39;MSN: 5b_FixedInterval_p&#39;:
-        interval = int(timestamps[&#34;Experiment Variables&#34;][3] / 100)
-        fig.suptitle(&#39;\n(Subject {}, {} {}s, {})&#39;.format(
-            subject[9:], session_type[5:-2], interval, date),
-            fontsize=9, y=.98, x=.51)
+    if ax is None:
+        single_plot = True
+        fig, ax = plt.subplots()
+        ax.set_title(&#39;Inter-Response Time\n&#39;, fontsize=15)
+        if session_type == &#39;5a_FixedRatio_p&#39;:
+            plt.suptitle(&#39;\n(Subject {}, {} {}, {})&#39;.format(
+                subject, session_type[:-2], ratio, date),
+                fontsize=10, y=.98, x=.51)
+        elif session_type == &#39;5b_FixedInterval_p&#39;:
+            plt.suptitle(&#39;\n(Subject {}, {} {}s, {})&#39;.format(
+                subject, session_type[:-2], interval, date),
+                fontsize=10, y=.98, x=.51)
+        else:
+            plt.suptitle(&#39;\n(Subject {}, {}, {})&#39;.format(
+                subject, session_type[:-2], date),
+                fontsize=10, y=.98, x=.51)
     else:
-        fig.suptitle(&#39;\n(Subject {}, {}, {})&#39;.format(
-            subject[9:], session_type[5:-2], date),
-            fontsize=9, y=.98, x=.51)
+        ax.set_title(&#39;\nSubject {}, S{}, IRT&#39;.format(
+            subject, stage), color=mycolors(subject),
+            fontsize=10, y=1, x=.51)
+
     ax.set_xlabel(&#39;IRT (s)&#39;)
     ax.set_ylabel(&#39;Counts&#39;)
     maxidx = np.argmax(np.array(hist_count))
     maxval = (hist_bins[maxidx + 1] - hist_bins[maxidx]) / \
         2 + hist_bins[maxidx]
-
-    # Text Display on Graph
-    ax.text(0.55, 0.8, &#39;Session Duration: {} mins\nMost Freq. IRT Bin: {} s&#39;
+    ax.text(0.45, 0.85, &#39;Session Duration: {} mins\nMost Freq. IRT Bin: {} s&#39;
             .format(time_taken, maxval), transform=ax.transAxes)
 
-    out_name = (subject[9:].zfill(3) + &#34;_IRT_Hist_&#34; +
-                session_type[5:-2] + &#34;_&#34; + date + &#34;.png&#34;)
-    print(&#34;Saved figure to {}&#34;.format(
-        os.path.join(out_dir, out_name)))
-    fig.savefig(os.path.join(out_dir, out_name), dpi=400)
     if showIRT:
         show_IRT_details(IRT, maxidx, hist_bins)
-#    plt.show()
-    plt.close()</code></pre>
+    if single_plot:
+        # Text Display on Graph
+        ax.text(0.55, 0.8, &#39;Session Duration: {} mins\nMost Freq. IRT Bin: {} s&#39;
+                .format(time_taken, maxval), transform=ax.transAxes)
+        out_name = (subject.zfill(3) + &#34;_IRT_Hist_&#34; +
+                    session_type[:-2] + &#34;_&#34; + date + &#34;.png&#34;)
+        print(&#34;Saved figure to {}&#34;.format(
+            os.path.join(out_dir, out_name)))
+        fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+        plt.close()
+    else:
+        return ax</code></pre>
 </details>
 </dd>
 <dt id="bvmpc.bv_analyse.cumplot"><code class="name flex">
-<span>def <span class="ident">cumplot</span></span>(<span>session, out_dir, smooth=False, ax=None)</span>
+<span>def <span class="ident">cumplot</span></span>(<span>session, out_dir, ax=None, int_only=False, zoom=False, zoom_sch=False, plot_error=False, plot_all=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Perform a cumulative plot for a Session.</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def cumplot(session, out_dir, smooth=False, ax=None):
+<pre><code class="python">def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
+            zoom_sch=False, plot_error=False, plot_all=False):
     &#34;&#34;&#34;Perform a cumulative plot for a Session.&#34;&#34;&#34;
-    date = session.get_metadata(&#39;start_date&#39;)[-8:].replace(&#39;/&#39;, &#39;_&#39;)
+    date = session.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
     timestamps = session.get_arrays()
     lever_ts = session.get_lever_ts()
     session_type = session.get_metadata(&#39;name&#39;)
+    stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
     subject = session.get_metadata(&#39;subject&#39;)
+    reward_times = session.get_rw_ts()
+    pell_ts = timestamps[&#34;Reward&#34;]
+    pell_double = np.nonzero(np.diff(pell_ts) &lt; 0.5)
 
-    # You have the array sorted, no need to histogram
-    reward_times = timestamps[&#34;Nosepoke&#34;]
-    fig, ax = plt.subplots()
-    ax.set_title(&#39;Cumulative Lever Presses\n&#39;, fontsize=15)
-    if session_type == &#39;MSN: 5a_FixedRatio_p&#39;:
-        ratio = int(timestamps[&#34;Experiment Variables&#34;][3])
-        plt.suptitle(&#39;\n(Subject {}, {} {}, {})&#39;.format(
-            subject[9:], session_type[5:-2], ratio, date),
-            fontsize=9, y=.98, x=.51)
-    elif session_type == &#39;MSN: 5b_FixedInterval_p&#39;:
-        interval = int(timestamps[&#34;Experiment Variables&#34;][3] / 100)
-        plt.suptitle(&#39;\n(Subject {}, {} {}s, {})&#39;.format(
-            subject[9:], session_type[5:-2], interval, date),
-            fontsize=9, y=.98, x=.51)
+    # for printing of error rates and rewards on graph
+    err_FI = 0
+    err_FR = 0
+    rw_FR = 0
+    rw_FI = 0
+    reward_double = reward_times[np.searchsorted(
+        reward_times, pell_ts[pell_double], side=&#39;right&#39;)]
+    single_plot = False
+    ratio = session.get_ratio()
+    interval = session.get_interval()
+
+    if ax is None:
+        single_plot = True
+        fig, ax = plt.subplots()
+        ax.set_title(&#39;Cumulative Lever Presses\n&#39;, fontsize=15)
+        if session_type == &#39;5a_FixedRatio_p&#39;:
+            plt.suptitle(&#39;\nSubject {}, {} {}, {}&#39;.format(
+                subject, session_type[:-2], ratio, date),
+                color=mycolors(subject), fontsize=10, y=.98, x=.51)
+        elif session_type == &#39;5b_FixedInterval_p&#39;:
+            plt.suptitle(&#39;\nSubject {}, {} {}s, {}&#39;.format(
+                subject, session_type[:-2], interval, date),
+                color=mycolors(subject), fontsize=10, y=.98, x=.51)
+        elif session_type == &#39;6_RandomisedBlocks_p:&#39;:
+            plt.suptitle(&#39;\nSubject {}, {} FR{}/FI{}s, {}&#39;.format(
+                subject, session_type[:-2], ratio, interval, date),
+                color=mycolors(subject), fontsize=10, y=.98, x=.51)
+        else:
+            plt.suptitle(&#39;\nSubject {}, S{}, {}&#39;.format(
+                subject, stage, date), color=mycolors(subject),
+                fontsize=10, y=.98, x=.51)
     else:
-        plt.suptitle(&#39;\n(Subject {}, {}, {})&#39;.format(
-            subject[9:], session_type[5:-2], date),
-            fontsize=9, y=.98, x=.51)
+        if session_type == &#39;5a_FixedRatio_p&#39;:
+            ax.set_title(&#39;\nSubject {}, S{}, FR{}, {}&#39;.format(
+                subject, stage, ratio, date),
+                color=mycolors(subject), fontsize=10)
+        elif session_type == &#39;5b_FixedInterval_p&#39;:
+            ax.set_title(&#39;\nSubject {}, S{}, FI{}s, {}&#39;.format(
+                subject, stage, interval, date),
+                color=mycolors(subject), fontsize=10)
+        elif session_type == &#39;6_RandomisedBlocks_p&#39; or stage == &#39;7&#39;:
+            switch_ts = np.arange(5, 1830, 305)
+            for x in switch_ts:
+                plt.axvline(x, color=&#39;g&#39;, linestyle=&#39;-.&#39;, linewidth=&#39;.4&#39;)
+            ax.set_title(&#39;\nSubject {}, S{}, FR{}/FI{}s, {}&#39;.format(
+                subject, stage, ratio, interval, date), color=mycolors(subject),
+                fontsize=10)
+        else:
+            ax.set_title(&#39;\nSubject {}, S{}, {}&#39;.format(
+                subject, stage, date), color=mycolors(subject),
+                fontsize=10, y=1, x=.51)
+
     ax.set_xlabel(&#39;Time (s)&#39;)
     ax.set_ylabel(&#39;Cumulative Lever Presses&#39;)
 
-    if smooth:
-        values, base = np.histogram(lever_ts, bins=len(lever_ts) * 4)
-        cumulative = np.cumsum(values)
-        plot_arr_x = np.append(base[:-1], base[-1] + 50)
-        plot_arr_y = np.append(cumulative, cumulative[-1])
-        ax.plot(plot_arr_x, plot_arr_y, c=&#39;blue&#39;)
-        bins = base[:-1]
+    # Broken and plots are ugly - Plots single trials
+    if zoom:
+        trial_lever_ts = np.split(lever_ts,
+                                  np.searchsorted(lever_ts, reward_times))
+        norm_reward_ts = []
+        norm_lever_ts = []
+        reward_times_0 = np.append([0], reward_times, axis=0)
+        for i, l in enumerate(trial_lever_ts[:-1]):
+            norm_lever_ts.append(np.append([0], l-reward_times_0[i], axis=0))
+            norm_reward_ts.append(reward_times[i]-reward_times_0[i])
+        ax.set_xlim(0, np.max(norm_reward_ts))
+        color = plt.cm.get_cmap(&#39;autumn&#39;)
+        for i, l in enumerate(norm_lever_ts):
+            ax.step(l, np.arange(l.size), c=color(i*20), where=&#34;post&#34;)
+            bins = l
+            reward_y = np.digitize(norm_reward_ts[i], bins) - 1
+            plt.scatter(norm_reward_ts[i], reward_y,
+                        marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+        ax.set_title(&#39;\nSubject {}, Trial-Based&#39;.format(
+            subject), color=mycolors(subject), fontsize=10)
+        ax.legend(loc=&#39;lower right&#39;)
+        return
+
+    elif zoom_sch and (session_type == &#39;6_RandomisedBlocks_p&#39; or stage == &#39;7&#39;):
+        # plots cum graph based on schedule type (i.e. FI/FR)
+        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl = split_sess(
+            session, plot_error=plot_error, plot_all=plot_all)
+
+        sch_type = session.get_arrays(&#39;Trial Type&#39;)
+        ratio_c = plt.cm.get_cmap(&#39;Wistia&#39;)
+        interval_c = plt.cm.get_cmap(&#39;winter&#39;)
+        ax.set_xlim(0, 305)
+        for i, l in enumerate(norm_l_ts):
+            if sch_type[i] == 1 and not int_only:
+                ax.step(l, np.arange(l.size), c=ratio_c(i*45), where=&#34;post&#34;,
+                        label=&#39;B&#39;+str(i+1)+&#39; - FR&#39;, zorder=1)
+            elif sch_type[i] == 0:
+                ax.step(l, np.arange(l.size), c=interval_c(i*45), where=&#34;post&#34;,
+                        label=&#39;B&#39;+str(i+1)+&#39; - FI&#39;, zorder=1)
+            bins = l
+            reward_y = np.digitize(norm_r_ts[i], bins) - 1
+            double_y = np.digitize(norm_dr_ts[i], bins) - 1
+            if stage == &#39;7&#39; and plot_all:  # plots all responses incl. errors
+                ax.scatter(norm_err_ts[i], np.isin(
+                    l, norm_err_ts[i]).nonzero()[0],
+                    c=&#39;r&#39;, s=1, zorder=2)
+                incl = &#39;_All&#39;
+            if int_only:
+                if sch_type[i] == 0:
+                    plt.scatter(norm_r_ts[i], reward_y,
+                                marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+                    plt.scatter(norm_dr_ts[i], double_y,
+                                marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
+            else:
+                plt.scatter(norm_r_ts[i], reward_y,
+                            marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+                plt.scatter(norm_dr_ts[i], double_y,
+                            marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
+        ax.set_title(&#39;\nSubject {}, Block-Split {}&#39;.format(
+            subject, incl), color=mycolors(subject), fontsize=10)
+        ax.legend(loc=&#39;upper left&#39;)
+        return
+
+    elif zoom_sch:  # plots cum graph based on schedule type (i.e. FI/FR)
+        if session_type == &#39;5a_FixedRatio_p&#39;:
+            sch_type = &#39;FR&#39;
+            ax.set_title(&#39;\nSubject {}, FR{} Split&#39;.format(
+                subject, ratio), color=mycolors(subject),
+                fontsize=10)
+        elif session_type == &#39;5b_FixedInterval_p&#39;:
+            sch_type = &#39;FI&#39;
+            ax.set_title(&#39;\nSubject {}, FI{}s Split&#39;.format(
+                subject, interval), color=mycolors(subject),
+                fontsize=10)
+        elif stage == 6 or stage == 7:
+            pass
+        else:
+            return print(&#34;Unable to split session&#34;)
+        # Change values to set division blocks
+        blocks = np.arange(0, 60*30, 300)
+        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, _ = split_sess(
+            session, blocks)
+        ax.set_xlim(0, 305)
+        for i, l in enumerate(norm_l_ts):
+            ax.step(l, np.arange(l.size), c=mycolors(i), where=&#34;post&#34;,
+                    label=&#39;B&#39;+str(i+1)+&#39; - {}&#39;.format(sch_type))
+            bins = l
+            reward_y = np.digitize(norm_r_ts[i], bins) - 1
+            double_y = np.digitize(norm_dr_ts[i], bins) - 1
+            plt.scatter(norm_r_ts[i], reward_y,
+                        marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+            plt.scatter(norm_dr_ts[i], double_y,
+                        marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
+        ax.legend(loc=&#39;upper left&#39;)
+        return
 
     else:
+        if stage == &#39;7&#39;:
+            err_lever_ts = session.get_err_lever_ts()
+            lever_ts = np.sort(np.concatenate((
+                lever_ts, err_lever_ts), axis=None))
         lever_times = np.insert(lever_ts, 0, 0, axis=0)
         ax.step(lever_times, np.arange(
-            lever_times.size), c=&#39;blue&#39;, where=&#34;post&#34;)
-        ax.plot(
-            [lever_times[-1], lever_times[-1] + 40],
-            [lever_times.size - 1, lever_times.size - 1],
-            c=&#39;blue&#39;, label=&#39;Lever Response&#39;)
+            lever_times.size), c=mycolors(subject),
+            where=&#34;post&#34;, label=&#39;Animal&#39;+subject, zorder=1)
+        if stage == &#39;7&#39;:  # plots error press in red
+            ax.scatter(err_lever_ts, np.isin(
+                lever_times, err_lever_ts).nonzero()[0],
+                c=&#39;r&#39;, label=&#39;Errors&#39;, s=1, zorder=2)
+        if reward_times[-1] &gt; lever_times[-1]:
+            ax.plot(
+                [lever_times[-1], reward_times[-1] + 2],
+                [lever_times.size - 1, lever_times.size - 1],
+                c=mycolors(subject))
         bins = lever_times
+        reward_y = np.digitize(reward_times, bins) - 1
+        double_y = np.digitize(reward_double, bins) - 1
+        # for printing of error rates on graph
+        norm_r_ts, _, norm_err_ts, _, _ = split_sess(
+            session, plot_all=True)
+        sch_type = session.get_arrays(&#39;Trial Type&#39;)
+        for i, l in enumerate(norm_err_ts):
+            if sch_type[i] == 1:
+                err_FR = err_FR + len(norm_err_ts[i])
+            elif sch_type[i] == 0:
+                err_FI = err_FI + len(norm_err_ts[i])
+        if stage == &#39;6&#39; or stage == &#39;7&#39;:
+            for i, l in enumerate(norm_r_ts):
+                if sch_type[i] == 1:
+                    rw_FR = rw_FR + len(norm_r_ts[i])
+                elif sch_type[i] == 0:
+                    rw_FI = rw_FI + len(norm_r_ts[i])
+            rw_print = &#34;\nCorrect FR \\ FI: &#34; + \
+                str(rw_FR) + r&#34; \ &#34; + str(rw_FI)
 
-    reward_y = np.digitize(reward_times, bins) - 1
+    ax.scatter(reward_times, reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;,
+               label=&#39;Reward Collected&#39;, s=25)
+    if len(reward_double) &gt; 0:
+        dr_print = &#34;\nTotal # of Double Rewards:&#34; + str(len(reward_double))
+        ax.scatter(reward_double, double_y, marker=&#34;x&#34;, c=&#34;magenta&#34;,
+                   label=&#39;Double Reward&#39;, s=25)
+    else:
+        dr_print = &#34;&#34;
+    ax.legend(loc=&#39;lower right&#39;)
+#    ax.set_xlim(0, 30 * 60 + 30)
 
-    if smooth:
-        reward_y = cumulative[reward_y]
+    if err_FR &gt; 0 or err_FI &gt; 0:
+        err_print = &#34;\nErrors FR \\ FI: &#34; + str(err_FR) + r&#34; \ &#34; + str(err_FI)
+    else:
+        err_print = &#34;&#34;
 
-    out_name = (subject[9:].zfill(3) + &#34;_CumulativeHist_&#34; +
-                session_type[5:-2] + &#34;_&#34; + date + &#34;.png&#34;)
-    out_name = os.path.join(out_dir, out_name)
-    print(&#34;Saved figure to {}&#34;.format(out_name))
-    plt.scatter(reward_times, reward_y, marker=&#34;x&#34;, c=&#34;r&#34;,
-                label=&#39;Reward Collected&#39;)
-    # Text Display on Graph
-    ax.text(0.55, 0.15, &#39;Total # of Lever Press: {}\nTotal # of Rewards: {}&#39;
-            .format(len(lever_ts), len(reward_times)), transform=ax.transAxes)
-
-    ax.legend()
-    ax.set_xlim(0, 30 * 60)
-    fig.savefig(out_name, dpi=400)
-    plt.close()</code></pre>
+    if single_plot:
+        out_name = (subject.zfill(3) + &#34;_CumulativeHist_&#34; + date +
+                    &#34;_&#34; + session_type[:-2] + &#34;.png&#34;)
+        out_name = os.path.join(out_dir, out_name)
+        print(&#34;Saved figure to {}&#34;.format(out_name))
+        # Text Display on Graph
+        if stage == &#39;6&#39; or stage == &#39;7&#39;:
+            ax.text(0.55, 0.15, &#39;Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}&#39;
+                    .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
+        fig.savefig(out_name, dpi=400)
+        plt.close()
+    else:
+        # Text Display on Graph
+        if stage == &#39;6&#39; or stage == &#39;7&#39;:
+            ax.text(0.05, 0.75, &#39;Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}&#39;
+                    .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
+        return</code></pre>
 </details>
 </dd>
 <dt id="bvmpc.bv_analyse.show_IRT_details"><code class="name flex">
@@ -369,6 +836,117 @@ def show_IRT_details(IRT, maxidx, hist_bins):
     print(&#39;Min IRT: {0:.2f} s&#39;.format(np.amin(IRT)))
     print(&#39;Max IRT: {0:.2f} s&#39;.format(np.amax(IRT)))
     print(&#39;IRTs: &#39;, np.round(IRT, decimals=2))</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_analyse.split_lever_ts"><code class="name flex">
+<span>def <span class="ident">split_lever_ts</span></span>(<span>session, out_dir, ax=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Split lever ts for into schedule-based arrays of trials</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def split_lever_ts(session, out_dir, ax=None):
+    &#34;&#34;&#34;Split lever ts for into schedule-based arrays of trials&#34;&#34;&#34;
+    # still in progress
+    lever_ts = session.get_lever_ts()
+    switch_ts = np.arange(5, 1830, 305)
+    reward_times = session.get_rw_ts()
+    trial_type = session.get_arrays(&#39;Trial Type&#39;)
+
+    ratio_lever_ts = []
+    interval_lever_ts = []
+    block_lever_ts = np.split(lever_ts, np.searchsorted(lever_ts, switch_ts))
+    block_reward_ts = np.split(reward_times,
+                               np.searchsorted(reward_times, switch_ts))
+    for i, (l, r) in enumerate(zip(block_lever_ts, block_reward_ts)):
+        if trial_type[i] == 1:  # FR Block
+            split_lever_ts = np.split(l, np.searchsorted(l, r))
+            ratio_lever_ts.append(split_lever_ts)
+        elif trial_type[i] == 0:  # FR Block
+            split_lever_ts = np.split(l, np.searchsorted(l, r))
+            interval_lever_ts.append(split_lever_ts)
+        else:
+            print(&#39;Not Ready for analysis!&#39;)
+    print(&#39;len of ratio_l&#39;+len(ratio_lever_ts))
+    print(&#39;len of interval_l&#39;+len(interval_lever_ts))
+    return ratio_lever_ts, interval_lever_ts</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_analyse.split_sess"><code class="name flex">
+<span>def <span class="ident">split_sess</span></span>(<span>session, norm=True, blocks=None, plot_error=False, plot_all=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>blocks: defines timepoints to split</p>
+<p>returns 5 outputs:
+1) timestamps split into rows depending on blocks input
+-&gt; norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts
+2) print to include in title and file name. Mainly for stage 7.
+incl</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False):
+    &#39;&#39;&#39;
+    blocks: defines timepoints to split
+
+    returns 5 outputs:
+        1) timestamps split into rows depending on blocks input
+                -&gt; norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts
+        2) print to include in title and file name. Mainly for stage 7.
+                incl
+    &#39;&#39;&#39;
+    session_type = session.get_metadata(&#39;name&#39;)
+    stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
+    reward_times = session.get_rw_ts()
+    timestamps = session.get_arrays()
+    lever_ts = session.get_lever_ts()
+    pell_ts = timestamps[&#34;Reward&#34;]
+    pell_double = np.nonzero(np.diff(pell_ts) &lt; 0.5)
+    reward_double = reward_times[np.searchsorted(
+        reward_times, pell_ts[pell_double], side=&#39;right&#39;)]  # returns reward ts after d_pell
+    err_lever_ts = []
+
+    if blocks is not None:
+        pass
+    else:
+        blocks = np.arange(5, 1830, 305)  # Default split into schedules
+
+    incl = &#34;&#34;  # Initialize print for type of extracted lever_ts
+    if stage == &#39;7&#39; and plot_error:  # plots errors only
+        incl = &#39;_Errors_Only&#39;
+        lever_ts = session.get_err_lever_ts()
+    elif stage == &#39;7&#39; and plot_all:  # plots all responses incl. errors
+        incl = &#39;_All&#39;
+        err_lever_ts = session.get_err_lever_ts()
+        lever_ts = np.sort(np.concatenate((
+            lever_ts, err_lever_ts), axis=None))
+    elif stage == &#39;7&#39;:  # plots all responses exclu. errors
+        incl = &#39;_Correct Only&#39;
+
+    split_lever_ts = np.split(lever_ts,
+                              np.searchsorted(lever_ts, blocks))
+    split_reward_ts = np.split(reward_times,
+                               np.searchsorted(reward_times, blocks))
+    split_double_r_ts = np.split(reward_double,
+                                 np.searchsorted(reward_double, blocks))
+    split_err_ts = np.split(err_lever_ts,
+                            np.searchsorted(err_lever_ts, blocks))
+    norm_reward_ts = []
+    norm_lever_ts = []
+    norm_err_ts = []
+    norm_double_r_ts = []
+    if norm:
+        for i, l in enumerate(split_lever_ts[1:]):
+            norm_lever_ts.append(np.append([0], l-blocks[i], axis=0))
+            norm_reward_ts.append(split_reward_ts[i+1]-blocks[i])
+            norm_double_r_ts.append(split_double_r_ts[i+1]-blocks[i])
+            if stage == &#39;7&#39; and plot_all:  # plots all responses incl. errors
+                norm_err_ts.append(split_err_ts[i+1]-blocks[i])
+    else:
+        norm_lever_ts = split_lever_ts[1:]
+        norm_reward_ts = split_reward_ts[1:]
+        norm_err_ts = split_err_ts[1:]
+        norm_double_r_ts = split_double_r_ts[1:]
+    return norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts, incl</code></pre>
 </details>
 </dd>
 </dl>
@@ -392,6 +970,8 @@ def show_IRT_details(IRT, maxidx, hist_bins):
 <li><code><a title="bvmpc.bv_analyse.IRT" href="#bvmpc.bv_analyse.IRT">IRT</a></code></li>
 <li><code><a title="bvmpc.bv_analyse.cumplot" href="#bvmpc.bv_analyse.cumplot">cumplot</a></code></li>
 <li><code><a title="bvmpc.bv_analyse.show_IRT_details" href="#bvmpc.bv_analyse.show_IRT_details">show_IRT_details</a></code></li>
+<li><code><a title="bvmpc.bv_analyse.split_lever_ts" href="#bvmpc.bv_analyse.split_lever_ts">split_lever_ts</a></code></li>
+<li><code><a title="bvmpc.bv_analyse.split_sess" href="#bvmpc.bv_analyse.split_sess">split_sess</a></code></li>
 </ul>
 </li>
 </ul>

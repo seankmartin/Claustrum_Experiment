@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>bvmpc.bv_axona API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>bvmpc.bv_axona</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">import os
+import argparse
+import numpy as np
+
+
+class AxonaInput:
+    def __init__(self, location):
+        &#34;&#34;&#34;
+        Initialise an axona input holder.
+
+        Can be initialised with a location.
+
+        Parameters
+        ----------
+        location : str, default None
+            location of .inp file
+
+        Returns
+        -------
+        None
+        &#34;&#34;&#34;
+        if location is not None:
+            self.location = location
+            AxonaInpReader.load(location, self)
+
+    def save_to_file(self, location=None, inp_types=[&#34;I&#34;, &#34;O&#34;]):
+        &#34;&#34;&#34;
+        Save the AxonaInput object information to a csv file.
+
+        Parameters
+        ----------
+        location: str, default None:
+            Where to save the file to
+            if None, determines the name from input file
+        inp_types: List, default [&#34;I&#34;, &#34;O&#34;]
+            What channel information types to save
+
+        Returns
+        -------
+        None
+        &#34;&#34;&#34;
+
+        if location is None:
+            if self.location is not None:
+                location = os.path.splitext(self.location)[0] + &#34;.csv&#34;
+            else:
+                print(&#34;Please provide a location to save the file to&#34;)
+                exit(-1)
+
+        with open(location, &#34;w&#34;) as file:
+            header = &#34;Time,Type&#34;
+            for i in range(16):
+                header = &#34;{},Ch{}&#34;.format(header, i + 1)
+            file.write(header + &#34;\n&#34;)
+            for (i, (t, c, p)) in enumerate(
+                    zip(self.timestamps, self.channels, self.pins)):
+                if c in inp_types:
+                    out_str = &#34;{:2f},{}&#34;.format(t, c)
+                    for bit in p:
+                        out_str = &#34;{},{}&#34;.format(out_str, bit)
+                    file.write(out_str + &#34;\n&#34;)
+
+    def link_info(self, t_arr, c_arr, p_arr):
+        &#34;&#34;&#34;
+        Link array information into this object.
+
+        Parameters
+        ----------
+        t_arr: np.ndarray
+            array of timestamp values
+        c_arr: np.ndarray
+            array of channel values(&#34;I&#34;, &#34;O&#34;, or &#34;V&#34;)
+        p_arr: np.ndarray
+            array of active pins for the related channel at that time
+            represented as a little endian 16 bit unsigned int
+
+        Returns
+        -------
+        None
+        &#34;&#34;&#34;
+        self.timestamps = t_arr
+        self.channels = c_arr
+        self.pins = np.array([
+            np.unpackbits(p_arr[2 * i:2 * i + 2])[::-1]
+            for i in range(len(p_arr) // 2)])
+
+    def get_times(self, channel, pin, inverted=False):
+        &#34;&#34;&#34;
+        Get timestamps of pin changes on a channel.
+
+        Parameters
+        ----------
+        channel: str
+            Which channel to get
+        pin: int
+            Which pin to retrieve, 1 indexed
+        inverted: bool - default False
+            if True, 1 is off and 0 is on
+        &#34;&#34;&#34;
+        if inverted:
+            on = 0
+        else:
+            on = 1
+        good_idx = np.nonzero(self.channels == channel)
+        times = self.timestamps[good_idx]
+        pins = self.pins[good_idx]
+        pins = pins[:, pin - 1].flatten()
+        differences = np.diff(pins)
+        change_idxs = np.add(np.nonzero(differences), 1).flatten()
+        pin_values_at_change = pins[change_idxs]
+        times_at_change = times[change_idxs]
+        on_change_idxs = np.nonzero(pin_values_at_change == on)
+        return times_at_change[on_change_idxs]
+
+
+class AxonaInpReader:
+    &#34;&#34;&#34;Axona .inp reader - this class is completely static&#34;&#34;&#34;
+
+    @classmethod
+    def load(cls, in_location, axona_input):
+        &#34;&#34;&#34;
+        Extract a information from an Axona inp file
+
+        Parameters
+        ----------
+        in_location : str
+            Location of the .inp file to load
+        axona_input : AxonaInput
+            Object to save the information into
+
+        Returns
+        -------
+        None
+
+        &#34;&#34;&#34;
+        counter = 0
+        with open(in_location, &#39;rb&#39;) as file:
+            header = cls._parse_header(file)
+
+            time_arr = np.zeros(header[&#34;samples&#34;], np.float32)
+            char_arr = np.zeros(header[&#34;samples&#34;], str)
+            inp_arr = np.zeros(header[&#34;samples&#34;] * 2, np.uint8)
+
+            chunk = file.read(header[&#34;sample_bytes&#34;])
+            while counter != header[&#34;samples&#34;]:
+                info = cls._info_from_chunk(chunk, header[&#34;timebase&#34;])
+                time_arr[counter] = info[0]
+                char_arr[counter] = info[1]
+                inp_arr[2 * counter:2 * counter + 2] = info[2]
+                counter = counter + 1
+                chunk = file.read(header[&#34;sample_bytes&#34;])
+
+        axona_input.link_info(time_arr, char_arr, inp_arr)
+
+    @staticmethod
+    def _info_from_chunk(chunk, timebase):
+        &#34;&#34;&#34;Extract the info from a 7 byte chunk.&#34;&#34;&#34;
+        time_val = (
+            16777216 * chunk[0] +
+            65536 * chunk[1] +
+            256 * chunk[2] +
+            chunk[3]) / timebase
+
+        input_type = chr(chunk[4])
+
+        channels = np.zeros(2, np.uint8)
+        channels[0] = chunk[5]
+        channels[1] = chunk[6]
+        return time_val, input_type, channels
+
+    @staticmethod
+    def _parse_header(file):
+        &#34;&#34;&#34;
+        Parse the header of the input file from Axona.
+
+        And leave the file just after the data_start string,
+        ready for reading the binary data in chunks
+        &#34;&#34;&#34;
+        out_dict = {}
+        finding_start = True
+        while finding_start:
+            line = file.readline().decode(&#34;latin-1&#34;)
+            if line.startswith(&#34;bytes_per_sample&#34;):
+                out_dict[&#34;sample_bytes&#34;] = int(line.split(&#34; &#34;)[1])
+            elif line.startswith(&#34;timebase&#34;):
+                out_dict[&#34;timebase&#34;] = int(line.split(&#34; &#34;)[1])
+            elif line.startswith(&#34;num_inp_samples&#34;):
+                out_dict[&#34;samples&#34;] = int(line.split(&#34; &#34;)[1])
+                finding_start = False
+        file.seek(10, 1)
+        return out_dict
+
+
+def main(in_location):
+    ai = AxonaInput(in_location)
+    ai.save_to_file()
+
+
+def main_cmd():
+    parser = argparse.ArgumentParser(description=&#34;Parse a program location&#34;)
+    parser.add_argument(&#34;--loc&#34;, &#34;-l&#34;, type=str, help=&#34;inp file location&#34;)
+    parsed = parser.parse_args()
+    if parsed.loc == None:
+        print(&#34;Please enter a location through cmd with -l LOCATION&#34;)
+        exit(-1)
+    main(parsed.loc)
+
+
+def main_py():
+    location = r&#34;/home/sean/Downloads/CAR-S2_2019-11-18_Unit.inp&#34;
+    # location = os.path.join(
+    #     r&#34;C:\Users\smartin5\Downloads&#34;,
+    #     &#34;CLA1_2019-09-28.inp&#34;)
+    main(location)
+
+
+if __name__ == &#34;__main__&#34;:
+    # main_cmd()
+    main_py()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="bvmpc.bv_axona.main"><code class="name flex">
+<span>def <span class="ident">main</span></span>(<span>in_location)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def main(in_location):
+    ai = AxonaInput(in_location)
+    ai.save_to_file()</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_axona.main_cmd"><code class="name flex">
+<span>def <span class="ident">main_cmd</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def main_cmd():
+    parser = argparse.ArgumentParser(description=&#34;Parse a program location&#34;)
+    parser.add_argument(&#34;--loc&#34;, &#34;-l&#34;, type=str, help=&#34;inp file location&#34;)
+    parsed = parser.parse_args()
+    if parsed.loc == None:
+        print(&#34;Please enter a location through cmd with -l LOCATION&#34;)
+        exit(-1)
+    main(parsed.loc)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_axona.main_py"><code class="name flex">
+<span>def <span class="ident">main_py</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def main_py():
+    location = r&#34;/home/sean/Downloads/CAR-S2_2019-11-18_Unit.inp&#34;
+    # location = os.path.join(
+    #     r&#34;C:\Users\smartin5\Downloads&#34;,
+    #     &#34;CLA1_2019-09-28.inp&#34;)
+    main(location)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="bvmpc.bv_axona.AxonaInpReader"><code class="flex name class">
+<span>class <span class="ident">AxonaInpReader</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Axona .inp reader - this class is completely static</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class AxonaInpReader:
+    &#34;&#34;&#34;Axona .inp reader - this class is completely static&#34;&#34;&#34;
+
+    @classmethod
+    def load(cls, in_location, axona_input):
+        &#34;&#34;&#34;
+        Extract a information from an Axona inp file
+
+        Parameters
+        ----------
+        in_location : str
+            Location of the .inp file to load
+        axona_input : AxonaInput
+            Object to save the information into
+
+        Returns
+        -------
+        None
+
+        &#34;&#34;&#34;
+        counter = 0
+        with open(in_location, &#39;rb&#39;) as file:
+            header = cls._parse_header(file)
+
+            time_arr = np.zeros(header[&#34;samples&#34;], np.float32)
+            char_arr = np.zeros(header[&#34;samples&#34;], str)
+            inp_arr = np.zeros(header[&#34;samples&#34;] * 2, np.uint8)
+
+            chunk = file.read(header[&#34;sample_bytes&#34;])
+            while counter != header[&#34;samples&#34;]:
+                info = cls._info_from_chunk(chunk, header[&#34;timebase&#34;])
+                time_arr[counter] = info[0]
+                char_arr[counter] = info[1]
+                inp_arr[2 * counter:2 * counter + 2] = info[2]
+                counter = counter + 1
+                chunk = file.read(header[&#34;sample_bytes&#34;])
+
+        axona_input.link_info(time_arr, char_arr, inp_arr)
+
+    @staticmethod
+    def _info_from_chunk(chunk, timebase):
+        &#34;&#34;&#34;Extract the info from a 7 byte chunk.&#34;&#34;&#34;
+        time_val = (
+            16777216 * chunk[0] +
+            65536 * chunk[1] +
+            256 * chunk[2] +
+            chunk[3]) / timebase
+
+        input_type = chr(chunk[4])
+
+        channels = np.zeros(2, np.uint8)
+        channels[0] = chunk[5]
+        channels[1] = chunk[6]
+        return time_val, input_type, channels
+
+    @staticmethod
+    def _parse_header(file):
+        &#34;&#34;&#34;
+        Parse the header of the input file from Axona.
+
+        And leave the file just after the data_start string,
+        ready for reading the binary data in chunks
+        &#34;&#34;&#34;
+        out_dict = {}
+        finding_start = True
+        while finding_start:
+            line = file.readline().decode(&#34;latin-1&#34;)
+            if line.startswith(&#34;bytes_per_sample&#34;):
+                out_dict[&#34;sample_bytes&#34;] = int(line.split(&#34; &#34;)[1])
+            elif line.startswith(&#34;timebase&#34;):
+                out_dict[&#34;timebase&#34;] = int(line.split(&#34; &#34;)[1])
+            elif line.startswith(&#34;num_inp_samples&#34;):
+                out_dict[&#34;samples&#34;] = int(line.split(&#34; &#34;)[1])
+                finding_start = False
+        file.seek(10, 1)
+        return out_dict</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="bvmpc.bv_axona.AxonaInpReader.load"><code class="name flex">
+<span>def <span class="ident">load</span></span>(<span>in_location, axona_input)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Extract a information from an Axona inp file</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>in_location</code></strong> :&ensp;<code>str</code></dt>
+<dd>Location of the .inp file to load</dd>
+<dt><strong><code>axona_input</code></strong> :&ensp;<a title="bvmpc.bv_axona.AxonaInput" href="#bvmpc.bv_axona.AxonaInput"><code>AxonaInput</code></a></dt>
+<dd>Object to save the information into</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@classmethod
+def load(cls, in_location, axona_input):
+    &#34;&#34;&#34;
+    Extract a information from an Axona inp file
+
+    Parameters
+    ----------
+    in_location : str
+        Location of the .inp file to load
+    axona_input : AxonaInput
+        Object to save the information into
+
+    Returns
+    -------
+    None
+
+    &#34;&#34;&#34;
+    counter = 0
+    with open(in_location, &#39;rb&#39;) as file:
+        header = cls._parse_header(file)
+
+        time_arr = np.zeros(header[&#34;samples&#34;], np.float32)
+        char_arr = np.zeros(header[&#34;samples&#34;], str)
+        inp_arr = np.zeros(header[&#34;samples&#34;] * 2, np.uint8)
+
+        chunk = file.read(header[&#34;sample_bytes&#34;])
+        while counter != header[&#34;samples&#34;]:
+            info = cls._info_from_chunk(chunk, header[&#34;timebase&#34;])
+            time_arr[counter] = info[0]
+            char_arr[counter] = info[1]
+            inp_arr[2 * counter:2 * counter + 2] = info[2]
+            counter = counter + 1
+            chunk = file.read(header[&#34;sample_bytes&#34;])
+
+    axona_input.link_info(time_arr, char_arr, inp_arr)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="bvmpc.bv_axona.AxonaInput"><code class="flex name class">
+<span>class <span class="ident">AxonaInput</span></span>
+<span>(</span><span>location)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Initialise an axona input holder.</p>
+<p>Can be initialised with a location.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>location</code></strong> :&ensp;<code>str</code>, default <code>None</code></dt>
+<dd>location of .inp file</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class AxonaInput:
+    def __init__(self, location):
+        &#34;&#34;&#34;
+        Initialise an axona input holder.
+
+        Can be initialised with a location.
+
+        Parameters
+        ----------
+        location : str, default None
+            location of .inp file
+
+        Returns
+        -------
+        None
+        &#34;&#34;&#34;
+        if location is not None:
+            self.location = location
+            AxonaInpReader.load(location, self)
+
+    def save_to_file(self, location=None, inp_types=[&#34;I&#34;, &#34;O&#34;]):
+        &#34;&#34;&#34;
+        Save the AxonaInput object information to a csv file.
+
+        Parameters
+        ----------
+        location: str, default None:
+            Where to save the file to
+            if None, determines the name from input file
+        inp_types: List, default [&#34;I&#34;, &#34;O&#34;]
+            What channel information types to save
+
+        Returns
+        -------
+        None
+        &#34;&#34;&#34;
+
+        if location is None:
+            if self.location is not None:
+                location = os.path.splitext(self.location)[0] + &#34;.csv&#34;
+            else:
+                print(&#34;Please provide a location to save the file to&#34;)
+                exit(-1)
+
+        with open(location, &#34;w&#34;) as file:
+            header = &#34;Time,Type&#34;
+            for i in range(16):
+                header = &#34;{},Ch{}&#34;.format(header, i + 1)
+            file.write(header + &#34;\n&#34;)
+            for (i, (t, c, p)) in enumerate(
+                    zip(self.timestamps, self.channels, self.pins)):
+                if c in inp_types:
+                    out_str = &#34;{:2f},{}&#34;.format(t, c)
+                    for bit in p:
+                        out_str = &#34;{},{}&#34;.format(out_str, bit)
+                    file.write(out_str + &#34;\n&#34;)
+
+    def link_info(self, t_arr, c_arr, p_arr):
+        &#34;&#34;&#34;
+        Link array information into this object.
+
+        Parameters
+        ----------
+        t_arr: np.ndarray
+            array of timestamp values
+        c_arr: np.ndarray
+            array of channel values(&#34;I&#34;, &#34;O&#34;, or &#34;V&#34;)
+        p_arr: np.ndarray
+            array of active pins for the related channel at that time
+            represented as a little endian 16 bit unsigned int
+
+        Returns
+        -------
+        None
+        &#34;&#34;&#34;
+        self.timestamps = t_arr
+        self.channels = c_arr
+        self.pins = np.array([
+            np.unpackbits(p_arr[2 * i:2 * i + 2])[::-1]
+            for i in range(len(p_arr) // 2)])
+
+    def get_times(self, channel, pin, inverted=False):
+        &#34;&#34;&#34;
+        Get timestamps of pin changes on a channel.
+
+        Parameters
+        ----------
+        channel: str
+            Which channel to get
+        pin: int
+            Which pin to retrieve, 1 indexed
+        inverted: bool - default False
+            if True, 1 is off and 0 is on
+        &#34;&#34;&#34;
+        if inverted:
+            on = 0
+        else:
+            on = 1
+        good_idx = np.nonzero(self.channels == channel)
+        times = self.timestamps[good_idx]
+        pins = self.pins[good_idx]
+        pins = pins[:, pin - 1].flatten()
+        differences = np.diff(pins)
+        change_idxs = np.add(np.nonzero(differences), 1).flatten()
+        pin_values_at_change = pins[change_idxs]
+        times_at_change = times[change_idxs]
+        on_change_idxs = np.nonzero(pin_values_at_change == on)
+        return times_at_change[on_change_idxs]</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="bvmpc.bv_axona.AxonaInput.get_times"><code class="name flex">
+<span>def <span class="ident">get_times</span></span>(<span>self, channel, pin, inverted=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get timestamps of pin changes on a channel.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>channel</code></strong> :&ensp;<code>str</code></dt>
+<dd>Which channel to get</dd>
+<dt><strong><code>pin</code></strong> :&ensp;<code>int</code></dt>
+<dd>Which pin to retrieve, 1 indexed</dd>
+<dt><strong><code>inverted</code></strong> :&ensp;<code>bool</code> - default <code>False</code></dt>
+<dd>if True, 1 is off and 0 is on</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_times(self, channel, pin, inverted=False):
+    &#34;&#34;&#34;
+    Get timestamps of pin changes on a channel.
+
+    Parameters
+    ----------
+    channel: str
+        Which channel to get
+    pin: int
+        Which pin to retrieve, 1 indexed
+    inverted: bool - default False
+        if True, 1 is off and 0 is on
+    &#34;&#34;&#34;
+    if inverted:
+        on = 0
+    else:
+        on = 1
+    good_idx = np.nonzero(self.channels == channel)
+    times = self.timestamps[good_idx]
+    pins = self.pins[good_idx]
+    pins = pins[:, pin - 1].flatten()
+    differences = np.diff(pins)
+    change_idxs = np.add(np.nonzero(differences), 1).flatten()
+    pin_values_at_change = pins[change_idxs]
+    times_at_change = times[change_idxs]
+    on_change_idxs = np.nonzero(pin_values_at_change == on)
+    return times_at_change[on_change_idxs]</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_axona.AxonaInput.link_info"><code class="name flex">
+<span>def <span class="ident">link_info</span></span>(<span>self, t_arr, c_arr, p_arr)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Link array information into this object.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>t_arr</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>array of timestamp values</dd>
+<dt><strong><code>c_arr</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>array of channel values("I", "O", or "V")</dd>
+<dt><strong><code>p_arr</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>array of active pins for the related channel at that time
+represented as a little endian 16 bit unsigned int</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def link_info(self, t_arr, c_arr, p_arr):
+    &#34;&#34;&#34;
+    Link array information into this object.
+
+    Parameters
+    ----------
+    t_arr: np.ndarray
+        array of timestamp values
+    c_arr: np.ndarray
+        array of channel values(&#34;I&#34;, &#34;O&#34;, or &#34;V&#34;)
+    p_arr: np.ndarray
+        array of active pins for the related channel at that time
+        represented as a little endian 16 bit unsigned int
+
+    Returns
+    -------
+    None
+    &#34;&#34;&#34;
+    self.timestamps = t_arr
+    self.channels = c_arr
+    self.pins = np.array([
+        np.unpackbits(p_arr[2 * i:2 * i + 2])[::-1]
+        for i in range(len(p_arr) // 2)])</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_axona.AxonaInput.save_to_file"><code class="name flex">
+<span>def <span class="ident">save_to_file</span></span>(<span>self, location=None, inp_types=['I', 'O'])</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Save the AxonaInput object information to a csv file.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>location</code></strong> :&ensp;<code>str</code>, default <code>None</code>:</dt>
+<dd>Where to save the file to
+if None, determines the name from input file</dd>
+<dt><strong><code>inp_types</code></strong> :&ensp;<code>List</code>, default [<code>"I"</code>, <code>"O"</code>]</dt>
+<dd>What channel information types to save</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def save_to_file(self, location=None, inp_types=[&#34;I&#34;, &#34;O&#34;]):
+    &#34;&#34;&#34;
+    Save the AxonaInput object information to a csv file.
+
+    Parameters
+    ----------
+    location: str, default None:
+        Where to save the file to
+        if None, determines the name from input file
+    inp_types: List, default [&#34;I&#34;, &#34;O&#34;]
+        What channel information types to save
+
+    Returns
+    -------
+    None
+    &#34;&#34;&#34;
+
+    if location is None:
+        if self.location is not None:
+            location = os.path.splitext(self.location)[0] + &#34;.csv&#34;
+        else:
+            print(&#34;Please provide a location to save the file to&#34;)
+            exit(-1)
+
+    with open(location, &#34;w&#34;) as file:
+        header = &#34;Time,Type&#34;
+        for i in range(16):
+            header = &#34;{},Ch{}&#34;.format(header, i + 1)
+        file.write(header + &#34;\n&#34;)
+        for (i, (t, c, p)) in enumerate(
+                zip(self.timestamps, self.channels, self.pins)):
+            if c in inp_types:
+                out_str = &#34;{:2f},{}&#34;.format(t, c)
+                for bit in p:
+                    out_str = &#34;{},{}&#34;.format(out_str, bit)
+                file.write(out_str + &#34;\n&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="bvmpc" href="index.html">bvmpc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="bvmpc.bv_axona.main" href="#bvmpc.bv_axona.main">main</a></code></li>
+<li><code><a title="bvmpc.bv_axona.main_cmd" href="#bvmpc.bv_axona.main_cmd">main_cmd</a></code></li>
+<li><code><a title="bvmpc.bv_axona.main_py" href="#bvmpc.bv_axona.main_py">main_py</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="bvmpc.bv_axona.AxonaInpReader" href="#bvmpc.bv_axona.AxonaInpReader">AxonaInpReader</a></code></h4>
+<ul class="">
+<li><code><a title="bvmpc.bv_axona.AxonaInpReader.load" href="#bvmpc.bv_axona.AxonaInpReader.load">load</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="bvmpc.bv_axona.AxonaInput" href="#bvmpc.bv_axona.AxonaInput">AxonaInput</a></code></h4>
+<ul class="">
+<li><code><a title="bvmpc.bv_axona.AxonaInput.get_times" href="#bvmpc.bv_axona.AxonaInput.get_times">get_times</a></code></li>
+<li><code><a title="bvmpc.bv_axona.AxonaInput.link_info" href="#bvmpc.bv_axona.AxonaInput.link_info">link_info</a></code></li>
+<li><code><a title="bvmpc.bv_axona.AxonaInput.save_to_file" href="#bvmpc.bv_axona.AxonaInput.save_to_file">save_to_file</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

@@ -1,0 +1,1874 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>bvmpc.bv_session API documentation</title>
+<meta name="description" content="This module is a representation of a single Operant box Session …" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>bvmpc.bv_session</code></h1>
+</header>
+<section id="section-intro">
+<p>This module is a representation of a single Operant box Session.</p>
+<p>Written by Sean Martin and Gao Xiang Ham</p>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">&#34;&#34;&#34;
+This module is a representation of a single Operant box Session.
+
+Written by Sean Martin and Gao Xiang Ham
+&#34;&#34;&#34;
+import os
+from datetime import datetime
+
+import numpy as np
+import pandas as pd
+
+from bvmpc.bv_session_info import SessionInfo
+import bvmpc.bv_analyse as bv_an
+from bvmpc.bv_axona import AxonaInput
+from bvmpc.bv_array_methods import *
+
+
+class Session:
+    &#34;&#34;&#34;The base class to hold MEDPC behaviour information.&#34;&#34;&#34;
+
+    def __init__(
+            self, h5_file=None, lines=None, neo_file=None,
+            axona_file=None, s_type=&#34;6&#34;,
+            neo_backend=&#34;nix&#34;, verbose=False, file_origin=None):
+        &#34;&#34;&#34;
+        Initialise the Session with lines from a MEDPC file.
+
+        Then extract this info into native attributes.
+
+        Parameters
+        ----------
+        h5_file: str - Default None
+            h5 file location to load from
+        lines: List of str - Default None
+            The lines in the MedPC file for this session.
+        neo_file: str - Default None
+            The location of a neo file to load from
+        axona_file: str - Default None
+            The location of a .inp file to load from
+        s_type: str - Default None
+            The type of session when using axona_file
+            For now, leaving as 6 will work for everything.
+        neo_backend: str - Default &#34;nix
+            If using neo_file, what backend to use
+        verbose: bool - Default False
+            Whether to print information while loading.
+        file_origin: str - Default None
+            Where the file originated from,
+            mostly only useful if directly passing lines
+
+        Returns
+        -------
+        None
+
+        &#34;&#34;&#34;
+        self.session_info = SessionInfo()
+        self.metadata = {}
+        self.info_arrays = {}
+        self.verbose = verbose
+        self.file_origin = file_origin
+        self.out_dir = None
+        self.trial_df = None
+        self.trial_df_norm = None
+
+        a = 0 if lines is None else 1
+        b = 0 if h5_file is None else 1
+        c = 0 if neo_file is None else 1
+        d = 0 if axona_file is None else 1
+        if (a + b + c + d != 1):
+            print(
+                &#34;Error: Session takes one of&#34; +
+                &#34;h5_file, lines, neo_file, and axona_file&#34;)
+            return
+
+        if lines is not None:
+            self.lines = lines
+            self._extract_metadata()
+            self._extract_session_arrays()
+
+        elif h5_file is not None:
+            self.file_origin = h5_file
+            self.h5_file = h5_file
+            self._extract_h5_info()
+
+        elif neo_file is not None:
+            self.file_origin = neo_file
+            self.neo_file = neo_file
+            self.neo_backend = neo_backend
+            self._extract_neo_info()
+
+        elif axona_file is not None:
+            if s_type is None:
+                print(&#34;Error: Please provide a session type (6 or 7)&#34;)
+                exit(-1)
+            self.s_type = s_type
+            self.file_origin = axona_file
+            self.axona_file = axona_file
+            self._extract_axona_info()
+
+        else:
+            print(&#34;Error: Unknown situation in Session init&#34;)
+            exit(-1)
+
+    # convert to trial based dataframe
+    def init_trial_dataframe(self):
+        self._init_trial_df()
+
+    def save_to_h5(self, out_dir, name=None):
+        &#34;&#34;&#34;Save information to a h5 file&#34;&#34;&#34;
+        location = name
+        if name == None:
+            location = self._get_hdf5_name()
+        self.h5_file = os.path.join(out_dir, location)
+        self._save_h5_info()
+
+    def save_to_neo(
+            self, out_dir, name=None, neo_backend=&#34;nix&#34;, remove_existing=False):
+        location = name
+        self.neo_backend = neo_backend
+        if name == None:
+            ext = self._get_neo_io(get_ext=True)
+            location = self._get_hdf5_name(ext=ext)
+        self.neo_file = os.path.join(out_dir, location)
+        self._save_neo_info(remove_existing)
+
+    def get_trial_df(self):
+        &#34;&#34;&#34;Get dataframe split into trials without normalisation (time).&#34;&#34;&#34;
+        if self.trial_df is None:
+            self.init_trial_dataframe()
+        return self.trial_df
+
+    def get_trial_df_norm(self):
+        &#34;&#34;&#34;Get dataframe split into trials with normalisation (time).&#34;&#34;&#34;
+        if self.trial_df_norm is None:
+            self.init_trial_dataframe()
+        return self.trial_df_norm
+
+    def get_metadata(self, key=None):
+        &#34;&#34;&#34;
+        Get the metadata for the Session.
+
+        Parameters
+        ----------
+        key : str - Default None
+            Possible Keys: &#34;start_date&#34;, &#34;end_date&#34;, &#34;subject&#34;,
+            &#34;experiment&#34;, &#34;group&#34;, &#34;box&#34;, &#34;start_time&#34;, &#34;end_time&#34;, &#34;name&#34;
+
+        Returns
+        -------
+        str : If key is a valid key.
+        Dict : If key is None, all the metadata.
+
+        &#34;&#34;&#34;
+        if key:
+            return self.metadata.get(key, None)
+        return self.metadata
+
+    def get_subject_type(self):
+        &#34;&#34;&#34;Return the subject and session type as a string.&#34;&#34;&#34;
+        subject = self.get_metadata(&#34;subject&#34;)
+        name = self.get_metadata(&#34;name&#34;)
+        return &#39;Subject: {}, Trial Type {}&#39;.format(subject, name)
+
+    def get_ratio(self):
+        &#34;&#34;&#34;Return the fixed ratio as an int.&#34;&#34;&#34;
+        ratio = self.get_metadata(&#34;fixed_ratio&#34;)
+        if ratio is not None:
+            return int(ratio)
+        return None
+
+    def get_interval(self):
+        &#34;&#34;&#34;Return the fixed ratio as an int.&#34;&#34;&#34;
+        interval = self.get_metadata(&#34;fixed_interval (secs)&#34;)
+        if interval is not None:
+            return int(interval)
+        return None
+
+    def get_stage(self):
+        &#34;&#34;&#34;Obtain the stage number (without _)&#34;&#34;&#34;
+        session_type = self.get_metadata(&#39;name&#39;)
+        stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
+        return stage
+
+    def get_arrays(self, key=None):
+        &#34;&#34;&#34;
+        Return the info arrays in the session.
+
+        Parameters
+        ----------
+        key : str - Default None
+            The name of the info array to get.
+
+        Returns
+        -------
+        np.ndarray: If key is a valid key.
+        [] : If key is not a valid key
+        Dict : If key is None, all the info arrays.
+
+        &#34;&#34;&#34;
+        if key:
+            return self.info_arrays.get(key, [])
+        return self.info_arrays
+
+    def get_lever_ts(self, include_un=True):
+        &#34;&#34;&#34;
+        Get the timestamps of the lever presses.
+
+        Parameters
+        ----------
+        include_un : bool - Default True
+            Include lever presses that were unnecessary for the reward.
+
+        Returns
+        -------
+        np.ndarray : A numpy array of sorted timestamps.
+
+        &#34;&#34;&#34;
+        levers = [
+            self.get_arrays(&#34;R&#34;),
+            self.get_arrays(&#34;L&#34;)]
+        if include_un:
+            levers.append(self.get_arrays(&#34;Un_R&#34;))
+            levers.append(self.get_arrays(&#34;Un_L&#34;))
+        return np.sort(np.concatenate(levers, axis=None))
+
+    def get_err_lever_ts(self, include_un=True):
+        &#34;&#34;&#34;
+        Get the timestamps of the error/opposite lever presses.
+
+        Parameters
+        ----------
+        include_un : bool - Default True
+            Include lever presses that were unnecessary for the reward.
+
+        Returns
+        -------
+        np.ndarray : A numpy array of sorted timestamps.
+
+        &#34;&#34;&#34;
+        levers = [
+            self.get_arrays(&#34;FR_Err&#34;),
+            self.get_arrays(&#34;FI_Err&#34;)]
+        if include_un:
+            levers.append(self.get_arrays(&#34;Un_FR_Err&#34;))
+            levers.append(self.get_arrays(&#34;Un_FI_Err&#34;))
+        return np.sort(np.concatenate(levers, axis=None))
+
+    def split_pell_ts(self):
+        &#34;&#34;&#34;
+        Returns a tuple of arrays splitting up the rewards.
+
+        (Pellets without doubles, time of doubles)
+        &#34;&#34;&#34;
+
+        pell_ts = self.get_arrays(&#34;Reward&#34;)
+
+        dpell_bool = np.diff(pell_ts) &lt; 0.8
+        # Provides index of double pell in pell_ts
+        dpell_idx = np.nonzero(dpell_bool)[0] + 1
+        dpell = pell_ts[dpell_idx]
+
+        # pell drop ts excluding double ts
+        pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
+
+        return pell_ts_exdouble, dpell
+
+    def get_rw_ts(self):
+        &#34;&#34;&#34;
+        Get the timestamps of rewards. 
+
+        Corrected for session switching/ending without reward collection.
+
+        Returns
+        -------
+        np.ndarray : A numpy array of sorted timestamps.
+
+        &#34;&#34;&#34;
+        session_type = self.get_metadata(&#39;name&#39;)
+        stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
+        pell_ts = self.get_arrays(&#34;Reward&#34;)
+        reward_times = self.get_arrays(&#34;Nosepoke&#34;)
+
+        pell_ts_exdouble = self.split_pell_ts()[0]
+
+        reward_times = self.get_arrays(&#34;Nosepoke&#34;)
+        trial_len = self.get_metadata(&#34;trial_length (mins)&#34;) * 60
+        if stage == &#39;7&#39; or stage == &#39;6&#39;:
+            trial_len += 5
+            repeated_trial_len = (trial_len) * 6
+
+        if stage == &#39;7&#39; or stage == &#39;6&#39;:
+            # Check if trial switched before reward collection -&gt; Adds collection as switch time
+            split_pell_ts = split_into_blocks(
+                pell_ts_exdouble, trial_len, 6)
+            split_reward_ts = split_into_blocks(
+                reward_times, trial_len, 6)
+
+            for i, (pell, reward) in enumerate(zip(split_pell_ts, split_reward_ts[:-1])):
+                if len(pell) &gt; len(reward):
+                    reward_times = np.insert(
+                        reward_times, np.searchsorted(
+                            reward_times, blocks[i]), blocks[i])
+
+        # if last reward time &lt; last pellet dispensed, assume animal picked reward at end of session.
+        # Checks if last block contains responses first
+        if reward_times[-1] &lt; pell_ts[-1]:
+            if stage == &#39;7&#39; or stage == &#39;6&#39;:
+                reward_times = np.append(reward_times, repeated_trial_len)
+            else:
+                reward_times = np.append(reward_times, trial_len)
+
+        return np.sort(reward_times, axis=None)
+
+    def time_taken(self):
+        &#34;&#34;&#34;Calculate how long the Session took in mins.&#34;&#34;&#34;
+        start_time = self.get_metadata(&#34;start_time&#34;)[-8:].replace(&#39; &#39;, &#39;0&#39;)
+        end_time = self.get_metadata(&#34;end_time&#34;)[-8:].replace(&#39; &#39;, &#39;0&#39;)
+        fmt = &#39;%H:%M:%S&#39;
+        tdelta = (
+            datetime.strptime(end_time, fmt) -
+            datetime.strptime(start_time, fmt))
+        tdelta_mins = int(tdelta.total_seconds() / 60)
+        return tdelta_mins
+
+    def _save_neo_info(self, remove_existing):
+        &#34;&#34;&#34;Private function to save info to neo file&#34;&#34;&#34;
+        if os.path.isfile(self.neo_file):
+            if remove_existing:
+                os.remove(self.neo_file)
+            else:
+                print(&#34;Skipping {} as it already exists&#34;.format(
+                    self.neo_file) +
+                    &#34; - set remove_existing to True to remove&#34;)
+                return
+
+        from neo.core import Block, Segment, Event
+        from quantities import s
+
+        anots = self.get_metadata()
+        anots[&#34;nix_name&#34;] = &#34;Block_Main&#34;
+        anots[&#34;protocol&#34;] = anots.pop(&#34;name&#34;)
+
+        blk = Block(name=&#34;Block_Main&#34;, **anots)
+
+        seg = Segment(name=&#34;Segment_Main&#34;, nix_name=&#34;Segment_Main&#34;)
+        blk.segments.append(seg)
+        # Could consider splitting by trials using index in seg
+        for key, val in self.get_arrays().items():
+            e = Event(
+                times=val * s, labels=None,
+                name=key, nix_name=&#34;Event_&#34; + key)
+            seg.events.append(e)
+        nio = self._get_neo_io()
+        nio.write_block(blk)
+        nio.close()
+
+    def _extract_neo_info(self):
+        &#34;&#34;&#34;Private function to extract info from neo file&#34;&#34;&#34;
+        nio = self._get_neo_io()
+        block = nio.read()[0]
+        nio.close()
+        annotations = block.annotations
+        for key, val in annotations.items():
+            if key == &#34;protocol&#34;:
+                key = &#34;name&#34;
+            self.metadata[key] = val
+        for event in block.segments[0].events:
+            key = event.name
+            self.info_arrays[key] = (
+                event.times.rescale(&#39;s&#39;).magnitude)
+
+    def _get_neo_io(self, get_ext=False):
+        backend = self.neo_backend
+        if backend == &#34;nix&#34;:
+            if get_ext:
+                return &#34;nix&#34;
+            from neo.io import NixIO
+            nio = NixIO(filename=self.neo_file)
+        elif backend == &#34;nsdf&#34;:
+            if get_ext:
+                return &#34;h5&#34;
+            from neo.io import NSDFIO
+            nio = NSDFIO(filename=self.neo_file)
+        elif backend == &#34;matlab&#34;:
+            if get_ext:
+                return &#34;mat&#34;
+            from neo.io import NeoMatlabIO
+            nio = NeoMatlabIO(filename=self.neo_file)
+        else:
+            print(
+                &#34;Backend {} not recognised, defaulting to nix&#34;.format(
+                    backend))
+            from neo.io import NixIO
+            if get_ext:
+                return &#34;nix&#34;
+            nio = NixIO(filename=self.neo_file)
+        return nio
+
+    def _save_h5_info(self):
+        &#34;&#34;&#34;Private function to save info to h5 file&#34;&#34;&#34;
+        import h5py
+        with h5py.File(self.h5_file, &#34;w&#34;, libver=&#34;latest&#34;) as f:
+            for key, val in self.get_metadata().items():
+                f.attrs[key] = val
+            for key, val in self.get_arrays().items():
+                f.create_dataset(key, data=val, dtype=np.float32)
+
+    def _extract_h5_info(self):
+        &#34;&#34;&#34;Private function to pull info from h5 file&#34;&#34;&#34;
+        import h5py
+        with h5py.File(self.h5_file, &#34;r&#34;, libver=&#34;latest&#34;) as f:
+            for key, val in f.attrs.items():
+                self.metadata[key] = val
+            for key in f.keys():
+                self.info_arrays[key] = f[key][()]
+
+    def _extract_axona_info(self):
+        self.axona_info = AxonaInput(self.axona_file)
+        # TODO Metadata extract from set file for standard metadata
+        # TODO Numerical metadata extract from log file
+        # Need &#34;fixed_interval (ticks)&#34;, &#34;double_reward_window (ticks)&#34;
+        # AND &#34;trial_length (mins)&#34;, &#34;fixed_ratio&#34;
+        # &#34;num_trials&#34; should be added too
+        for k, v in self.session_info.get_input_channel(self.s_type).items():
+            self.info_arrays[k] = self.axona_info.get_times(
+                &#34;I&#34;, v[0], v[1])
+        for k, v in self.session_info.get_output_channel(self.s_type).items():
+            self.info_arrays[k] = self.axona_info.get_times(
+                &#34;O&#34;, v[0], v[1])
+        self._convert_axona_info()
+
+    def _convert_axona_info(self):
+        left_presses = self.info_arrays.get(&#34;left_lever&#34;, [])
+        right_presses = self.info_arrays.get(&#34;right_lever&#34;, [])
+        nosepokes = self.info_arrays.get(&#34;all_nosepokes&#34;, [])
+
+        # Extract nosepokes as necessary and unecessary
+        pell_ts_exdouble, _ = self.split_pell_ts()
+        good_nosepokes, un_nosepokes = split_array_with_another(
+            nosepokes, pell_ts_exdouble)
+
+        # TODO make sure that nosepoke occurs before trial switch if reward before trial switch - Ham has idea for this already in another function
+        # For now, just a check!
+        split_nosepokes = split_into_blocks(
+            good_nosepokes, 305, 6)
+        split_pellets = split_into_blocks(
+            pell_ts_exdouble, 305, 6)
+        for i, (b1, b2) in enumerate(zip(split_nosepokes, split_pellets)):
+            if b1.shape != b2.shape:
+                print(&#34;Error, nosepokes in blocks don&#39;t match pellets&#34;)
+                print(&#34;{} nosepokes, {} pellets, in block {}&#34;.format(
+                    len(b1), len(b2), i + 1))
+                exit(-1)
+
+        self.info_arrays[&#34;Nosepoke&#34;] = good_nosepokes
+        self.info_arrays[&#34;Un_Nosepoke&#34;] = un_nosepokes
+
+        fi_starts = self.info_arrays[&#34;left_light&#34;]
+        fr_starts = self.info_arrays[&#34;right_light&#34;]
+        trial_types = np.zeros(6)
+
+        # set trial types - 1 is FR, 0 is FI
+        for i in range(3):
+            j = int(fi_starts[i] // 305)
+            trial_types[j] = 0
+            j = int(fr_starts[i] // 305)
+            trial_types[j] = 1
+        self.info_arrays[&#34;Trial Type&#34;] = trial_types
+
+        # TODO parse other file to remove fixed value
+        self.metadata[&#34;fixed_interval (secs)&#34;] = 30
+        fi = self.get_metadata(&#34;fixed_interval (secs)&#34;)
+
+        # Set left presses and unnecessary left presses
+        split_left_presses = split_into_blocks(
+            left_presses, 305, 6)
+        left_presses_fi = np.concatenate(
+            split_left_presses[np.nonzero(trial_types == 0)])
+        left_presses_fr = np.concatenate(
+            split_left_presses[np.nonzero(trial_types == 1)])
+        good_nosepokes_fi = np.concatenate(
+            split_into_blocks(good_nosepokes, 305, 6)[
+                np.nonzero(trial_types == 0)])
+
+        fi_allow_times = np.add(good_nosepokes_fi, fi)
+        good_left_presses, un_left_presses = split_array_with_another(
+            left_presses_fi, fi_allow_times)
+        self.info_arrays[&#34;L&#34;] = good_left_presses
+        self.info_arrays[&#34;Un_L&#34;] = un_left_presses
+
+        un_fr_err, fr_err = split_array_in_between_two(
+            left_presses_fr, pell_ts_exdouble, good_nosepokes)
+        self.info_arrays[&#34;Un_FR_Err&#34;] = un_fr_err
+        self.info_arrays[&#34;FR_Err&#34;] = fr_err
+
+        # set right presses and unnecessary right presses
+        split_right_presses = split_into_blocks(
+            right_presses, 305, 6)
+        right_presses_fr = np.concatenate(
+            split_right_presses[np.nonzero(trial_types == 1)])
+        right_presses_fi = np.concatenate(
+            split_right_presses[np.nonzero(trial_types == 0)])
+
+        un_right_presses, good_right_presses = split_array_in_between_two(
+            right_presses_fr, pell_ts_exdouble, good_nosepokes)
+        self.info_arrays[&#34;R&#34;] = good_right_presses
+        self.info_arrays[&#34;Un_R&#34;] = un_right_presses
+
+        un_fi_err, fi_err = split_array_in_between_two(
+            right_presses_fi, pell_ts_exdouble, good_nosepokes)
+        self.info_arrays[&#34;Un_FI_Err&#34;] = un_fi_err
+        self.info_arrays[&#34;FI_Err&#34;] = fi_err
+
+    def _extract_metadata(self):
+        &#34;&#34;&#34;Private function to pull metadata out of lines.&#34;&#34;&#34;
+        for i, name in enumerate(self.session_info.get_metadata()):
+            start = self.session_info.get_metadata_start(i)
+            self.metadata[name] = self.lines[i][start:]
+
+    def _extract_session_arrays(self):
+        &#34;&#34;&#34;Private function to pull session arrays out of lines.&#34;&#34;&#34;
+        data_info = self.session_info.get_session_type_info(
+            self.get_metadata(&#34;name&#34;))
+
+        if data_info is None:
+            print(&#34;Not parsing {}&#34;.format(self))
+            return
+
+        print(&#34;Parsing {}&#34;.format(self))
+        if self.verbose:
+            print(&#34;Parameters extracted:&#34;)
+        for i, (start_char, end_char, parameter) in enumerate(data_info):
+            c_data = self._extract_array(self.lines, start_char, end_char)
+            if parameter == &#34;Experiment Variables&#34;:
+                mapping = self.session_info.get_session_variable_list(
+                    self.get_metadata(&#34;name&#34;))
+                for m, v in zip(mapping, c_data):
+                    if m.endswith(&#34;(ticks)&#34;):
+                        m = m[:-7] + &#34;(secs)&#34;
+                        v = v / 100
+                    self.metadata[m] = v
+            self.info_arrays[parameter] = c_data
+            if self.verbose:
+                print(i, &#39;-&gt; {}: {}&#39;.format(parameter, len(c_data)))
+
+        return self.info_arrays
+
+    def _init_trial_df(self):
+        session_type = self.get_metadata(&#39;name&#39;)
+        stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)  # Obtain stage number w/o _
+
+        pell_ts_exdouble, dpell = self.split_pell_ts()
+        reward_times = self.get_rw_ts()
+
+        # Assign schedule type to trials
+        schedule_type = []
+        if stage == &#39;7&#39; or stage == &#39;6&#39;:
+            norm_r_ts, _, _, _, _ = bv_an.split_sess(
+                self, norm=False, plot_all=True)
+            sch_type = self.get_arrays(&#39;Trial Type&#39;)
+
+            for i, block in enumerate(norm_r_ts):
+                if sch_type[i] == 1:
+                    b_type = &#39;FR&#39;
+                elif sch_type[i] == 0:
+                    b_type = &#39;FI&#39;
+                for l, _ in enumerate(block):
+                    schedule_type.append(b_type)
+        else:
+            if stage == &#39;4&#39;:
+                b_type = &#39;CR&#39;
+            elif stage == &#39;5a&#39;:
+                b_type = &#39;FR&#39;
+            elif stage == &#39;5b&#39;:
+                b_type = &#39;FI&#39;
+            else:
+                b_type = &#39;NA&#39;
+            for i in reward_times:
+                schedule_type.append(b_type)
+
+        # Rearrange timestamps based on trial per row
+        lever_ts = self.get_lever_ts(True)
+        err_ts = self.get_err_lever_ts(True)
+        trial_lever_ts = np.split(
+            lever_ts, (np.searchsorted(lever_ts, reward_times)[:-1]))
+        trial_err_ts = np.split(
+            err_ts, (np.searchsorted(err_ts, reward_times)[:-1]))
+        trial_dr_ts = np.split(
+            dpell, (np.searchsorted(dpell, reward_times)[:-1]))
+
+        # Initialize array for lever timestamps
+        # Max lever press per trial
+        trials_max_l = len(max(trial_lever_ts, key=len))
+        lever_arr = np.empty((len(reward_times), trials_max_l,))
+        lever_arr.fill(np.nan)
+        trials_max_err = len(max(trial_err_ts, key=len)
+                             )  # Max err press per trial
+        err_arr = np.empty((len(reward_times), trials_max_err,))
+        err_arr.fill(np.nan)
+
+        # Arrays used for normalization of timestamps to trials
+        from copy import deepcopy
+        trial_norm = np.insert(reward_times, 0, 0)
+        norm_lever = deepcopy(trial_lever_ts)
+        norm_err = deepcopy(trial_err_ts)
+        norm_dr = deepcopy(trial_dr_ts)
+        norm_rw = deepcopy(reward_times)
+        norm_pell = deepcopy(pell_ts_exdouble)
+
+        # Normalize timestamps based on start of trial
+        for i, _ in enumerate(norm_rw):
+            norm_lever[i] -= trial_norm[i]
+            norm_err[i] -= trial_norm[i]
+            norm_dr[i] -= trial_norm[i]
+            norm_pell[i] -= trial_norm[i]
+            norm_rw[i] -= trial_norm[i]
+
+        # # 2D array of lever timestamps (Incomplete)
+        # for i, (l, err) in enumerate(zip(trial_lever_ts, trial_err_ts)):
+        #     l_end = len(l)
+        #     lever_arr[i,:l_end] = l[:]
+        #     err_end = len(err)
+        #     err_arr[i,:err_end] = err[:]
+
+        # Timestamps kept as original starting from session start
+        session_dict = {
+            &#39;Reward_ts&#39;: reward_times,
+            &#39;Pellet_ts&#39;: pell_ts_exdouble,
+            &#39;D_Pellet_ts&#39;: trial_dr_ts,
+            &#39;Schedule&#39;: schedule_type,
+            &#39;Levers_ts&#39;: trial_lever_ts,
+            &#39;Err_ts&#39;: trial_err_ts
+        }
+
+        # Timestamps normalised to each trial start
+        trial_dict = {
+            &#39;Reward_ts&#39;: norm_rw,
+            &#39;Pellet_ts&#39;: norm_pell,
+            &#39;D_Pellet_ts&#39;: norm_dr,
+            &#39;Schedule&#39;: schedule_type,
+            &#39;Levers_ts&#39;: norm_lever,
+            &#39;Err_ts&#39;: norm_err
+        }
+
+        for key, val in trial_dict.items():
+            print(key, &#39;:&#39;, len(val))
+
+        self.trial_df = pd.DataFrame(session_dict)
+        self.trial_df_norm = pd.DataFrame(trial_dict)
+
+    @staticmethod
+    def _extract_array(lines, start_char, end_char):
+        &#34;&#34;&#34;Private function to pull a single session from lines.&#34;&#34;&#34;
+        def parse_line(line, dtype=np.float32):
+            return np.array(line.lstrip().split()[1:]).astype(dtype)
+
+        start_index = np.flatnonzero(lines == start_char)
+        stop_index = np.flatnonzero(lines == end_char)
+        if end_char == &#39;END&#39;:
+            # Last timepoint does not have a end_char
+            stop_index = [lines.size]
+        if start_index[0] + 1 == stop_index[0]:
+            return np.array([])
+        data_lines = lines[start_index[0] + 1:stop_index[0]]
+
+        last_line = parse_line(data_lines[-1])
+        arr = np.empty(
+            5 * (len(data_lines) - 1) + len(last_line),
+            dtype=np.float32)
+        for i, line in enumerate(data_lines):
+            numbers = parse_line(line)
+            st = 5 * i
+            arr[st:st + len(numbers)] = numbers
+        return arr
+
+    def _get_hdf5_name(self, ext=&#34;h5&#34;):
+        return &#34;{:03d}_{}_{}_{}.{}&#34;.format(
+            int(self.get_metadata(&#34;subject&#34;)),
+            self.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;-&#34;),
+            self.get_metadata(&#34;start_time&#34;)[:-3].replace(&#34;:&#34;, &#34;-&#34;),
+            self.get_metadata(&#34;name&#34;), ext)
+
+    def __repr__(self):
+        &#34;&#34;&#34;
+        Return string representation of the Session.
+
+        Currently includes the date, subject and trial type.
+        &#34;&#34;&#34;
+        return (
+            self.get_metadata(&#34;start_date&#34;) + &#34; &#34; + self.get_subject_type())</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="bvmpc.bv_session.Session"><code class="flex name class">
+<span>class <span class="ident">Session</span></span>
+<span>(</span><span>h5_file=None, lines=None, neo_file=None, axona_file=None, s_type='6', neo_backend='nix', verbose=False, file_origin=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>The base class to hold MEDPC behaviour information.</p>
+<p>Initialise the Session with lines from a MEDPC file.</p>
+<p>Then extract this info into native attributes.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>h5_file</code></strong> :&ensp;<code>str</code> - <code>Default</code> <code>None</code></dt>
+<dd>h5 file location to load from</dd>
+<dt><strong><code>lines</code></strong> :&ensp;<code>List</code> of <code>str</code> - <code>Default</code> <code>None</code></dt>
+<dd>The lines in the MedPC file for this session.</dd>
+<dt><strong><code>neo_file</code></strong> :&ensp;<code>str</code> - <code>Default</code> <code>None</code></dt>
+<dd>The location of a neo file to load from</dd>
+<dt><strong><code>axona_file</code></strong> :&ensp;<code>str</code> - <code>Default</code> <code>None</code></dt>
+<dd>The location of a .inp file to load from</dd>
+<dt><strong><code>s_type</code></strong> :&ensp;<code>str</code> - <code>Default</code> <code>None</code></dt>
+<dd>The type of session when using axona_file
+For now, leaving as 6 will work for everything.</dd>
+<dt><strong><code>neo_backend</code></strong> :&ensp;<code>str</code> - <code>Default</code> <code>"nix</code></dt>
+<dd>If using neo_file, what backend to use</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code> - <code>Default</code> <code>False</code></dt>
+<dd>Whether to print information while loading.</dd>
+<dt><strong><code>file_origin</code></strong> :&ensp;<code>str</code> - <code>Default</code> <code>None</code></dt>
+<dd>Where the file originated from,
+mostly only useful if directly passing lines</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Session:
+    &#34;&#34;&#34;The base class to hold MEDPC behaviour information.&#34;&#34;&#34;
+
+    def __init__(
+            self, h5_file=None, lines=None, neo_file=None,
+            axona_file=None, s_type=&#34;6&#34;,
+            neo_backend=&#34;nix&#34;, verbose=False, file_origin=None):
+        &#34;&#34;&#34;
+        Initialise the Session with lines from a MEDPC file.
+
+        Then extract this info into native attributes.
+
+        Parameters
+        ----------
+        h5_file: str - Default None
+            h5 file location to load from
+        lines: List of str - Default None
+            The lines in the MedPC file for this session.
+        neo_file: str - Default None
+            The location of a neo file to load from
+        axona_file: str - Default None
+            The location of a .inp file to load from
+        s_type: str - Default None
+            The type of session when using axona_file
+            For now, leaving as 6 will work for everything.
+        neo_backend: str - Default &#34;nix
+            If using neo_file, what backend to use
+        verbose: bool - Default False
+            Whether to print information while loading.
+        file_origin: str - Default None
+            Where the file originated from,
+            mostly only useful if directly passing lines
+
+        Returns
+        -------
+        None
+
+        &#34;&#34;&#34;
+        self.session_info = SessionInfo()
+        self.metadata = {}
+        self.info_arrays = {}
+        self.verbose = verbose
+        self.file_origin = file_origin
+        self.out_dir = None
+        self.trial_df = None
+        self.trial_df_norm = None
+
+        a = 0 if lines is None else 1
+        b = 0 if h5_file is None else 1
+        c = 0 if neo_file is None else 1
+        d = 0 if axona_file is None else 1
+        if (a + b + c + d != 1):
+            print(
+                &#34;Error: Session takes one of&#34; +
+                &#34;h5_file, lines, neo_file, and axona_file&#34;)
+            return
+
+        if lines is not None:
+            self.lines = lines
+            self._extract_metadata()
+            self._extract_session_arrays()
+
+        elif h5_file is not None:
+            self.file_origin = h5_file
+            self.h5_file = h5_file
+            self._extract_h5_info()
+
+        elif neo_file is not None:
+            self.file_origin = neo_file
+            self.neo_file = neo_file
+            self.neo_backend = neo_backend
+            self._extract_neo_info()
+
+        elif axona_file is not None:
+            if s_type is None:
+                print(&#34;Error: Please provide a session type (6 or 7)&#34;)
+                exit(-1)
+            self.s_type = s_type
+            self.file_origin = axona_file
+            self.axona_file = axona_file
+            self._extract_axona_info()
+
+        else:
+            print(&#34;Error: Unknown situation in Session init&#34;)
+            exit(-1)
+
+    # convert to trial based dataframe
+    def init_trial_dataframe(self):
+        self._init_trial_df()
+
+    def save_to_h5(self, out_dir, name=None):
+        &#34;&#34;&#34;Save information to a h5 file&#34;&#34;&#34;
+        location = name
+        if name == None:
+            location = self._get_hdf5_name()
+        self.h5_file = os.path.join(out_dir, location)
+        self._save_h5_info()
+
+    def save_to_neo(
+            self, out_dir, name=None, neo_backend=&#34;nix&#34;, remove_existing=False):
+        location = name
+        self.neo_backend = neo_backend
+        if name == None:
+            ext = self._get_neo_io(get_ext=True)
+            location = self._get_hdf5_name(ext=ext)
+        self.neo_file = os.path.join(out_dir, location)
+        self._save_neo_info(remove_existing)
+
+    def get_trial_df(self):
+        &#34;&#34;&#34;Get dataframe split into trials without normalisation (time).&#34;&#34;&#34;
+        if self.trial_df is None:
+            self.init_trial_dataframe()
+        return self.trial_df
+
+    def get_trial_df_norm(self):
+        &#34;&#34;&#34;Get dataframe split into trials with normalisation (time).&#34;&#34;&#34;
+        if self.trial_df_norm is None:
+            self.init_trial_dataframe()
+        return self.trial_df_norm
+
+    def get_metadata(self, key=None):
+        &#34;&#34;&#34;
+        Get the metadata for the Session.
+
+        Parameters
+        ----------
+        key : str - Default None
+            Possible Keys: &#34;start_date&#34;, &#34;end_date&#34;, &#34;subject&#34;,
+            &#34;experiment&#34;, &#34;group&#34;, &#34;box&#34;, &#34;start_time&#34;, &#34;end_time&#34;, &#34;name&#34;
+
+        Returns
+        -------
+        str : If key is a valid key.
+        Dict : If key is None, all the metadata.
+
+        &#34;&#34;&#34;
+        if key:
+            return self.metadata.get(key, None)
+        return self.metadata
+
+    def get_subject_type(self):
+        &#34;&#34;&#34;Return the subject and session type as a string.&#34;&#34;&#34;
+        subject = self.get_metadata(&#34;subject&#34;)
+        name = self.get_metadata(&#34;name&#34;)
+        return &#39;Subject: {}, Trial Type {}&#39;.format(subject, name)
+
+    def get_ratio(self):
+        &#34;&#34;&#34;Return the fixed ratio as an int.&#34;&#34;&#34;
+        ratio = self.get_metadata(&#34;fixed_ratio&#34;)
+        if ratio is not None:
+            return int(ratio)
+        return None
+
+    def get_interval(self):
+        &#34;&#34;&#34;Return the fixed ratio as an int.&#34;&#34;&#34;
+        interval = self.get_metadata(&#34;fixed_interval (secs)&#34;)
+        if interval is not None:
+            return int(interval)
+        return None
+
+    def get_stage(self):
+        &#34;&#34;&#34;Obtain the stage number (without _)&#34;&#34;&#34;
+        session_type = self.get_metadata(&#39;name&#39;)
+        stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
+        return stage
+
+    def get_arrays(self, key=None):
+        &#34;&#34;&#34;
+        Return the info arrays in the session.
+
+        Parameters
+        ----------
+        key : str - Default None
+            The name of the info array to get.
+
+        Returns
+        -------
+        np.ndarray: If key is a valid key.
+        [] : If key is not a valid key
+        Dict : If key is None, all the info arrays.
+
+        &#34;&#34;&#34;
+        if key:
+            return self.info_arrays.get(key, [])
+        return self.info_arrays
+
+    def get_lever_ts(self, include_un=True):
+        &#34;&#34;&#34;
+        Get the timestamps of the lever presses.
+
+        Parameters
+        ----------
+        include_un : bool - Default True
+            Include lever presses that were unnecessary for the reward.
+
+        Returns
+        -------
+        np.ndarray : A numpy array of sorted timestamps.
+
+        &#34;&#34;&#34;
+        levers = [
+            self.get_arrays(&#34;R&#34;),
+            self.get_arrays(&#34;L&#34;)]
+        if include_un:
+            levers.append(self.get_arrays(&#34;Un_R&#34;))
+            levers.append(self.get_arrays(&#34;Un_L&#34;))
+        return np.sort(np.concatenate(levers, axis=None))
+
+    def get_err_lever_ts(self, include_un=True):
+        &#34;&#34;&#34;
+        Get the timestamps of the error/opposite lever presses.
+
+        Parameters
+        ----------
+        include_un : bool - Default True
+            Include lever presses that were unnecessary for the reward.
+
+        Returns
+        -------
+        np.ndarray : A numpy array of sorted timestamps.
+
+        &#34;&#34;&#34;
+        levers = [
+            self.get_arrays(&#34;FR_Err&#34;),
+            self.get_arrays(&#34;FI_Err&#34;)]
+        if include_un:
+            levers.append(self.get_arrays(&#34;Un_FR_Err&#34;))
+            levers.append(self.get_arrays(&#34;Un_FI_Err&#34;))
+        return np.sort(np.concatenate(levers, axis=None))
+
+    def split_pell_ts(self):
+        &#34;&#34;&#34;
+        Returns a tuple of arrays splitting up the rewards.
+
+        (Pellets without doubles, time of doubles)
+        &#34;&#34;&#34;
+
+        pell_ts = self.get_arrays(&#34;Reward&#34;)
+
+        dpell_bool = np.diff(pell_ts) &lt; 0.8
+        # Provides index of double pell in pell_ts
+        dpell_idx = np.nonzero(dpell_bool)[0] + 1
+        dpell = pell_ts[dpell_idx]
+
+        # pell drop ts excluding double ts
+        pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
+
+        return pell_ts_exdouble, dpell
+
+    def get_rw_ts(self):
+        &#34;&#34;&#34;
+        Get the timestamps of rewards. 
+
+        Corrected for session switching/ending without reward collection.
+
+        Returns
+        -------
+        np.ndarray : A numpy array of sorted timestamps.
+
+        &#34;&#34;&#34;
+        session_type = self.get_metadata(&#39;name&#39;)
+        stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
+        pell_ts = self.get_arrays(&#34;Reward&#34;)
+        reward_times = self.get_arrays(&#34;Nosepoke&#34;)
+
+        pell_ts_exdouble = self.split_pell_ts()[0]
+
+        reward_times = self.get_arrays(&#34;Nosepoke&#34;)
+        trial_len = self.get_metadata(&#34;trial_length (mins)&#34;) * 60
+        if stage == &#39;7&#39; or stage == &#39;6&#39;:
+            trial_len += 5
+            repeated_trial_len = (trial_len) * 6
+
+        if stage == &#39;7&#39; or stage == &#39;6&#39;:
+            # Check if trial switched before reward collection -&gt; Adds collection as switch time
+            split_pell_ts = split_into_blocks(
+                pell_ts_exdouble, trial_len, 6)
+            split_reward_ts = split_into_blocks(
+                reward_times, trial_len, 6)
+
+            for i, (pell, reward) in enumerate(zip(split_pell_ts, split_reward_ts[:-1])):
+                if len(pell) &gt; len(reward):
+                    reward_times = np.insert(
+                        reward_times, np.searchsorted(
+                            reward_times, blocks[i]), blocks[i])
+
+        # if last reward time &lt; last pellet dispensed, assume animal picked reward at end of session.
+        # Checks if last block contains responses first
+        if reward_times[-1] &lt; pell_ts[-1]:
+            if stage == &#39;7&#39; or stage == &#39;6&#39;:
+                reward_times = np.append(reward_times, repeated_trial_len)
+            else:
+                reward_times = np.append(reward_times, trial_len)
+
+        return np.sort(reward_times, axis=None)
+
+    def time_taken(self):
+        &#34;&#34;&#34;Calculate how long the Session took in mins.&#34;&#34;&#34;
+        start_time = self.get_metadata(&#34;start_time&#34;)[-8:].replace(&#39; &#39;, &#39;0&#39;)
+        end_time = self.get_metadata(&#34;end_time&#34;)[-8:].replace(&#39; &#39;, &#39;0&#39;)
+        fmt = &#39;%H:%M:%S&#39;
+        tdelta = (
+            datetime.strptime(end_time, fmt) -
+            datetime.strptime(start_time, fmt))
+        tdelta_mins = int(tdelta.total_seconds() / 60)
+        return tdelta_mins
+
+    def _save_neo_info(self, remove_existing):
+        &#34;&#34;&#34;Private function to save info to neo file&#34;&#34;&#34;
+        if os.path.isfile(self.neo_file):
+            if remove_existing:
+                os.remove(self.neo_file)
+            else:
+                print(&#34;Skipping {} as it already exists&#34;.format(
+                    self.neo_file) +
+                    &#34; - set remove_existing to True to remove&#34;)
+                return
+
+        from neo.core import Block, Segment, Event
+        from quantities import s
+
+        anots = self.get_metadata()
+        anots[&#34;nix_name&#34;] = &#34;Block_Main&#34;
+        anots[&#34;protocol&#34;] = anots.pop(&#34;name&#34;)
+
+        blk = Block(name=&#34;Block_Main&#34;, **anots)
+
+        seg = Segment(name=&#34;Segment_Main&#34;, nix_name=&#34;Segment_Main&#34;)
+        blk.segments.append(seg)
+        # Could consider splitting by trials using index in seg
+        for key, val in self.get_arrays().items():
+            e = Event(
+                times=val * s, labels=None,
+                name=key, nix_name=&#34;Event_&#34; + key)
+            seg.events.append(e)
+        nio = self._get_neo_io()
+        nio.write_block(blk)
+        nio.close()
+
+    def _extract_neo_info(self):
+        &#34;&#34;&#34;Private function to extract info from neo file&#34;&#34;&#34;
+        nio = self._get_neo_io()
+        block = nio.read()[0]
+        nio.close()
+        annotations = block.annotations
+        for key, val in annotations.items():
+            if key == &#34;protocol&#34;:
+                key = &#34;name&#34;
+            self.metadata[key] = val
+        for event in block.segments[0].events:
+            key = event.name
+            self.info_arrays[key] = (
+                event.times.rescale(&#39;s&#39;).magnitude)
+
+    def _get_neo_io(self, get_ext=False):
+        backend = self.neo_backend
+        if backend == &#34;nix&#34;:
+            if get_ext:
+                return &#34;nix&#34;
+            from neo.io import NixIO
+            nio = NixIO(filename=self.neo_file)
+        elif backend == &#34;nsdf&#34;:
+            if get_ext:
+                return &#34;h5&#34;
+            from neo.io import NSDFIO
+            nio = NSDFIO(filename=self.neo_file)
+        elif backend == &#34;matlab&#34;:
+            if get_ext:
+                return &#34;mat&#34;
+            from neo.io import NeoMatlabIO
+            nio = NeoMatlabIO(filename=self.neo_file)
+        else:
+            print(
+                &#34;Backend {} not recognised, defaulting to nix&#34;.format(
+                    backend))
+            from neo.io import NixIO
+            if get_ext:
+                return &#34;nix&#34;
+            nio = NixIO(filename=self.neo_file)
+        return nio
+
+    def _save_h5_info(self):
+        &#34;&#34;&#34;Private function to save info to h5 file&#34;&#34;&#34;
+        import h5py
+        with h5py.File(self.h5_file, &#34;w&#34;, libver=&#34;latest&#34;) as f:
+            for key, val in self.get_metadata().items():
+                f.attrs[key] = val
+            for key, val in self.get_arrays().items():
+                f.create_dataset(key, data=val, dtype=np.float32)
+
+    def _extract_h5_info(self):
+        &#34;&#34;&#34;Private function to pull info from h5 file&#34;&#34;&#34;
+        import h5py
+        with h5py.File(self.h5_file, &#34;r&#34;, libver=&#34;latest&#34;) as f:
+            for key, val in f.attrs.items():
+                self.metadata[key] = val
+            for key in f.keys():
+                self.info_arrays[key] = f[key][()]
+
+    def _extract_axona_info(self):
+        self.axona_info = AxonaInput(self.axona_file)
+        # TODO Metadata extract from set file for standard metadata
+        # TODO Numerical metadata extract from log file
+        # Need &#34;fixed_interval (ticks)&#34;, &#34;double_reward_window (ticks)&#34;
+        # AND &#34;trial_length (mins)&#34;, &#34;fixed_ratio&#34;
+        # &#34;num_trials&#34; should be added too
+        for k, v in self.session_info.get_input_channel(self.s_type).items():
+            self.info_arrays[k] = self.axona_info.get_times(
+                &#34;I&#34;, v[0], v[1])
+        for k, v in self.session_info.get_output_channel(self.s_type).items():
+            self.info_arrays[k] = self.axona_info.get_times(
+                &#34;O&#34;, v[0], v[1])
+        self._convert_axona_info()
+
+    def _convert_axona_info(self):
+        left_presses = self.info_arrays.get(&#34;left_lever&#34;, [])
+        right_presses = self.info_arrays.get(&#34;right_lever&#34;, [])
+        nosepokes = self.info_arrays.get(&#34;all_nosepokes&#34;, [])
+
+        # Extract nosepokes as necessary and unecessary
+        pell_ts_exdouble, _ = self.split_pell_ts()
+        good_nosepokes, un_nosepokes = split_array_with_another(
+            nosepokes, pell_ts_exdouble)
+
+        # TODO make sure that nosepoke occurs before trial switch if reward before trial switch - Ham has idea for this already in another function
+        # For now, just a check!
+        split_nosepokes = split_into_blocks(
+            good_nosepokes, 305, 6)
+        split_pellets = split_into_blocks(
+            pell_ts_exdouble, 305, 6)
+        for i, (b1, b2) in enumerate(zip(split_nosepokes, split_pellets)):
+            if b1.shape != b2.shape:
+                print(&#34;Error, nosepokes in blocks don&#39;t match pellets&#34;)
+                print(&#34;{} nosepokes, {} pellets, in block {}&#34;.format(
+                    len(b1), len(b2), i + 1))
+                exit(-1)
+
+        self.info_arrays[&#34;Nosepoke&#34;] = good_nosepokes
+        self.info_arrays[&#34;Un_Nosepoke&#34;] = un_nosepokes
+
+        fi_starts = self.info_arrays[&#34;left_light&#34;]
+        fr_starts = self.info_arrays[&#34;right_light&#34;]
+        trial_types = np.zeros(6)
+
+        # set trial types - 1 is FR, 0 is FI
+        for i in range(3):
+            j = int(fi_starts[i] // 305)
+            trial_types[j] = 0
+            j = int(fr_starts[i] // 305)
+            trial_types[j] = 1
+        self.info_arrays[&#34;Trial Type&#34;] = trial_types
+
+        # TODO parse other file to remove fixed value
+        self.metadata[&#34;fixed_interval (secs)&#34;] = 30
+        fi = self.get_metadata(&#34;fixed_interval (secs)&#34;)
+
+        # Set left presses and unnecessary left presses
+        split_left_presses = split_into_blocks(
+            left_presses, 305, 6)
+        left_presses_fi = np.concatenate(
+            split_left_presses[np.nonzero(trial_types == 0)])
+        left_presses_fr = np.concatenate(
+            split_left_presses[np.nonzero(trial_types == 1)])
+        good_nosepokes_fi = np.concatenate(
+            split_into_blocks(good_nosepokes, 305, 6)[
+                np.nonzero(trial_types == 0)])
+
+        fi_allow_times = np.add(good_nosepokes_fi, fi)
+        good_left_presses, un_left_presses = split_array_with_another(
+            left_presses_fi, fi_allow_times)
+        self.info_arrays[&#34;L&#34;] = good_left_presses
+        self.info_arrays[&#34;Un_L&#34;] = un_left_presses
+
+        un_fr_err, fr_err = split_array_in_between_two(
+            left_presses_fr, pell_ts_exdouble, good_nosepokes)
+        self.info_arrays[&#34;Un_FR_Err&#34;] = un_fr_err
+        self.info_arrays[&#34;FR_Err&#34;] = fr_err
+
+        # set right presses and unnecessary right presses
+        split_right_presses = split_into_blocks(
+            right_presses, 305, 6)
+        right_presses_fr = np.concatenate(
+            split_right_presses[np.nonzero(trial_types == 1)])
+        right_presses_fi = np.concatenate(
+            split_right_presses[np.nonzero(trial_types == 0)])
+
+        un_right_presses, good_right_presses = split_array_in_between_two(
+            right_presses_fr, pell_ts_exdouble, good_nosepokes)
+        self.info_arrays[&#34;R&#34;] = good_right_presses
+        self.info_arrays[&#34;Un_R&#34;] = un_right_presses
+
+        un_fi_err, fi_err = split_array_in_between_two(
+            right_presses_fi, pell_ts_exdouble, good_nosepokes)
+        self.info_arrays[&#34;Un_FI_Err&#34;] = un_fi_err
+        self.info_arrays[&#34;FI_Err&#34;] = fi_err
+
+    def _extract_metadata(self):
+        &#34;&#34;&#34;Private function to pull metadata out of lines.&#34;&#34;&#34;
+        for i, name in enumerate(self.session_info.get_metadata()):
+            start = self.session_info.get_metadata_start(i)
+            self.metadata[name] = self.lines[i][start:]
+
+    def _extract_session_arrays(self):
+        &#34;&#34;&#34;Private function to pull session arrays out of lines.&#34;&#34;&#34;
+        data_info = self.session_info.get_session_type_info(
+            self.get_metadata(&#34;name&#34;))
+
+        if data_info is None:
+            print(&#34;Not parsing {}&#34;.format(self))
+            return
+
+        print(&#34;Parsing {}&#34;.format(self))
+        if self.verbose:
+            print(&#34;Parameters extracted:&#34;)
+        for i, (start_char, end_char, parameter) in enumerate(data_info):
+            c_data = self._extract_array(self.lines, start_char, end_char)
+            if parameter == &#34;Experiment Variables&#34;:
+                mapping = self.session_info.get_session_variable_list(
+                    self.get_metadata(&#34;name&#34;))
+                for m, v in zip(mapping, c_data):
+                    if m.endswith(&#34;(ticks)&#34;):
+                        m = m[:-7] + &#34;(secs)&#34;
+                        v = v / 100
+                    self.metadata[m] = v
+            self.info_arrays[parameter] = c_data
+            if self.verbose:
+                print(i, &#39;-&gt; {}: {}&#39;.format(parameter, len(c_data)))
+
+        return self.info_arrays
+
+    def _init_trial_df(self):
+        session_type = self.get_metadata(&#39;name&#39;)
+        stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)  # Obtain stage number w/o _
+
+        pell_ts_exdouble, dpell = self.split_pell_ts()
+        reward_times = self.get_rw_ts()
+
+        # Assign schedule type to trials
+        schedule_type = []
+        if stage == &#39;7&#39; or stage == &#39;6&#39;:
+            norm_r_ts, _, _, _, _ = bv_an.split_sess(
+                self, norm=False, plot_all=True)
+            sch_type = self.get_arrays(&#39;Trial Type&#39;)
+
+            for i, block in enumerate(norm_r_ts):
+                if sch_type[i] == 1:
+                    b_type = &#39;FR&#39;
+                elif sch_type[i] == 0:
+                    b_type = &#39;FI&#39;
+                for l, _ in enumerate(block):
+                    schedule_type.append(b_type)
+        else:
+            if stage == &#39;4&#39;:
+                b_type = &#39;CR&#39;
+            elif stage == &#39;5a&#39;:
+                b_type = &#39;FR&#39;
+            elif stage == &#39;5b&#39;:
+                b_type = &#39;FI&#39;
+            else:
+                b_type = &#39;NA&#39;
+            for i in reward_times:
+                schedule_type.append(b_type)
+
+        # Rearrange timestamps based on trial per row
+        lever_ts = self.get_lever_ts(True)
+        err_ts = self.get_err_lever_ts(True)
+        trial_lever_ts = np.split(
+            lever_ts, (np.searchsorted(lever_ts, reward_times)[:-1]))
+        trial_err_ts = np.split(
+            err_ts, (np.searchsorted(err_ts, reward_times)[:-1]))
+        trial_dr_ts = np.split(
+            dpell, (np.searchsorted(dpell, reward_times)[:-1]))
+
+        # Initialize array for lever timestamps
+        # Max lever press per trial
+        trials_max_l = len(max(trial_lever_ts, key=len))
+        lever_arr = np.empty((len(reward_times), trials_max_l,))
+        lever_arr.fill(np.nan)
+        trials_max_err = len(max(trial_err_ts, key=len)
+                             )  # Max err press per trial
+        err_arr = np.empty((len(reward_times), trials_max_err,))
+        err_arr.fill(np.nan)
+
+        # Arrays used for normalization of timestamps to trials
+        from copy import deepcopy
+        trial_norm = np.insert(reward_times, 0, 0)
+        norm_lever = deepcopy(trial_lever_ts)
+        norm_err = deepcopy(trial_err_ts)
+        norm_dr = deepcopy(trial_dr_ts)
+        norm_rw = deepcopy(reward_times)
+        norm_pell = deepcopy(pell_ts_exdouble)
+
+        # Normalize timestamps based on start of trial
+        for i, _ in enumerate(norm_rw):
+            norm_lever[i] -= trial_norm[i]
+            norm_err[i] -= trial_norm[i]
+            norm_dr[i] -= trial_norm[i]
+            norm_pell[i] -= trial_norm[i]
+            norm_rw[i] -= trial_norm[i]
+
+        # # 2D array of lever timestamps (Incomplete)
+        # for i, (l, err) in enumerate(zip(trial_lever_ts, trial_err_ts)):
+        #     l_end = len(l)
+        #     lever_arr[i,:l_end] = l[:]
+        #     err_end = len(err)
+        #     err_arr[i,:err_end] = err[:]
+
+        # Timestamps kept as original starting from session start
+        session_dict = {
+            &#39;Reward_ts&#39;: reward_times,
+            &#39;Pellet_ts&#39;: pell_ts_exdouble,
+            &#39;D_Pellet_ts&#39;: trial_dr_ts,
+            &#39;Schedule&#39;: schedule_type,
+            &#39;Levers_ts&#39;: trial_lever_ts,
+            &#39;Err_ts&#39;: trial_err_ts
+        }
+
+        # Timestamps normalised to each trial start
+        trial_dict = {
+            &#39;Reward_ts&#39;: norm_rw,
+            &#39;Pellet_ts&#39;: norm_pell,
+            &#39;D_Pellet_ts&#39;: norm_dr,
+            &#39;Schedule&#39;: schedule_type,
+            &#39;Levers_ts&#39;: norm_lever,
+            &#39;Err_ts&#39;: norm_err
+        }
+
+        for key, val in trial_dict.items():
+            print(key, &#39;:&#39;, len(val))
+
+        self.trial_df = pd.DataFrame(session_dict)
+        self.trial_df_norm = pd.DataFrame(trial_dict)
+
+    @staticmethod
+    def _extract_array(lines, start_char, end_char):
+        &#34;&#34;&#34;Private function to pull a single session from lines.&#34;&#34;&#34;
+        def parse_line(line, dtype=np.float32):
+            return np.array(line.lstrip().split()[1:]).astype(dtype)
+
+        start_index = np.flatnonzero(lines == start_char)
+        stop_index = np.flatnonzero(lines == end_char)
+        if end_char == &#39;END&#39;:
+            # Last timepoint does not have a end_char
+            stop_index = [lines.size]
+        if start_index[0] + 1 == stop_index[0]:
+            return np.array([])
+        data_lines = lines[start_index[0] + 1:stop_index[0]]
+
+        last_line = parse_line(data_lines[-1])
+        arr = np.empty(
+            5 * (len(data_lines) - 1) + len(last_line),
+            dtype=np.float32)
+        for i, line in enumerate(data_lines):
+            numbers = parse_line(line)
+            st = 5 * i
+            arr[st:st + len(numbers)] = numbers
+        return arr
+
+    def _get_hdf5_name(self, ext=&#34;h5&#34;):
+        return &#34;{:03d}_{}_{}_{}.{}&#34;.format(
+            int(self.get_metadata(&#34;subject&#34;)),
+            self.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;-&#34;),
+            self.get_metadata(&#34;start_time&#34;)[:-3].replace(&#34;:&#34;, &#34;-&#34;),
+            self.get_metadata(&#34;name&#34;), ext)
+
+    def __repr__(self):
+        &#34;&#34;&#34;
+        Return string representation of the Session.
+
+        Currently includes the date, subject and trial type.
+        &#34;&#34;&#34;
+        return (
+            self.get_metadata(&#34;start_date&#34;) + &#34; &#34; + self.get_subject_type())</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="bvmpc.bv_session.Session.get_arrays"><code class="name flex">
+<span>def <span class="ident">get_arrays</span></span>(<span>self, key=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Return the info arrays in the session.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>key</code></strong> :&ensp;<code>str</code> - <code>Default</code> <code>None</code></dt>
+<dd>The name of the info array to get.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>np.ndarray: If key is a valid key.
+[] : If key is not a valid key
+Dict : If key is None, all the info arrays.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_arrays(self, key=None):
+    &#34;&#34;&#34;
+    Return the info arrays in the session.
+
+    Parameters
+    ----------
+    key : str - Default None
+        The name of the info array to get.
+
+    Returns
+    -------
+    np.ndarray: If key is a valid key.
+    [] : If key is not a valid key
+    Dict : If key is None, all the info arrays.
+
+    &#34;&#34;&#34;
+    if key:
+        return self.info_arrays.get(key, [])
+    return self.info_arrays</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.get_err_lever_ts"><code class="name flex">
+<span>def <span class="ident">get_err_lever_ts</span></span>(<span>self, include_un=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get the timestamps of the error/opposite lever presses.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>include_un</code></strong> :&ensp;<code>bool</code> - <code>Default</code> <code>True</code></dt>
+<dd>Include lever presses that were unnecessary for the reward.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>np.ndarray : A numpy array of sorted timestamps.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_err_lever_ts(self, include_un=True):
+    &#34;&#34;&#34;
+    Get the timestamps of the error/opposite lever presses.
+
+    Parameters
+    ----------
+    include_un : bool - Default True
+        Include lever presses that were unnecessary for the reward.
+
+    Returns
+    -------
+    np.ndarray : A numpy array of sorted timestamps.
+
+    &#34;&#34;&#34;
+    levers = [
+        self.get_arrays(&#34;FR_Err&#34;),
+        self.get_arrays(&#34;FI_Err&#34;)]
+    if include_un:
+        levers.append(self.get_arrays(&#34;Un_FR_Err&#34;))
+        levers.append(self.get_arrays(&#34;Un_FI_Err&#34;))
+    return np.sort(np.concatenate(levers, axis=None))</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.get_interval"><code class="name flex">
+<span>def <span class="ident">get_interval</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Return the fixed ratio as an int.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_interval(self):
+    &#34;&#34;&#34;Return the fixed ratio as an int.&#34;&#34;&#34;
+    interval = self.get_metadata(&#34;fixed_interval (secs)&#34;)
+    if interval is not None:
+        return int(interval)
+    return None</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.get_lever_ts"><code class="name flex">
+<span>def <span class="ident">get_lever_ts</span></span>(<span>self, include_un=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get the timestamps of the lever presses.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>include_un</code></strong> :&ensp;<code>bool</code> - <code>Default</code> <code>True</code></dt>
+<dd>Include lever presses that were unnecessary for the reward.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>np.ndarray : A numpy array of sorted timestamps.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_lever_ts(self, include_un=True):
+    &#34;&#34;&#34;
+    Get the timestamps of the lever presses.
+
+    Parameters
+    ----------
+    include_un : bool - Default True
+        Include lever presses that were unnecessary for the reward.
+
+    Returns
+    -------
+    np.ndarray : A numpy array of sorted timestamps.
+
+    &#34;&#34;&#34;
+    levers = [
+        self.get_arrays(&#34;R&#34;),
+        self.get_arrays(&#34;L&#34;)]
+    if include_un:
+        levers.append(self.get_arrays(&#34;Un_R&#34;))
+        levers.append(self.get_arrays(&#34;Un_L&#34;))
+    return np.sort(np.concatenate(levers, axis=None))</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.get_metadata"><code class="name flex">
+<span>def <span class="ident">get_metadata</span></span>(<span>self, key=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get the metadata for the Session.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>key</code></strong> :&ensp;<code>str</code> - <code>Default</code> <code>None</code></dt>
+<dd>Possible Keys: "start_date", "end_date", "subject",
+"experiment", "group", "box", "start_time", "end_time", "name"</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>str : If key is a valid key.
+Dict : If key is None, all the metadata.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_metadata(self, key=None):
+    &#34;&#34;&#34;
+    Get the metadata for the Session.
+
+    Parameters
+    ----------
+    key : str - Default None
+        Possible Keys: &#34;start_date&#34;, &#34;end_date&#34;, &#34;subject&#34;,
+        &#34;experiment&#34;, &#34;group&#34;, &#34;box&#34;, &#34;start_time&#34;, &#34;end_time&#34;, &#34;name&#34;
+
+    Returns
+    -------
+    str : If key is a valid key.
+    Dict : If key is None, all the metadata.
+
+    &#34;&#34;&#34;
+    if key:
+        return self.metadata.get(key, None)
+    return self.metadata</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.get_ratio"><code class="name flex">
+<span>def <span class="ident">get_ratio</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Return the fixed ratio as an int.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_ratio(self):
+    &#34;&#34;&#34;Return the fixed ratio as an int.&#34;&#34;&#34;
+    ratio = self.get_metadata(&#34;fixed_ratio&#34;)
+    if ratio is not None:
+        return int(ratio)
+    return None</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.get_rw_ts"><code class="name flex">
+<span>def <span class="ident">get_rw_ts</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get the timestamps of rewards. </p>
+<p>Corrected for session switching/ending without reward collection.</p>
+<h2 id="returns">Returns</h2>
+<p>np.ndarray : A numpy array of sorted timestamps.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_rw_ts(self):
+    &#34;&#34;&#34;
+    Get the timestamps of rewards. 
+
+    Corrected for session switching/ending without reward collection.
+
+    Returns
+    -------
+    np.ndarray : A numpy array of sorted timestamps.
+
+    &#34;&#34;&#34;
+    session_type = self.get_metadata(&#39;name&#39;)
+    stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
+    pell_ts = self.get_arrays(&#34;Reward&#34;)
+    reward_times = self.get_arrays(&#34;Nosepoke&#34;)
+
+    pell_ts_exdouble = self.split_pell_ts()[0]
+
+    reward_times = self.get_arrays(&#34;Nosepoke&#34;)
+    trial_len = self.get_metadata(&#34;trial_length (mins)&#34;) * 60
+    if stage == &#39;7&#39; or stage == &#39;6&#39;:
+        trial_len += 5
+        repeated_trial_len = (trial_len) * 6
+
+    if stage == &#39;7&#39; or stage == &#39;6&#39;:
+        # Check if trial switched before reward collection -&gt; Adds collection as switch time
+        split_pell_ts = split_into_blocks(
+            pell_ts_exdouble, trial_len, 6)
+        split_reward_ts = split_into_blocks(
+            reward_times, trial_len, 6)
+
+        for i, (pell, reward) in enumerate(zip(split_pell_ts, split_reward_ts[:-1])):
+            if len(pell) &gt; len(reward):
+                reward_times = np.insert(
+                    reward_times, np.searchsorted(
+                        reward_times, blocks[i]), blocks[i])
+
+    # if last reward time &lt; last pellet dispensed, assume animal picked reward at end of session.
+    # Checks if last block contains responses first
+    if reward_times[-1] &lt; pell_ts[-1]:
+        if stage == &#39;7&#39; or stage == &#39;6&#39;:
+            reward_times = np.append(reward_times, repeated_trial_len)
+        else:
+            reward_times = np.append(reward_times, trial_len)
+
+    return np.sort(reward_times, axis=None)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.get_stage"><code class="name flex">
+<span>def <span class="ident">get_stage</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Obtain the stage number (without _)</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_stage(self):
+    &#34;&#34;&#34;Obtain the stage number (without _)&#34;&#34;&#34;
+    session_type = self.get_metadata(&#39;name&#39;)
+    stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
+    return stage</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.get_subject_type"><code class="name flex">
+<span>def <span class="ident">get_subject_type</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Return the subject and session type as a string.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_subject_type(self):
+    &#34;&#34;&#34;Return the subject and session type as a string.&#34;&#34;&#34;
+    subject = self.get_metadata(&#34;subject&#34;)
+    name = self.get_metadata(&#34;name&#34;)
+    return &#39;Subject: {}, Trial Type {}&#39;.format(subject, name)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.get_trial_df"><code class="name flex">
+<span>def <span class="ident">get_trial_df</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get dataframe split into trials without normalisation (time).</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_trial_df(self):
+    &#34;&#34;&#34;Get dataframe split into trials without normalisation (time).&#34;&#34;&#34;
+    if self.trial_df is None:
+        self.init_trial_dataframe()
+    return self.trial_df</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.get_trial_df_norm"><code class="name flex">
+<span>def <span class="ident">get_trial_df_norm</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get dataframe split into trials with normalisation (time).</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_trial_df_norm(self):
+    &#34;&#34;&#34;Get dataframe split into trials with normalisation (time).&#34;&#34;&#34;
+    if self.trial_df_norm is None:
+        self.init_trial_dataframe()
+    return self.trial_df_norm</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.init_trial_dataframe"><code class="name flex">
+<span>def <span class="ident">init_trial_dataframe</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def init_trial_dataframe(self):
+    self._init_trial_df()</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.save_to_h5"><code class="name flex">
+<span>def <span class="ident">save_to_h5</span></span>(<span>self, out_dir, name=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Save information to a h5 file</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def save_to_h5(self, out_dir, name=None):
+    &#34;&#34;&#34;Save information to a h5 file&#34;&#34;&#34;
+    location = name
+    if name == None:
+        location = self._get_hdf5_name()
+    self.h5_file = os.path.join(out_dir, location)
+    self._save_h5_info()</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.save_to_neo"><code class="name flex">
+<span>def <span class="ident">save_to_neo</span></span>(<span>self, out_dir, name=None, neo_backend='nix', remove_existing=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def save_to_neo(
+        self, out_dir, name=None, neo_backend=&#34;nix&#34;, remove_existing=False):
+    location = name
+    self.neo_backend = neo_backend
+    if name == None:
+        ext = self._get_neo_io(get_ext=True)
+        location = self._get_hdf5_name(ext=ext)
+    self.neo_file = os.path.join(out_dir, location)
+    self._save_neo_info(remove_existing)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.split_pell_ts"><code class="name flex">
+<span>def <span class="ident">split_pell_ts</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns a tuple of arrays splitting up the rewards.</p>
+<p>(Pellets without doubles, time of doubles)</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def split_pell_ts(self):
+    &#34;&#34;&#34;
+    Returns a tuple of arrays splitting up the rewards.
+
+    (Pellets without doubles, time of doubles)
+    &#34;&#34;&#34;
+
+    pell_ts = self.get_arrays(&#34;Reward&#34;)
+
+    dpell_bool = np.diff(pell_ts) &lt; 0.8
+    # Provides index of double pell in pell_ts
+    dpell_idx = np.nonzero(dpell_bool)[0] + 1
+    dpell = pell_ts[dpell_idx]
+
+    # pell drop ts excluding double ts
+    pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
+
+    return pell_ts_exdouble, dpell</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_session.Session.time_taken"><code class="name flex">
+<span>def <span class="ident">time_taken</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Calculate how long the Session took in mins.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def time_taken(self):
+    &#34;&#34;&#34;Calculate how long the Session took in mins.&#34;&#34;&#34;
+    start_time = self.get_metadata(&#34;start_time&#34;)[-8:].replace(&#39; &#39;, &#39;0&#39;)
+    end_time = self.get_metadata(&#34;end_time&#34;)[-8:].replace(&#39; &#39;, &#39;0&#39;)
+    fmt = &#39;%H:%M:%S&#39;
+    tdelta = (
+        datetime.strptime(end_time, fmt) -
+        datetime.strptime(start_time, fmt))
+    tdelta_mins = int(tdelta.total_seconds() / 60)
+    return tdelta_mins</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="bvmpc" href="index.html">bvmpc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="bvmpc.bv_session.Session" href="#bvmpc.bv_session.Session">Session</a></code></h4>
+<ul class="">
+<li><code><a title="bvmpc.bv_session.Session.get_arrays" href="#bvmpc.bv_session.Session.get_arrays">get_arrays</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.get_err_lever_ts" href="#bvmpc.bv_session.Session.get_err_lever_ts">get_err_lever_ts</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.get_interval" href="#bvmpc.bv_session.Session.get_interval">get_interval</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.get_lever_ts" href="#bvmpc.bv_session.Session.get_lever_ts">get_lever_ts</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.get_metadata" href="#bvmpc.bv_session.Session.get_metadata">get_metadata</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.get_ratio" href="#bvmpc.bv_session.Session.get_ratio">get_ratio</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.get_rw_ts" href="#bvmpc.bv_session.Session.get_rw_ts">get_rw_ts</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.get_stage" href="#bvmpc.bv_session.Session.get_stage">get_stage</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.get_subject_type" href="#bvmpc.bv_session.Session.get_subject_type">get_subject_type</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.get_trial_df" href="#bvmpc.bv_session.Session.get_trial_df">get_trial_df</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.get_trial_df_norm" href="#bvmpc.bv_session.Session.get_trial_df_norm">get_trial_df_norm</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.init_trial_dataframe" href="#bvmpc.bv_session.Session.init_trial_dataframe">init_trial_dataframe</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.save_to_h5" href="#bvmpc.bv_session.Session.save_to_h5">save_to_h5</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.save_to_neo" href="#bvmpc.bv_session.Session.save_to_neo">save_to_neo</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.split_pell_ts" href="#bvmpc.bv_session.Session.split_pell_ts">split_pell_ts</a></code></li>
+<li><code><a title="bvmpc.bv_session.Session.time_taken" href="#bvmpc.bv_session.Session.time_taken">time_taken</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

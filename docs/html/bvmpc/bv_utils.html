@@ -26,11 +26,236 @@
 <pre><code class="python">&#34;&#34;&#34;This holds utility functions.&#34;&#34;&#34;
 
 import os
+import re
+import argparse
+from datetime import timedelta
+from collections.abc import Iterable
+
+import h5py
+import numpy as np
+
+
+def boolean_indexing(v, fillval=np.nan):
+    lens = np.array([len(item) for item in v])
+    mask = lens[:, None] &gt; np.arange(lens.max())
+    out = np.full(mask.shape, fillval)
+    out[mask] = np.concatenate(v)
+    return out
+
+
+def daterange(start_date, end_date):
+    for n in range(int((end_date - start_date).days)):
+        yield start_date + timedelta(n)
 
 
 def make_dir_if_not_exists(location):
     &#34;&#34;&#34;Make directory structure for given location.&#34;&#34;&#34;
-    os.makedirs(location, exist_ok=True)</code></pre>
+    os.makedirs(location, exist_ok=True)
+
+
+def mycolors(subject):
+    &#34;&#34;&#34;Colour options for subject based on number&#34;&#34;&#34;
+    i = int(subject)
+    mycolors = [&#39;tab:red&#39;, &#39;tab:blue&#39;, &#39;tab:green&#39;, &#39;tab:orange&#39;,
+                &#39;tab:brown&#39;, &#39;deeppink&#39;, &#39;tab:olive&#39;, &#39;tab:pink&#39;,
+                &#39;steelblue&#39;, &#39;firebrick&#39;, &#39;mediumseagreen&#39;]
+    return mycolors[i]
+
+
+def split_list(list, chunk_limit):
+    &#34;&#34;&#34;Splits a list into small chunks based on chunk_limit&#34;&#34;&#34;
+    new_list = [list[i:i + chunk_limit]
+                for i in range(0, len(list), chunk_limit)]
+    return new_list
+
+
+def walk_dict(d, depth=0):
+    &#34;&#34;&#34;Walk a Dictionary.&#34;&#34;&#34;
+    for k, v in sorted(d.items(), key=lambda x: x[0]):
+        spaces = (&#34;  &#34;) * depth
+        if hasattr(v, &#34;items&#34;):
+            print(spaces + (&#34;%s&#34; % k))
+            walk_dict(v, depth + 1)
+        else:
+            print(spaces + &#34;%s %s&#34; % (k, v))
+
+
+def get_attrs(d, depth=0):
+    &#34;&#34;&#34;Walk through attributes.&#34;&#34;&#34;
+    for k, v in sorted(d.items(), key=lambda x: x[0]):
+        spaces = (&#34;  &#34;) * depth
+        if len(v.attrs) is not 0:
+            print(&#34;{}{} has attrs {}&#34;.format(
+                spaces, k, list(v.attrs.items())
+            ))
+        if hasattr(v, &#34;items&#34;):
+            get_attrs(v, depth=depth + 1)
+
+
+def print_h5(file_location):
+    &#34;&#34;&#34;Print a summary of a h5 file.&#34;&#34;&#34;
+    import h5py
+    with h5py.File(file_location, &#39;r&#39;, libver=&#39;latest&#39;) as f:
+        for key, val in f.attrs.items():
+            print(key, val)
+        print()
+        walk_dict(f)
+        print()
+
+
+def has_ext(filename, ext):
+    &#34;&#34;&#34;
+    Check if the filename ends in the extension
+
+    Parameters
+    ----------
+    filename : str
+        The name of the file
+    ext : str
+        The extension, may have leading dot (e.g txt == .txt)
+
+    Returns
+    -------
+    bool indicating if the filename has the extension
+
+    &#34;&#34;&#34;
+    if ext == None:
+        return True
+    if ext[0] != &#34;.&#34;:
+        ext = &#34;.&#34; + ext
+    return filename[-len(ext):].lower() == ext.lower()
+
+
+def get_all_files_in_dir(
+        in_dir, ext=None, return_absolute=True,
+        recursive=False, verbose=False, re_filter=None):
+    &#34;&#34;&#34;
+    Get all files in the directory with the given extension.
+
+    Parameters
+    ----------
+    in_dir : str
+        The absolute path to the directory
+    ext : str, optional. Defaults to None.
+        The extension of files to get.
+    return_absolute : bool, optional. Defaults to True.
+        Whether to return the absolute filename or not.
+    recursive: bool, optional. Defaults to False.
+        Whether to recurse through directories.
+    verbose: bool, optional. Defaults to False.
+        Whether to print the files found.
+
+    Returns
+    -------
+    List : A list of filenames
+    &#34;&#34;&#34;
+    if not os.path.isdir(in_dir):
+        print(&#34;Non existant directory &#34; + str(in_dir))
+        return []
+
+    def match_filter(f):
+        if re_filter is None:
+            return True
+        search_res = re.search(re_filter, f)
+        return search_res is not None
+
+    def ok_file(root_dir, f):
+        return (
+            has_ext(f, ext) and match_filter(f) and
+            os.path.isfile(os.path.join(root_dir, f)))
+
+    def convert_to_path(root_dir, f):
+        return os.path.join(root_dir, f) if return_absolute else f
+
+    if verbose:
+        print(&#34;Adding following files from {}&#34;.format(in_dir))
+
+    if recursive:
+        onlyfiles = []
+        for root, _, filenames in os.walk(in_dir):
+            start_root = root[:len(in_dir)]
+
+            if len(root) == len(start_root):
+                end_root = &#34;&#34;
+            else:
+                end_root = root[len(in_dir + os.sep):]
+            for filename in filenames:
+                filename = os.path.join(end_root, filename)
+                if ok_file(start_root, filename):
+                    to_add = convert_to_path(start_root, filename)
+                    if verbose:
+                        print(to_add)
+                    onlyfiles.append(to_add)
+
+    else:
+        onlyfiles = [
+            convert_to_path(in_dir, f) for f in sorted(os.listdir(in_dir))
+            if ok_file(in_dir, f)
+        ]
+        if verbose:
+            for f in onlyfiles:
+                print(f)
+
+    if verbose:
+        print()
+    return onlyfiles
+
+
+def log_exception(ex, more_info=&#34;&#34;):
+    &#34;&#34;&#34;
+    Log an expection and additional info
+
+    Parameters
+    ----------
+    ex : Exception
+        The python exception that occured
+    more_info : 
+        Additional string to log
+
+    Returns
+    -------
+    None
+
+    &#34;&#34;&#34;
+
+    template = &#34;{0} because exception of type {1} occurred. Arguments:\n{2!r}&#34;
+    message = template.format(more_info, type(ex).__name__, ex.args)
+    print(message)
+
+
+def chunks(l, n):
+    &#34;&#34;&#34;Yield successive n-sized chunks from l.&#34;&#34;&#34;
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
+
+def save_dict_to_csv(filename, d):
+    &#34;&#34;&#34;Saves d to a file&#34;&#34;&#34;
+    with open(filename, &#34;w&#34;) as f:
+        for k, v in d.items():
+            out_str = k.replace(&#34; &#34;, &#34;_&#34;)
+            if isinstance(v, Iterable):
+                if isinstance(v, np.ndarray):
+                    v = v.flatten()
+                else:
+                    v = np.array(v).flatten()
+                str_arr = [str(x) for x in v]
+                out_str = out_str + &#34;,&#34; + &#34;,&#34;.join(str_arr)
+            else:
+                out_str += &#34;,&#34; + str(v)
+            f.write(out_str + &#34;\n&#34;)
+
+
+if __name__ == &#34;__main__&#34;:
+    &#34;&#34;&#34;Main entry point.&#34;&#34;&#34;
+    PARSER = argparse.ArgumentParser(
+        description=&#39;Process modifiable parameters from command line&#39;)
+    PARSER.add_argument(&#34;--loc&#34;, type=str, help=&#34;h5 location&#34;)
+    ARGS, UNPARSED = PARSER.parse_known_args()
+    if ARGS.loc is None:
+        print(&#34;Please enter a location through cmd, see -h for help&#34;)
+        exit(-1)
+    print_h5(ARGS.loc)</code></pre>
 </details>
 </section>
 <section>
@@ -40,6 +265,248 @@ def make_dir_if_not_exists(location):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="bvmpc.bv_utils.boolean_indexing"><code class="name flex">
+<span>def <span class="ident">boolean_indexing</span></span>(<span>v, fillval=nan)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def boolean_indexing(v, fillval=np.nan):
+    lens = np.array([len(item) for item in v])
+    mask = lens[:, None] &gt; np.arange(lens.max())
+    out = np.full(mask.shape, fillval)
+    out[mask] = np.concatenate(v)
+    return out</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.chunks"><code class="name flex">
+<span>def <span class="ident">chunks</span></span>(<span>l, n)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Yield successive n-sized chunks from l.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def chunks(l, n):
+    &#34;&#34;&#34;Yield successive n-sized chunks from l.&#34;&#34;&#34;
+    for i in range(0, len(l), n):
+        yield l[i:i + n]</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.daterange"><code class="name flex">
+<span>def <span class="ident">daterange</span></span>(<span>start_date, end_date)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def daterange(start_date, end_date):
+    for n in range(int((end_date - start_date).days)):
+        yield start_date + timedelta(n)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.get_all_files_in_dir"><code class="name flex">
+<span>def <span class="ident">get_all_files_in_dir</span></span>(<span>in_dir, ext=None, return_absolute=True, recursive=False, verbose=False, re_filter=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get all files in the directory with the given extension.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>in_dir</code></strong> :&ensp;<code>str</code></dt>
+<dd>The absolute path to the directory</dd>
+</dl>
+<p>ext : str, optional. Defaults to None.
+The extension of files to get.
+return_absolute : bool, optional. Defaults to True.
+Whether to return the absolute filename or not.
+recursive: bool, optional. Defaults to False.
+Whether to recurse through directories.
+verbose: bool, optional. Defaults to False.
+Whether to print the files found.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>List</code></strong> :&ensp;<code>A</code> <code>list</code> of <code>filenames</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_all_files_in_dir(
+        in_dir, ext=None, return_absolute=True,
+        recursive=False, verbose=False, re_filter=None):
+    &#34;&#34;&#34;
+    Get all files in the directory with the given extension.
+
+    Parameters
+    ----------
+    in_dir : str
+        The absolute path to the directory
+    ext : str, optional. Defaults to None.
+        The extension of files to get.
+    return_absolute : bool, optional. Defaults to True.
+        Whether to return the absolute filename or not.
+    recursive: bool, optional. Defaults to False.
+        Whether to recurse through directories.
+    verbose: bool, optional. Defaults to False.
+        Whether to print the files found.
+
+    Returns
+    -------
+    List : A list of filenames
+    &#34;&#34;&#34;
+    if not os.path.isdir(in_dir):
+        print(&#34;Non existant directory &#34; + str(in_dir))
+        return []
+
+    def match_filter(f):
+        if re_filter is None:
+            return True
+        search_res = re.search(re_filter, f)
+        return search_res is not None
+
+    def ok_file(root_dir, f):
+        return (
+            has_ext(f, ext) and match_filter(f) and
+            os.path.isfile(os.path.join(root_dir, f)))
+
+    def convert_to_path(root_dir, f):
+        return os.path.join(root_dir, f) if return_absolute else f
+
+    if verbose:
+        print(&#34;Adding following files from {}&#34;.format(in_dir))
+
+    if recursive:
+        onlyfiles = []
+        for root, _, filenames in os.walk(in_dir):
+            start_root = root[:len(in_dir)]
+
+            if len(root) == len(start_root):
+                end_root = &#34;&#34;
+            else:
+                end_root = root[len(in_dir + os.sep):]
+            for filename in filenames:
+                filename = os.path.join(end_root, filename)
+                if ok_file(start_root, filename):
+                    to_add = convert_to_path(start_root, filename)
+                    if verbose:
+                        print(to_add)
+                    onlyfiles.append(to_add)
+
+    else:
+        onlyfiles = [
+            convert_to_path(in_dir, f) for f in sorted(os.listdir(in_dir))
+            if ok_file(in_dir, f)
+        ]
+        if verbose:
+            for f in onlyfiles:
+                print(f)
+
+    if verbose:
+        print()
+    return onlyfiles</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.get_attrs"><code class="name flex">
+<span>def <span class="ident">get_attrs</span></span>(<span>d, depth=0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Walk through attributes.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_attrs(d, depth=0):
+    &#34;&#34;&#34;Walk through attributes.&#34;&#34;&#34;
+    for k, v in sorted(d.items(), key=lambda x: x[0]):
+        spaces = (&#34;  &#34;) * depth
+        if len(v.attrs) is not 0:
+            print(&#34;{}{} has attrs {}&#34;.format(
+                spaces, k, list(v.attrs.items())
+            ))
+        if hasattr(v, &#34;items&#34;):
+            get_attrs(v, depth=depth + 1)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.has_ext"><code class="name flex">
+<span>def <span class="ident">has_ext</span></span>(<span>filename, ext)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Check if the filename ends in the extension</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of the file</dd>
+<dt><strong><code>ext</code></strong> :&ensp;<code>str</code></dt>
+<dd>The extension, may have leading dot (e.g txt == .txt)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code> <code>indicating</code> <code>if</code> <code>the</code> <code>filename</code> <code>has</code> <code>the</code> <code>extension</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def has_ext(filename, ext):
+    &#34;&#34;&#34;
+    Check if the filename ends in the extension
+
+    Parameters
+    ----------
+    filename : str
+        The name of the file
+    ext : str
+        The extension, may have leading dot (e.g txt == .txt)
+
+    Returns
+    -------
+    bool indicating if the filename has the extension
+
+    &#34;&#34;&#34;
+    if ext == None:
+        return True
+    if ext[0] != &#34;.&#34;:
+        ext = &#34;.&#34; + ext
+    return filename[-len(ext):].lower() == ext.lower()</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.log_exception"><code class="name flex">
+<span>def <span class="ident">log_exception</span></span>(<span>ex, more_info='')</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Log an expection and additional info</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ex</code></strong> :&ensp;<code>Exception</code></dt>
+<dd>The python exception that occured</dd>
+<dt><strong><code>more_info</code></strong></dt>
+<dd>Additional string to log</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def log_exception(ex, more_info=&#34;&#34;):
+    &#34;&#34;&#34;
+    Log an expection and additional info
+
+    Parameters
+    ----------
+    ex : Exception
+        The python exception that occured
+    more_info : 
+        Additional string to log
+
+    Returns
+    -------
+    None
+
+    &#34;&#34;&#34;
+
+    template = &#34;{0} because exception of type {1} occurred. Arguments:\n{2!r}&#34;
+    message = template.format(more_info, type(ex).__name__, ex.args)
+    print(message)</code></pre>
+</details>
+</dd>
 <dt id="bvmpc.bv_utils.make_dir_if_not_exists"><code class="name flex">
 <span>def <span class="ident">make_dir_if_not_exists</span></span>(<span>location)</span>
 </code></dt>
@@ -50,6 +517,96 @@ def make_dir_if_not_exists(location):
 <pre><code class="python">def make_dir_if_not_exists(location):
     &#34;&#34;&#34;Make directory structure for given location.&#34;&#34;&#34;
     os.makedirs(location, exist_ok=True)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.mycolors"><code class="name flex">
+<span>def <span class="ident">mycolors</span></span>(<span>subject)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Colour options for subject based on number</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def mycolors(subject):
+    &#34;&#34;&#34;Colour options for subject based on number&#34;&#34;&#34;
+    i = int(subject)
+    mycolors = [&#39;tab:red&#39;, &#39;tab:blue&#39;, &#39;tab:green&#39;, &#39;tab:orange&#39;,
+                &#39;tab:brown&#39;, &#39;deeppink&#39;, &#39;tab:olive&#39;, &#39;tab:pink&#39;,
+                &#39;steelblue&#39;, &#39;firebrick&#39;, &#39;mediumseagreen&#39;]
+    return mycolors[i]</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.print_h5"><code class="name flex">
+<span>def <span class="ident">print_h5</span></span>(<span>file_location)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Print a summary of a h5 file.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def print_h5(file_location):
+    &#34;&#34;&#34;Print a summary of a h5 file.&#34;&#34;&#34;
+    import h5py
+    with h5py.File(file_location, &#39;r&#39;, libver=&#39;latest&#39;) as f:
+        for key, val in f.attrs.items():
+            print(key, val)
+        print()
+        walk_dict(f)
+        print()</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.save_dict_to_csv"><code class="name flex">
+<span>def <span class="ident">save_dict_to_csv</span></span>(<span>filename, d)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Saves d to a file</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def save_dict_to_csv(filename, d):
+    &#34;&#34;&#34;Saves d to a file&#34;&#34;&#34;
+    with open(filename, &#34;w&#34;) as f:
+        for k, v in d.items():
+            out_str = k.replace(&#34; &#34;, &#34;_&#34;)
+            if isinstance(v, Iterable):
+                if isinstance(v, np.ndarray):
+                    v = v.flatten()
+                else:
+                    v = np.array(v).flatten()
+                str_arr = [str(x) for x in v]
+                out_str = out_str + &#34;,&#34; + &#34;,&#34;.join(str_arr)
+            else:
+                out_str += &#34;,&#34; + str(v)
+            f.write(out_str + &#34;\n&#34;)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.split_list"><code class="name flex">
+<span>def <span class="ident">split_list</span></span>(<span>list, chunk_limit)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Splits a list into small chunks based on chunk_limit</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def split_list(list, chunk_limit):
+    &#34;&#34;&#34;Splits a list into small chunks based on chunk_limit&#34;&#34;&#34;
+    new_list = [list[i:i + chunk_limit]
+                for i in range(0, len(list), chunk_limit)]
+    return new_list</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.walk_dict"><code class="name flex">
+<span>def <span class="ident">walk_dict</span></span>(<span>d, depth=0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Walk a Dictionary.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def walk_dict(d, depth=0):
+    &#34;&#34;&#34;Walk a Dictionary.&#34;&#34;&#34;
+    for k, v in sorted(d.items(), key=lambda x: x[0]):
+        spaces = (&#34;  &#34;) * depth
+        if hasattr(v, &#34;items&#34;):
+            print(spaces + (&#34;%s&#34; % k))
+            walk_dict(v, depth + 1)
+        else:
+            print(spaces + &#34;%s %s&#34; % (k, v))</code></pre>
 </details>
 </dd>
 </dl>
@@ -70,7 +627,19 @@ def make_dir_if_not_exists(location):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="bvmpc.bv_utils.boolean_indexing" href="#bvmpc.bv_utils.boolean_indexing">boolean_indexing</a></code></li>
+<li><code><a title="bvmpc.bv_utils.chunks" href="#bvmpc.bv_utils.chunks">chunks</a></code></li>
+<li><code><a title="bvmpc.bv_utils.daterange" href="#bvmpc.bv_utils.daterange">daterange</a></code></li>
+<li><code><a title="bvmpc.bv_utils.get_all_files_in_dir" href="#bvmpc.bv_utils.get_all_files_in_dir">get_all_files_in_dir</a></code></li>
+<li><code><a title="bvmpc.bv_utils.get_attrs" href="#bvmpc.bv_utils.get_attrs">get_attrs</a></code></li>
+<li><code><a title="bvmpc.bv_utils.has_ext" href="#bvmpc.bv_utils.has_ext">has_ext</a></code></li>
+<li><code><a title="bvmpc.bv_utils.log_exception" href="#bvmpc.bv_utils.log_exception">log_exception</a></code></li>
 <li><code><a title="bvmpc.bv_utils.make_dir_if_not_exists" href="#bvmpc.bv_utils.make_dir_if_not_exists">make_dir_if_not_exists</a></code></li>
+<li><code><a title="bvmpc.bv_utils.mycolors" href="#bvmpc.bv_utils.mycolors">mycolors</a></code></li>
+<li><code><a title="bvmpc.bv_utils.print_h5" href="#bvmpc.bv_utils.print_h5">print_h5</a></code></li>
+<li><code><a title="bvmpc.bv_utils.save_dict_to_csv" href="#bvmpc.bv_utils.save_dict_to_csv">save_dict_to_csv</a></code></li>
+<li><code><a title="bvmpc.bv_utils.split_list" href="#bvmpc.bv_utils.split_list">split_list</a></code></li>
+<li><code><a title="bvmpc.bv_utils.walk_dict" href="#bvmpc.bv_utils.walk_dict">walk_dict</a></code></li>
 </ul>
 </li>
 </ul>

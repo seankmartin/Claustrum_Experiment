@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>bvmpc.bv_plot API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>bvmpc.bv_plot</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">import os
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+
+
+class GridFig:
+    &#34;&#34;&#34; Handles gridded figures. &#34;&#34;&#34;
+
+    def __init__(
+            self, rows, cols=4,
+            size_multiplier=5, wspace=0.3, hspace=0.3,
+            tight_layout=False):
+        self.fig = plt.figure(
+            figsize=(cols * size_multiplier,
+                     rows * size_multiplier),
+            tight_layout=tight_layout)
+        self.gs = gridspec.GridSpec(rows, cols, wspace=wspace, hspace=hspace)
+        self.idx = 0
+        self.rows = rows
+        self.cols = cols
+
+    def get_ax(self, row_idx, col_idx):
+        &#39;&#39;&#39; Add subplot with standard 1x1 gs -&gt; returns ax &#39;&#39;&#39;
+        ax = self.fig.add_subplot(self.gs[row_idx, col_idx])
+        return ax
+
+    def get_multi_ax(self, row_start, row_end, col_start, col_end):
+        &#39;&#39;&#39; Add subplot with custom gs sizes -&gt; returns ax &#39;&#39;&#39;
+        ax = self.fig.add_subplot(
+            self.gs[row_start:row_end, col_start:col_end])
+        plt.subplots_adjust(top=0.85)
+        return ax
+
+    def save_fig(self, df_date, df_sub, df_stage, plot_type, out_dir, j=None):
+        &#39;&#39;&#39; Names and saves figure. Required inputs:
+            df_date - list of dates plot
+            df_sub - list of subjects plot
+            df_stage - list of stages plot
+            plot_type - name of plot type
+            out_dir - location to save figure
+            j - current figure index
+        &#39;&#39;&#39;
+
+        date_p = sorted(set(df_date))
+        sub_p = sorted(set(df_sub))
+        stage_p = sorted(set(df_stage))
+        out_name = plot_type + \
+            str(date_p) + &#39;_&#39; + str(sub_p) + \
+            &#39;_&#39; + str(stage_p)
+        if j is not None:
+            out_name += &#39;_&#39; + str(j)
+        out_name += &#34;.png&#34;
+        print(&#34;Saved figure to {}&#34;.format(
+            os.path.join(out_dir, out_name)))
+        self.fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+        plt.close()
+        return
+
+    def get_fig(self):
+        return self.fig
+
+    def get_next(self, along_rows=True):
+        &#34;&#34;&#34;Moves like this:
+        along rows:
+        1   2   3   4   5   6
+        7   8   9   10  11  12  ...
+
+        else:
+        1   3   5   7   9   11
+        2   3   6   8   10  12  ...
+        &#34;&#34;&#34;
+        if along_rows:
+            row_idx = (self.idx // self.cols)
+            col_idx = (self.idx % self.cols)
+
+            print(row_idx, col_idx)
+            ax = self.get_ax(row_idx, col_idx)
+        else:
+            row_idx = (self.idx % self.rows)
+            col_idx = (self.idx // self.rows)
+
+            print(row_idx, col_idx)
+            ax = self.get_ax(row_idx, col_idx)
+        self._increment()
+        return ax
+
+    def get_next_snake(self):
+        &#34;&#34;&#34;Moves like this:
+
+        1   2   5   6   9   10  ...
+        3   4   7   8   11  12  ...
+        &#34;&#34;&#34;
+        if self.rows != 2:
+            print(&#34;ERROR: Can&#39;t get snake unless there are two rows&#34;)
+        i = self.idx
+        row_idx = (i // 2) % 2
+        col_idx = (i // 2) + (i % 2) - row_idx
+        ax = self.get_ax(row_idx, col_idx)
+        self._increment()
+        return ax
+
+    def _increment(self):
+        self.idx = self.idx + 1
+        if self.idx == self.rows * self.cols:
+            print(&#34;Looping&#34;)
+            self.idx = 0</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="bvmpc.bv_plot.GridFig"><code class="flex name class">
+<span>class <span class="ident">GridFig</span></span>
+<span>(</span><span>rows, cols=4, size_multiplier=5, wspace=0.3, hspace=0.3, tight_layout=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Handles gridded figures.</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class GridFig:
+    &#34;&#34;&#34; Handles gridded figures. &#34;&#34;&#34;
+
+    def __init__(
+            self, rows, cols=4,
+            size_multiplier=5, wspace=0.3, hspace=0.3,
+            tight_layout=False):
+        self.fig = plt.figure(
+            figsize=(cols * size_multiplier,
+                     rows * size_multiplier),
+            tight_layout=tight_layout)
+        self.gs = gridspec.GridSpec(rows, cols, wspace=wspace, hspace=hspace)
+        self.idx = 0
+        self.rows = rows
+        self.cols = cols
+
+    def get_ax(self, row_idx, col_idx):
+        &#39;&#39;&#39; Add subplot with standard 1x1 gs -&gt; returns ax &#39;&#39;&#39;
+        ax = self.fig.add_subplot(self.gs[row_idx, col_idx])
+        return ax
+
+    def get_multi_ax(self, row_start, row_end, col_start, col_end):
+        &#39;&#39;&#39; Add subplot with custom gs sizes -&gt; returns ax &#39;&#39;&#39;
+        ax = self.fig.add_subplot(
+            self.gs[row_start:row_end, col_start:col_end])
+        plt.subplots_adjust(top=0.85)
+        return ax
+
+    def save_fig(self, df_date, df_sub, df_stage, plot_type, out_dir, j=None):
+        &#39;&#39;&#39; Names and saves figure. Required inputs:
+            df_date - list of dates plot
+            df_sub - list of subjects plot
+            df_stage - list of stages plot
+            plot_type - name of plot type
+            out_dir - location to save figure
+            j - current figure index
+        &#39;&#39;&#39;
+
+        date_p = sorted(set(df_date))
+        sub_p = sorted(set(df_sub))
+        stage_p = sorted(set(df_stage))
+        out_name = plot_type + \
+            str(date_p) + &#39;_&#39; + str(sub_p) + \
+            &#39;_&#39; + str(stage_p)
+        if j is not None:
+            out_name += &#39;_&#39; + str(j)
+        out_name += &#34;.png&#34;
+        print(&#34;Saved figure to {}&#34;.format(
+            os.path.join(out_dir, out_name)))
+        self.fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+        plt.close()
+        return
+
+    def get_fig(self):
+        return self.fig
+
+    def get_next(self, along_rows=True):
+        &#34;&#34;&#34;Moves like this:
+        along rows:
+        1   2   3   4   5   6
+        7   8   9   10  11  12  ...
+
+        else:
+        1   3   5   7   9   11
+        2   3   6   8   10  12  ...
+        &#34;&#34;&#34;
+        if along_rows:
+            row_idx = (self.idx // self.cols)
+            col_idx = (self.idx % self.cols)
+
+            print(row_idx, col_idx)
+            ax = self.get_ax(row_idx, col_idx)
+        else:
+            row_idx = (self.idx % self.rows)
+            col_idx = (self.idx // self.rows)
+
+            print(row_idx, col_idx)
+            ax = self.get_ax(row_idx, col_idx)
+        self._increment()
+        return ax
+
+    def get_next_snake(self):
+        &#34;&#34;&#34;Moves like this:
+
+        1   2   5   6   9   10  ...
+        3   4   7   8   11  12  ...
+        &#34;&#34;&#34;
+        if self.rows != 2:
+            print(&#34;ERROR: Can&#39;t get snake unless there are two rows&#34;)
+        i = self.idx
+        row_idx = (i // 2) % 2
+        col_idx = (i // 2) + (i % 2) - row_idx
+        ax = self.get_ax(row_idx, col_idx)
+        self._increment()
+        return ax
+
+    def _increment(self):
+        self.idx = self.idx + 1
+        if self.idx == self.rows * self.cols:
+            print(&#34;Looping&#34;)
+            self.idx = 0</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="bvmpc.bv_plot.GridFig.get_ax"><code class="name flex">
+<span>def <span class="ident">get_ax</span></span>(<span>self, row_idx, col_idx)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Add subplot with standard 1x1 gs -&gt; returns ax</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_ax(self, row_idx, col_idx):
+    &#39;&#39;&#39; Add subplot with standard 1x1 gs -&gt; returns ax &#39;&#39;&#39;
+    ax = self.fig.add_subplot(self.gs[row_idx, col_idx])
+    return ax</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_plot.GridFig.get_fig"><code class="name flex">
+<span>def <span class="ident">get_fig</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_fig(self):
+    return self.fig</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_plot.GridFig.get_multi_ax"><code class="name flex">
+<span>def <span class="ident">get_multi_ax</span></span>(<span>self, row_start, row_end, col_start, col_end)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Add subplot with custom gs sizes -&gt; returns ax</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_multi_ax(self, row_start, row_end, col_start, col_end):
+    &#39;&#39;&#39; Add subplot with custom gs sizes -&gt; returns ax &#39;&#39;&#39;
+    ax = self.fig.add_subplot(
+        self.gs[row_start:row_end, col_start:col_end])
+    plt.subplots_adjust(top=0.85)
+    return ax</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_plot.GridFig.get_next"><code class="name flex">
+<span>def <span class="ident">get_next</span></span>(<span>self, along_rows=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Moves like this:
+along rows:
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+&hellip;</p>
+<p>else:
+1
+3
+5
+7
+9
+11
+2
+3
+6
+8
+10
+12
+&hellip;</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_next(self, along_rows=True):
+    &#34;&#34;&#34;Moves like this:
+    along rows:
+    1   2   3   4   5   6
+    7   8   9   10  11  12  ...
+
+    else:
+    1   3   5   7   9   11
+    2   3   6   8   10  12  ...
+    &#34;&#34;&#34;
+    if along_rows:
+        row_idx = (self.idx // self.cols)
+        col_idx = (self.idx % self.cols)
+
+        print(row_idx, col_idx)
+        ax = self.get_ax(row_idx, col_idx)
+    else:
+        row_idx = (self.idx % self.rows)
+        col_idx = (self.idx // self.rows)
+
+        print(row_idx, col_idx)
+        ax = self.get_ax(row_idx, col_idx)
+    self._increment()
+    return ax</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_plot.GridFig.get_next_snake"><code class="name flex">
+<span>def <span class="ident">get_next_snake</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Moves like this:</p>
+<p>1
+2
+5
+6
+9
+10
+&hellip;
+3
+4
+7
+8
+11
+12
+&hellip;</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def get_next_snake(self):
+    &#34;&#34;&#34;Moves like this:
+
+    1   2   5   6   9   10  ...
+    3   4   7   8   11  12  ...
+    &#34;&#34;&#34;
+    if self.rows != 2:
+        print(&#34;ERROR: Can&#39;t get snake unless there are two rows&#34;)
+    i = self.idx
+    row_idx = (i // 2) % 2
+    col_idx = (i // 2) + (i % 2) - row_idx
+    ax = self.get_ax(row_idx, col_idx)
+    self._increment()
+    return ax</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_plot.GridFig.save_fig"><code class="name flex">
+<span>def <span class="ident">save_fig</span></span>(<span>self, df_date, df_sub, df_stage, plot_type, out_dir, j=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Names and saves figure. Required inputs:
+df_date - list of dates plot
+df_sub - list of subjects plot
+df_stage - list of stages plot
+plot_type - name of plot type
+out_dir - location to save figure
+j - current figure index</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def save_fig(self, df_date, df_sub, df_stage, plot_type, out_dir, j=None):
+    &#39;&#39;&#39; Names and saves figure. Required inputs:
+        df_date - list of dates plot
+        df_sub - list of subjects plot
+        df_stage - list of stages plot
+        plot_type - name of plot type
+        out_dir - location to save figure
+        j - current figure index
+    &#39;&#39;&#39;
+
+    date_p = sorted(set(df_date))
+    sub_p = sorted(set(df_sub))
+    stage_p = sorted(set(df_stage))
+    out_name = plot_type + \
+        str(date_p) + &#39;_&#39; + str(sub_p) + \
+        &#39;_&#39; + str(stage_p)
+    if j is not None:
+        out_name += &#39;_&#39; + str(j)
+    out_name += &#34;.png&#34;
+    print(&#34;Saved figure to {}&#34;.format(
+        os.path.join(out_dir, out_name)))
+    self.fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+    plt.close()
+    return</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="bvmpc" href="index.html">bvmpc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="bvmpc.bv_plot.GridFig" href="#bvmpc.bv_plot.GridFig">GridFig</a></code></h4>
+<ul class="two-column">
+<li><code><a title="bvmpc.bv_plot.GridFig.get_ax" href="#bvmpc.bv_plot.GridFig.get_ax">get_ax</a></code></li>
+<li><code><a title="bvmpc.bv_plot.GridFig.get_fig" href="#bvmpc.bv_plot.GridFig.get_fig">get_fig</a></code></li>
+<li><code><a title="bvmpc.bv_plot.GridFig.get_multi_ax" href="#bvmpc.bv_plot.GridFig.get_multi_ax">get_multi_ax</a></code></li>
+<li><code><a title="bvmpc.bv_plot.GridFig.get_next" href="#bvmpc.bv_plot.GridFig.get_next">get_next</a></code></li>
+<li><code><a title="bvmpc.bv_plot.GridFig.get_next_snake" href="#bvmpc.bv_plot.GridFig.get_next_snake">get_next_snake</a></code></li>
+<li><code><a title="bvmpc.bv_plot.GridFig.save_fig" href="#bvmpc.bv_plot.GridFig.save_fig">save_fig</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
