@@ -1,9 +1,0 @@
-\ Tutorial1: Turn on and off an output
-
-^OutPin = 1
-
-S.S.1,
-S1,
-    1": ON ^OutPin ---> S2
-S2,
-    5": OFF ^OutPin ---> S1

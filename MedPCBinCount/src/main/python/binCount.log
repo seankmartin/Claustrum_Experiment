@@ -1,2 +1,0 @@
-ERROR:root:During loading file because exception of type TypeError occurred. Arguments:
-('expected str, bytes or os.PathLike object, not NoneType',)
