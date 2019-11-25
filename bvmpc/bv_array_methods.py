@@ -33,7 +33,7 @@ def split_array(array, idxs):
 
 def split_array_with_another(array, split_arr):
     """
-    Split a sorted one d array into two with 
+    Split a sorted one d array into two with
     one array being the values directly after splt_arr.
 
     Returns

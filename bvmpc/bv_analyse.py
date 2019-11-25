@@ -97,8 +97,8 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
             for x in switch_ts:
                 plt.axvline(x, color='g', linestyle='-.', linewidth='.4')
             ax.set_title('\nSubject {}, S{}, FR{}/FI{}s, {}'.format(
-                subject, stage, ratio, interval, date), color=mycolors(subject),
-                fontsize=10)
+                subject, stage, ratio, interval, date),
+                color=mycolors(subject), fontsize=10)
         else:
             ax.set_title('\nSubject {}, S{}, {}'.format(
                 subject, stage, date), color=mycolors(subject),
@@ -265,19 +265,28 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         print("Saved figure to {}".format(out_name))
         # Text Display on Graph
         if stage == '6' or stage == '7':
-            ax.text(0.55, 0.15, 'Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}'
-                    .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
+            text = (
+                'Total # of Lever Press: ' +
+                '{}\nTotal # of Rewards: {}{}{}{}'.format(
+                    len(lever_ts), len(reward_times) + len(reward_double),
+                    dr_print, rw_print, err_print))
+            ax.text(0.55, 0.15, text, transform=ax.transAxes)
         fig.savefig(out_name, dpi=400)
         plt.close()
     else:
         # Text Display on Graph
         if stage == '6' or stage == '7':
-            ax.text(0.05, 0.75, 'Total # of Lever Press: {}\nTotal # of Rewards: {}{}{}{}'
-                    .format(len(lever_ts), len(reward_times) + len(reward_double), dr_print, rw_print, err_print), transform=ax.transAxes)
+            text = (
+                'Total # of Lever Press: ' +
+                '{}\nTotal # of Rewards: {}{}{}{}'.format(
+                    len(lever_ts), len(reward_times) + len(reward_double),
+                    dr_print, rw_print, err_print))
+            ax.text(0.05, 0.75, text, transform=ax.transAxes)
         return
 
 
-def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False):
+def split_sess(
+        session, norm=True, blocks=None, plot_error=False, plot_all=False):
     '''
     blocks: defines timepoints to split
 
@@ -294,8 +303,10 @@ def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False
     lever_ts = session.get_lever_ts()
     pell_ts = timestamps["Reward"]
     pell_double = np.nonzero(np.diff(pell_ts) < 0.5)
-    reward_double = reward_times[np.searchsorted(
-        reward_times, pell_ts[pell_double], side='right')]  # returns reward ts after d_pell
+    # returns reward ts after d_pell
+    reward_double = reward_times[
+        np.searchsorted(
+            reward_times, pell_ts[pell_double], side='right')]
     err_lever_ts = []
 
     if blocks is not None:
@@ -343,7 +354,10 @@ def split_sess(session, norm=True, blocks=None, plot_error=False, plot_all=False
 
 
 def IRT(session, out_dir, ax=None, showIRT=False):
-    """Perform an inter-response time plot for a Session. IRT calculated from prev reward to next lever press resulting in reward"""
+    """
+    Perform an inter-response time plot for a Session.
+
+    IRT calculated from prev reward to next lever press resulting in reward"""
     single_plot = False
 
     # General session info
@@ -420,8 +434,11 @@ def IRT(session, out_dir, ax=None, showIRT=False):
         show_IRT_details(IRT, maxidx, hist_bins)
     if single_plot:
         # Text Display on Graph
-        ax.text(0.55, 0.8, 'Session Duration: {} mins\nMost Freq. IRT Bin: {} s'
-                .format(time_taken, maxval), transform=ax.transAxes)
+        text = (
+            'Session Duration: ' +
+            '{} mins\nMost Freq. IRT Bin: {} s'.format(
+                time_taken, maxval))
+        ax.text(0.55, 0.8, text, transform=ax.transAxes)
         out_name = (subject.zfill(3) + "_IRT_Hist_" +
                     session_type[:-2] + "_" + date + ".png")
         print("Saved figure to {}".format(
@@ -435,8 +452,8 @@ def IRT(session, out_dir, ax=None, showIRT=False):
 def show_IRT_details(IRT, maxidx, hist_bins):
     """Display further information for an IRT."""
     plt.show()
-    print('Most Freq. IRT Bin: {} s'.format((hist_bins[maxidx + 1] -
-                                             hist_bins[maxidx]) / 2 + hist_bins[maxidx]))
+    print('Most Freq. IRT Bin: {} s'.format(
+        ((hist_bins[maxidx + 1] - hist_bins[maxidx]) / 2) + hist_bins[maxidx]))
     print(
         'Median Inter-Response Time (IRT): {0:.2f} s'.format(np.median(IRT)))
     print('Min IRT: {0:.2f} s'.format(np.amin(IRT)))

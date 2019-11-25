@@ -108,16 +108,17 @@ class Session:
     def save_to_h5(self, out_dir, name=None):
         """Save information to a h5 file"""
         location = name
-        if name == None:
+        if name is None:
             location = self._get_hdf5_name()
         self.h5_file = os.path.join(out_dir, location)
         self._save_h5_info()
 
     def save_to_neo(
-            self, out_dir, name=None, neo_backend="nix", remove_existing=False):
+            self, out_dir, name=None,
+            neo_backend="nix", remove_existing=False):
         location = name
         self.neo_backend = neo_backend
-        if name == None:
+        if name is None:
             ext = self._get_neo_io(get_ext=True)
             location = self._get_hdf5_name(ext=ext)
         self.neo_file = os.path.join(out_dir, location)
@@ -266,7 +267,7 @@ class Session:
 
     def get_rw_ts(self):
         """
-        Get the timestamps of rewards. 
+        Get the timestamps of rewards.
 
         Corrected for session switching/ending without reward collection.
 
@@ -289,19 +290,22 @@ class Session:
             repeated_trial_len = (trial_len) * 6
 
         if stage == '7' or stage == '6':
-            # Check if trial switched before reward collection -> Adds collection as switch time
+            # Check if trial switched before reward collection
+            # -> Adds collection as switch time
             split_pell_ts = split_into_blocks(
                 pell_ts_exdouble, trial_len, 6)
             split_reward_ts = split_into_blocks(
                 reward_times, trial_len, 6)
 
-            for i, (pell, reward) in enumerate(zip(split_pell_ts, split_reward_ts[:-1])):
+            for i, (pell, reward) in enumerate(
+                    zip(split_pell_ts, split_reward_ts[:-1])):
                 if len(pell) > len(reward):
                     reward_times = np.insert(
                         reward_times, np.searchsorted(
                             reward_times, blocks[i]), blocks[i])
 
-        # if last reward time < last pellet dispensed, assume animal picked reward at end of session.
+        # if last reward time < last pellet dispensed,
+        # assume animal picked reward at end of session.
         # Checks if last block contains responses first
         if reward_times[-1] < pell_ts[-1]:
             if stage == '7' or stage == '6':
@@ -439,8 +443,11 @@ class Session:
         good_nosepokes, un_nosepokes = split_array_with_another(
             nosepokes, pell_ts_exdouble)
 
-        # TODO make sure that nosepoke occurs before trial switch if reward before trial switch - Ham has idea for this already in another function
-        # For now, just a check!
+        """
+        TODO make sure that nosepoke occurs before trial switch if reward
+        before trial switch - Ham has idea for this already in another function
+        For now, just a check!
+        """
         split_nosepokes = split_into_blocks(
             good_nosepokes, 305, 6)
         split_pellets = split_into_blocks(

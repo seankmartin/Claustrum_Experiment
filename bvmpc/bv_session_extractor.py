@@ -60,7 +60,8 @@ class SessionExtractor:
                 s_data = np.array(lines[start:end])
                 self.sessions.append(
                     Session(
-                        lines=s_data, verbose=self.verbose, file_origin=self.file_location))
+                        lines=s_data, verbose=self.verbose,
+                        file_origin=self.file_location))
             return self.sessions
 
     def __repr__(self):

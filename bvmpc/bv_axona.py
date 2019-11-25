@@ -200,7 +200,7 @@ def main_cmd():
     parser = argparse.ArgumentParser(description="Parse a program location")
     parser.add_argument("--loc", "-l", type=str, help="inp file location")
     parsed = parser.parse_args()
-    if parsed.loc == None:
+    if parsed.loc is None:
         print("Please enter a location through cmd with -l LOCATION")
         exit(-1)
     main(parsed.loc)

@@ -94,7 +94,7 @@ def has_ext(filename, ext):
     bool indicating if the filename has the extension
 
     """
-    if ext == None:
+    if ext is None:
         return True
     if ext[0] != ".":
         ext = "." + ext
@@ -184,7 +184,7 @@ def log_exception(ex, more_info=""):
     ----------
     ex : Exception
         The python exception that occured
-    more_info : 
+    more_info :
         Additional string to log
 
     Returns
