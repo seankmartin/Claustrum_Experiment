@@ -423,10 +423,10 @@ def grp_errors(s_grp):
     return grp_FRerr, grp_FIerr
 
 def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
-    out_dir = os.path.join(start_dir, "Plots")
+    out_dir = os.path.join(start_dir, "Plots\Current")
     
     # Quick control of plotting
-    timeline, summary, raster, hist = [0, 0, 1, 0]
+    timeline, summary, raster, hist = [1, 0, 0, 0]
 
     if raster or hist:
         in_dir = os.path.join(start_dir, "hdf5")  # Path join only present in plot_sessions
@@ -559,7 +559,7 @@ def plot_sessions(
     s_list = ['4', '5a', '5b', '6', '7']
 
     in_dir = os.path.join(start_dir, "hdf5")
-    out_dir = os.path.join(start_dir, "Plots")
+    out_dir = os.path.join(start_dir, "Plots\Current")
     make_dir_if_not_exists(out_dir)
 
     if summary and not corr_only:
@@ -675,6 +675,9 @@ def plot_sessions(
 
 def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
              int_only=False, corr_only=False):
+    """ zoom:   if True, divides session into blocks and plots each block as individual lines.
+
+    """
     # Plots summary of day
     if zoom:
         print('zoomed')
@@ -1210,12 +1213,12 @@ def main_batch(
         # sub = ['10']
         # sub = ['3','4']
 
-        # start_date = date(2019, 10, 23)  # date(year, mth, day)
-        # end_date = date(2019, 8, 12)
+        start_date = date(2019, 11, 14)  # date(year, mth, day)
+        end_date = date(2019, 11, 26)
 
-        # Sets date using today as reference (Default)
-        start_date = date.today() - timedelta(days=3)
-        end_date = date.today() - timedelta(days=0)
+        # # Sets date using today as reference (Default)
+        # start_date = date.today() - timedelta(days=3)
+        # end_date = date.today() - timedelta(days=0)
 
         # for sub in sub:
             # plot_batch_sessions(out_main_dir, sub, start_date, end_date)
@@ -1227,7 +1230,7 @@ def main_batch(
 if __name__ == "__main__":
     # TODO set this up with a cfg file and cmd args
 
-    start_dir = r"F:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
+    start_dir = r"G:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
     out_dir = start_dir
     # start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
     # start_dir = r"C:\Users\smartin5\TCDUD.onmicrosoft.com\Gao Xiang Ham - MEDPC"
@@ -1239,9 +1242,10 @@ if __name__ == "__main__":
     # 2 - plot batch sessions, sub, and dates in main_batch
     # 3 - temporary compare variables function
     analysis_flags = [False, False, True, False]
-    # main_batch(start_dir, analysis_flags, out_dir)
+    main_batch(start_dir, analysis_flags, out_dir)
 
-    location = r"/home/sean/Downloads/CAR-S2_2019-11-18_Unit.inp"
-    s = Session(axona_file=location)
-    out_name = location[:-4] + "_parsed.csv"
-    save_dict_to_csv(out_name, s.info_arrays)
+    ## Convert inp to csv
+    # location = r"/home/sean/Downloads/CAR-S2_2019-11-18_Unit.inp"
+    # s = Session(axona_file=location)
+    # out_name = location[:-4] + "_parsed.csv"
+    # save_dict_to_csv(out_name, s.info_arrays)

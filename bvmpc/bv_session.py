@@ -302,11 +302,12 @@ class Session:
                 reward_times, trial_len, 6)
 
             for i, (pell, reward) in enumerate(
-                    zip(split_pell_ts, split_reward_ts[:-1])):
+                    zip(split_pell_ts, split_reward_ts)):
                 if len(pell) > len(reward):
+                    block_len = trial_len * (i+1)
                     reward_times = np.insert(
                         reward_times, np.searchsorted(
-                            reward_times, blocks[i]), blocks[i])
+                            reward_times, block_len), block_len)
 
         # if last reward time < last pellet dispensed,
         # assume animal picked reward at end of session.
