@@ -12,7 +12,7 @@ import bvmpc.bv_plot as bv_plot
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from scipy import interpolate
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 
 # def split_df(grp_trial_df):  
     # TODO split trial dataframe into FR and FI only dfs
@@ -783,7 +783,7 @@ def timeline_plot(
     for c, sub in enumerate(sub_list):
         # Plot total pellets across sessions
         s_grp = extract_sessions(in_dir, [sub])
-        s_list, r_list, type_list, d_list = [], [], [], []
+        s_list, r_list, type_list, d_list, box_list, time_list = [], [], [], [], [], []
         err_FR_list, err_FI_list = [], []
         rw_FR_list, rw_FI_list, rw_double_list = [], [], []
         changes, stage_change, dpell_change = [], [], []
@@ -807,8 +807,12 @@ def timeline_plot(
             pell_ts = timestamps["Reward"]
             pell_double = np.nonzero(np.diff(pell_ts) < 0.5)[0]
             reward_times = s.get_rw_ts()
+            box = s.get_metadata('box')
+            exptime = s.get_metadata('start_time')[:2]  # time format - "%H:%M:%S"
 
             d_list.append(date)
+            box_list.append(box)
+            time_list.append(exptime)
 
             if len(pell_double):
                 dpell_change = 1
@@ -910,6 +914,7 @@ def timeline_plot(
             prev_ratio = c_ratio
             prev_interval = c_interval
             prev_name = s_type
+        
         if single_plot:
             rows, cols = [1, 4]
             size_multiplier = 5
@@ -927,7 +932,8 @@ def timeline_plot(
             ax = fig.add_subplot(gs[int(c), :])
 
         s_idx = np.arange(0, len(s_list))
-        if details:
+
+        if details:  # Plots average sessions variables i.e. FR_corr, FI_corr, FR_err, FI_err, double_rw
             ratio_c = plt.cm.get_cmap('Wistia')
             interval_c = plt.cm.get_cmap('winter')
             # Change value to increase height of annotation
@@ -986,11 +992,20 @@ def timeline_plot(
             ax.set_title('\nSubject {} Timeline_Details'.format(
                 subject), y=1.05, fontsize=25, color=mycolors(subject))
         else:
+            # Only plots total rewards
             y_axis = r_list
             h1, = plt.plot(s_idx, y_axis, label='Animal'+subject, linewidth='4',
                            color=mycolors(subject))
+            
             ax.set_title('\nSubject {} Timeline'.format(subject), y=1.05,
                          fontsize=25, color=mycolors(subject))
+            
+            # # Plot experiment time w rewards
+            # ax2 = ax.twinx()
+            # y_axis_2 = time_list
+            # ax2.set_ylim([0, 24])
+            # ax2.plot(s_idx, y_axis_2, label='Animal'+subject, linewidth='4',
+            #                color=mycolors(subject))
 
         # Annotated changes in protocol
         annotate_fontsize = 12
@@ -1009,8 +1024,9 @@ def timeline_plot(
                                  arrowprops=dict(facecolor='Red', shrink=0.05), size=annotate_fontsize)
         ax.set_xlim(0, len(s_idx))
         if show_date:
-            # plots x-axis ticks as dates
+            # plots x-axis tics as dates
             plt.xticks(s_idx, d_list, fontsize=10)
+            # plt.xticks(s_idx, box_list, fontsize=10)    # Plots x-tics as box
             ax.set_xlabel('Sessions (Dates)', fontsize=20)
         else:
             # plots x-axis ticks as stages
