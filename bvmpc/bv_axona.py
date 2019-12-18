@@ -2,6 +2,9 @@
 
 import os
 import argparse
+import calendar
+from collections import OrderedDict
+
 import numpy as np
 
 
@@ -203,7 +206,47 @@ class AxonaInpReader:
         return out_dict
 
 
+class AxonaSet:
+    def __init__(self, location=None):
+        self.data = OrderedDict()
+        self.change_dict = {}
+        self.change_dict["trial_date"] = self.change_date
+        if location is not None:
+            self.location = location
+            self.load(location)
+
+    def load(self, location):
+        with open(location, 'r', encoding='latin-1') as f_set:
+            lines = f_set.readlines()
+            for line in lines:
+                split = line.index(" ")
+                key, val = line[:split], line[split + 1:].strip()
+                # if key in list(self.data.keys()):
+                #     print(("Duplicate Key found {}".format(key)))
+                if key in list(self.change_dict.keys()):
+                    val = self.change_dict[key](val)
+                self.data[key] = val
+
+    def get_val(self, key=None):
+        if key is None:
+            return self.data
+        return self.data.get(key, None)
+
+    @staticmethod
+    def change_date(date):
+        change = {v: k for k, v in enumerate(calendar.month_abbr)}
+        rest = date[date.index(" ") + 1:]
+        day, month, year = rest.split(" ")
+        month = change[month]
+        month = "0" + str(month) if month < 10 else month
+        output = "{}/{}/{}".format(month, day, year[2:])
+        return output
+
+
 if __name__ == "__main__":
-    in_location = r"/home/sean/Downloads/CAR-S2_2019-11-18_Unit.inp"
+    in_location = r"C:\Users\smartin5\Recordings\CLA1_2019-09-28.inp"
     ai = AxonaInput(in_location)
     ai.save_to_file()
+    in_location = r"C:\Users\smartin5\Recordings\ER\29082019-nt2\29082019-nt2-LFP-2nd-Saline.set"
+    set_info = AxonaSet(in_location)
+    print(set_info.get_val("trial_date"))
