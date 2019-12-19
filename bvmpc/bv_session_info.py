@@ -12,6 +12,7 @@ class SessionInfo:
         self._init_session_info()
         self._init_experiment_vars()
         self._init_io_channels()
+        self._init_axona_metadata_map()
 
     def _init_metadata_info(self):
         self.metadata_info = [
@@ -184,6 +185,16 @@ class SessionInfo:
             "i": input_dict, "o": output_dict}
         self.io_channel_map["7"] = self.io_channel_map["6"]
 
+    def _init_axona_metadata_map(self):
+        # TODO get the right values here
+        self.axona_metadata_map = {
+            "start_date": "trial_date",
+            "end_date": "trial_date",
+            "subject": "comments",
+            "start_time": "trial_time",
+            "end_time": "end_time",
+            "name": "comments"}
+
     def get_session_type_info(self, key=None):
         """
         Return the mapping for a given session type.
@@ -301,6 +312,11 @@ class SessionInfo:
 
         """
         return self._get_channel("o", s_type, key=key)
+
+    def get_axona_metadata_map(self, key=None):
+        if key is None:
+            return self.axona_metadata_map
+        return self.axona_metadata_map.get(key, None)
 
     def _get_channel(self, io, s_type, key=None):
         """Intended private function to help channel retrieval."""
