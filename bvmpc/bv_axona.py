@@ -3,6 +3,7 @@
 import os
 import argparse
 import calendar
+import datetime
 from collections import OrderedDict
 
 import numpy as np
@@ -215,6 +216,17 @@ class AxonaSet:
             self.location = location
             self.load(location)
 
+    def set_end_time(self):
+        """Calculate how long the Session took in mins."""
+        dur = int(self.get_val("duration"))
+        start_time = self.get_val("trial_time")
+        fmt = '%H:%M:%S'
+        start_fmt = datetime.datetime.strptime(start_time, fmt)
+        final_time = start_fmt + datetime.timedelta(seconds=dur)
+        out_str = "{}:{}:{}".format(
+            final_time.hour, final_time.minute, final_time.second)
+        self.data["end_time"] = out_str
+
     def load(self, location):
         with open(location, 'r', encoding='latin-1') as f_set:
             lines = f_set.readlines()
@@ -226,6 +238,7 @@ class AxonaSet:
                 if key in list(self.change_dict.keys()):
                     val = self.change_dict[key](val)
                 self.data[key] = val
+        self.set_end_time()
 
     def get_val(self, key=None):
         if key is None:
@@ -250,3 +263,4 @@ if __name__ == "__main__":
     in_location = r"C:\Users\smartin5\Recordings\ER\29082019-nt2\29082019-nt2-LFP-2nd-Saline.set"
     set_info = AxonaSet(in_location)
     print(set_info.get_val("trial_date"))
+    print(set_info.get_val("end_time"))
