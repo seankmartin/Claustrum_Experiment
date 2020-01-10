@@ -11,7 +11,7 @@ import pandas as pd
 
 from bvmpc.bv_session_info import SessionInfo
 import bvmpc.bv_analyse as bv_an
-from bvmpc.bv_axona import AxonaInput
+from bvmpc.bv_axona import AxonaInput, AxonaSet
 from bvmpc.bv_array_methods import split_into_blocks
 from bvmpc.bv_array_methods import split_array
 from bvmpc.bv_array_methods import split_array_with_another
@@ -424,12 +424,20 @@ class Session:
                 self.info_arrays[key] = f[key][()]
 
     def _extract_axona_info(self):
-        self.axona_info = AxonaInput(self.axona_file)
-        # TODO Metadata extract from set file for standard metadata
+        """Extract from .inp .set and .log files for session conversion."""
+        # Extract metadata from set file
+        self.axona_setfile = self.axona_file[:-3] + "set"
+        self.axona_set = AxonaSet(self.axona_setfile)
+        for k, v in self.session_info.get_axona_metadata_map().items():
+            self.metadata[k] = self.axona_set.get_val(v)
+
         # TODO Numerical metadata extract from log file
         # Need "fixed_interval (ticks)", "double_reward_window (ticks)"
         # AND "trial_length (mins)", "fixed_ratio"
         # "num_trials" should be added too
+
+        # Extract the timestamp arrays from the axona data .inp file
+        self.axona_info = AxonaInput(self.axona_file)
         for k, v in self.session_info.get_input_channel(self.s_type).items():
             self.info_arrays[k] = self.axona_info.get_times(
                 "I", v[0], v[1])
@@ -439,6 +447,7 @@ class Session:
         self._convert_axona_info()
 
     def _convert_axona_info(self):
+        """Perform postprocessing on the extracted axona timestamp arrays."""
         left_presses = self.info_arrays.get("left_lever", [])
         right_presses = self.info_arrays.get("right_lever", [])
         nosepokes = self.info_arrays.get("all_nosepokes", [])
