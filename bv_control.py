@@ -272,8 +272,8 @@ def struc_timeline(sub_list, in_dir):
                 rw_FI, rw_FR = 0, 0
                 ratio = 'R' + str(ratio)
                 interval = 'I' + str(interval)
-                norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = bv_an.split_sess(
-                    s, plot_all=True)
+                norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = s.split_sess(
+                    plot_all=True)
                 sch_type = s.get_arrays('Trial Type')
                 # Error related variables
                 if s_name == 'B2':
@@ -410,8 +410,8 @@ def grp_errors(s_grp):
     for i, s in enumerate(s_grp):
         err_FI = 0
         err_FR = 0
-        _, _, norm_err_ts, _, _ = bv_an.split_sess(
-            s, plot_all=True)
+        _, _, norm_err_ts, _, _ = s.split_sess(
+            plot_all=True)
         sch_type = s.get_arrays('Trial Type')
         for i, _ in enumerate(norm_err_ts):
             if sch_type[i] == 1:
@@ -423,7 +423,7 @@ def grp_errors(s_grp):
     return grp_FRerr, grp_FIerr
 
 def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
-    out_dir = os.path.join(start_dir, "Plots\Current")
+    out_dir = os.path.join(start_dir, "Plots", "Current")
     
     # Quick control of plotting
     timeline, summary, raster, hist = [1, 0, 0, 0]
@@ -559,7 +559,7 @@ def plot_sessions(
     s_list = ['4', '5a', '5b', '6', '7']
 
     in_dir = os.path.join(start_dir, "hdf5")
-    out_dir = os.path.join(start_dir, "Plots\Current")
+    out_dir = os.path.join(start_dir, "Plots", "Current")
     make_dir_if_not_exists(out_dir)
 
     if summary and not corr_only:
@@ -699,7 +699,7 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
     s_passed = []
     d_passed = []
 
-    for i, s in enumerate(s_grp):
+    for _, s in enumerate(s_grp):
         subject = s.get_metadata('subject')
         stage = s.get_metadata('name')[:2].replace('_', '')
         date = s.get_metadata("start_date").replace("/", "-")
@@ -862,8 +862,8 @@ def timeline_plot(
             err_plotted = 0
             corr_plotted = 0
             if s_type == '7_' or s_type == '6_':
-                norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = bv_an.split_sess(
-                    s, plot_all=True)
+                norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = s.split_sess(
+                    plot_all=True)
                 sch_type = s.get_arrays('Trial Type')
                 if s_type == '7_':
                     for i, _ in enumerate(norm_err_ts):
@@ -1243,6 +1243,11 @@ def main_batch(
     if analysis_flags[3]:  # Temporary function for comparing variables (Bar Plots)
         compare_variables(out_main_dir)
 
+    if analysis_flags[4]:
+        h5_loc = r"C:\Users\smartin5\OneDrive - TCDUD.onmicrosoft.com\Claustrum\hdf5\1_08-29-19_16-58_7_RandomisedBlocksExtended_p.nix"
+        s = Session(neo_file=h5_loc)
+        bv_an.trial_clustering(s)
+
 if __name__ == "__main__":
     # TODO set this up with a cfg file and cmd args
 
@@ -1257,7 +1262,8 @@ if __name__ == "__main__":
     # 1 - plot sessions, d_list and s_list set in main_batch
     # 2 - plot batch sessions, sub, and dates in main_batch
     # 3 - temporary compare variables function
-    analysis_flags = [False, False, True, False]
+    # 4 - clustering of trials behaviourally
+    analysis_flags = [False, False, False, False, True]
     main_batch(start_dir, analysis_flags, out_dir)
 
     ## Convert inp to csv

@@ -5,10 +5,14 @@ Plots and analysis for MEDPC behaviour.
 @author: HAMG
 """
 
+import os.path
+import math
+
 import matplotlib.pyplot as plt
 import numpy as np
-import math
-import os.path
+from sklearn.cluster import KMeans
+import seaborn as sns
+
 from bvmpc.bv_utils import mycolors
 
 
@@ -148,8 +152,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
 
     elif zoom_sch and (session_type == '6_RandomisedBlocks_p' or stage == '7'):
         # plots cum graph based on schedule type (i.e. FI/FR)
-        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl = split_sess(
-            session, plot_error=plot_error, plot_all=plot_all)
+        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl = session.split_sess(plot_error=plot_error, plot_all=plot_all)
 
         sch_type = session.get_arrays('Trial Type')
         ratio_c = plt.cm.get_cmap('Wistia')
@@ -203,8 +206,8 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
             return print("Unable to split session")
         # Change values to set division blocks
         blocks = np.arange(0, 60*30, 300)
-        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, _ = split_sess(
-            session, blocks)
+        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, _ = session.split_sess(
+            blocks)
         ax.set_xlim(0, 305)
         for i, l in enumerate(norm_l_ts):
             ax.step(l, np.arange(l.size), c=mycolors(i), where="post",
@@ -241,8 +244,8 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         reward_y = np.digitize(reward_times, bins) - 1
         double_y = np.digitize(reward_double, bins) - 1
         # for printing of error rates on graph
-        norm_r_ts, _, norm_err_ts, _, _ = split_sess(
-            session, plot_all=True)
+        norm_r_ts, _, norm_err_ts, _, _ = session.split_sess(
+            plot_all=True)
         sch_type = session.get_arrays('Trial Type')
         for i, l in enumerate(norm_err_ts):
             if sch_type[i] == 1:
@@ -299,76 +302,6 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
                     dr_print, rw_print, err_print))
             ax.text(0.05, 0.75, text, transform=ax.transAxes)
         return
-
-
-def split_sess(
-        session, norm=True, blocks=None, plot_error=False, plot_all=False):
-    """
-    Split a session up into multiple blocks.
-
-    blocks: defines timepoints to split.
-
-    returns 5 outputs:
-        1) timestamps split into rows depending on blocks input
-                -> norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts
-        2) print to include in title and file name. Mainly for stage 7.
-    """
-    session_type = session.get_metadata('name')
-    stage = session_type[:2].replace('_', '')
-    reward_times = session.get_rw_ts()
-    timestamps = session.get_arrays()
-    lever_ts = session.get_lever_ts()
-    pell_ts = timestamps["Reward"]
-    pell_double = np.nonzero(np.diff(pell_ts) < 0.5)
-    # returns reward ts after d_pell
-    reward_double = reward_times[
-        np.searchsorted(
-            reward_times, pell_ts[pell_double], side='right')]
-    err_lever_ts = []
-
-    if blocks is not None:
-        pass
-    else:
-        blocks = np.arange(5, 1830, 305)  # Default split into schedules
-
-    incl = ""  # Initialize print for type of extracted lever_ts
-    if stage == '7' and plot_error:  # plots errors only
-        incl = '_Errors_Only'
-        lever_ts = session.get_err_lever_ts()
-    elif stage == '7' and plot_all:  # plots all responses incl. errors
-        incl = '_All'
-        err_lever_ts = session.get_err_lever_ts()
-        lever_ts = np.sort(np.concatenate((
-            lever_ts, err_lever_ts), axis=None))
-    elif stage == '7':  # plots all responses exclu. errors
-        incl = '_Correct Only'
-
-    split_lever_ts = np.split(lever_ts,
-                              np.searchsorted(lever_ts, blocks))
-    split_reward_ts = np.split(reward_times,
-                               np.searchsorted(reward_times, blocks))
-    split_double_r_ts = np.split(reward_double,
-                                 np.searchsorted(reward_double, blocks))
-    split_err_ts = np.split(err_lever_ts,
-                            np.searchsorted(err_lever_ts, blocks))
-    norm_reward_ts = []
-    norm_lever_ts = []
-    norm_err_ts = []
-    norm_double_r_ts = []
-    if norm:
-        for i, l in enumerate(split_lever_ts[1:]):
-            norm_lever_ts.append(np.append([0], l-blocks[i], axis=0))
-            norm_reward_ts.append(split_reward_ts[i+1]-blocks[i])
-            norm_double_r_ts.append(split_double_r_ts[i+1]-blocks[i])
-            if stage == '7' and plot_all:  # plots all responses incl. errors
-                norm_err_ts.append(split_err_ts[i+1]-blocks[i])
-    else:
-        norm_lever_ts = split_lever_ts[1:]
-        norm_reward_ts = split_reward_ts[1:]
-        norm_err_ts = split_err_ts[1:]
-        norm_double_r_ts = split_double_r_ts[1:]
-    return norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts, incl
-
 
 def IRT(session, out_dir, ax=None, showIRT=False):
     """
@@ -477,3 +410,20 @@ def show_IRT_details(IRT, maxidx, hist_bins):
     print('Min IRT: {0:.2f} s'.format(np.amin(IRT)))
     print('Max IRT: {0:.2f} s'.format(np.amax(IRT)))
     print('IRTs: ', np.round(IRT, decimals=2))
+
+def trial_clustering(session, should_pca=False, num_clusts=2):
+    if should_pca:
+        data = session.perform_pca(should_scale=False)[1]
+    else:
+        data = session.extract_features()
+    cluster = KMeans(num_clusts)
+    cluster.fit_predict(data)
+    markers = session.trial_df_norm["Schedule"]
+    plot_dim1 = 0
+    plot_dim2 = 1
+    fig, ax = plt.subplots()
+    sns.scatterplot(
+        data[:, plot_dim1], data[:, plot_dim2], ax=ax,
+        style=markers, hue=cluster.labels_)
+    plot_loc = os.path.join("PCAclust.png")
+    fig.savefig(plot_loc, dpi=400)

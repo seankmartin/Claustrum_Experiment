@@ -8,9 +8,10 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 from bvmpc.bv_session_info import SessionInfo
-import bvmpc.bv_analyse as bv_an
 from bvmpc.bv_axona import AxonaInput, AxonaSet
 from bvmpc.bv_array_methods import split_into_blocks
 from bvmpc.bv_array_methods import split_array
@@ -19,43 +20,40 @@ from bvmpc.bv_array_methods import split_array_in_between_two
 
 
 class Session:
-    """The base class to hold MEDPC behaviour information."""
+    """
+    The base class to hold MEDPC behaviour information.
+
+    An Operant Chamber Session holds data and methods related to this.
+    Provide ONE of h5_file, lines, neo_file, and axona_file to initialise.
+
+    Parameters
+    ----------
+    h5_file: str - Default None
+        h5 file location to load the session from
+    lines: List of str - Default None
+        The lines in the MedPC file for this session.
+    neo_file: str - Default None
+        The location of a neo file to load from
+    axona_file: str - Default None
+        The location of a .inp file to load from
+    s_type: str - Default None
+        The type of session when using axona_file
+        For now, leaving as 6 will work for everything.
+    neo_backend: str - Default "nix
+        If using neo_file, what backend to use
+    verbose: bool - Default False
+        Whether to print information while loading.
+    file_origin: str - Default None
+        Where the file originated from,
+        mostly only useful if directly passing lines
+
+    """
 
     def __init__(
             self, h5_file=None, lines=None, neo_file=None,
             axona_file=None, s_type="6",
             neo_backend="nix", verbose=False, file_origin=None):
-        """
-        Initialise the Session with lines from a MEDPC file.
-
-        Then extract this info into native attributes.
-
-        Parameters
-        ----------
-        h5_file: str - Default None
-            h5 file location to load from
-        lines: List of str - Default None
-            The lines in the MedPC file for this session.
-        neo_file: str - Default None
-            The location of a neo file to load from
-        axona_file: str - Default None
-            The location of a .inp file to load from
-        s_type: str - Default None
-            The type of session when using axona_file
-            For now, leaving as 6 will work for everything.
-        neo_backend: str - Default "nix
-            If using neo_file, what backend to use
-        verbose: bool - Default False
-            Whether to print information while loading.
-        file_origin: str - Default None
-            Where the file originated from,
-            mostly only useful if directly passing lines
-
-        Returns
-        -------
-        None
-
-        """
+        """See help(Session) for more info."""
         self.session_info = SessionInfo()
         self.metadata = {}
         self.info_arrays = {}
@@ -107,6 +105,159 @@ class Session:
     def init_trial_dataframe(self):
         """Initialise the trial based Pandas dataframe for this session."""
         self._init_trial_df()
+
+    def split_pell_ts(self):
+        """
+        Return a tuple of arrays splitting up the rewards.
+
+        (Pellets without doubles, time of doubles)
+
+        """
+        pell_ts = self.get_arrays("Reward")
+
+        dpell_bool = np.diff(pell_ts) < 0.8
+        # Provides index of double pell in pell_ts
+        dpell_idx = np.nonzero(dpell_bool)[0] + 1
+        dpell = pell_ts[dpell_idx]
+
+        # pell drop ts excluding double ts
+        pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
+
+        return pell_ts_exdouble, dpell
+
+
+    def time_taken(self):
+        """Calculate how long the Session took in mins."""
+        start_time = self.get_metadata("start_time")[-8:].replace(' ', '0')
+        end_time = self.get_metadata("end_time")[-8:].replace(' ', '0')
+        fmt = '%H:%M:%S'
+        tdelta = (
+            datetime.strptime(end_time, fmt) -
+            datetime.strptime(start_time, fmt))
+        tdelta_mins = int(tdelta.total_seconds() / 60)
+        return tdelta_mins
+
+    def split_sess(
+            self, norm=True, blocks=None, plot_error=False, plot_all=False):
+        """
+        Split a session up into multiple blocks.
+
+        blocks: defines timepoints to split.
+
+        returns 5 outputs:
+            1) timestamps split into rows depending on blocks input
+                    -> norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts
+            2) print to include in title and file name. Mainly for stage 7.
+        """
+        session_type = self.get_metadata('name')
+        stage = session_type[:2].replace('_', '')
+        reward_times = self.get_rw_ts()
+        timestamps = self.get_arrays()
+        lever_ts = self.get_lever_ts()
+        pell_ts = timestamps["Reward"]
+        pell_double = np.nonzero(np.diff(pell_ts) < 0.5)
+        # returns reward ts after d_pell
+        reward_double = reward_times[
+            np.searchsorted(
+                reward_times, pell_ts[pell_double], side='right')]
+        err_lever_ts = []
+
+        if blocks is not None:
+            pass
+        else:
+            blocks = np.arange(5, 1830, 305)  # Default split into schedules
+
+        incl = ""  # Initialize print for type of extracted lever_ts
+        if stage == '7' and plot_error:  # plots errors only
+            incl = '_Errors_Only'
+            lever_ts = self.get_err_lever_ts()
+        elif stage == '7' and plot_all:  # plots all responses incl. errors
+            incl = '_All'
+            err_lever_ts = self.get_err_lever_ts()
+            lever_ts = np.sort(np.concatenate((
+                lever_ts, err_lever_ts), axis=None))
+        elif stage == '7':  # plots all responses exclu. errors
+            incl = '_Correct Only'
+
+        split_lever_ts = np.split(lever_ts,
+                                np.searchsorted(lever_ts, blocks))
+        split_reward_ts = np.split(reward_times,
+                                np.searchsorted(reward_times, blocks))
+        split_double_r_ts = np.split(reward_double,
+                                    np.searchsorted(reward_double, blocks))
+        split_err_ts = np.split(err_lever_ts,
+                                np.searchsorted(err_lever_ts, blocks))
+        norm_reward_ts = []
+        norm_lever_ts = []
+        norm_err_ts = []
+        norm_double_r_ts = []
+        if norm:
+            for i, l in enumerate(split_lever_ts[1:]):
+                norm_lever_ts.append(np.append([0], l - blocks[i], axis=0))
+                norm_reward_ts.append(split_reward_ts[i + 1] - blocks[i])
+                norm_double_r_ts.append(split_double_r_ts[i + 1] - blocks[i])
+                if stage == '7' and plot_all:  # plots all responses incl. errors
+                    norm_err_ts.append(split_err_ts[i + 1] - blocks[i])
+        else:
+            norm_lever_ts = split_lever_ts[1:]
+            norm_reward_ts = split_reward_ts[1:]
+            norm_err_ts = split_err_ts[1:]
+            norm_double_r_ts = split_double_r_ts[1:]
+        return (
+            norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts, incl)
+
+    def extract_features(self):
+        if self.trial_df_norm is None:
+            self.init_trial_dataframe()
+        features = np.zeros(shape=(len(self.trial_df_norm.index), 12))
+        for row in self.trial_df_norm.itertuples():
+            index = row.Index
+            features[index, 0] = row.Reward_ts
+            features[index, 1] = row.Pellet_ts
+            double_pellet_time = row.D_Pellet_ts
+            if len(double_pellet_time) == 0:
+                d_pell_feature = 0
+            else:
+                d_pell_feature = double_pellet_time
+            features[index, 2] = d_pell_feature
+            lever_hist = np.histogram(
+                row.Levers_ts, bins=8, density=True)[0]
+            features[index, 3:11] = lever_hist
+            # err_hist = np.histogram(
+                # row.Err_ts, bins=5, density=False)[0]
+            features[index, 11] = row.Err_ts.size
+        return features
+
+    def perform_pca(self, n_components=3, should_scale=True):
+        """
+        Perform PCA on per trial features 
+        
+        Parameters
+        ------
+        n_components : int or float 
+            the number of PCA components to compute
+            if float, uses enough components to reach that much variance
+        should_scale - whether to scale the data to unit variance
+
+        Returns
+        -------
+        tuple : (ndarray, ndarray, PCA)
+            (features 2d array, PCA of features, PCA object)
+        """
+        data = self.extract_features()
+        scaler = StandardScaler()
+        pca = PCA(n_components=n_components)
+
+        # Standardise the data to improve PCA performance
+        if should_scale:
+            std_data = scaler.fit_transform(data)
+            after_pca = pca.fit_transform(std_data)
+        else:
+            after_pca = pca.fit_transform(data)
+
+        print(
+            "PCA fraction of explained variance", pca.explained_variance_ratio_)
+        return data, after_pca, pca
 
     def save_to_h5(self, out_dir, name=None):
         """Save information to a h5 file."""
@@ -250,25 +401,6 @@ class Session:
             levers.append(self.get_arrays("Un_FI_Err"))
         return np.sort(np.concatenate(levers, axis=None))
 
-    def split_pell_ts(self):
-        """
-        Return a tuple of arrays splitting up the rewards.
-
-        (Pellets without doubles, time of doubles)
-
-        """
-        pell_ts = self.get_arrays("Reward")
-
-        dpell_bool = np.diff(pell_ts) < 0.8
-        # Provides index of double pell in pell_ts
-        dpell_idx = np.nonzero(dpell_bool)[0] + 1
-        dpell = pell_ts[dpell_idx]
-
-        # pell drop ts excluding double ts
-        pell_ts_exdouble = np.delete(pell_ts, dpell_idx)
-
-        return pell_ts_exdouble, dpell
-
     def get_rw_ts(self):
         """
         Get the timestamps of rewards.
@@ -319,17 +451,6 @@ class Session:
                 reward_times = np.append(reward_times, trial_len)
 
         return np.sort(reward_times, axis=None)
-
-    def time_taken(self):
-        """Calculate how long the Session took in mins."""
-        start_time = self.get_metadata("start_time")[-8:].replace(' ', '0')
-        end_time = self.get_metadata("end_time")[-8:].replace(' ', '0')
-        fmt = '%H:%M:%S'
-        tdelta = (
-            datetime.strptime(end_time, fmt) -
-            datetime.strptime(start_time, fmt))
-        tdelta_mins = int(tdelta.total_seconds() / 60)
-        return tdelta_mins
 
     def _save_neo_info(self, remove_existing):
         """Private function to save info to neo file."""
@@ -576,8 +697,8 @@ class Session:
         # Assign schedule type to trials
         schedule_type = []
         if stage == '7' or stage == '6':
-            norm_r_ts, _, _, _, _ = bv_an.split_sess(
-                self, norm=False, plot_all=True)
+            norm_r_ts, _, _, _, _ = self.split_sess(
+                norm=False, plot_all=True)
             sch_type = self.get_arrays('Trial Type')
 
             for i, block in enumerate(norm_r_ts):
@@ -585,7 +706,7 @@ class Session:
                     b_type = 'FR'
                 elif sch_type[i] == 0:
                     b_type = 'FI'
-                for l, _ in enumerate(block):
+                for _, _ in enumerate(block):
                     schedule_type.append(b_type)
         else:
             if stage == '4':
