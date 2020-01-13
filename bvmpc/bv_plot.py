@@ -89,13 +89,11 @@ class GridFig:
             row_idx = (self.idx // self.cols)
             col_idx = (self.idx % self.cols)
 
-            print(row_idx, col_idx)
             ax = self.get_ax(row_idx, col_idx)
         else:
             row_idx = (self.idx % self.rows)
             col_idx = (self.idx // self.rows)
 
-            print(row_idx, col_idx)
             ax = self.get_ax(row_idx, col_idx)
         self._increment()
         return ax
@@ -121,5 +119,4 @@ class GridFig:
         """Private function to increase the internal idx counter."""
         self.idx = self.idx + 1
         if self.idx == self.rows * self.cols:
-            print("Looping")
             self.idx = 0
