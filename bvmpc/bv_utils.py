@@ -33,6 +33,9 @@ def make_dir_if_not_exists(location):
 def mycolors(subject):
     """Colour options for subject based on number."""
     i = int(subject)
+    if i>10:
+        i = i%4
+
     mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange',
                 'tab:brown', 'deeppink', 'tab:olive', 'tab:pink',
                 'steelblue', 'firebrick', 'mediumseagreen']
