@@ -32,8 +32,8 @@ def trial_length_hist (s, ax, loop):
         'FR': t_df[t_df['Schedule'] == 'FR']['Reward_ts'],
         'FI': t_df[t_df['Schedule'] == 'FI']['Reward_ts']}
 
-    sns.distplot(t_len['FR'], ax=ax, label='{}_p{}'.format('FR', str(loop)))
-    sns.distplot(t_len['FI'], ax=ax, label='{}_p{}'.format('FI', str(loop)))
+    sns.distplot(np.log(t_len['FR']), ax=ax, label='{}_p{}'.format('FR', str(loop)))
+    sns.distplot(np.log(t_len['FI']), ax=ax, label='{}_p{}'.format('FI', str(loop)))
     
     
     # Plot customization
@@ -422,13 +422,10 @@ def grp_errors(s_grp):
         grp_FIerr.append(err_FI)
     return grp_FRerr, grp_FIerr
 
-def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
+def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags):
     out_dir = os.path.join(start_dir, "Plots\Current")
-    
-    # Quick control of plotting
-    timeline, summary, raster, hist = [1, 0, 0, 0]
 
-    if raster or hist:
+    if plt_flags["raster"] or plt_flags["hist"]:
         in_dir = os.path.join(start_dir, "hdf5")  # Path join only present in plot_sessions
 
         # Default conversion of date based on start_date and end_date range
@@ -471,13 +468,13 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
                 
                 # 2x2 plotting axes
                 k = (i%2)*2
-                if raster:
+                if plt_flags["raster"]:
                     ax = gf.get_multi_ax(
                         k, k+2, 4*int(i/2), 4*math.ceil((i+1)/2))
                     plot_raster_trials(s, ax)
                     plot_type = 'Raster_'  # Plot name for saving
                     
-                if hist:
+                if plt_flags["hist"]:
                     if not plotting_sub == s.get_metadata('subject'):
                         ax = gf.get_multi_ax(k, k+2, 4*int(i/2), 4*math.ceil((i+1)/2))
                         plotting_sub = s.get_metadata('subject')
@@ -504,7 +501,7 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
 
 
     # plot cumulative response graphs
-    if summary == 1:
+    if plt_flags["summary"] == 1:
         for single_date in daterange(start_date, end_date):
             d = [single_date.isoformat()[-5:]]
             # plot_sessions(start_dir, d, sub, summary=True, single=True,
@@ -514,7 +511,7 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
             # plot_sessions(start_dir, d, sub, summary=True, single=False, corr_only=False)  # Group with complete breakdown
 
         # plot all 4 timeline types
-    if timeline == 1:
+    if plt_flags["timeline"] == 1:
         d = [end_date.isoformat()[-5:]]
         single = False  # plots seperate graphs for each animal if True
         show_date = True  # Sets x-axis as dates if True
@@ -1057,7 +1054,7 @@ def timeline_plot(
             ax2.set_ylabel('Error Presses', fontsize=20)
         else:
             # plt.axhline(45, color='g', linestyle='-.', linewidth='.5')
-            plt.axhline(90, color='r', linestyle='-.', linewidth='.5')  # Marks max reward
+            plt.axhline(60, color='r', linestyle='-.', linewidth='.5')  # Marks max reward
             ax.set_ylabel('Total Rewards', fontsize=20)
             plots = [h1]
             labels = [h1.get_label()]
@@ -1225,20 +1222,23 @@ def main_batch(
         plot_sessions(out_main_dir, d_list, s_list, summary=True)
 
     if analysis_flags[2]:  # plot_batch_sessions
-        sub = ['7', '8', '9', '10']
+        sub = ['11', '12', '13', '14']
         # sub = ['10']
         # sub = ['3','4']
 
-        start_date = date(2019, 11, 14)  # date(year, mth, day)
-        end_date = date(2019, 11, 26)
+        # start_date = date(2020, 1, 6)  # date(year, mth, day)
+        # end_date = date(2019, 11, 26)
 
-        # # Sets date using today as reference (Default)
-        # start_date = date.today() - timedelta(days=3)
-        # end_date = date.today() - timedelta(days=0)
+        # Sets date using today as reference (Default)
+        start_date = date.today() - timedelta(days=1)
+        end_date = date.today() - timedelta(days=0)
+        
+        # Quick control of plotting
+        plt_flags = {"timeline" : 0, "summary" : 0, "raster": 1, "hist": 0}
 
         # for sub in sub:
             # plot_batch_sessions(out_main_dir, sub, start_date, end_date)
-        plot_batch_sessions(out_main_dir, sub, start_date, end_date)
+        plot_batch_sessions(out_main_dir, sub, start_date, end_date, plt_flags)
     
     if analysis_flags[3]:  # Temporary function for comparing variables (Bar Plots)
         compare_variables(out_main_dir)
@@ -1246,7 +1246,8 @@ def main_batch(
 if __name__ == "__main__":
     # TODO set this up with a cfg file and cmd args
 
-    start_dir = r"G:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
+    # start_dir = r"G:\PhD (Shane O'Mara)\Operant Data\Recordings"
+    start_dir = r"G:\PhD (Shane O'Mara)\Operant Data\Batch 3"
     out_dir = start_dir
     # start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
     # start_dir = r"C:\Users\smartin5\TCDUD.onmicrosoft.com\Gao Xiang Ham - MEDPC"
@@ -1257,7 +1258,7 @@ if __name__ == "__main__":
     # 1 - plot sessions, d_list and s_list set in main_batch
     # 2 - plot batch sessions, sub, and dates in main_batch
     # 3 - temporary compare variables function
-    analysis_flags = [False, False, True, False]
+    analysis_flags = [0, 0, 1, 0]
     main_batch(start_dir, analysis_flags, out_dir)
 
     ## Convert inp to csv
