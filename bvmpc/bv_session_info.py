@@ -156,7 +156,7 @@ class SessionInfo:
         self.experiment_var_dict['5a_FixedRatio_p'] = (
             base_exp_list[:3] +
             ["fixed_ratio", "ending_ratio", "ratio_increment",
-                "max_ratio", base_exp_list[4], "fast_trials_to_advance"])
+             "max_ratio", base_exp_list[4], "fast_trials_to_advance"])
 
         self.experiment_var_dict['5b_FixedInterval_p'] = (
             base_exp_list[:3] + [base_exp_list[5]])
@@ -193,7 +193,7 @@ class SessionInfo:
             "subject": "comments",
             "start_time": "trial_time",
             "end_time": "end_time",
-            "name": "comments"}
+            "name": "script"}
 
     def get_session_type_info(self, key=None):
         """

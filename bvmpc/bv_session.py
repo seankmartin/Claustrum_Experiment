@@ -431,8 +431,13 @@ class Session:
         for k, v in self.session_info.get_axona_metadata_map().items():
             self.metadata[k] = self.axona_set.get_val(v)
 
-        # TODO Numerical metadata extract from log file
-        # Need "fixed_interval (ticks)", "double_reward_window (ticks)"
+        # Numerical metadata extract from log file **No log file in some cases. Static method for now**
+        self.metadata["fixed_ratio"] = 6
+        self.metadata["double_reward_window (secs)"] = 10
+        self.metadata["fixed_interval (secs)"] = 30
+        self.metadata["num_trials"] = 6
+        self.metadata["trial_length (mins)"] = 5
+
         # AND "trial_length (mins)", "fixed_ratio"
         # "num_trials" should be added too
 
@@ -695,8 +700,8 @@ class Session:
         return arr
 
     def _get_hdf5_name(self, ext="h5"):
-        return "{:03d}_{}_{}_{}.{}".format(
-            int(self.get_metadata("subject")),
+        return "{}_{}_{}_{}.{}".format(
+            self.get_metadata("subject"),
             self.get_metadata("start_date").replace("/", "-"),
             self.get_metadata("start_time")[:-3].replace(":", "-"),
             self.get_metadata("name"), ext)

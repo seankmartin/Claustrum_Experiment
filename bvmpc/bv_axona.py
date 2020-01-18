@@ -212,6 +212,7 @@ class AxonaSet:
         self.data = OrderedDict()
         self.change_dict = {}
         self.change_dict["trial_date"] = self.change_date
+        self.change_dict["script"] = lambda x: os.path.basename(x)[:-4]
         if location is not None:
             self.location = location
             self.load(location)
@@ -254,6 +255,10 @@ class AxonaSet:
         month = "0" + str(month) if month < 10 else month
         output = "{}/{}/{}".format(month, day, year[2:])
         return output
+
+    @staticmethod
+    def change_name(name):
+        return
 
 
 if __name__ == "__main__":
