@@ -152,6 +152,9 @@ class AxonaInpReader:
         counter = 0
         with open(in_location, 'rb') as file:
             header = cls._parse_header(file)
+            if header["samples"] == 0:
+                raise ValueError("No input/output samples in {}".format(
+                    in_location))
 
             time_arr = np.zeros(header["samples"], np.float32)
             char_arr = np.zeros(header["samples"], str)
@@ -212,6 +215,7 @@ class AxonaSet:
         self.data = OrderedDict()
         self.change_dict = {}
         self.change_dict["trial_date"] = self.change_date
+        self.change_dict["script"] = lambda x: os.path.basename(x)[:-4]
         if location is not None:
             self.location = location
             self.load(location)
@@ -254,6 +258,10 @@ class AxonaSet:
         month = "0" + str(month) if month < 10 else month
         output = "{}/{}/{}".format(month, day, year[2:])
         return output
+
+    @staticmethod
+    def change_name(name):
+        return
 
 
 if __name__ == "__main__":

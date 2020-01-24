@@ -2,12 +2,17 @@
 
 import os
 import re
+import sys
 import argparse
 from datetime import timedelta
 from collections.abc import Iterable
 
 import h5py
 import numpy as np
+import logging
+import configparser
+from pprint import pprint
+import argparse
 
 
 def boolean_indexing(v, fillval=np.nan):
@@ -33,6 +38,9 @@ def make_dir_if_not_exists(location):
 def mycolors(subject):
     """Colour options for subject based on number."""
     i = int(subject)
+    if i > 10:
+        i = i % 4
+
     mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange',
                 'tab:brown', 'deeppink', 'tab:olive', 'tab:pink',
                 'steelblue', 'firebrick', 'mediumseagreen']
@@ -221,6 +229,54 @@ def save_dict_to_csv(filename, d):
             else:
                 out_str += "," + str(v)
             f.write(out_str + "\n")
+
+
+def make_path_if_not_exists(fname):
+    """Makes directory structure for given fname"""
+    os.makedirs(os.path.dirname(fname), exist_ok=True)
+
+
+def setup_logging(in_dir):
+    fname = os.path.join(in_dir, 'nc_output.log')
+    if os.path.isfile(fname):
+        open(fname, 'w').close()
+    logging.basicConfig(
+        filename=fname, level=logging.DEBUG)
+    mpl_logger = logging.getLogger("matplotlib")
+    mpl_logger.setLevel(level=logging.WARNING)
+
+
+def print_config(config, msg=""):
+    if msg is not "":
+        print(msg)
+    """Prints the contents of a config file"""
+    config_dict = [{x: tuple(config.items(x))} for x in config.sections()]
+    pprint(config_dict, width=120)
+
+
+def read_cfg(location, verbose=True):
+    config = configparser.ConfigParser()
+    config.read(location)
+
+    if verbose:
+        print_config(config, "Program started with configuration")
+    return config
+
+
+def parse_args(verbose=True):
+    parser = argparse.ArgumentParser(
+        description='Process modifiable parameters from command line')
+    args, unparsed = parser.parse_known_args()
+
+    if len(unparsed) is not 0:
+        print("Unrecognised command line argument passed")
+        print(unparsed)
+        exit(-1)
+
+    if verbose:
+        if len(sys.argv) > 1:
+            print("Command line arguments", args)
+    return args
 
 
 if __name__ == "__main__":

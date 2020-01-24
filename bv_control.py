@@ -32,8 +32,8 @@ def trial_length_hist (s, ax, loop):
         'FR': t_df[t_df['Schedule'] == 'FR']['Reward_ts'],
         'FI': t_df[t_df['Schedule'] == 'FI']['Reward_ts']}
 
-    sns.distplot(t_len['FR'], ax=ax, label='{}_p{}'.format('FR', str(loop)))
-    sns.distplot(t_len['FI'], ax=ax, label='{}_p{}'.format('FI', str(loop)))
+    sns.distplot(np.log(t_len['FR']), ax=ax, label='{}_p{}'.format('FR', str(loop)))
+    sns.distplot(np.log(t_len['FI']), ax=ax, label='{}_p{}'.format('FI', str(loop)))
     
     
     # Plot customization
@@ -422,13 +422,10 @@ def grp_errors(s_grp):
         grp_FIerr.append(err_FI)
     return grp_FRerr, grp_FIerr
 
-def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
-    out_dir = os.path.join(start_dir, "Plots", "Current")
-    
-    # Quick control of plotting
-    timeline, summary, raster, hist = [1, 0, 0, 0]
+def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags):
+    out_dir = os.path.join(start_dir, "Plots\Current")
 
-    if raster or hist:
+    if plt_flags["raster"] or plt_flags["hist"]:
         in_dir = os.path.join(start_dir, "hdf5")  # Path join only present in plot_sessions
 
         # Default conversion of date based on start_date and end_date range
@@ -471,13 +468,13 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
                 
                 # 2x2 plotting axes
                 k = (i%2)*2
-                if raster:
+                if plt_flags["raster"]:
                     ax = gf.get_multi_ax(
                         k, k+2, 4*int(i/2), 4*math.ceil((i+1)/2))
                     plot_raster_trials(s, ax)
                     plot_type = 'Raster_'  # Plot name for saving
                     
-                if hist:
+                if plt_flags["hist"]:
                     if not plotting_sub == s.get_metadata('subject'):
                         ax = gf.get_multi_ax(k, k+2, 4*int(i/2), 4*math.ceil((i+1)/2))
                         plotting_sub = s.get_metadata('subject')
@@ -504,7 +501,7 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
 
 
     # plot cumulative response graphs
-    if summary == 1:
+    if plt_flags["summary"] == 1:
         for single_date in daterange(start_date, end_date):
             d = [single_date.isoformat()[-5:]]
             # plot_sessions(start_dir, d, sub, summary=True, single=True,
@@ -514,27 +511,23 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date):
             # plot_sessions(start_dir, d, sub, summary=True, single=False, corr_only=False)  # Group with complete breakdown
 
         # plot all 4 timeline types
-    if timeline == 1:
+    if plt_flags["timeline"] == 1:
         d = [end_date.isoformat()[-5:]]
+        in_dir = os.path.join(start_dir, "hdf5")
         single = False  # plots seperate graphs for each animal if True
         show_date = True  # Sets x-axis as dates if True
-        # plot_sessions(start_dir, d, sub timeline=True, single=single, details=True, recent=True,
-        #               show_date=show_date)  # Timeline_recent_details
-        # plot_sessions(start_dir, d, sub timeline=True, single=single, details=True, det_err=True, det_corr=False, recent=True,
-        #               show_date=show_date)  # Timeline_recent_details_Err **Need to fix with ax.remove() instead**
-        # plot_sessions(start_dir, d, sub, timeline=True, single=single, details=True, det_err=False, det_corr=True, recent=True,
-        #               show_date=show_date)  # Timeline_recent_details_Corr **Need to fix with ax.remove() instead**
-
-        # plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=True, det_err=True, det_corr=False,
-        #               show_date=show_date)  # Timeline_recent_details_Err
-        # plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=True, det_err=False, det_corr=True,
-        #               show_date=show_date)  # Timeline_recent_details_Corr
-        # plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=True,
-        #               recent=False, show_date=show_date)  # Timeline_details
-        # plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=False,
-        #               recent=True, show_date=show_date)  # Timeline_recent
-        plot_sessions(start_dir, d, sub_list, timeline=True, single=single, details=False,
-                        recent=False, show_date=show_date)  # Timeline
+        details = False
+        recent = False
+        if not single:
+            plot_limit = 4
+            sub_list = split_list(sub_list, plot_limit)
+            for l in sub_list:
+                timeline_plot(l, in_dir, out_dir, single_plot=single, det_err=False, det_corr=False,
+                              recent=recent, show_date=show_date, details=details)
+        else:
+            # Plots timeline for specified subjects
+            timeline_plot(sub_list, in_dir, out_dir, single_plot=single, det_err=False, det_corr=False,
+                          recent=recent, show_date=show_date, details=details)
 
     # # Multiple dates in single plot; Doesnt work yet
     # d = []
@@ -552,7 +545,6 @@ def plot_sessions(
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
     single = True: Plots single session summaries with breakdown of single blocks
-    Timeline = True: Plots total rewards from beginining of first session
     int_only = True: Plots only interval trials in zoomed schedule plot
     corr_only = True: Plots seperate summary plot with correct only trials
     '''
@@ -661,17 +653,6 @@ def plot_sessions(
             else:
                 sum_plot(s_grp, idx, out_dir, single=single)
 
-    if timeline:
-        if not single:
-            plot_limit = 4
-            sub_list = split_list(sub_list, plot_limit)
-            for l in sub_list:
-                timeline_plot(l, in_dir, out_dir, single_plot=single, det_err=det_err, det_corr=det_corr,
-                              recent=recent, show_date=show_date, details=details)
-        else:
-            # Plots timeline for specified subjects
-            timeline_plot(sub_list, in_dir, out_dir, single_plot=single, det_err=det_err, det_corr=det_corr,
-                          recent=recent, show_date=show_date, details=details)
 
 def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
              int_only=False, corr_only=False):
@@ -772,6 +753,16 @@ def timeline_plot(
     sub_list, in_dir, out_dir, single_plot=False, 
     det_err=False, det_corr=False, recent=False, 
     show_date=True, details=False):
+    """
+    
+    Plots total rewards from beginining of first session  
+
+    Arguments:
+    det_err - plots error lever presses
+    det_cor - plots correct lever presses
+    recent - plots recent (determined in code - static) datapoints only
+    show_date - plots date as x axis instead of session type
+    """
     # Plot size
     rows, cols = [len(sub_list), 4]
     size_multiplier = 5
@@ -1057,7 +1048,7 @@ def timeline_plot(
             ax2.set_ylabel('Error Presses', fontsize=20)
         else:
             # plt.axhline(45, color='g', linestyle='-.', linewidth='.5')
-            plt.axhline(90, color='r', linestyle='-.', linewidth='.5')  # Marks max reward
+            plt.axhline(60, color='r', linestyle='-.', linewidth='.5')  # Marks max reward
             ax.set_ylabel('Total Rewards', fontsize=20)
             plots = [h1]
             labels = [h1.get_label()]
@@ -1167,6 +1158,16 @@ def convert_to_neo(filename, out_dir, neo_backend="nix", remove_existing=False):
                 out_dir, neo_backend=neo_backend,
                 remove_existing=remove_existing)
 
+def convert_axona_to_neo(
+        filename, out_dir, neo_backend="nix", remove_existing=False):
+    """Convert .inp files to Sessions and store in out_dir."""
+    make_dir_if_not_exists(out_dir)
+    print("Converting {} to neo".format(os.path.basename(filename)))
+    s = Session(axona_file=filename)
+    s.save_to_neo(
+        out_dir, neo_backend=neo_backend,
+        remove_existing=remove_existing)
+
 def load_hdf5(filename, verbose=False):
     if verbose:
         print_h5(filename)
@@ -1212,11 +1213,29 @@ def main_batch(
             out_main_dir = start_dir
         out_dir = os.path.join(out_main_dir, "hdf5")
         in_files = get_all_files_in_dir(start_dir, return_absolute=True)
+
+        # Check if we are using Axona files
         for filename in in_files:
-            try:
-                convert_to_neo(filename, out_dir, remove_existing=False)
-            except Exception as e:
-                log_exception(e, "Error during coversion to neo")
+            if os.path.splitext(filename)[-1] == ".inp":
+                using_axona = True
+                break
+            else:
+                using_axona = False
+
+        if not using_axona:
+            for filename in in_files:
+                try:
+                    convert_to_neo(filename, out_dir, remove_existing=False)
+                except Exception as e:
+                    log_exception(e, "Error during coversion to neo")
+        else:
+            for filename in in_files:
+                try:
+                    if os.path.splitext(filename)[-1] == ".inp":
+                        convert_axona_to_neo(
+                            filename, out_dir, remove_existing=False)
+                except Exception as e:
+                    log_exception(e, "Error during coversion to neo")
     
     if analysis_flags[1]:  # plot_sessions
         d_list = ["09-03"]
@@ -1225,20 +1244,23 @@ def main_batch(
         plot_sessions(out_main_dir, d_list, s_list, summary=True)
 
     if analysis_flags[2]:  # plot_batch_sessions
-        sub = ['7', '8', '9', '10']
+        sub = ['11', '12', '13', '14']
         # sub = ['10']
         # sub = ['3','4']
 
-        start_date = date(2019, 11, 14)  # date(year, mth, day)
-        end_date = date(2019, 11, 26)
+        # start_date = date(2020, 1, 6)  # date(year, mth, day)
+        # end_date = date(2019, 11, 26)
 
-        # # Sets date using today as reference (Default)
-        # start_date = date.today() - timedelta(days=3)
-        # end_date = date.today() - timedelta(days=0)
+        # Sets date using today as reference (Default)
+        start_date = date.today() - timedelta(days=2)
+        end_date = date.today() - timedelta(days=0)
+        
+        # Quick control of plotting
+        plt_flags = {"timeline" : 1, "summary" : 0, "raster": 0, "hist": 0}
 
         # for sub in sub:
             # plot_batch_sessions(out_main_dir, sub, start_date, end_date)
-        plot_batch_sessions(out_main_dir, sub, start_date, end_date)
+        plot_batch_sessions(out_main_dir, sub, start_date, end_date, plt_flags)
     
     if analysis_flags[3]:  # Temporary function for comparing variables (Bar Plots)
         compare_variables(out_main_dir)
@@ -1251,7 +1273,8 @@ def main_batch(
 if __name__ == "__main__":
     # TODO set this up with a cfg file and cmd args
 
-    start_dir = r"G:\PhD (Shane O'Mara)\Operant Data\IR Discrimination Pilot 1"
+    # start_dir = r"G:\PhD (Shane O'Mara)\Operant Data\Recordings"
+    start_dir = r"G:\PhD (Shane O'Mara)\Operant Data\Batch 3"
     out_dir = start_dir
     # start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
     # start_dir = r"C:\Users\smartin5\TCDUD.onmicrosoft.com\Gao Xiang Ham - MEDPC"
@@ -1262,8 +1285,7 @@ if __name__ == "__main__":
     # 1 - plot sessions, d_list and s_list set in main_batch
     # 2 - plot batch sessions, sub, and dates in main_batch
     # 3 - temporary compare variables function
-    # 4 - clustering of trials behaviourally
-    analysis_flags = [False, False, False, False, True]
+    analysis_flags = [0, 0, 1, 0]
     main_batch(start_dir, analysis_flags, out_dir)
 
     ## Convert inp to csv

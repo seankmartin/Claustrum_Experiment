@@ -552,8 +552,15 @@ class Session:
         for k, v in self.session_info.get_axona_metadata_map().items():
             self.metadata[k] = self.axona_set.get_val(v)
 
-        # TODO Numerical metadata extract from log file
-        # Need "fixed_interval (ticks)", "double_reward_window (ticks)"
+        # Numerical metadata extract from log file **No log file in some cases. Static method for now**
+        self.metadata["fixed_ratio"] = 6
+        self.metadata["double_reward_window (secs)"] = 10
+        self.metadata["fixed_interval (secs)"] = 30
+        self.metadata["num_trials"] = 6
+        self.metadata["trial_length (mins)"] = 5
+        self.metadata['subject'] = os.path.basename(
+            self.axona_file).split("_")[0]
+
         # AND "trial_length (mins)", "fixed_ratio"
         # "num_trials" should be added too
 
@@ -578,17 +585,26 @@ class Session:
         good_nosepokes, un_nosepokes = split_array_with_another(
             nosepokes, pell_ts_exdouble)
 
-        """
-        TODO make sure that nosepoke occurs before trial switch if reward
-        before trial switch - Ham has idea for this already in another function
-        For now, just a check!
-        """
         split_nosepokes = split_into_blocks(
             good_nosepokes, 305, 6)
         split_pellets = split_into_blocks(
             pell_ts_exdouble, 305, 6)
         for i, (b1, b2) in enumerate(zip(split_nosepokes, split_pellets)):
-            if b1.shape != b2.shape:
+            if len(b2) > len(b1):
+                print(good_nosepokes)
+                last_trial_idx = np.nonzero(
+                    np.abs(good_nosepokes - b1[-1]) <= 0.00001)[0]
+                good_nosepokes[last_trial_idx+1] = 305 * (i+1)
+                if i < 5:
+                    split_nosepokes[i+1] = split_nosepokes[i+1][1:]
+                print(good_nosepokes)
+
+        split_nosepokes = split_into_blocks(
+            good_nosepokes, 305, 6)
+        split_pellets = split_into_blocks(
+            pell_ts_exdouble, 305, 6)
+        for i, (b1, b2) in enumerate(zip(split_nosepokes, split_pellets)):
+            if b2.shape != b1.shape:
                 print("Error, nosepokes in blocks don't match pellets")
                 print("{} nosepokes, {} pellets, in block {}".format(
                     len(b1), len(b2), i + 1))
@@ -816,8 +832,8 @@ class Session:
         return arr
 
     def _get_hdf5_name(self, ext="h5"):
-        return "{:03d}_{}_{}_{}.{}".format(
-            int(self.get_metadata("subject")),
+        return "{}_{}_{}_{}.{}".format(
+            self.get_metadata("subject"),
             self.get_metadata("start_date").replace("/", "-"),
             self.get_metadata("start_time")[:-3].replace(":", "-"),
             self.get_metadata("name"), ext)
