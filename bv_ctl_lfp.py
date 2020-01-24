@@ -1,5 +1,6 @@
 import os
 import math
+import json
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -19,44 +20,35 @@ import neurochat.nc_plot as nc_plot
 from bvmpc.lfp_plot import plot_lfp, plot_coherence
 
 
-def main(fname, analysis_flags, o_main_dir=None, alignment=None):
+def main(fname, out_main_dir, config):
     '''
     Parameters
     ----------
     fname : str
         filenames to be analysed
 
-    analysis_flags : bool, optional. Defaults to True.
-        Sets analysis to be used.
-        0 - plot periodograms and ptrs in seperate plots for each tetrode
-        1 - plot graphs from all tetrodes in 1 .png
-
-    alignment : bool, optional. Defaults to None #TODO write alignment function
-        Sets alignment points to be used.
-        0 - Align to reward
-        1 - Align to pellet drop
-        2 - Align to FI
-        3 - Align to Tone
-
-    o_main_dir: dir, optional. Defaults to None.
-        None - Saves plots in a LFP folder where .eeg was found
-        Else - Saves plots in a LFP folder of given drive
+    Saves plots in a !LFP folder inside out_main_dir
     '''
 
-    # Setup Region info for eeg
-    # # Axona single screw Drive settings
+    analysis_flags = json.loads(config.get("Setup", "analysis_flags"))
+    alignment = json.loads(config.get("Setup", "alignment"))
+    chan_amount = int(config.get("Setup", "chans"))
+    chans = [i for i in range(1, chan_amount+1)]
+    region_dict = config._sections["Regions"]
+    regions = []
+    for _, val in region_dict.items():
+        to_add = val.split(" * ")
+        adding = [to_add[0]] * int(to_add[1])
+        regions += adding
+    filt_btm = float(config.get("Setup", "filt_btm"))
+    filt_top = float(config.get("Setup", "filt_top"))
     # chans = [i for i in range(1, 17*2-1)]
     # regions = ["CLA"] * 28 + ["ACC"] * 2 + ["RSC"] * 2
 
     # Single Hemi Multisite Drive settings
-    chans = [i for i in range(1, 17)]
     regions = ["CLA"] * 8 + ["ACC"] * 4 + ["RSC"] * 4
 
     gm = bv_plot.GroupManager(regions)
-
-    # Change filt values here. Default order 10.
-    filt_btm = 1.0
-    filt_top = 50
 
     lfp_list = []
     for chans in chunks(chans, 16):
@@ -69,11 +61,7 @@ def main(fname, analysis_flags, o_main_dir=None, alignment=None):
     rw_ts = s.get_rw_ts()
     sch_type = s.get_arrays('Trial Type')  # FR = 1, FI = 0
 
-    if o_main_dir is None:
-        o_dir = os.path.join(
-            os.path.dirname(fname), "!LFP")
-    else:
-        o_dir = os.path.join(o_main_dir, "!LFP")
+    o_dir = os.path.join(out_main_dir, "!LFP")
     make_dir_if_not_exists(o_dir)
 
     if analysis_flags[0]:   # Plot periodograms and ptr for each tetrode seperately
@@ -310,6 +298,9 @@ def select_lfp(fname, ROI):  # Select lfp based on region
     lfp_list = []
     chans = [i for i in range(1, 17)]
     regions = ["CLA"] * 8 + ["ACC"] * 4 + ["RSC"] * 4
+    # Change filt values here. Default order 10.
+    filt_btm = 1.0
+    filt_top = 50
 
     # Actual function
     for r in ROI:
@@ -324,36 +315,32 @@ def load_bv_from_set(fname):
     """ Loads session based from .inp """
     return Session(axona_file=fname + ".inp")
 
+def main_entry(config_name):
+    here = os.path.dirname(os.path.realpath(__file__))
+    config_path = os.path.join(here, "Configs", "LFP", config_name)
+    config = read_cfg(config_path)
 
-if __name__ == "__main__":
-    in_dir = r"F:\Ham Data\A1_CAR-R1\CAR-R1_20191126"
-    # in_dir = r"F:\Ham Data\A9_CAR-SA1\CAR-SA1_20191215"
-    # in_dir = r"F:\Ham Data\A10_CAR-SA2\CAR-SA2_20200110"
-
+    in_dir = config.get("Setup", "in_dir")
+    if in_dir[0] == "\"":
+        in_dir = in_dir[1:-1]
+    out_main_dir = config.get("Setup", "out_dir")
+    if out_main_dir == "":
+        out_main_dir = in_dir
+    regex_filter = config.get("Setup", "regex_filter")
+    regex_filter = None if regex_filter == "None" else regex_filter
     filenames = get_all_files_in_dir(
         in_dir, ext=".eeg", recursive=True,
-        verbose=True, re_filter="CAR-R1")
+        verbose=True, re_filter=regex_filter)
 
+    main("None", "None", config)
     filenames = [fname[:-4] for fname in filenames]
     if len(filenames) == 0:
         print("No set files found for analysis!")
         exit(-1)
 
-    # Description of analysis_flags
-    # 0 - plot periodograms and ptrs in seperate plots for each tetrode
-    # 1 - plot graphs from all tetrodes in a single .png
-    # 2 - Compare periodograms for FR and FI for specific eegs
-    # 3 - Compare coherence in terms of freq between ACC & RSC
-
-    analysis_flags = [0, 0, 0, 1]
-
-    # Description of alignment
-    # 0 - Align to reward
-    # 1 - Align to pellet drop
-    # 2 - Align to FI
-    # 3 - Align to Tone
-
-    aligment = [0, 0, 0, 0]
-
     for fname in filenames:
-        main(fname, analysis_flags, in_dir)
+        main(fname, out_main_dir, config)
+
+if __name__ == "__main__":
+    config_name = "Main.cfg"
+    main_entry(config_name)
