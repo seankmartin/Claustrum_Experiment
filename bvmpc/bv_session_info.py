@@ -190,7 +190,6 @@ class SessionInfo:
         self.axona_metadata_map = {
             "start_date": "trial_date",
             "end_date": "trial_date",
-            "subject": "comments",
             "start_time": "trial_time",
             "end_time": "end_time",
             "name": "script"}

@@ -152,6 +152,9 @@ class AxonaInpReader:
         counter = 0
         with open(in_location, 'rb') as file:
             header = cls._parse_header(file)
+            if header["samples"] == 0:
+                raise ValueError("No input/output samples in {}".format(
+                    in_location))
 
             time_arr = np.zeros(header["samples"], np.float32)
             char_arr = np.zeros(header["samples"], str)
