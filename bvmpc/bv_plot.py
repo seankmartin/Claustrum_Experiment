@@ -83,17 +83,14 @@ class GridFig:
             row_idx = (self.idx // self.cols)
             col_idx = (self.idx % self.cols)
 
-            # print(row_idx, col_idx)
-            ax = self.get_ax(row_idx, col_idx)
         else:
             row_idx = (self.idx % self.rows)
             col_idx = (self.idx // self.rows)
 
-
-<< << << < HEAD
-== == == =
-            # print(row_idx, col_idx)
+        # print(row_idx, col_idx)
+        ax = self.get_ax(row_idx, col_idx)
         self._increment()
+        return ax
 
     def get_next_snake(self):
         """
