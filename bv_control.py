@@ -1062,7 +1062,7 @@ def run_mpc_file(filename, out_dir):
 def main(config_name):
     """Main control for batch process."""
     here = os.path.dirname(os.path.realpath(__file__))
-    config_path = os.path.join(here, "Configs", config_name)
+    config_path = os.path.join(here, "Configs", "Behaviour", config_name)
     config = read_cfg(config_path)
 
     in_dir = config.get("Setup", "in_dir")
@@ -1124,6 +1124,7 @@ def main(config_name):
         plot_batch_sessions(out_main_dir, sub, start_date, end_date, plt_flags)
 
     if analysis_flags[2]:
+        # TODO turn this into batch if using it
         h5_loc = r"C:\Users\smartin5\OneDrive - TCDUD.onmicrosoft.com\Claustrum\hdf5\1_08-29-19_16-58_7_RandomisedBlocksExtended_p.nix"
         s = Session(neo_file=h5_loc)
         bv_an.trial_clustering(s)
