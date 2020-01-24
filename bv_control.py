@@ -1,24 +1,22 @@
 """Control script for MEDPC behaviour analysis."""
 import os
 import math
+import json
+
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+from datetime import date, timedelta, datetime
+
 from bvmpc.bv_session_extractor import SessionExtractor
 from bvmpc.bv_session import Session
 import bvmpc.bv_analyse as bv_an
-from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list, get_all_files_in_dir, log_exception, chunks, save_dict_to_csv
+from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list, get_all_files_in_dir, log_exception, chunks, save_dict_to_csv, read_cfg
 import bvmpc.bv_plot as bv_plot
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 from scipy import interpolate
-from datetime import date, timedelta, datetime
 
-# def split_df(grp_trial_df):  
-    # TODO split trial dataframe into FR and FI only dfs
-    # return 
-
-#     return 
 
 def trial_length_hist (s, ax, loop):
     ''' Plot histrogram of trial durations 
@@ -49,24 +47,6 @@ def trial_length_hist (s, ax, loop):
                  y=1.025, fontsize=25, color=mycolors(sub))
     ax.legend(fontsize=20)
     return
-    
-
-
-# def trial_features_df(trial_df):  #TODO complete this
-#     '''Pandas dataframe of features extracted based on trials in a session'''
-
-#     # Timestamps kept as original starting from session start
-#         trial_features = {
-#             'Reward_ts': reward_times,
-#             'Pellet_ts': pell_ts_exdouble,
-#             'D_Pellet_ts': trial_dr_ts,
-#             'Schedule': schedule_type,
-#             'Levers_ts': trial_lever_ts,
-#             'Err_ts': trial_err_ts
-#         }
-
-#         trial_features_df = pd.DataFrame(trial_features)
-#     return trial_features_df
 
 def plot_raster_trials(s, ax):
     
@@ -176,47 +156,6 @@ def plot_raster_trials(s, ax):
         plt.axhline(l, linestyle='-', color=c, linewidth='5', alpha=0.1)
     
     return
-
-def struc_session(d_list, sub_list, in_dir):
-    """ Structure sessions into a pandas dataframe based on trials
-    Returns 5 outputs: s_grp, grp_session_df, grp_trial_df, df_sub, df_date
-        s_grp           - sessions extracted from hdf5
-        grp_session_df  - array of pandas dataframe from raw extraction of ts
-        grp_trial_df    - array of pandas dataframe with ts normalized to start of each trial
-        df_sub          - array denoting the subject corresponding to each df
-        df_date         - array denoting the date corresponding to each df
-        df_stage        - array denoting the session stage corresponding to each df
-    """
-    in_dir = os.path.join(start_dir, "hdf5")
-    # d_list, s_list, sub_list = [['09-17'], ['7'], ['3']]
-    s_list = ['4','5a','5b','6','7']
-    s_grp = extract_sessions(in_dir, sub_list, s_list, d_list)
-    
-    # Quit program if no sessions passed
-    if s_grp == []:
-        print('No Session passed')
-        exit()
-
-    # Initialize group arrays
-    grp_session_df = []
-    grp_trial_df = []
-    df_sub = []
-    df_date = []
-    df_stage = []
-
-    for s in s_grp:
-        subject = s.get_metadata('subject')
-        date = s.get_metadata("start_date").replace("/", "-")[:5]
-        stage = s.get_stage()
-        session_df = s.get_trial_df()
-        trial_df = s.get_trial_df_norm()
-        grp_session_df.append(session_df)
-        grp_trial_df.append(trial_df)
-        df_sub.append(subject)
-        df_date.append(date)
-        df_stage.append(stage)
-
-    return s_grp, grp_session_df, grp_trial_df, df_sub, df_date, df_stage
 
 def struc_timeline(sub_list, in_dir):
     """ Structure sessions into a pandas dataframe based on trials
@@ -344,86 +283,8 @@ def struc_timeline(sub_list, in_dir):
 
     return grp_timeline_df, grp_timeline_df_sub
 
-def compare_variables(start_dir):
-    """ Temporary Function to plot difference between errors"""
-    # Only works for stage 7
-    # start_dir = r"G:\!Operant Data\Ham"
-    in_dir = os.path.join(start_dir, "hdf5")
-    sub_list = ['1', '2', '3', '4']
-    s_list = ['7']
-    grpA_d_list = ['08-10', '08-11', '08-12']
-    grpB_d_list = ['08-17', '08-18', '08-19']
-    grpC_d_list = ['09-15', '09-16', '09-17']
-
-    s_grpA = extract_sessions(in_dir, sub_list, s_list, grpA_d_list)
-    s_grpB = extract_sessions(in_dir, sub_list, s_list, grpB_d_list)
-    s_grpC = extract_sessions(in_dir, sub_list, s_list, grpC_d_list)
-    s_grpA.pop()
-    s_grpA.pop(-4)
-    s_grpA.pop(-7)
-    s_grpA.pop(-10)
-    s_grps = [s_grpA, s_grpB, s_grpC]
-    FR_means = []
-    FI_means = []
-    FR_stds = []
-    FI_stds = []
-
-    for s in s_grps:
-        grp_FRerr, grp_FIerr = grp_errors(s)
-        FRerr_arr = np.array(grp_FRerr)
-        FIerr_arr = np.array(grp_FIerr)
-        FR_mean = np.mean(FRerr_arr, axis=0)
-        FI_mean = np.mean(FIerr_arr, axis=0)
-        FR_means.append(FR_mean)
-        FI_means.append(FI_mean)
-        FR_std = np.std(FRerr_arr, axis=0)
-        FI_std = np.std(FIerr_arr, axis=0)
-        FR_stds.append(FR_std)
-        FI_stds.append(FI_std)
-
-    # x_label = ['FR6_noDP-Ratio', 'FR6_NoDP-Int', 'FR8-Ratio',
-    #            'FR8-Int', 'FR18-Ratio', 'FR18-Int']
-    ratio_c = plt.cm.get_cmap('Wistia')
-    interval_c = plt.cm.get_cmap('winter')
-
-    _, ax = plt.subplots()
-    ind = np.arange(len(FR_means))  # the x locations for the groups
-    width = 0.35  # the width of the bars
-    ax.bar(ind - width/2, FR_means, width,
-           yerr=FR_stds, label='FR', color=ratio_c(10*45), align='center')
-    ax.bar(ind + width/2, FI_means, width,
-           yerr=FI_stds, label='FI', color=interval_c(4*45), align='center')
-    # ax.bar(ind - width/2, np.mean(err_arr, axis=1), tick_label=x_label,
-    #        yerr=np.std(err_arr, axis=1), align='center',
-    #        alpha=0.5, ecolor='black', capsize=10)
-    ax.set_xticks(ind)
-    ax.set_xticklabels(('FR6_noDP', 'FR8', 'FR18'))
-    ax.set_ylabel('Error Presses')
-    ax.set_xlabel('Sessions-Type')
-    ax.set_title('Errors Comparison')
-    ax.legend()
-    plt.show()
-
-def grp_errors(s_grp):
-    grp_FRerr = []
-    grp_FIerr = []
-    for i, s in enumerate(s_grp):
-        err_FI = 0
-        err_FR = 0
-        _, _, norm_err_ts, _, _ = s.split_sess(
-            plot_all=True)
-        sch_type = s.get_arrays('Trial Type')
-        for i, _ in enumerate(norm_err_ts):
-            if sch_type[i] == 1:
-                err_FR = err_FR + len(norm_err_ts[i])
-            elif sch_type[i] == 0:
-                err_FI = err_FI + len(norm_err_ts[i])
-        grp_FRerr.append(err_FR)
-        grp_FIerr.append(err_FI)
-    return grp_FRerr, grp_FIerr
-
 def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags):
-    out_dir = os.path.join(start_dir, "Plots\Current")
+    out_dir = os.path.join(start_dir, "Plots", "Current")
 
     if plt_flags["raster"] or plt_flags["hist"]:
         in_dir = os.path.join(start_dir, "hdf5")  # Path join only present in plot_sessions
@@ -1198,21 +1059,24 @@ def run_mpc_file(filename, out_dir):
         bv_an.cumplot(s, out_dir, False)
         # bv_an.IRT(s, out_dir, False)  # Doesnt work with stage 6
 
-def main_single(filename, out_dir):
-    """Main control for single files."""
-    # # Converting single MPC files
-    return convert_to_neo(filename, out_dir)
-
-def main_batch(
-    start_dir, analysis_flags, out_main_dir=None):
+def main(config_name):
     """Main control for batch process."""
+    here = os.path.dirname(os.path.realpath(__file__))
+    config_path = os.path.join(here, "Configs", config_name)
+    config = read_cfg(config_path)
+
+    in_dir = config.get("Setup", "in_dir")
+    if in_dir[0] == "\"":
+        in_dir = in_dir[1:-1]
+    out_main_dir = config.get("Setup", "out_dir")
+    if out_main_dir == "":
+        out_main_dir = in_dir
+    analysis_flags = json.loads(config.get("Setup", "analysis_flags"))
 
     # Batch processing of sessions in folder
     if analysis_flags[0]:  # Convert new MEDPC files to neo
-        if out_main_dir is None:
-            out_main_dir = start_dir
         out_dir = os.path.join(out_main_dir, "hdf5")
-        in_files = get_all_files_in_dir(start_dir, return_absolute=True)
+        in_files = get_all_files_in_dir(in_dir, return_absolute=True)
 
         # Check if we are using Axona files
         for filename in in_files:
@@ -1237,59 +1101,33 @@ def main_batch(
                 except Exception as e:
                     log_exception(e, "Error during coversion to neo")
     
-    if analysis_flags[1]:  # plot_sessions
-        d_list = ["09-03"]
-        s_list = ["1"]
-        # d_list = [date.today().isoformat()[-5:]]
-        plot_sessions(out_main_dir, d_list, s_list, summary=True)
 
-    if analysis_flags[2]:  # plot_batch_sessions
-        sub = ['11', '12', '13', '14']
-        # sub = ['10']
-        # sub = ['3','4']
+    if analysis_flags[1]:  # plot_batch_sessions
+        sub = json.loads(config.get("BatchPlot", "subjects"))
+        sub = [str(sub_val) for sub_val in sub]
+        end_date_parsed = config.get("BatchPlot", "end_date")
+        if "_" not in end_date_parsed:
+            end_date = date.today() + timedelta(
+                days=int(end_date_parsed))
+        else:
+            Y, M, D = [int(x) for x in end_date_parsed.split("_")]
+            end_date = date(Y, M, D)
+        start_date_parsed = config.get("BatchPlot", "start_date")
+        if "_" not in start_date_parsed:
+            start_date = end_date + timedelta(
+                days=int(start_date_parsed))
+        else:
+            Y, M, D = [int(x) for x in start_date_parsed.split("_")]
+            start_date = date(Y, M, D)
 
-        # start_date = date(2020, 1, 6)  # date(year, mth, day)
-        # end_date = date(2019, 11, 26)
-
-        # Sets date using today as reference (Default)
-        start_date = date.today() - timedelta(days=2)
-        end_date = date.today() - timedelta(days=0)
-        
-        # Quick control of plotting
-        plt_flags = {"timeline" : 1, "summary" : 0, "raster": 0, "hist": 0}
-
-        # for sub in sub:
-            # plot_batch_sessions(out_main_dir, sub, start_date, end_date)
+        plt_flags = config._sections["BatchPlotOpts"]
         plot_batch_sessions(out_main_dir, sub, start_date, end_date, plt_flags)
-    
-    if analysis_flags[3]:  # Temporary function for comparing variables (Bar Plots)
-        compare_variables(out_main_dir)
 
-    if analysis_flags[4]:
+    if analysis_flags[2]:
         h5_loc = r"C:\Users\smartin5\OneDrive - TCDUD.onmicrosoft.com\Claustrum\hdf5\1_08-29-19_16-58_7_RandomisedBlocksExtended_p.nix"
         s = Session(neo_file=h5_loc)
         bv_an.trial_clustering(s)
 
 if __name__ == "__main__":
-    # TODO set this up with a cfg file and cmd args
-
-    # start_dir = r"G:\PhD (Shane O'Mara)\Operant Data\Recordings"
-    start_dir = r"G:\PhD (Shane O'Mara)\Operant Data\Batch 3"
-    out_dir = start_dir
-    # start_dir = r"G:\!Operant Data\Ham"  # from Ham Personal Thumbdrive
-    # start_dir = r"C:\Users\smartin5\TCDUD.onmicrosoft.com\Gao Xiang Ham - MEDPC"
-    # out_dir = r"C:\Users\smartin5\OneDrive - TCDUD.onmicrosoft.com\Claustrum"
-
-    # Description of analysis_flags
-    # 0 - convert files to neo format in start_dir
-    # 1 - plot sessions, d_list and s_list set in main_batch
-    # 2 - plot batch sessions, sub, and dates in main_batch
-    # 3 - temporary compare variables function
-    analysis_flags = [0, 0, 1, 0]
-    main_batch(start_dir, analysis_flags, out_dir)
-
-    ## Convert inp to csv
-    # location = r"/home/sean/Downloads/CAR-S2_2019-11-18_Unit.inp"
-    # s = Session(axona_file=location)
-    # out_name = location[:-4] + "_parsed.csv"
-    # save_dict_to_csv(out_name, s.info_arrays)
+    config_name = "Main.cfg"
+    main(config_name)
