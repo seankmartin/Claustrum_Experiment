@@ -117,7 +117,7 @@ def plot_raster_trials(s, ax):
     ax.eventplot(norm_err[:], color='red')
     ax.scatter(norm_rw, np.arange(len(norm_rw)), s=5,
                 color='orange', label='Reward Collection')
-    ax.eventplot(norm_dr[:], color='magenta', label='Double Reward')
+    ax.eventplot(norm_dr[:], color='magenta')
 
     # Figure labels
     ax.set_xlim(xmin, xmax)  # Uncomment to set x limit
@@ -285,8 +285,9 @@ def struc_timeline(sub_list, in_dir):
 
 def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags):
     out_dir = os.path.join(start_dir, "Plots", "Current")
+    plt_flags = {"timeline": 0, "summary": 0, "raster": 1, "hist": 0}
 
-    if plt_flags["raster"] or plt_flags["hist"]:
+    if plt_flags["raster"] == 1 or plt_flags["hist"] == 1:
         in_dir = os.path.join(start_dir, "hdf5")  # Path join only present in plot_sessions
 
         # Default conversion of date based on start_date and end_date range
@@ -329,13 +330,13 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags):
                 
                 # 2x2 plotting axes
                 k = (i%2)*2
-                if plt_flags["raster"]:
+                if plt_flags["raster"] == 1:
                     ax = gf.get_multi_ax(
                         k, k+2, 4*int(i/2), 4*math.ceil((i+1)/2))
                     plot_raster_trials(s, ax)
                     plot_type = 'Raster_'  # Plot name for saving
                     
-                if plt_flags["hist"]:
+                if plt_flags["hist"] == 1:
                     if not plotting_sub == s.get_metadata('subject'):
                         ax = gf.get_multi_ax(k, k+2, 4*int(i/2), 4*math.ceil((i+1)/2))
                         plotting_sub = s.get_metadata('subject')
@@ -373,10 +374,11 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags):
 
         # plot all 4 timeline types
     if plt_flags["timeline"] == 1:
+        print("Plotting Timeline...")
         d = [end_date.isoformat()[-5:]]
         in_dir = os.path.join(start_dir, "hdf5")
         single = False  # plots seperate graphs for each animal if True
-        show_date = True  # Sets x-axis as dates if True
+        show_date = False  # Sets x-axis as dates if True
         details = False
         recent = False
         if not single:
