@@ -121,13 +121,13 @@ class GroupManager:
 
     def __init__(self, group_list):
         self.group_list = group_list
-        print(self.group_list)
+        # print(self.group_list)
         self.info_dict = OrderedDict()
         self.index = 0
         self.color_list = [
             "Blues", "Oranges", "Greens", "Reds", "Purples", "Greys"]
         set_vals = sorted(set(group_list), key=group_list.index)
-        print(set_vals)
+        # print(set_vals)
         import numpy as np
         if len(set_vals) > len(self.color_list):
             start_vals = np.arange(0.0, 2.5, 2.5 / (len(set_vals) - 0.99))
@@ -139,7 +139,7 @@ class GroupManager:
             for set_v, start_v in zip(set_vals, start_vals):
                 self.info_dict[set_v] = ColorManager(
                     group_list.count(set_v), "sns", sns_style=start_v)
-        print(self.info_dict)
+        # print(self.info_dict)
 
     def get_next_color(self):
         out = self.info_dict[self.group_list[self.index]].get_next_color()
