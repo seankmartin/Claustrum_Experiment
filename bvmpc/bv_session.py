@@ -579,6 +579,7 @@ class Session:
         left_presses = self.info_arrays.get("left_lever", [])
         right_presses = self.info_arrays.get("right_lever", [])
         nosepokes = self.info_arrays.get("all_nosepokes", [])
+        # print(nosepokes)
 
         # Extract nosepokes as necessary and unecessary
         pell_ts_exdouble, _ = self.split_pell_ts()
@@ -589,15 +590,37 @@ class Session:
             good_nosepokes, 305, 6)
         split_pellets = split_into_blocks(
             pell_ts_exdouble, 305, 6)
-        for i, (b1, b2) in enumerate(zip(split_nosepokes, split_pellets)):
+        split_all_nosepokes = split_into_blocks(
+            nosepokes, 305, 6)
+        for i in range(6):
+            b1, b2 = split_nosepokes[i], split_pellets[i]
             if len(b2) > len(b1):
-                print(good_nosepokes)
-                last_trial_idx = np.nonzero(
-                    np.abs(good_nosepokes - b1[-1]) <= 0.00001)[0]
-                good_nosepokes[last_trial_idx+1] = 305 * (i+1)
-                if i < 5:
-                    split_nosepokes[i+1] = split_nosepokes[i+1][1:]
-                print(good_nosepokes)
+                print("block: {}, End-time: {}".format(i, 305*(i+1)))
+                print("good nosepokes: {}".format(good_nosepokes))
+                print("nosepokes: {}".format(b1))
+                print("pellets: {}".format(b2))
+
+                last_nosepoke_idx = -1
+                for j in range(i, -1, -1):
+                    bl = split_all_nosepokes[j]
+                    if len(bl) == 0:
+                        continue
+                    # Finds last nosepoke in this block, or previous block
+                    last_nosepoke_arr = np.nonzero(
+                        np.abs(nosepokes - bl[-1]) <= 0.00001)
+                    last_nosepoke_idx = last_nosepoke_arr[0][0]
+                    break
+
+                # Replaces overflowed nosepoke w block end in main array
+                nosepokes = np.insert(nosepokes, last_nosepoke_idx+1, 305 * (i+1))
+                if i < 5: # ignores first nosepoke in next block in split arrays
+                    good_nosepokes, un_nosepokes = split_array_with_another(
+                        nosepokes, pell_ts_exdouble)
+                    split_nosepokes = split_into_blocks(
+                        good_nosepokes, 305, 6)
+                    split_all_nosepokes = split_into_blocks(
+                        nosepokes, 305, 6)
+                print("Corrected:", good_nosepokes)
 
         split_nosepokes = split_into_blocks(
             good_nosepokes, 305, 6)

@@ -53,6 +53,7 @@ def split_array_with_another(array, split_arr):
     """
     idxs = np.searchsorted(array, split_arr)
     idxs = idxs[idxs != len(array)]
+    idxs = np.unique(idxs)
     return split_array(array, idxs)
 
 
