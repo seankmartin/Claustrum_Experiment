@@ -152,7 +152,8 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
 
     elif zoom_sch and (session_type == '6_RandomisedBlocks_p' or stage == '7'):
         # plots cum graph based on schedule type (i.e. FI/FR)
-        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl = session.split_sess(plot_error=plot_error, plot_all=plot_all)
+        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl = session.split_sess(
+            plot_error=plot_error, plot_all=plot_all)
 
         sch_type = session.get_arrays('Trial Type')
         ratio_c = plt.cm.get_cmap('Wistia')
@@ -264,7 +265,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     ax.scatter(reward_times, reward_y, marker="x", c="grey",
                label='Reward Collected', s=25)
     if len(reward_double) > 0:
-        dr_print = "\nTotal # of Double Rewards:" + str(len(reward_double))
+        dr_print = "\nTotal # of Double Rewards: " + str(len(reward_double))
         ax.scatter(reward_double, double_y, marker="x", c="magenta",
                    label='Double Reward', s=25)
     else:
@@ -302,6 +303,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
                     dr_print, rw_print, err_print))
             ax.text(0.05, 0.75, text, transform=ax.transAxes)
         return
+
 
 def IRT(session, out_dir, ax=None, showIRT=False):
     """
@@ -410,6 +412,7 @@ def show_IRT_details(IRT, maxidx, hist_bins):
     print('Min IRT: {0:.2f} s'.format(np.amin(IRT)))
     print('Max IRT: {0:.2f} s'.format(np.amax(IRT)))
     print('IRTs: ', np.round(IRT, decimals=2))
+
 
 def trial_clustering(session, should_pca=False, num_clusts=2):
     if should_pca:

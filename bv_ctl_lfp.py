@@ -42,11 +42,9 @@ def main(fname, out_main_dir, config):
         regions += adding
     filt_btm = float(config.get("Setup", "filt_btm"))
     filt_top = float(config.get("Setup", "filt_top"))
-    # chans = [i for i in range(1, 17*2-1)]
-    # regions = ["CLA"] * 28 + ["ACC"] * 2 + ["RSC"] * 2
 
-    # Single Hemi Multisite Drive settings
-    regions = ["CLA"] * 8 + ["ACC"] * 4 + ["RSC"] * 4
+    # # Single Hemi Multisite Drive settings
+    # regions = ["CLA"] * 8 + ["ACC"] * 4 + ["RSC"] * 4
 
     gm = bv_plot.GroupManager(regions)
 
@@ -56,10 +54,14 @@ def main(fname, out_main_dir, config):
             fname, channels=chans, filt_params=(True, filt_btm, filt_top))
         lfp_list.append(lfp_odict)
 
-    # Load behaviour-related data
-    s = load_bv_from_set(fname)
-    rw_ts = s.get_rw_ts()
-    sch_type = s.get_arrays('Trial Type')  # FR = 1, FI = 0
+    if "Pre" in fname:
+        rw_ts = []
+        sch_type = []
+    else:
+        # Load behaviour-related data
+        s = load_bv_from_set(fname)
+        rw_ts = s.get_rw_ts()
+        sch_type = s.get_arrays('Trial Type')  # FR = 1, FI = 0
 
     o_dir = os.path.join(out_main_dir, "!LFP")
     make_dir_if_not_exists(o_dir)
@@ -71,7 +73,9 @@ def main(fname, out_main_dir, config):
 
         """
         for p, lfp_odict in enumerate(lfp_list):
-            # # Plot periodogram for each eeg as a seperate .png
+            indiv = False  # Set to true for individual periodograms on a 4x4 grid
+
+            # Old code to plot each periodogram in a seperate .png
             # for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
             #     graph_data = lfp.spectrum(
             #         ptype='psd', prefilt=False,
@@ -85,37 +89,38 @@ def main(fname, out_main_dir, config):
             #     fig.savefig(out_name)
             #     plt.close()
 
-            # Setup 4x4 summary grid
-            rows, cols = [4, 4]
-            gf = bv_plot.GridFig(rows, cols, wspace=0.3,
-                                 hspace=0.3, tight_layout=False)
+            if indiv:
+                # Setup 4x4 summary grid
+                rows, cols = [4, 4]
+                gf = bv_plot.GridFig(rows, cols, wspace=0.3,
+                                     hspace=0.3, tight_layout=False)
 
-            # Plot individual periodograms on a 4x4 grid
-            for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
-                graph_data = lfp.spectrum(
-                    ptype='psd', prefilt=False,
-                    db=False, tr=False)
-                ax = gf.get_next(along_rows=False)
-                color = gm.get_next_color()
-                nc_plot.lfp_spectrum(graph_data, ax, color)
-                plt.ylim(0, 0.015)
-                # plt.xlim(0, 40)
-                ax.text(0.49, 1.08, regions[i+p*16], fontsize=20,
-                        horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
-            if p:
-                gf.fig.suptitle(
-                    (fname.split("\\")[-1][4:] + " Periodogram " + str(p)), fontsize=30)
-                out_name = os.path.join(
-                    o_dir, fname.split("\\")[-1] + "_p_sum_" + str(p) + ".png")
-            else:
-                gf.fig.suptitle(
-                    (fname.split("\\")[-1][4:] + " Periodogram"), fontsize=30)
-                out_name = os.path.join(
-                    o_dir, fname.split("\\")[-1] + "_p_sum.png")
-            make_path_if_not_exists(out_name)
-            print("Saving result to {}".format(out_name))
-            gf.fig.savefig(out_name)
-            plt.close()
+                # Plot individual periodograms on a 4x4 grid
+                for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
+                    graph_data = lfp.spectrum(
+                        ptype='psd', prefilt=False,
+                        db=False, tr=False)
+                    ax = gf.get_next(along_rows=False)
+                    color = gm.get_next_color()
+                    nc_plot.lfp_spectrum(graph_data, ax, color)
+                    plt.ylim(0, 0.015)
+                    # plt.xlim(0, 40)
+                    ax.text(0.49, 1.08, regions[i+p*16], fontsize=20,
+                            horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+                if p:
+                    gf.fig.suptitle(
+                        (fname.split("\\")[-1][4:] + " Periodogram " + str(p)), fontsize=30)
+                    out_name = os.path.join(
+                        o_dir, fname.split("\\")[-1] + "_p_sum_" + str(p) + ".png")
+                else:
+                    gf.fig.suptitle(
+                        (fname.split("\\")[-1][4:] + " Periodogram"), fontsize=30)
+                    out_name = os.path.join(
+                        o_dir, fname.split("\\")[-1] + "_p_sum.png")
+                make_path_if_not_exists(out_name)
+                print("Saving result to {}".format(out_name))
+                gf.fig.savefig(out_name)
+                plt.close()
 
            # Plot spectrogram for each eeg as a seperate .png
             for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
@@ -135,15 +140,21 @@ def main(fname, out_main_dir, config):
                             ptype='psd', prefilt=False,
                             db=True, tr=True)
                         nc_plot.lfp_spectrum_tr(graph_data, ax)
+                        plt.tick_params(labelsize=20)
+                        ax.xaxis.label.set_size(25)
+                        ax.yaxis.label.set_size(25)
                         if j == 0:
                             plt.title("T" + key + " " +
-                                      regions[i+p*16] + " Spectrogram", fontsize=40)
+                                      regions[i+p*16] + " Spectrogram", fontsize=40, y=1.05)
                         plt.ylim(0, filt_top)
-                        for rw in rw_ts:
-                            ax.axvline(rw, linestyle='-',
-                                       color='orange', linewidth='1')    # vline demarcating reward point/end of trial
-                        ax.axvline(tone_ts, linestyle='-',
-                                   color='r', linewidth='1')    # vline demarcating end of tone
+                        if "Pre" in fname:
+                            continue
+                        else:
+                            for rw in rw_ts:
+                                ax.axvline(rw, linestyle='-',
+                                           color='orange', linewidth='1.5')    # vline demarcating reward point/end of trial
+                            ax.axvline(tone_ts, linestyle='-',
+                                       color='r', linewidth='1.5')    # vline demarcating end of tone
                     fig = gf.get_fig()
                 else:
                     fig, ax = plt.subplots(figsize=(20, 5))
@@ -163,6 +174,7 @@ def main(fname, out_main_dir, config):
         # Plot all periodograms on 1 plot
         fig, ax = plt.subplots(figsize=(20, 20))
         legend = []
+        max_p = 0
         for p, lfp_odict in enumerate(lfp_list):
             for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
                 graph_data = lfp.spectrum(
@@ -171,11 +183,19 @@ def main(fname, out_main_dir, config):
                 color = gm.get_next_color()
                 nc_plot.lfp_spectrum(graph_data, ax, color)
                 legend.append(regions[i+p*16] + " T" + key)
-        plt.ylim(0, 0.015)
+                cur_max_p = max(graph_data['Pxx'])
+                if cur_max_p > max_p:
+                    max_p = cur_max_p
+                else:
+                    continue
+        plt.tick_params(labelsize=20)
+        ax.xaxis.label.set_size(25)
+        ax.yaxis.label.set_size(25)
+        plt.ylim(0, max_p+max_p*0.1)
         plt.xlim(0, filt_top)
-        plt.legend(legend)
+        plt.legend(legend, fontsize=15)
         plt.title(fname.split("\\")[-1][4:] +
-                  " Compiled Periodogram", fontsize=25)
+                  " Compiled Periodogram", fontsize=40, y=1.02)
         out_name = os.path.join(o_dir, fname.split("\\")[-1] + "_p.png")
         make_path_if_not_exists(out_name)
         fig.savefig(out_name)
@@ -188,7 +208,7 @@ def main(fname, out_main_dir, config):
             for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
                 graph_data = lfp.spectrum(
                     ptype='psd', prefilt=True,
-                    db=True, tr=True)
+                    db=True, tr=True)   # Function from nc_lfp
                 ax = gf.get_next(along_rows=False)
                 nc_plot.lfp_spectrum_tr(graph_data, ax)
                 plt.ylim(0, 40)
@@ -217,7 +237,7 @@ def main(fname, out_main_dir, config):
 
         for p, lfp_odict in enumerate(lfp_list):
             rows, cols = [4, 4]
-            gf = bv_plot.GridFig(rows, cols, wspace=0.5, hspace=0.5)
+            gf = bv_plot.GridFig(rows, cols, wspace=0.3, hspace=0.3)
             for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
                 ax = gf.get_next(along_rows=False)
                 legend = []
@@ -237,18 +257,21 @@ def main(fname, out_main_dir, config):
                         sch_name.append("FI")
                         legend.append("{}-FI".format(k))
                     nc_plot.lfp_spectrum(graph_data, ax, color)
-                    plt.ylim(0, 0.010)
+                    plt.ylim(0, 0.0045)
                     plt.xlim(0, filt_top)
+                # plt.tick_params(labelsize=15)
                 plt.legend(legend)
-                plt.title(regions[i+p*16] + " T" + key, fontsize=12)
+                reg_color = gm.get_next_color()
+                plt.title(regions[i+p*16] + " T" + key,
+                          fontsize=15, color=reg_color)
             if p:
                 plt.suptitle(fname.split(
-                    "\\")[-1] + " Periodogram - Blocks " + str(p), y=0.95, fontsize=25)
+                    "\\")[-1] + " Periodogram - Blocks " + str(p), y=0.92, fontsize=30)
                 out_name = os.path.join(o_dir, fname.split(
                     "\\")[-1] + "_p_com_" + str(p) + ".png")
             else:
                 plt.suptitle(fname.split("\\")
-                             [-1] + " Periodogram - Blocks", y=0.95, fontsize=25)
+                             [-1] + " Periodogram - Blocks", y=0.92, fontsize=30)
                 out_name = os.path.join(o_dir, fname.split(
                     "\\")[-1] + "_p_com.png")
             make_path_if_not_exists(out_name)
@@ -258,7 +281,10 @@ def main(fname, out_main_dir, config):
 
     if analysis_flags[3]:   # Compare coherence in terms of freq between ACC & RSC
         # lfp_list = select_lfp(fname, ROI)
-        chans = [30, 31]
+        chans = [12, 13]
+        reg_sel = []
+        for chan in chans:  # extracts name of regions selected
+            reg_sel.append(regions[chan-1] + "-" + str(chan))
         gm_sch = bv_plot.GroupManager(list(sch_type))
 
         lfp_odict = LfpODict(fname, channels=chans)
@@ -280,17 +306,97 @@ def main(fname, out_main_dir, config):
             lfp_list1.append(new_lfp1)
             lfp_list2.append(new_lfp2)
 
+        # Plots wavelet coherence for each block in a seperate .png
+        for b, (lfp1, lfp2, sch) in enumerate(zip(lfp_list1, lfp_list2, sch_name)):
+            out_name = os.path.join(
+                o_dir, os.path.basename(fname) + "_wcohere_" + str(b+1) + ".png")
+            sch_n = str(b+1) + "-" + sch
+            test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel, out_name)
+
+        # Plots coherence by comparing FI vs FR
         sch_f, sch_Cxy = [], []
         for lfp1, lfp2 in zip(lfp_list1, lfp_list2):
             from bvmpc.lfp_coherence import calc_coherence
             f, Cxy = calc_coherence(lfp1, lfp2)
             sch_f.append(f)
             sch_Cxy.append(Cxy)
-        fig, ax = plt.subplots(figsize=(1, 1))
+        fig, ax = plt.subplots(figsize=(20, 10))
         for f, Cxy in zip(sch_f, sch_Cxy):
             color = gm_sch.get_next_color()
             ax = plot_coherence(f, Cxy, ax=ax, color=color, legend=legend)
-        plt.show()
+        plt.xlim(0, 60)
+        plt.suptitle(fname.split("\\")
+                     [-1], y=0.95, fontsize=25)
+        plt.text(x=0.5, y=0.89, s="{}_{} Coherence - Blocks".format(reg_sel[0], reg_sel[1]),
+                 fontsize=10, ha="center", transform=fig.transFigure)
+        out_name = os.path.join(o_dir, fname.split(
+            "\\")[-1] + "_cohere.png")
+        make_path_if_not_exists(out_name)
+        print("Saving result to {}".format(out_name))
+        fig.savefig(out_name)
+        plt.close()
+
+
+# matlab version of wcoherence
+def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name='default.png'):
+    import matlab.engine
+    import numpy as np
+    from scipy import signal
+
+    eng = matlab.engine.start_matlab()
+    fs = lfp1.get_sampling_rate()
+    t = lfp1.get_timestamp()
+    x = lfp1.get_samples()
+    y = lfp2.get_samples()
+    x_m = matlab.double(list(x))
+    y_m = matlab.double(list(y))
+
+    rw_ts = matlab.double(list(rw_ts))
+    o = 7.0
+    eng.wcoherence(x_m, y_m, fs, 'NumOctaves', o, nargout=0)
+    aspect_ratio = matlab.double([2, 1, 1])
+    eng.pbaspect(aspect_ratio, nargout=0)
+
+    title = ("{} vs {} Wavelet Coherence {}".format(
+        reg_sel[0], reg_sel[1], sch_n))
+    eng.title(title)
+    # eng.hold("on", nargout=0)
+
+    # for rw in rw_ts:
+    #     # vline demarcating reward point/end of trial
+    #     eng.xline(rw, "-r")
+    # eng.hold("off", nargout=0)
+    fig = eng.gcf()
+    print("Saving result to {}".format(name))
+    eng.saveas(fig, name, nargout=0)
+
+
+def test_wct(lfp1, lfp2, sig=True):  # python CWT
+    import pycwt as wavelet
+    dt = 1/lfp1.get_sampling_rate()
+    WCT, aWCT, coi, freq, sig = wavelet.wct(
+        lfp1.get_samples(), lfp2.get_samples(), dt, sig=sig)
+    _, ax = plt.subplots()
+    t = lfp1.get_timestamp()
+    ax.contourf(t, freq, WCT, 6, extend='both', cmap="viridis")
+    extent = [t.min(), t.max(), 0, max(freq)]
+    N = lfp1.get_total_samples()
+    sig95 = np.ones([1, N]) * sig[:, None]
+    sig95 = WCT / sig95
+    ax.contour(t, freq, sig95, [-99, 1], colors='k', linewidths=2,
+               extent=extent)
+    ax.fill(np.concatenate([t, t[-1:] + dt, t[-1:] + dt,
+                            t[:1] - dt, t[:1] - dt]),
+            np.concatenate([coi, [1e-9], freq[-1:],
+                            freq[-1:], [1e-9]]),
+            'k', alpha=0.3, hatch='x')
+
+    ax.set_title('Wavelet Power Spectrum')
+    ax.set_ylabel('Freq (Hz)')
+    ax.set_xlabel('Time (s)')
+
+    plt.show()
+    exit(-1)
 
 
 def select_lfp(fname, ROI):  # Select lfp based on region
@@ -315,6 +421,7 @@ def load_bv_from_set(fname):
     """ Loads session based from .inp """
     return Session(axona_file=fname + ".inp")
 
+
 def main_entry(config_name):
     here = os.path.dirname(os.path.realpath(__file__))
     config_path = os.path.join(here, "Configs", "LFP", config_name)
@@ -332,7 +439,6 @@ def main_entry(config_name):
         in_dir, ext=".eeg", recursive=True,
         verbose=True, re_filter=regex_filter)
 
-    main("None", "None", config)
     filenames = [fname[:-4] for fname in filenames]
     if len(filenames) == 0:
         print("No set files found for analysis!")
@@ -341,6 +447,7 @@ def main_entry(config_name):
     for fname in filenames:
         main(fname, out_main_dir, config)
 
+
 if __name__ == "__main__":
-    config_name = "Main.cfg"
+    config_name = "CAR-SA1.cfg"
     main_entry(config_name)
