@@ -285,7 +285,6 @@ def struc_timeline(sub_list, in_dir):
 
 def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags):
     out_dir = os.path.join(start_dir, "Plots", "Current")
-    plt_flags = {"timeline": 0, "summary": 0, "raster": 1, "hist": 0}
 
     if plt_flags["raster"] == 1 or plt_flags["hist"] == 1:
         in_dir = os.path.join(start_dir, "hdf5")  # Path join only present in plot_sessions
@@ -1123,6 +1122,8 @@ def main(config_name):
             start_date = date(Y, M, D)
 
         plt_flags = config._sections["BatchPlotOpts"]
+        for k, v in plt_flags.items():  # Converts dict variables in .config to int
+            plt_flags[k] = int(v)
         plot_batch_sessions(out_main_dir, sub, start_date, end_date, plt_flags)
 
     if analysis_flags[2]:
