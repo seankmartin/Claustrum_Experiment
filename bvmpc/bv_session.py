@@ -596,9 +596,9 @@ class Session:
             b1, b2 = split_nosepokes[i], split_pellets[i]
             if len(b2) > len(b1):
                 print("block: {}, End-time: {}".format(i, 305*(i+1)))
-                print("good nosepokes: {}".format(good_nosepokes))
-                print("nosepokes: {}".format(b1))
-                print("pellets: {}".format(b2))
+                # print("good nosepokes: {}".format(good_nosepokes))
+                # print("nosepokes: {}".format(b1))
+                # print("pellets: {}".format(b2))
 
                 last_nosepoke_idx = -1
                 for j in range(i, -1, -1):
@@ -613,14 +613,14 @@ class Session:
 
                 # Replaces overflowed nosepoke w block end in main array
                 nosepokes = np.insert(nosepokes, last_nosepoke_idx+1, 305 * (i+1))
+                good_nosepokes, un_nosepokes = split_array_with_another(
+                    nosepokes, pell_ts_exdouble)
                 if i < 5: # ignores first nosepoke in next block in split arrays
-                    good_nosepokes, un_nosepokes = split_array_with_another(
-                        nosepokes, pell_ts_exdouble)
                     split_nosepokes = split_into_blocks(
                         good_nosepokes, 305, 6)
                     split_all_nosepokes = split_into_blocks(
                         nosepokes, 305, 6)
-                print("Corrected:", good_nosepokes)
+                # print("Corrected:", good_nosepokes)
 
         split_nosepokes = split_into_blocks(
             good_nosepokes, 305, 6)
