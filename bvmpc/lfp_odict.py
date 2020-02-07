@@ -33,6 +33,7 @@ class LfpODict:
         """
         self._init_lfp(filename, channels)
         self.lfp_filt_odict = OrderedDict()
+        self.info = None
         if filt_params[0]:
             self.lfp_filt_odict = self.filter(*filt_params[1:])
         else:
@@ -122,3 +123,40 @@ class LfpODict:
 
     def __len__(self):
         return len(self.get_signal())
+
+    def add_info(self, key, info, name):
+        if self.info is None:
+            self.info = OrderedDict()
+        if not key in self.info.keys():
+            self.info[key] = {}
+        self.info[key][name] = info
+
+    def get_info(self, key, name):
+        if self.info is None:
+            raise ValueError("info has not been initialised in LFPODict")
+        return self.info[key][name]
+
+    def does_info_exist(self, name):
+        if self.info is not None:
+            for item in self.info.values():
+                if name in item.keys():
+                    return True
+        return False
+
+    def find_noise(self, sd, filt=False):
+        if self.does_info_exist("mean"):
+            print("Already calculated noise for this lfp_o_dict")
+            return
+        if filt:
+            lfp_dict_s = self.get_filt_signal()
+        else:
+            lfp_dict_s = self.get_signal()
+
+        for key, lfp in lfp_dict_s.items():
+            # info is mean, sd, thr_locs, thr_vals, thr_time
+            mean, std, thr_locs, thr_vals, thr_time = lfp.find_noise(sd)
+            self.add_info(key, mean, "mean")
+            self.add_info(key, std, "std")
+            self.add_info(key, thr_locs, "thr_locs")
+            self.add_info(key, thr_vals, "thr_vals")
+            self.add_info(key, thr_time, "thr_time")
