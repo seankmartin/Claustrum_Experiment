@@ -279,6 +279,17 @@ def parse_args(verbose=True):
     return args
 
 
+def find_ranges(iterable):
+    """Yield range of consecutive numbers."""
+    import more_itertools as mit
+    for group in mit.consecutive_groups(iterable):
+        group = list(group)
+        if len(group) == 1:
+            yield group[0], group[0]
+        else:
+            yield group[0], group[-1]
+
+
 if __name__ == "__main__":
     """Main entry point."""
     PARSER = argparse.ArgumentParser(
