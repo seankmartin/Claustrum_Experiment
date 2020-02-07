@@ -52,8 +52,7 @@ def plot_long_lfp(
     plt.close(fig)
 
 
-def plot_lfp(
-        out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50):
+def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, filt=False):
     """
     Create a number of figures to display lfp signal on multiple channels.
 
@@ -69,37 +68,138 @@ def plot_lfp(
         in_range (tuple(int, int), optional): Time(s) of LFP to plot overall.
             Defaults to None.
         dpi (int, optional): Resulting plot dpi.
+        filt (bool): Uses filtered lfp if True
+        csv (bool): Outputs excel with threshold and points crossing threshold
 
     Returns:
         None
 
     """
+
+    if filt:
+        lfp_dict_s = lfp_odict.get_filt_signal()
+    else:
+        lfp_dict_s = lfp_odict.get_signal()
+
+    sd = 4
+    for i, (key, lfp) in enumerate(lfp_dict_s.items()):
+        # info is mean, sd, thr_locs, thr_vals, thr_time
+        mean, std, thr_locs, thr_vals, thr_time = lfp.find_noise(sd)
+        lfp_odict.add_info(key, mean, "mean")
+        lfp_odict.add_info(key, std, "std")
+        lfp_odict.add_info(key, thr_locs, "thr_locs")
+        lfp_odict.add_info(key, thr_vals, "thr_vals")
+        lfp_odict.add_info(key, thr_time, "thr_time")
+
     if in_range is None:
-        in_range = (0, max([lfp.get_duration() for lfp in lfp_odict.values()]))
-    y_axis_max = max([max(lfp.get_samples()) for lfp in lfp_odict.values()])
-    y_axis_min = min([min(lfp.get_samples()) for lfp in lfp_odict.values()])
+        in_range = (0, max([lfp.get_duration()
+                            for lfp in lfp_dict_s.values()]))
+    y_axis_max = max([max(lfp.get_samples())
+                      for lfp in lfp_dict_s.values()])
+    y_axis_min = min([min(lfp.get_samples())
+                      for lfp in lfp_dict_s.values()])
     for split in np.arange(in_range[0], in_range[1], segment_length):
         fig, axes = plt.subplots(
-            nrows=len(lfp_odict),
-            figsize=(20, len(lfp_odict) * 2))
+            nrows=len(lfp_dict_s),
+            figsize=(20, len(lfp_dict_s) * 2))
         a = np.round(split, 2)
         b = np.round(min(split + segment_length, in_range[1]), 2)
         out_name = os.path.join(
             out_dir, "{}s_to_{}s.png".format(a, b))
-        for i, (key, lfp) in enumerate(lfp_odict.items()):
+        for i, (key, lfp) in enumerate(lfp_dict_s.items()):
             convert = lfp.get_sampling_rate()
             c_start, c_end = math.floor(a * convert), math.floor(b * convert)
             lfp_sample = lfp.get_samples()[c_start:c_end]
             x_pos = lfp.get_timestamp()[c_start:c_end]
-            axes[i].plot(x_pos, lfp_sample, c="k")
+            axes[i].plot(x_pos, lfp_sample, color="k")
+
+            from bvmpc.bv_utils import find_ranges
+            shading = list(find_ranges(lfp_odict.get_info(key, "thr_locs")))
+            # print(len(shading))
+            # print(len(thr_locs_od[key]))
+            # exit(-1)
+            for x, y in shading:
+                times = lfp.get_timestamp()
+                axes[i].axvspan(times[x], times[y], color='red', alpha=0.5)
             axes[i].text(
                 0.03, 1, "Channel " + key,
-                transform=axes[i].transAxes, c="k")
+                transform=axes[i].transAxes, color="k")
             axes[i].set_ylim(y_axis_min, y_axis_max)
             axes[i].set_xlim(a, b)
+            mean = lfp_odict.get_info(key, "mean")
+            std = lfp_odict.get_info(key, "std")
+            axes[i].axhline(mean-sd*std, linestyle='-',
+                            color='red', linewidth='1.5')
+            axes[i].axhline(mean+sd*std, linestyle='-',
+                            color='red', linewidth='1.5')
+
         print("Saving result to {}".format(out_name))
         fig.savefig(out_name, dpi=dpi)
         plt.close("all")
+
+
+def lfp_csv(fname, out_dir, lfp_odict, filt=True):
+    """
+    Outputs csv for Tetrodes to be used in analysis based on data crossing sd.
+    """
+    if filt:
+        lfp_dict_s = lfp_odict.get_filt_signal()
+    else:
+        lfp_dict_s = lfp_odict.get_signal()
+
+    tetrodes, threshold, ex_thres, choose, mean_list, std_list = [], [], [], [], [], []
+    sd = 4
+    for i, (key, lfp) in enumerate(lfp_dict_s.items()):
+        mean, std, thr_locs, thr_vals, thr_time = lfp.find_noise(sd)
+        tetrodes.append("T" + str(key))
+        threshold.append(sd*std)
+        ex_thres.append(len(thr_locs))
+        mean_list.append(mean)
+        std_list.append(std)
+
+    import pandas as pd
+    for a in range(0, len(ex_thres)-1, 2):
+        if ex_thres[a] > ex_thres[a+1]:
+            choose.append("C")
+            choose.append("")
+        else:
+            choose.append("")
+            choose.append("C")
+    csv = {
+        "Tetrode": tetrodes,
+        "Choose": choose,
+        "Threshold": threshold,
+        "ex_Thres": ex_thres,
+        "Mean": mean_list,
+        "STD": std_list
+    }
+    df = pd.DataFrame(csv)
+
+    csv_filename = os.path.join(out_dir, "Tetrode_Summary.csv")
+    if os.path.exists(csv_filename):
+        import csv
+        exist = False
+        with open(csv_filename, 'rt', newline='') as f:
+            reader = csv.reader(f, delimiter=',')
+            print("Processing {}...".format(fname))
+            for row in reader:
+                if [fname.split('\\')[-1]] == row:
+                    exist = True
+                    print("{} info exists.".format(
+                        fname.split('\\')[-1]))
+                    break
+                else:
+                    continue
+        if not exist:
+            with open(csv_filename, 'a', newline='') as f:
+                f.write("\n{}\n".format(fname.split('\\')[-1]))
+                df.to_csv(f, index=False)
+            print("Saved {} to {}".format(fname.split('\\')[-1], csv_filename))
+    else:
+        with open(csv_filename, 'w', newline='') as f:
+            f.write("{}\n".format(fname.split('\\')[-1]))
+            df.to_csv(f, encoding='utf-8', index=False)
+        print("Saved {} to {}".format(fname.split('\\')[-1], csv_filename))
 
 
 def plot_sample_of_signal(
