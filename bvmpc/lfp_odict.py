@@ -14,7 +14,7 @@ class LfpODict:
     """This class holds LFP files over multiple channels in a recording."""
 
     def __init__(
-            self, filename, channels="all", filt_params=(False, None, None)):
+            self, filename, channels="all", filt_params=(False, None, None), artf_params=(False, None, None, None, False)):
         """
         Load the channels from filename.
 
@@ -26,6 +26,9 @@ class LfpODict:
             filt_params (tuple(bool, float, float), optional):
                 Defaults to (False, None, None)
                 (Should filter, lower_bound, upper_bound)
+            artf_params (tuple(bool, float, float, float, bool), optional):
+                Defaults to (False, None, None, None, False)
+                (Should thresh, sd, min_artf_freq, rep_freq, filt)
 
         Returns:
             None
@@ -38,6 +41,12 @@ class LfpODict:
             self.lfp_filt_odict = self.filter(*filt_params[1:])
         else:
             self.lfp_filt_odict = self.lfp_odict
+
+        if artf_params[0]:
+            self.lfp_clean_odict = self.deartf(
+                *artf_params[1:])
+        else:
+            self.lfp_clean_odict = self.lfp_filt_odict
 
     def get_signal(self, key=None):
         """Return signal at key, or full dict if key is None."""
@@ -54,6 +63,14 @@ class LfpODict:
         if key is not None:
             return self.lfp_filt_odict.get(key, None)
         return self.lfp_filt_odict
+
+    def get_clean_signal(self, key=None):
+        """Return artefact removed signal at key, or full dict if key is None."""
+        if type(key) is int:
+            return list(self.lfp_clean_odict.values())[key]
+        if key is not None:
+            return self.lfp_clean_odict.get(key, None)
+        return self.lfp_clean_odict
 
     def get_signals(self, keys):
         """Return a list of NLFP objects at the given keys."""
@@ -143,9 +160,9 @@ class LfpODict:
                     return True
         return False
 
-    def find_noise(self, sd, filt=False):
+    def find_artf(self, sd, min_artf_freq, filt=False):
         if self.does_info_exist("mean"):
-            print("Already calculated noise for this lfp_o_dict")
+            print("Already calculated artefacts for this lfp_o_dict")
             return
         if filt:
             lfp_dict_s = self.get_filt_signal()
@@ -154,9 +171,46 @@ class LfpODict:
 
         for key, lfp in lfp_dict_s.items():
             # info is mean, sd, thr_locs, thr_vals, thr_time
-            mean, std, thr_locs, thr_vals, thr_time = lfp.find_noise(sd)
+            mean, std, thr_locs, thr_vals, thr_time, per_removed = lfp.find_artf(
+                sd, min_artf_freq)
             self.add_info(key, mean, "mean")
             self.add_info(key, std, "std")
             self.add_info(key, thr_locs, "thr_locs")
             self.add_info(key, thr_vals, "thr_vals")
             self.add_info(key, thr_time, "thr_time")
+            self.add_info(key, per_removed, "artf_removed")
+
+    def deartf(self, sd, min_artf_freq, rep_freq=None, filt=False):
+        """
+        remove artifacts based on SD thresholding.
+
+        Args:
+            sd, min_artf_freq, filt, rep_freq (float, float, bool, float):
+                Standard Deviation used for thresholding
+                minimum artefact frequency used to determine block removal size
+                True - removes artefacts from filtered signals
+                replaces artefacts with sin wave of this freq
+
+
+        Returns:
+            OrderedDict of signals with artefacts replaced.
+
+        """
+        self.find_artf(sd, min_artf_freq, filt)
+
+        lfp_clean_odict = OrderedDict()
+
+        for key, lfp in self.lfp_filt_odict.items():
+            clean_lfp = deepcopy(lfp)
+            thr_locs = self.get_info(key, "thr_locs")
+
+            if rep_freq is None:
+                clean_lfp._samples[thr_locs] = np.mean(
+                    clean_lfp._samples)
+            else:
+                times = lfp.get_timestamp()
+                rep_sig = 0.5 * np.sin(2 * np.pi * rep_freq * times)
+                clean_lfp._samples[thr_locs] = rep_sig[thr_locs]
+            lfp_clean_odict[key] = clean_lfp
+
+        return lfp_clean_odict
