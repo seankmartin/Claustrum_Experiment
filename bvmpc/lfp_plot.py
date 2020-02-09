@@ -52,7 +52,7 @@ def plot_long_lfp(
     plt.close(fig)
 
 
-def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, filt=False):
+def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4, filt=False, artf=False):
     """
     Create a number of figures to display lfp signal on multiple channels.
 
@@ -81,16 +81,6 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, filt
     else:
         lfp_dict_s = lfp_odict.get_signal()
 
-    sd = 4
-    for i, (key, lfp) in enumerate(lfp_dict_s.items()):
-        # info is mean, sd, thr_locs, thr_vals, thr_time
-        mean, std, thr_locs, thr_vals, thr_time = lfp.find_noise(sd)
-        lfp_odict.add_info(key, mean, "mean")
-        lfp_odict.add_info(key, std, "std")
-        lfp_odict.add_info(key, thr_locs, "thr_locs")
-        lfp_odict.add_info(key, thr_vals, "thr_vals")
-        lfp_odict.add_info(key, thr_time, "thr_time")
-
     if in_range is None:
         in_range = (0, max([lfp.get_duration()
                             for lfp in lfp_dict_s.values()]))
@@ -113,32 +103,33 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, filt
             x_pos = lfp.get_timestamp()[c_start:c_end]
             axes[i].plot(x_pos, lfp_sample, color="k")
 
-            from bvmpc.bv_utils import find_ranges
-            shading = list(find_ranges(lfp_odict.get_info(key, "thr_locs")))
-            # print(len(shading))
-            # print(len(thr_locs_od[key]))
-            # exit(-1)
-            for x, y in shading:
-                times = lfp.get_timestamp()
-                axes[i].axvspan(times[x], times[y], color='red', alpha=0.5)
+            if artf:
+                from bvmpc.bv_utils import find_ranges
+                shading = list(find_ranges(
+                    lfp_odict.get_info(key, "thr_locs")))
+
+                for x, y in shading:    # Shading of artf portions
+                    times = lfp.get_timestamp()
+                    axes[i].axvspan(times[x], times[y], color='red', alpha=0.5)
+                mean = lfp_odict.get_info(key, "mean")
+                std = lfp_odict.get_info(key, "std")
+                # Label thresholds
+                axes[i].axhline(mean-sd*std, linestyle='-',
+                                color='red', linewidth='1.5')
+                axes[i].axhline(mean+sd*std, linestyle='-',
+                                color='red', linewidth='1.5')
             axes[i].text(
                 0.03, 1, "Channel " + key,
                 transform=axes[i].transAxes, color="k")
             axes[i].set_ylim(y_axis_min, y_axis_max)
             axes[i].set_xlim(a, b)
-            mean = lfp_odict.get_info(key, "mean")
-            std = lfp_odict.get_info(key, "std")
-            axes[i].axhline(mean-sd*std, linestyle='-',
-                            color='red', linewidth='1.5')
-            axes[i].axhline(mean+sd*std, linestyle='-',
-                            color='red', linewidth='1.5')
 
         print("Saving result to {}".format(out_name))
         fig.savefig(out_name, dpi=dpi)
         plt.close("all")
 
 
-def lfp_csv(fname, out_dir, lfp_odict, filt=True):
+def lfp_csv(fname, out_dir, lfp_odict, sd, min_artf_freq, filt=False):
     """
     Outputs csv for Tetrodes to be used in analysis based on data crossing sd.
     """
@@ -147,31 +138,34 @@ def lfp_csv(fname, out_dir, lfp_odict, filt=True):
     else:
         lfp_dict_s = lfp_odict.get_signal()
 
-    tetrodes, threshold, ex_thres, choose, mean_list, std_list = [], [], [], [], [], []
-    sd = 4
+    tetrodes, threshold, ex_thres, choose, mean_list, std_list, removed = [
+    ], [], [], [], [], [], []
     for i, (key, lfp) in enumerate(lfp_dict_s.items()):
-        mean, std, thr_locs, thr_vals, thr_time = lfp.find_noise(sd)
+        mean, std, thr_locs, thr_vals, thr_time, per_removed = lfp.find_artf(
+            sd, min_artf_freq)
         tetrodes.append("T" + str(key))
         threshold.append(sd*std)
         ex_thres.append(len(thr_locs))
         mean_list.append(mean)
         std_list.append(std)
+        removed.append(per_removed)
 
     import pandas as pd
     for a in range(0, len(ex_thres)-1, 2):
         if ex_thres[a] > ex_thres[a+1]:
-            choose.append("C")
             choose.append("")
+            choose.append("C")
         else:
-            choose.append("")
             choose.append("C")
+            choose.append("")
     csv = {
         "Tetrode": tetrodes,
         "Choose": choose,
         "Threshold": threshold,
         "ex_Thres": ex_thres,
         "Mean": mean_list,
-        "STD": std_list
+        "STD": std_list,
+        "% Removed": removed
     }
     df = pd.DataFrame(csv)
 
