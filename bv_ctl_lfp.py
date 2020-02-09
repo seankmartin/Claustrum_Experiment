@@ -17,7 +17,7 @@ from datetime import date, timedelta, datetime
 from bvmpc.lfp_odict import LfpODict
 import neurochat.nc_plot as nc_plot
 
-from bvmpc.lfp_plot import plot_lfp, plot_coherence
+from bvmpc.lfp_plot import plot_lfp, plot_coherence, lfp_csv
 
 
 def main(fname, out_main_dir, config):
@@ -40,18 +40,26 @@ def main(fname, out_main_dir, config):
         to_add = val.split(" * ")
         adding = [to_add[0]] * int(to_add[1])
         regions += adding
+
+    filt = bool(config.get("Setup", "filt"))
     filt_btm = float(config.get("Setup", "filt_btm"))
     filt_top = float(config.get("Setup", "filt_top"))
 
-    # # Single Hemi Multisite Drive settings
-    # regions = ["CLA"] * 8 + ["ACC"] * 4 + ["RSC"] * 4
+    artf = bool(config.get("Artefact Params", "artf"))
+    sd_thres = float(config.get("Artefact Params", "sd_thres"))
+    min_artf_freq = float(config.get("Artefact Params", "min_artf_freq"))
+    rep_freq = config.get("Artefact Params", "rep_freq")
+    if rep_freq == "":
+        rep_freq = None
+    else:
+        rep_freq = float(config.get("Artefact Params", "rep_freq"))
 
     gm = bv_plot.GroupManager(regions)
 
     lfp_list = []
     for chans in chunks(chans, 16):
-        lfp_odict = LfpODict(
-            fname, channels=chans, filt_params=(True, filt_btm, filt_top))
+        lfp_odict = LfpODict(fname, channels=chans, filt_params=(
+            filt, filt_btm, filt_top), artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
         lfp_list.append(lfp_odict)
 
     if "Pre" in fname:
@@ -73,7 +81,9 @@ def main(fname, out_main_dir, config):
 
         """
         for p, lfp_odict in enumerate(lfp_list):
-            indiv = False  # Set to true for individual periodograms on a 4x4 grid
+            indiv = False   # Set to true for individual periodograms on a 4x4 grid
+            spec = False    # Set to true for individual spectrograms per .png
+            raw = True      # Set to true for raw trace
 
             # Old code to plot each periodogram in a seperate .png
             # for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
@@ -122,53 +132,64 @@ def main(fname, out_main_dir, config):
                 gf.fig.savefig(out_name)
                 plt.close()
 
-           # Plot spectrogram for each eeg as a seperate .png
-            for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
-                graph_data = lfp.spectrum(
-                    ptype='psd', prefilt=False,
-                    db=True, tr=True)
-                if graph_data['t'][-1] > 305:
-                    block_size = 305
-                    rows, cols = [6, 1]
-                    gf = bv_plot.GridFig(rows, cols, wspace=0.3,
-                                         hspace=0.3, size_multiplier_x=40, tight_layout=False)
-                    for j in range(0, block_size*6, block_size):
-                        tone_ts = range(j+5, j+305, 300)
-                        ax = gf.get_next(along_rows=True)
-                        new_lfp = lfp.subsample(sample_range=(j, j+block_size))
-                        graph_data = new_lfp.spectrum(
-                            ptype='psd', prefilt=False,
-                            db=True, tr=True)
+            if spec:
+                # Plot spectrogram for each eeg as a seperate .png
+                for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
+                    graph_data = lfp.spectrum(
+                        ptype='psd', prefilt=False,
+                        db=True, tr=True)
+                    if graph_data['t'][-1] > 305:
+                        block_size = 305
+                        rows, cols = [6, 1]
+                        gf = bv_plot.GridFig(rows, cols, wspace=0.3,
+                                             hspace=0.3, size_multiplier_x=40, tight_layout=False)
+                        for j in range(0, block_size*6, block_size):
+                            tone_ts = range(j+5, j+305, 300)
+                            ax = gf.get_next(along_rows=True)
+                            new_lfp = lfp.subsample(
+                                sample_range=(j, j+block_size))
+                            graph_data = new_lfp.spectrum(
+                                ptype='psd', prefilt=False,
+                                db=True, tr=True)
+                            nc_plot.lfp_spectrum_tr(graph_data, ax)
+                            plt.tick_params(labelsize=20)
+                            ax.xaxis.label.set_size(25)
+                            ax.yaxis.label.set_size(25)
+                            if j == 0:
+                                plt.title("T" + key + " " +
+                                          regions[i+p*16] + " Spectrogram", fontsize=40, y=1.05)
+                            plt.ylim(0, filt_top)
+                            if "Pre" in fname:
+                                continue
+                            else:
+                                for rw in rw_ts:
+                                    ax.axvline(rw, linestyle='-',
+                                               color='orange', linewidth='1.5')    # vline demarcating reward point/end of trial
+                                ax.axvline(tone_ts, linestyle='-',
+                                           color='r', linewidth='1.5')    # vline demarcating end of tone
+                        fig = gf.get_fig()
+                    else:
+                        fig, ax = plt.subplots(figsize=(20, 5))
                         nc_plot.lfp_spectrum_tr(graph_data, ax)
-                        plt.tick_params(labelsize=20)
-                        ax.xaxis.label.set_size(25)
-                        ax.yaxis.label.set_size(25)
-                        if j == 0:
-                            plt.title("T" + key + " " +
-                                      regions[i+p*16] + " Spectrogram", fontsize=40, y=1.05)
                         plt.ylim(0, filt_top)
-                        if "Pre" in fname:
-                            continue
-                        else:
-                            for rw in rw_ts:
-                                ax.axvline(rw, linestyle='-',
-                                           color='orange', linewidth='1.5')    # vline demarcating reward point/end of trial
-                            ax.axvline(tone_ts, linestyle='-',
-                                       color='r', linewidth='1.5')    # vline demarcating end of tone
-                    fig = gf.get_fig()
-                else:
-                    fig, ax = plt.subplots(figsize=(20, 5))
-                    nc_plot.lfp_spectrum_tr(graph_data, ax)
-                    plt.ylim(0, filt_top)
-                    fig.suptitle("T" + key + " " +
-                                 regions[i+p*16] + " Spectrogram")
-                out_name = os.path.join(o_dir, "ptr", key + "ptr.png")
-                make_path_if_not_exists(out_name)
-                print("Saving result to {}".format(out_name))
-                fig.savefig(out_name)
-                plt.close()
+                        fig.suptitle("T" + key + " " +
+                                     regions[i+p*16] + " Spectrogram")
+                    out_name = os.path.join(o_dir, "ptr", key + "ptr.png")
+                    make_path_if_not_exists(out_name)
+                    print("Saving result to {}".format(out_name))
+                    fig.savefig(out_name)
+                    plt.close()
 
-            # plot_lfp(o_dir, lfp_odict.get_filt_signal(), segment_length=60)   # Plot raw LFP for all tetrodes in segments
+            if raw:
+                plot = True
+                csv = True
+                if plot:
+                    # Plot raw LFP for all tetrodes in segments
+                    plot_lfp(o_dir, lfp_odict, segment_length=60,
+                             sd=sd_thres, filt=filt, artf=artf)
+                if csv:
+                    lfp_csv(fname, o_dir, lfp_odict, sd_thres,
+                            min_artf_freq, filt)
 
     if analysis_flags[1]:   # Complie graphs per session in a single .png
         # Plot all periodograms on 1 plot
@@ -176,7 +197,11 @@ def main(fname, out_main_dir, config):
         legend = []
         max_p = 0
         for p, lfp_odict in enumerate(lfp_list):
-            for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
+            if artf:
+                signal_used = lfp_odict.get_clean_signal()
+            else:
+                signal_used = lfp_odict.get_filt_signal()
+            for i, (key, lfp) in enumerate(signal_used.items()):
                 graph_data = lfp.spectrum(
                     ptype='psd', prefilt=False,
                     db=False, tr=False)
@@ -194,10 +219,17 @@ def main(fname, out_main_dir, config):
         plt.ylim(0, max_p+max_p*0.1)
         plt.xlim(0, filt_top)
         plt.legend(legend, fontsize=15)
-        plt.title(fname.split("\\")[-1][4:] +
-                  " Compiled Periodogram", fontsize=40, y=1.02)
-        out_name = os.path.join(o_dir, fname.split("\\")[-1] + "_p.png")
+        if artf:
+            plt.title(fname.split("\\")[-1][4:] +
+                      " Compiled Periodogram - Thresh", fontsize=40, y=1.02)
+            out_name = os.path.join(
+                o_dir, fname.split("\\")[-1] + "_p_Thresh.png")
+        else:
+            plt.title(fname.split("\\")[-1][4:] +
+                      " Compiled Periodogram", fontsize=40, y=1.02)
+            out_name = os.path.join(o_dir, fname.split("\\")[-1] + "_p.png")
         make_path_if_not_exists(out_name)
+        print("Saving result to {}".format(out_name))
         fig.savefig(out_name)
         plt.close()
 
@@ -205,7 +237,12 @@ def main(fname, out_main_dir, config):
             # Plot spectrograms in set of 16s
             rows, cols = [4, 4]
             gf = bv_plot.GridFig(rows, cols, wspace=0.5, hspace=0.5)
-            for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
+
+            if artf:
+                signal_used = lfp_odict.get_clean_signal()
+            else:
+                signal_used = lfp_odict.get_filt_signal()
+            for i, (key, lfp) in enumerate(signal_used.items()):
                 graph_data = lfp.spectrum(
                     ptype='psd', prefilt=True,
                     db=True, tr=True)   # Function from nc_lfp
