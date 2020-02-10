@@ -6,7 +6,7 @@ from copy import deepcopy
 import numpy as np
 import matplotlib.pyplot as plt
 
-from bvmpc.bv_utils import make_dir_if_not_exists
+from bvmpc.bv_utils import make_dir_if_not_exists, find_in, ordered_set
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_utils import butter_filter
 
@@ -52,7 +52,7 @@ def plot_long_lfp(
     plt.close(fig)
 
 
-def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4, filt=False, artf=False):
+def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4, filt=False, artf=False, session=None):
     """
     Create a number of figures to display lfp signal on multiple channels.
 
@@ -75,7 +75,8 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
         None
 
     """
-
+    if session:
+        rw_ts = session.get_rw_ts()
     if filt:
         lfp_dict_s = lfp_odict.get_filt_signal()
     else:
@@ -91,7 +92,7 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
     for split in np.arange(in_range[0], in_range[1], segment_length):
         fig, axes = plt.subplots(
             nrows=len(lfp_dict_s),
-            figsize=(20, len(lfp_dict_s) * 2))
+            figsize=(40, len(lfp_dict_s) * 2))
         a = np.round(split, 2)
         b = np.round(min(split + segment_length, in_range[1]), 2)
         out_name = os.path.join(
@@ -118,6 +119,12 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
                                 color='red', linewidth='1.5')
                 axes[i].axhline(mean+sd*std, linestyle='-',
                                 color='red', linewidth='1.5')
+
+            if session:
+                for rw in rw_ts:
+                    axes[i].axvline(rw, linestyle='-',
+                                    color='green', linewidth='1.5')    # vline demarcating reward point/end of trial
+
             axes[i].text(
                 0.03, 1, "Channel " + key,
                 transform=axes[i].transAxes, color="k")
@@ -129,7 +136,7 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
         plt.close("all")
 
 
-def lfp_csv(fname, out_dir, lfp_odict, sd, min_artf_freq, filt=False):
+def lfp_csv(fname, out_dir, lfp_odict, sd, min_artf_freq, shuttles, filt=False):
     """
     Outputs csv for Tetrodes to be used in analysis based on data crossing sd.
     """
@@ -151,15 +158,24 @@ def lfp_csv(fname, out_dir, lfp_odict, sd, min_artf_freq, filt=False):
         removed.append(per_removed)
 
     import pandas as pd
-    for a in range(0, len(ex_thres)-1, 2):
-        if ex_thres[a] > ex_thres[a+1]:
-            choose.append("")
+    min_shut = []
+    for a in set(shuttles):
+        compare = []
+        for j, shut in enumerate(shuttles):
+            if shut == a:
+                compare.append(ex_thres[j])
+        min_shut.append(min(compare))
+
+    truth = find_in(min_shut, ex_thres)
+    for c in truth:
+        if c:
             choose.append("C")
         else:
-            choose.append("C")
             choose.append("")
+
     csv = {
         "Tetrode": tetrodes,
+        "Shuttles": shuttles,
         "Choose": choose,
         "Threshold": threshold,
         "ex_Thres": ex_thres,
@@ -170,6 +186,10 @@ def lfp_csv(fname, out_dir, lfp_odict, sd, min_artf_freq, filt=False):
     df = pd.DataFrame(csv)
 
     csv_filename = os.path.join(out_dir, "Tetrode_Summary.csv")
+    if tetrodes[0] == "T17":
+        check_name = fname.split('\\')[-1] + "_p2"
+    else:
+        check_name = fname.split('\\')[-1]
     if os.path.exists(csv_filename):
         import csv
         exist = False
@@ -177,23 +197,23 @@ def lfp_csv(fname, out_dir, lfp_odict, sd, min_artf_freq, filt=False):
             reader = csv.reader(f, delimiter=',')
             print("Processing {}...".format(fname))
             for row in reader:
-                if [fname.split('\\')[-1]] == row:
+                if [check_name] == row:
                     exist = True
                     print("{} info exists.".format(
-                        fname.split('\\')[-1]))
+                        check_name))
                     break
                 else:
                     continue
         if not exist:
             with open(csv_filename, 'a', newline='') as f:
-                f.write("\n{}\n".format(fname.split('\\')[-1]))
+                f.write("\n{}\n".format(check_name))
                 df.to_csv(f, index=False)
-            print("Saved {} to {}".format(fname.split('\\')[-1], csv_filename))
+            print("Saved {} to {}".format(check_name, csv_filename))
     else:
         with open(csv_filename, 'w', newline='') as f:
-            f.write("{}\n".format(fname.split('\\')[-1]))
+            f.write("{}\n".format(check_name))
             df.to_csv(f, encoding='utf-8', index=False)
-        print("Saved {} to {}".format(fname.split('\\')[-1], csv_filename))
+        print("Saved {} to {}".format(check_name, csv_filename))
 
 
 def plot_sample_of_signal(
