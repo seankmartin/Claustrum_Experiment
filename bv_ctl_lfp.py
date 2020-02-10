@@ -41,11 +41,18 @@ def main(fname, out_main_dir, config):
         adding = [to_add[0]] * int(to_add[1])
         regions += adding
 
-    filt = bool(config.get("Setup", "filt"))
+    shuttle_dict = config._sections["Shuttles"]
+    shuttles = []
+    for _, val in shuttle_dict.items():
+        to_add = val.split(" * ")
+        adding = [to_add[0]] * int(to_add[1])
+        shuttles += adding
+
+    filt = bool(int(config.get("Setup", "filt")))
     filt_btm = float(config.get("Setup", "filt_btm"))
     filt_top = float(config.get("Setup", "filt_top"))
 
-    artf = bool(config.get("Artefact Params", "artf"))
+    artf = bool(int(config.get("Artefact Params", "artf")))
     sd_thres = float(config.get("Artefact Params", "sd_thres"))
     min_artf_freq = float(config.get("Artefact Params", "min_artf_freq"))
     rep_freq = config.get("Artefact Params", "rep_freq")
@@ -63,6 +70,7 @@ def main(fname, out_main_dir, config):
         lfp_list.append(lfp_odict)
 
     if "Pre" in fname:
+        s = None
         rw_ts = []
         sch_type = []
     else:
@@ -182,14 +190,15 @@ def main(fname, out_main_dir, config):
 
             if raw:
                 plot = True
-                csv = True
+                csv = False
                 if plot:
                     # Plot raw LFP for all tetrodes in segments
-                    plot_lfp(o_dir, lfp_odict, segment_length=60,
-                             sd=sd_thres, filt=filt, artf=artf)
+                    plot_lfp(o_dir, lfp_odict, segment_length=305,
+                             sd=sd_thres, filt=filt, artf=artf, session=s)
                 if csv:
+                    shut_s, shut_end = p*16, 16+p*16
                     lfp_csv(fname, o_dir, lfp_odict, sd_thres,
-                            min_artf_freq, filt)
+                            min_artf_freq, shuttles[shut_s:shut_end], filt)
 
     if analysis_flags[1]:   # Complie graphs per session in a single .png
         # Plot all periodograms on 1 plot
@@ -318,21 +327,24 @@ def main(fname, out_main_dir, config):
 
     if analysis_flags[3]:   # Compare coherence in terms of freq between ACC & RSC
         # lfp_list = select_lfp(fname, ROI)
-        chans = [12, 13]
+        chan1 = int(config.get("Wavelet", "chan1"))
+        chan2 = int(config.get("Wavelet", "chan2"))
+        wlet_chans = [chan1, chan2]
         reg_sel = []
-        for chan in chans:  # extracts name of regions selected
+        for chan in wlet_chans:  # extracts name of regions selected
             reg_sel.append(regions[chan-1] + "-" + str(chan))
         gm_sch = bv_plot.GroupManager(list(sch_type))
 
-        lfp_odict = LfpODict(fname, channels=chans)
+        lfp_odict = LfpODict(fname, channels=wlet_chans, filt_params=(
+            filt, filt_btm, filt_top), artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
         legend = []
         sch_name = []
         block_size = 305
         lfp_list1, lfp_list2 = [], []
         for k, j in enumerate(range(0, block_size*6, block_size)):
-            new_lfp1 = lfp_odict.get_signal(0).subsample(
+            new_lfp1 = lfp_odict.get_clean_signal(0).subsample(
                 sample_range=(j, j+block_size))
-            new_lfp2 = lfp_odict.get_signal(1).subsample(
+            new_lfp2 = lfp_odict.get_clean_signal(1).subsample(
                 sample_range=(j, j+block_size))
             if sch_type[k] == 1:
                 sch_name.append("FR")
@@ -345,8 +357,12 @@ def main(fname, out_main_dir, config):
 
         # Plots wavelet coherence for each block in a seperate .png
         for b, (lfp1, lfp2, sch) in enumerate(zip(lfp_list1, lfp_list2, sch_name)):
-            out_name = os.path.join(
-                o_dir, os.path.basename(fname) + "_wcohere_" + str(b+1) + ".png")
+            if artf:
+                out_name = os.path.join(
+                    o_dir, os.path.basename(fname) + "_wcohere_T{}-T{}_Clean_".format(chan1, chan2) + str(b+1) + ".png")
+            else:
+                out_name = os.path.join(
+                    o_dir, os.path.basename(fname) + "_wcohere_T{}-T{}_".format(chan1, chan2) + str(b+1) + ".png")
             sch_n = str(b+1) + "-" + sch
             test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel, out_name)
 
@@ -486,5 +502,5 @@ def main_entry(config_name):
 
 
 if __name__ == "__main__":
-    config_name = "CAR-SA1.cfg"
+    config_name = "CAR-R1.cfg"
     main_entry(config_name)
