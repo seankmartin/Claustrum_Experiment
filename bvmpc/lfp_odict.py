@@ -211,6 +211,7 @@ class LfpODict:
                 times = lfp.get_timestamp()
                 rep_sig = 0.5 * np.sin(2 * np.pi * rep_freq * times)
                 clean_lfp._samples[thr_locs] = rep_sig[thr_locs]
+                # clean_lfp._samples[250*60:250*120] = rep_sig[250*60:250*120]  # To artifically introduce sign at 1-2mins
             lfp_clean_odict[key] = clean_lfp
 
         return lfp_clean_odict
