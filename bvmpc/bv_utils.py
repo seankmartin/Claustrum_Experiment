@@ -290,6 +290,22 @@ def find_ranges(iterable):
             yield group[0], group[-1]
 
 
+def find_in(a, b):
+    """Returns a boolean array of len(b) with True if any elements in a is found in b"""
+    def t_val(x): return x in a
+    truth = [t_val(x) for x in b]
+    return truth
+
+
+def ordered_set(arr):
+    """Returns set in order it was first seen"""
+    set_a = []
+    for x in arr:
+        if x not in set_a:
+            set_a.append(x)
+    return set_a
+
+
 if __name__ == "__main__":
     """Main entry point."""
     PARSER = argparse.ArgumentParser(
