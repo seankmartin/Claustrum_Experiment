@@ -86,7 +86,7 @@ def split_into_amp_phase(lfp, deg=False):
     return amplitude, phase
 
 
-def calc_coherence(
+def calc_wave_coherence(
         wave1, wave2, sample_times,
         min_freq=1, max_freq=40,
         sig=False, ax=None, title="Wavelet Coherence",
@@ -294,7 +294,7 @@ def test_wave_coherence():
     temp.fill(0)
     np.sin(2 * np.pi * 50 * t, where=((t >= 0.4) & (t < 1.6)), out=temp)
     y += temp
-    fig, data = calc_coherence(
+    fig, data = calc_wave_coherence(
         x, y, t, min_freq=2, max_freq=1000,
         plot_arrows=True, plot_coi=True, plot_period=True,
         resolution=12, all_arrows=True)
