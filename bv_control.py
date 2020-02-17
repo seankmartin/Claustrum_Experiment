@@ -18,7 +18,7 @@ import bvmpc.bv_plot as bv_plot
 from scipy import interpolate
 
 
-def trial_length_hist (s, ax, loop):
+def trial_length_hist(s, ax, loop):
     ''' Plot histrogram of trial durations 
         loop: indicates number of iterations through plot without changing axis
         -   Mainly used to identify morning/afternoon sessions for each animal
@@ -30,10 +30,11 @@ def trial_length_hist (s, ax, loop):
         'FR': t_df[t_df['Schedule'] == 'FR']['Reward_ts'],
         'FI': t_df[t_df['Schedule'] == 'FI']['Reward_ts']}
 
-    sns.distplot(np.log(t_len['FR']), ax=ax, label='{}_p{}'.format('FR', str(loop)))
-    sns.distplot(np.log(t_len['FI']), ax=ax, label='{}_p{}'.format('FI', str(loop)))
-    
-    
+    sns.distplot(np.log(t_len['FR']), ax=ax,
+                 label='{}_p{}'.format('FR', str(loop)))
+    sns.distplot(np.log(t_len['FI']), ax=ax,
+                 label='{}_p{}'.format('FI', str(loop)))
+
     # Plot customization
     date = s.get_metadata('start_date').replace('/', '_')
     sub = s.get_metadata('subject')
@@ -48,8 +49,9 @@ def trial_length_hist (s, ax, loop):
     ax.legend(fontsize=20)
     return
 
+
 def plot_raster_trials(s, ax):
-    
+
     # Retrive session related variables
     date = s.get_metadata('start_date').replace('/', '_')
     sub = s.get_metadata('subject')
@@ -80,12 +82,12 @@ def plot_raster_trials(s, ax):
     if align_rw:
         plot_type = 'Reward-Aligned'
         norm_arr = np.copy(norm_rw)
-        
+
     elif align_pell:
         plot_type = 'Pell-Aligned'
         norm_arr = np.copy(norm_pell)
-        xmax = 10
-        xmin = -60
+        xmax = 5
+        xmin = -30
     elif align_FI:
         plot_type = 'Interval-Aligned'
         norm_arr = np.empty_like(norm_rw)
@@ -95,7 +97,12 @@ def plot_raster_trials(s, ax):
         norm_arr = np.zeros_like(norm_rw)
         xmax = 60
         xmin = 0
-    plot_name = 'Raster({})'.format(plot_type)
+    plot_name = 'Raster ({})'.format(plot_type)
+
+    ax.axvline(0, linestyle='-.', color='g',
+               linewidth=1)
+    ax.text(0.1, -1, plot_type.split('-')[0], fontsize=12,
+            color='g', ha='left', va='top')
 
     for i, _ in enumerate(norm_rw):
         # color assigment for trial type
@@ -111,22 +118,33 @@ def plot_raster_trials(s, ax):
         norm_pell[i] -= norm_arr[i]
         norm_rw[i] -= norm_arr[i]
 
-
     # Plotting of raster
     ax.eventplot(norm_lever[:], color=color)
     ax.eventplot(norm_err[:], color='red')
-    ax.scatter(norm_rw, np.arange(len(norm_rw)), s=5,
-                color='orange', label='Reward Collection')
-    ax.eventplot(norm_dr[:], color='magenta')
+    rw_plot = ax.scatter(norm_rw, np.arange(len(norm_rw)), s=5,
+                         color='orange', label='Reward Collection')
+    ax.eventplot(
+        norm_dr[:], color='magenta')
 
     # Figure labels
     ax.set_xlim(xmin, xmax)  # Uncomment to set x limit
-    ax.axvline(0, linestyle='-', color='k', linewidth='.5')
+    ax.set_ylim(-3, len(norm_rw)+3)  # Uncomment to set y limit
     ax.tick_params(axis='both', labelsize=15)
     ax.set_xlabel('Time (s)', fontsize=20)
     ax.set_ylabel('Trials', fontsize=20)
     ax.set_title('\nSub {} {} {} {}'.format(sub, date, stage, plot_name),
                  y=1.025, fontsize=25, color=mycolors(sub))
+
+    # Legend construction
+    from matplotlib import lines
+    FR_label = lines.Line2D([], [], color='black', marker='|', linestyle='None',
+                            markersize=10, markeredgewidth=1.5, label='FR press')
+    FI_label = lines.Line2D([], [], color='b', marker='|', linestyle='None',
+                            markersize=10, markeredgewidth=1.5, label='FI press')
+    drw_label = lines.Line2D([], [], color='magenta', marker='|', linestyle='None',
+                             markersize=10, markeredgewidth=1.5, label='Double Reward')
+
+    ax.legend(handles=[FR_label, FI_label, drw_label, rw_plot], fontsize=12)
 
     # Highlight specific trials
     hline, h_ref = [], []
@@ -147,15 +165,16 @@ def plot_raster_trials(s, ax):
                 h_ref.append([])
     else:
         pass
-    
+
     # highlight if array is not empty
     for i, ts in enumerate(h_ref):
         if len(ts) > 0:
             hline.append(i)
     for l in hline:
         plt.axhline(l, linestyle='-', color=c, linewidth='5', alpha=0.1)
-    
+
     return
+
 
 def struc_timeline(sub_list, in_dir):
     """ Structure sessions into a pandas dataframe based on trials
@@ -181,7 +200,8 @@ def struc_timeline(sub_list, in_dir):
             date = s.get_metadata("start_date").replace("/", "-")[:5]
             session_type = s.get_metadata('name')
             time = s.get_metadata('start_time')
-            stage = session_type[:2].replace('_', '')  # Obtain stage number w/o _
+            stage = session_type[:2].replace(
+                '_', '')  # Obtain stage number w/o _
             timestamps = s.get_arrays()
             pell_ts = timestamps["Reward"]
             dpell_bool = np.diff(pell_ts) < 0.5
@@ -219,14 +239,14 @@ def struc_timeline(sub_list, in_dir):
                     err_FI, err_FR = 0, 0
                     for i, err in enumerate(norm_err_ts):
                         if sch_type[i] == 1:
-                            err_FR =+ len(err)
+                            err_FR = + len(err)
                         elif sch_type[i] == 0:
                             err_FI += len(err)
                         sch_err.append(len(err))
                 else:
                     err_FR = []
                     err_FI = []
-                
+
                 # Reward related variables
                 for i, (rw, dr) in enumerate(zip(norm_r_ts, norm_dr_ts)):
                     if sch_type[i] == 1:
@@ -259,41 +279,43 @@ def struc_timeline(sub_list, in_dir):
         sub_list = np.full(len(d_list), sub, dtype=int)
 
         timeline_dict = {
-                        'Subject': sub_list,
-                        'Date': d_list,
-                        'Start Time': t_list,
-                        'Stage Idx': s_idx_list,  # eg. S2, S5, S7 ...
-                        'Stage': s_list,  # eg. M, Lt, R8, I30, B1
-                        'Total Rewards': r_list,
-                        'Double Rewards': dr_list,
-                        'Interval': interval_list,
-                        'Ratio': ratio_list,
-                        'Schedule Blocks': sch_list,
-                        'Schedule Rw': sch_rw_list,
-                        'Schedule Err': sch_err_list,
-                        'Schedule DRw': sch_dr_list,
-                        'FI Corr': rw_FI_list,
-                        'FR Corr': rw_FR_list,
-                        'FI Err': err_FI_list,
-                        'FR Err': err_FR_list
-                        }
+            'Subject': sub_list,
+            'Date': d_list,
+            'Start Time': t_list,
+            'Stage Idx': s_idx_list,  # eg. S2, S5, S7 ...
+            'Stage': s_list,  # eg. M, Lt, R8, I30, B1
+            'Total Rewards': r_list,
+            'Double Rewards': dr_list,
+            'Interval': interval_list,
+            'Ratio': ratio_list,
+            'Schedule Blocks': sch_list,
+            'Schedule Rw': sch_rw_list,
+            'Schedule Err': sch_err_list,
+            'Schedule DRw': sch_dr_list,
+            'FI Corr': rw_FI_list,
+            'FR Corr': rw_FR_list,
+            'FI Err': err_FI_list,
+            'FR Err': err_FR_list
+        }
         timeline_df = pd.DataFrame(timeline_dict)
         grp_timeline_df.append(timeline_df)
         grp_timeline_df_sub.append(subject)
 
     return grp_timeline_df, grp_timeline_df_sub
 
+
 def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags):
     out_dir = os.path.join(start_dir, "Plots", "Current")
 
     if plt_flags["raster"] == 1 or plt_flags["hist"] == 1:
-        in_dir = os.path.join(start_dir, "hdf5")  # Path join only present in plot_sessions
+        # Path join only present in plot_sessions
+        in_dir = os.path.join(start_dir, "hdf5")
 
         # Default conversion of date based on start_date and end_date range
         d = []
         for single_date in daterange(start_date, end_date):
             d.append(single_date.isoformat()[-5:])
-        
+
         s_grp = extract_sessions(in_dir, sub_list, d_list=d)
 
         plot_set = chunks(s_grp, 4)  # splits s_grp into groups of 4
@@ -308,7 +330,7 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags):
                 rows, cols = [4, 4*math.ceil(n/2)]
             else:
                 rows, cols = [2*n, 4*math.ceil(n/2)]
-            
+
             # Initializes GridFig Obj
             gf = bv_plot.GridFig(rows, cols, wspace=0.5, hspace=0.5)
             # fig = gf.get_fig()
@@ -324,20 +346,22 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags):
             for i, s in enumerate(plot_grp):  # Iterate through groups to plot rasters
                 # plot naming parameters
                 df_sub.append(s.get_metadata('subject'))
-                df_date.append(s.get_metadata('start_date').replace('/', '_')[:5])
+                df_date.append(s.get_metadata(
+                    'start_date').replace('/', '_')[:5])
                 df_stage.append(s.get_stage())
-                
+
                 # 2x2 plotting axes
-                k = (i%2)*2
+                k = (i % 2)*2
                 if plt_flags["raster"] == 1:
                     ax = gf.get_multi_ax(
                         k, k+2, 4*int(i/2), 4*math.ceil((i+1)/2))
                     plot_raster_trials(s, ax)
                     plot_type = 'Raster_'  # Plot name for saving
-                    
+
                 if plt_flags["hist"] == 1:
                     if not plotting_sub == s.get_metadata('subject'):
-                        ax = gf.get_multi_ax(k, k+2, 4*int(i/2), 4*math.ceil((i+1)/2))
+                        ax = gf.get_multi_ax(
+                            k, k+2, 4*int(i/2), 4*math.ceil((i+1)/2))
                         plotting_sub = s.get_metadata('subject')
                         loop = 1
                     trial_length_hist(s, ax, loop)
@@ -360,7 +384,6 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags):
             # plt.close()
             gf.save_fig(df_date, df_sub, df_stage, plot_type, out_dir, j)
 
-
     # plot cumulative response graphs
     if plt_flags["summary"] == 1:
         for single_date in daterange(start_date, end_date):
@@ -368,7 +391,8 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags):
             # plot_sessions(start_dir, d, sub, summary=True, single=True,
             #               corr_only=True)  # Single animal breakdown
             # Group with corr_only breakdown
-            plot_sessions(start_dir, d, sub_list, summary=True, single=False, corr_only=True)
+            plot_sessions(start_dir, d, sub_list, summary=True,
+                          single=False, corr_only=True)
             # plot_sessions(start_dir, d, sub, summary=True, single=False, corr_only=False)  # Group with complete breakdown
 
         # plot all 4 timeline types
@@ -398,12 +422,13 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags):
     # print(d)
     # plot_sessions(start_dir, d)
 
+
 def plot_sessions(
-    start_dir, d_list, sub_list, 
-    summary=False, single=False, timeline=False, 
-    details=False, det_err=False, det_corr=False, 
-    recent=False, show_date=False, int_only=False, 
-    corr_only=False):  #TODO Split timeline and plotting into seperate functions
+        start_dir, d_list, sub_list,
+        summary=False, single=False, timeline=False,
+        details=False, det_err=False, det_corr=False,
+        recent=False, show_date=False, int_only=False,
+        corr_only=False):  # TODO Split timeline and plotting into seperate functions
     ''' Plots session summaries
     summary = True: Plots all sessions in a single plot, up to 6
     single = True: Plots single session summaries with breakdown of single blocks
@@ -611,12 +636,13 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
     fig.savefig(os.path.join(out_dir, out_name), dpi=400)
     plt.close()
 
+
 def timeline_plot(
-    sub_list, in_dir, out_dir, single_plot=False, 
-    det_err=False, det_corr=False, recent=False, 
-    show_date=True, details=False):
+        sub_list, in_dir, out_dir, single_plot=False,
+        det_err=False, det_corr=False, recent=False,
+        show_date=True, details=False):
     """
-    
+
     Plots total rewards from beginining of first session  
 
     Arguments:
@@ -661,7 +687,8 @@ def timeline_plot(
             pell_double = np.nonzero(np.diff(pell_ts) < 0.5)[0]
             reward_times = s.get_rw_ts()
             box = s.get_metadata('box')
-            exptime = s.get_metadata('start_time')[:2]  # time format - "%H:%M:%S"
+            # time format - "%H:%M:%S"
+            exptime = s.get_metadata('start_time')[:2]
 
             d_list.append(date)
             box_list.append(box)
@@ -767,7 +794,7 @@ def timeline_plot(
             prev_ratio = c_ratio
             prev_interval = c_interval
             prev_name = s_type
-        
+
         if single_plot:
             rows, cols = [1, 4]
             size_multiplier = 5
@@ -849,10 +876,10 @@ def timeline_plot(
             y_axis = r_list
             h1, = plt.plot(s_idx, y_axis, label='Animal'+subject, linewidth='4',
                            color=mycolors(subject))
-            
+
             ax.set_title('\nSubject {} Timeline'.format(subject), y=1.05,
                          fontsize=25, color=mycolors(subject))
-            
+
             # # Plot experiment time w rewards
             # ax2 = ax.twinx()
             # y_axis_2 = time_list
@@ -910,7 +937,8 @@ def timeline_plot(
             ax2.set_ylabel('Error Presses', fontsize=20)
         else:
             # plt.axhline(45, color='g', linestyle='-.', linewidth='.5')
-            plt.axhline(60, color='r', linestyle='-.', linewidth='.5')  # Marks max reward
+            plt.axhline(60, color='r', linestyle='-.',
+                        linewidth='.5')  # Marks max reward
             ax.set_ylabel('Total Rewards', fontsize=20)
             plots = [h1]
             labels = [h1.get_label()]
@@ -950,9 +978,10 @@ def timeline_plot(
         fig.savefig(os.path.join(out_dir, out_name), dpi=400)
         plt.close()
 
+
 def extract_sessions(
-    in_dir, sub_list=None, s_list=None, d_list=None,
-    load_backend="neo", neo_backend="nix"):
+        in_dir, sub_list=None, s_list=None, d_list=None,
+        load_backend="neo", neo_backend="nix"):
     '''Extracts specified sessions from files '''
 
     def should_use(val, vlist):
@@ -990,6 +1019,7 @@ def extract_sessions(
     print('Total Files extracted: {}'.format(len(s_grp)))
     return s_grp
 
+
 def convert_to_hdf5(filename, out_dir):
     """Convert all sessions in filename to hdf5 and store in out_dir."""
     make_dir_if_not_exists(out_dir)
@@ -1002,6 +1032,7 @@ def convert_to_hdf5(filename, out_dir):
             continue
         else:
             s.save_to_h5(out_dir)
+
 
 def convert_to_neo(filename, out_dir, neo_backend="nix", remove_existing=False):
     """Convert all sessions in filename to hdf5 and store in out_dir."""
@@ -1020,6 +1051,7 @@ def convert_to_neo(filename, out_dir, neo_backend="nix", remove_existing=False):
                 out_dir, neo_backend=neo_backend,
                 remove_existing=remove_existing)
 
+
 def convert_axona_to_neo(
         filename, out_dir, neo_backend="nix", remove_existing=False):
     """Convert .inp files to Sessions and store in out_dir."""
@@ -1030,6 +1062,7 @@ def convert_axona_to_neo(
         out_dir, neo_backend=neo_backend,
         remove_existing=remove_existing)
 
+
 def load_hdf5(filename, verbose=False):
     if verbose:
         print_h5(filename)
@@ -1037,9 +1070,11 @@ def load_hdf5(filename, verbose=False):
 
     return session
 
+
 def load_neo(filename, neo_backend="nix"):
     session = Session(neo_file=filename, neo_backend="nix")
     return session
+
 
 def run_mpc_file(filename, out_dir):
     """Use this to work on MEDPC files without converting to HDF5."""
@@ -1059,6 +1094,7 @@ def run_mpc_file(filename, out_dir):
 
         bv_an.cumplot(s, out_dir, False)
         # bv_an.IRT(s, out_dir, False)  # Doesnt work with stage 6
+
 
 def main(config_name):
     """Main control for batch process."""
@@ -1101,7 +1137,6 @@ def main(config_name):
                             filename, out_dir, remove_existing=False)
                 except Exception as e:
                     log_exception(e, "Error during coversion to neo")
-    
 
     if analysis_flags[1]:  # plot_batch_sessions
         sub = json.loads(config.get("BatchPlot", "subjects"))
@@ -1131,6 +1166,7 @@ def main(config_name):
         h5_loc = r"C:\Users\smartin5\OneDrive - TCDUD.onmicrosoft.com\Claustrum\hdf5\1_08-29-19_16-58_7_RandomisedBlocksExtended_p.nix"
         s = Session(neo_file=h5_loc)
         bv_an.trial_clustering(s)
+
 
 if __name__ == "__main__":
     config_name = "Main.cfg"
