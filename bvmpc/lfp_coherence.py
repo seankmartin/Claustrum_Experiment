@@ -4,6 +4,9 @@ from scipy.signal import hilbert
 from scipy.signal import coherence
 from scipy.stats import norm
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.image import NonUniformImage
+import pycwt as wavelet
 
 from neurochat.nc_utils import butter_filter
 from neurochat.nc_circular import CircStat
@@ -81,6 +84,233 @@ def split_into_amp_phase(lfp, deg=False):
     phase = np.angle(complex_lfp, deg=deg)
     amplitude = np.abs(complex_lfp)
     return amplitude, phase
+
+
+def calc_wave_coherence(
+        wave1, wave2, sample_times,
+        min_freq=1, max_freq=40,
+        sig=False, ax=None, title="Wavelet Coherence",
+        plot_arrows=True, plot_coi=True, plot_period=False,
+        resolution=12, all_arrows=True):
+    """
+    Calculate wavelet coherence between wave1 and wave2 using pycwt.
+
+    TODO fix min_freq, max_freq and add parameters to control arrows.
+    TODO also test out sig on a large dataset
+
+    Parameters
+    ----------
+    wave1 : np.ndarray
+        The values of the first waveform.
+    wave2 : np.ndarray
+        The values of the second waveform.
+    sample_times : np.ndarray
+        The times at which waveform samples occur.
+    min_freq : float
+        Supposed to be minimum frequency, but not quite working.
+    max_freq : float
+        Supposed to be max frequency, but not quite working.
+    sig : bool, default False
+        Optional Should significance of waveform coherence be calculated.
+    ax : plt.axe, default None
+        Optional ax object to plot into.
+    title : str, default "Wavelet Coherence"
+        Optional title for the graph
+    plot_arrows : bool, default True
+        Should phase arrows be plotted.
+    plot_coi : bool, default True
+        Should the cone of influence be plotted
+    plot_period : bool
+        Should the y-axis be in period or in frequency (Hz)
+    resolution : int
+        How many wavelets should be at each level of the graph
+    all_arrows : bool
+        Should phase arrows be plotted uniformly or only at high coherence
+
+    Returns
+    -------
+    tuple : (fig, result)
+        Where fig is a matplotlib Figure
+        and result is a tuple consisting of WCT, aWCT, coi, freq, sig
+        WCT - 2D numpy array with coherence values
+        aWCT - 2D numpy array with same shape as aWCT indicating phase angles
+        coi - 1D numpy array with a frequency value for each time 
+        freq - 1D numpy array with the frequencies wavelets were calculated at
+        sig - 2D numpy array indicating where data is significant by monte carlo
+
+    """
+    t = np.asarray(sample_times)
+    dt = np.mean(np.diff(t))
+
+    # Set up the scales to match min max input frequencies
+    dj = resolution
+    s0 = min_freq * dt
+    if s0 < 2 * dt:
+        s0 = 2 * dt
+    max_J = max_freq * dt
+    J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
+    # freqs = np.geomspace(max_freq, min_freq, num=50)
+    freqs = None
+
+    # Do the actual calculation
+    WCT, aWCT, coi, freq, sig = wavelet.wct(
+        wave1, wave2, dt,  # Fixed params
+        dj=(1.0 / dj), s0=s0, J=J, sig=sig, normalize=True, freqs=freqs,
+    )
+
+    # Convert frequency to period if necessary
+    if plot_period:
+        y_vals = np.log2(1 / freq)
+    if not plot_period:
+        y_vals = np.log2(freq)
+
+    # Calculates the phase between both time series. The phase arrows in the
+    # cross wavelet power spectrum rotate clockwise with 'north' origin.
+    # The relative phase relationship convention is the same as adopted
+    # by Torrence and Webster (1999), where in phase signals point
+    # upwards (N), anti-phase signals point downwards (S). If X leads Y,
+    # arrows point to the right (E) and if X lags Y, arrow points to the
+    # left (W).
+    angle = 0.5 * np.pi - aWCT
+    u, v = np.cos(angle), np.sin(angle)
+
+    if ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig = None
+
+    # Set the x and y axes of the plot
+    extent_corr = [t.min(), t.max(), 0, max(y_vals)]
+
+    # Fill the plot with the magnitude squared coherence values
+    # That is, MSC = abs(Pxy) ^ 2 / (Pxx * Pyy)
+    # TODO I think this might be the wrong way to plot this
+    # It assumes that the samples are linearly spaced
+    im = NonUniformImage(ax, interpolation='bilinear', extent=extent_corr)
+    if plot_period:
+        im.set_data(t, y_vals, WCT)
+    else:
+        im.set_data(t, y_vals[::-1], WCT[::-1, :])
+    ax.images.append(im)
+    # pcm = ax.pcolormesh(WCT)
+
+    # Plot the cone of influence - Periods greater than
+    # those are subject to edge effects.
+    if plot_coi:
+        # Performed by plotting a polygon
+        x_positions = np.zeros(shape=(len(t),))
+        x_positions = t
+
+        y_positions = np.zeros(shape=(len(t),))
+        if plot_period:
+            y_positions = np.log2(coi)
+        else:
+            y_positions = np.log2(1 / coi)
+
+        ax.plot(x_positions, y_positions,
+                'w--', linewidth=2, c="w")
+
+    # Plot the significance level contour plot
+    if sig:
+        ax.contour(t, y_vals, sig,
+                   [-99, 1], colors='k', linewidths=2, extent=extent_corr)
+
+    # Plot the arrows on the plot
+    if plot_arrows:
+        # TODO currently this is a uniform grid, could be changed to WCT > 0.5
+        x_res = 120
+        y_res = 3
+        if all_arrows:
+            ax.quiver(t[::x_res], y_vals[::y_res],
+                      u[::y_res, ::x_res], v[::y_res, ::x_res], units='height',
+                      angles='uv', pivot='mid', linewidth=1, edgecolor='k',
+                      headwidth=10, headlength=10, headaxislength=5, minshaft=2,
+                      minlength=5)
+        else:
+            # t[::x_res], y_vals[::y_res],
+            # u[::y_res, ::x_res], v[::y_res, ::x_res]
+            high_points = np.nonzero(WCT[::y_res, ::x_res] > 0.7)
+            sub_t = t[::x_res][high_points[1]]
+            sub_y = y_vals[::y_res][high_points[0]]
+            sub_u = u[::y_res, ::x_res][np.array(
+                high_points[0]), np.array(high_points[1])]
+            sub_v = v[::y_res, ::x_res][high_points[0], high_points[1]]
+            res = 1
+            ax.quiver(sub_t[::res], sub_y[::res],
+                      sub_u[::res], sub_v[::res], units='height',
+                      angles='uv', pivot='mid', linewidth=1, edgecolor='k',
+                      headwidth=10, headlength=10, headaxislength=5, minshaft=2,
+                      minlength=5)
+
+    # Add the colorbar to the figure
+    if fig is not None:
+        fig.colorbar(im)
+    else:
+        plt.colorbar(im, ax=ax, use_gridspec=True)
+
+    # Add limits, titles, etc.
+    ax.set_ylim(min(y_vals), max(y_vals))
+    ax.set_xlim(t.min(), t.max())
+
+    if plot_period:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        # y_ticks = [np.log2(x) for x in [0.004, 0.008, 0.016,
+        #                                 0.032, 0.064, 0.125, 0.25, 0.5, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+    else:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        # y_ticks = [np.log2(x) for x in [256, 128, 64, 32, 16, 8, 4, 2, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+    plt.yticks(y_ticks, y_labels)
+    ax.set_title(title)
+    ax.set_xlabel("Time (s)")
+
+    if plot_period:
+        ax.set_ylabel("Period")
+    else:
+        ax.set_ylabel("Frequency (Hz)")
+
+    return (fig, [WCT, aWCT, coi, freq, sig])
+
+
+def test_wave_coherence():
+    # Compare this to Matlab
+    fs = 1000.0
+    t = np.arange(0, 2.0011, 0.001)
+    x = 0.25 * np.random.randn(t.size)
+    temp = np.zeros(t.size)
+    np.cos(2 * np.pi * 10 * t, where=((t >= 0.5) & (t < 1.1)), out=temp)
+    x += temp
+    temp.fill(0)
+    np.cos(2 * np.pi * 50 * t, where=((t >= 0.2) & (t < 1.4)), out=temp)
+    x += temp
+    temp.fill(0)
+
+    y = 0.35 * np.random.randn(t.size)
+    np.sin(2 * np.pi * 10 * t, where=((t >= 0.6) & (t < 1.2)), out=temp)
+    y += temp
+    temp.fill(0)
+    np.sin(2 * np.pi * 50 * t, where=((t >= 0.4) & (t < 1.6)), out=temp)
+    y += temp
+    fig, data = calc_wave_coherence(
+        x, y, t, min_freq=2, max_freq=1000,
+        plot_arrows=True, plot_coi=True, plot_period=True,
+        resolution=12, all_arrows=True)
+    fig.savefig("test_coherence_o.png", dpi=400)
+    do_matlab = False
+
+    if do_matlab:
+        import matlab.engine
+
+        eng = matlab.engine.start_matlab()
+        x_m = matlab.double(list(x))
+        y_m = matlab.double(list(y))
+
+        eng.wcoherence(x_m, y_m, fs, nargout=0)
+        fig = eng.gcf()
+        eng.saveas(fig, "test_matlab_freq.png", nargout=0)
 
 
 def test_coherence():
