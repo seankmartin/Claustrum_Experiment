@@ -95,8 +95,12 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
             figsize=(40, len(lfp_dict_s) * 2))
         a = np.round(split, 2)
         b = np.round(min(split + segment_length, in_range[1]), 2)
-        out_name = os.path.join(
-            out_dir, "{}s_to_{}s.png".format(a, b))
+        if list(lfp_dict_s.keys())[0] == '17':
+            out_name = os.path.join(
+                out_dir, "1_{}s_to_{}s.png".format(a, b))
+        else:
+            out_name = os.path.join(
+                out_dir, "0_{}s_to_{}s.png".format(a, b))
         for i, (key, lfp) in enumerate(lfp_dict_s.items()):
             convert = lfp.get_sampling_rate()
             c_start, c_end = math.floor(a * convert), math.floor(b * convert)
