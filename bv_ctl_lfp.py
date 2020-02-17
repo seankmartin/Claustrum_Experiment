@@ -189,18 +189,22 @@ def main(fname, out_main_dir, config):
                     plt.close()
 
             if raw:
-                plot = True
-                csv = False
-                if plot:
+                r_plot = bool(int(config.get("Setup", "r_plot")))
+                r_csv = bool(int(config.get("Setup", "r_csv")))
+
+                if r_plot:
+                    ro_dir = os.path.join(o_dir, "Raw")
+                    make_dir_if_not_exists(ro_dir)
                     # Plot raw LFP for all tetrodes in segments
-                    plot_lfp(o_dir, lfp_odict, segment_length=305,
+                    plot_lfp(ro_dir, lfp_odict, segment_length=305,
                              sd=sd_thres, filt=filt, artf=artf, session=s)
-                if csv:
+                if r_csv:
                     shut_s, shut_end = p*16, 16+p*16
                     lfp_csv(fname, o_dir, lfp_odict, sd_thres,
                             min_artf_freq, shuttles[shut_s:shut_end], filt)
 
     if analysis_flags[1]:   # Complie graphs per session in a single .png
+        spec = False
         # Plot all periodograms on 1 plot
         fig, ax = plt.subplots(figsize=(20, 20))
         legend = []
@@ -242,41 +246,42 @@ def main(fname, out_main_dir, config):
         fig.savefig(out_name)
         plt.close()
 
-        for p, lfp_odict in enumerate(lfp_list):
-            # Plot spectrograms in set of 16s
-            rows, cols = [4, 4]
-            gf = bv_plot.GridFig(rows, cols, wspace=0.5, hspace=0.5)
+        if spec:
+            for p, lfp_odict in enumerate(lfp_list):
+                # Plot spectrograms in set of 16s
+                rows, cols = [4, 4]
+                gf = bv_plot.GridFig(rows, cols, wspace=0.5, hspace=0.5)
 
-            if artf:
-                signal_used = lfp_odict.get_clean_signal()
-            else:
-                signal_used = lfp_odict.get_filt_signal()
-            for i, (key, lfp) in enumerate(signal_used.items()):
-                graph_data = lfp.spectrum(
-                    ptype='psd', prefilt=True,
-                    db=True, tr=True)   # Function from nc_lfp
-                ax = gf.get_next(along_rows=False)
-                nc_plot.lfp_spectrum_tr(graph_data, ax)
-                plt.ylim(0, 40)
-                # plt.xlim(0, 40)
-                color = gm.get_next_color()
-                ax.text(0.49, 1.08, regions[i+p*16], fontsize=20, color=color,
-                        horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+                if artf:
+                    signal_used = lfp_odict.get_clean_signal()
+                else:
+                    signal_used = lfp_odict.get_filt_signal()
+                for i, (key, lfp) in enumerate(signal_used.items()):
+                    graph_data = lfp.spectrum(
+                        ptype='psd', prefilt=True,
+                        db=True, tr=True)   # Function from nc_lfp
+                    ax = gf.get_next(along_rows=False)
+                    nc_plot.lfp_spectrum_tr(graph_data, ax)
+                    plt.ylim(0, 40)
+                    # plt.xlim(0, 40)
+                    color = gm.get_next_color()
+                    ax.text(0.49, 1.08, regions[i+p*16], fontsize=20, color=color,
+                            horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
 
-            if p:
-                gf.fig.suptitle(
-                    (fname.split("\\")[-1][4:] + " Spectrogram " + str(p)), fontsize=30)
-                out_name = os.path.join(
-                    o_dir, "Sum_ptr", fname.split("\\")[-1] + "_ptr_sum_" + str(p) + ".png")
-            else:
-                gf.fig.suptitle(
-                    (fname.split("\\")[-1][4:] + " Spectrogram"), fontsize=30)
-                out_name = os.path.join(
-                    o_dir, "Sum_ptr", fname.split("\\")[-1] + "_ptr_sum.png")
-            make_path_if_not_exists(out_name)
-            print("Saving result to {}".format(out_name))
-            gf.fig.savefig(out_name)
-            plt.close()
+                if p:
+                    gf.fig.suptitle(
+                        (fname.split("\\")[-1][4:] + " Spectrogram " + str(p)), fontsize=30)
+                    out_name = os.path.join(
+                        o_dir, "Sum_ptr", fname.split("\\")[-1] + "_ptr_sum_" + str(p) + ".png")
+                else:
+                    gf.fig.suptitle(
+                        (fname.split("\\")[-1][4:] + " Spectrogram"), fontsize=30)
+                    out_name = os.path.join(
+                        o_dir, "Sum_ptr", fname.split("\\")[-1] + "_ptr_sum.png")
+                make_path_if_not_exists(out_name)
+                print("Saving result to {}".format(out_name))
+                gf.fig.savefig(out_name)
+                plt.close()
 
     if analysis_flags[2]:    # Compare periodograms for FR and FI for specific eegs
         gm_sch = bv_plot.GroupManager(list(sch_type))
@@ -284,7 +289,7 @@ def main(fname, out_main_dir, config):
         for p, lfp_odict in enumerate(lfp_list):
             rows, cols = [4, 4]
             gf = bv_plot.GridFig(rows, cols, wspace=0.3, hspace=0.3)
-            for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
+            for i, (key, lfp) in enumerate(lfp_odict.get_clean_signal().items()):
                 ax = gf.get_next(along_rows=False)
                 legend = []
                 block_size = 305
@@ -313,13 +318,21 @@ def main(fname, out_main_dir, config):
             if p:
                 plt.suptitle(fname.split(
                     "\\")[-1] + " Periodogram - Blocks " + str(p), y=0.92, fontsize=30)
-                out_name = os.path.join(o_dir, fname.split(
-                    "\\")[-1] + "_p_com_" + str(p) + ".png")
+                if artf:
+                    out_name = os.path.join(o_dir, fname.split(
+                        "\\")[-1] + "_p_com_clean_" + str(p) + ".png")
+                else:
+                    out_name = os.path.join(o_dir, fname.split(
+                        "\\")[-1] + "_p_com_" + str(p) + ".png")
             else:
                 plt.suptitle(fname.split("\\")
                              [-1] + " Periodogram - Blocks", y=0.92, fontsize=30)
-                out_name = os.path.join(o_dir, fname.split(
-                    "\\")[-1] + "_p_com.png")
+                if artf:
+                    out_name = os.path.join(o_dir, fname.split(
+                        "\\")[-1] + "_p_com.png")
+                else:
+                    out_name = os.path.join(o_dir, fname.split(
+                        "\\")[-1] + "_p_com.png")
             make_path_if_not_exists(out_name)
             print("Saving result to {}".format(out_name))
             gf.fig.savefig(out_name)
@@ -327,67 +340,87 @@ def main(fname, out_main_dir, config):
 
     if analysis_flags[3]:   # Compare coherence in terms of freq between ACC & RSC
         # lfp_list = select_lfp(fname, ROI)
-        chan1 = int(config.get("Wavelet", "chan1"))
-        chan2 = int(config.get("Wavelet", "chan2"))
-        wlet_chans = [chan1, chan2]
-        reg_sel = []
-        for chan in wlet_chans:  # extracts name of regions selected
-            reg_sel.append(regions[chan-1] + "-" + str(chan))
-        gm_sch = bv_plot.GroupManager(list(sch_type))
 
-        lfp_odict = LfpODict(fname, channels=wlet_chans, filt_params=(
-            filt, filt_btm, filt_top), artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
-        legend = []
-        sch_name = []
-        block_size = 305
-        lfp_list1, lfp_list2 = [], []
-        for k, j in enumerate(range(0, block_size*6, block_size)):
-            new_lfp1 = lfp_odict.get_clean_signal(0).subsample(
-                sample_range=(j, j+block_size))
-            new_lfp2 = lfp_odict.get_clean_signal(1).subsample(
-                sample_range=(j, j+block_size))
-            if sch_type[k] == 1:
-                sch_name.append("FR")
-                legend.append("{}-FR".format(k))
-            elif sch_type[k] == 0:
-                sch_name.append("FI")
-                legend.append("{}-FI".format(k))
-            lfp_list1.append(new_lfp1)
-            lfp_list2.append(new_lfp2)
+        wchans = [int(x) for x in config.get("Wavelet", "wchans").split(", ")]
+        import itertools
+        wave_combi = list(itertools.combinations(wchans, 2))
+        for chan1, chan2 in wave_combi:
+            wlet_chans = [chan1, chan2]
+            reg_sel = []
+            for chan in wlet_chans:  # extracts name of regions selected
+                reg_sel.append(regions[chan-1] + "-" + str(chan))
+            gm_sch = bv_plot.GroupManager(list(sch_type))
 
-        # Plots wavelet coherence for each block in a seperate .png
-        for b, (lfp1, lfp2, sch) in enumerate(zip(lfp_list1, lfp_list2, sch_name)):
-            if artf:
-                out_name = os.path.join(
-                    o_dir, os.path.basename(fname) + "_wcohere_T{}-T{}_Clean_".format(chan1, chan2) + str(b+1) + ".png")
-            else:
-                out_name = os.path.join(
-                    o_dir, os.path.basename(fname) + "_wcohere_T{}-T{}_".format(chan1, chan2) + str(b+1) + ".png")
-            sch_n = str(b+1) + "-" + sch
-            test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel, out_name)
+            lfp_odict = LfpODict(fname, channels=wlet_chans, filt_params=(
+                filt, filt_btm, filt_top), artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
+            legend = []
+            sch_name = []
+            block_size = 305
+            lfp_list1, lfp_list2 = [], []
+            for k, j in enumerate(range(0, block_size*6, block_size)):
+                new_lfp1 = lfp_odict.get_clean_signal(0).subsample(
+                    sample_range=(j, j+block_size))
+                new_lfp2 = lfp_odict.get_clean_signal(1).subsample(
+                    sample_range=(j, j+block_size))
+                if sch_type[k] == 1:
+                    sch_name.append("FR")
+                    legend.append("{}-FR".format(k))
+                elif sch_type[k] == 0:
+                    sch_name.append("FI")
+                    legend.append("{}-FI".format(k))
+                lfp_list1.append(new_lfp1)
+                lfp_list2.append(new_lfp2)
 
-        # Plots coherence by comparing FI vs FR
-        sch_f, sch_Cxy = [], []
-        for lfp1, lfp2 in zip(lfp_list1, lfp_list2):
-            from bvmpc.lfp_coherence import calc_coherence
-            f, Cxy = calc_coherence(lfp1, lfp2)
-            sch_f.append(f)
-            sch_Cxy.append(Cxy)
-        fig, ax = plt.subplots(figsize=(20, 10))
-        for f, Cxy in zip(sch_f, sch_Cxy):
-            color = gm_sch.get_next_color()
-            ax = plot_coherence(f, Cxy, ax=ax, color=color, legend=legend)
-        plt.xlim(0, 60)
-        plt.suptitle(fname.split("\\")
-                     [-1], y=0.95, fontsize=25)
-        plt.text(x=0.5, y=0.89, s="{}_{} Coherence - Blocks".format(reg_sel[0], reg_sel[1]),
-                 fontsize=10, ha="center", transform=fig.transFigure)
-        out_name = os.path.join(o_dir, fname.split(
-            "\\")[-1] + "_cohere.png")
-        make_path_if_not_exists(out_name)
-        print("Saving result to {}".format(out_name))
-        fig.savefig(out_name)
-        plt.close()
+            wo_dir = os.path.join(
+                o_dir, "wcohere_T{}vsT{}".format(chan1, chan2))
+            make_dir_if_not_exists(wo_dir)
+
+            # Plots wavelet coherence for each block in a seperate .png
+            for b, (lfp1, lfp2, sch) in enumerate(zip(lfp_list1, lfp_list2, sch_name)):
+                if artf:
+                    out_name = os.path.join(
+                        wo_dir, os.path.basename(fname) + "_wcohere_T{}-T{}_Clean_".format(chan1, chan2) + str(b+1) + ".png")
+                else:
+                    out_name = os.path.join(
+                        wo_dir, os.path.basename(fname) + "_wcohere_T{}-T{}_".format(chan1, chan2) + str(b+1) + ".png")
+                sch_n = str(b+1) + "-" + sch
+                test_matlab_wcoherence(
+                    lfp1, lfp2, rw_ts, sch_n, reg_sel, out_name)
+                from plotting_coherence import calc_coherence
+                fig, ax = plt.subplots(figsize=(20, 8))
+                _, result = calc_coherence(
+                    lfp1.get_samples(), lfp2.get_samples(), lfp1.get_timestamp(),
+                    plot_arrows=True, plot_coi=False, resolution=12,
+                    plot_period=False, min_freq=1.5, max_freq=120, ax=ax)
+                print("Saving result to {}".format(out_name[:-4]+'python.png'))
+                fig.savefig(out_name[:-4]+'python.png')
+
+            # # Plots coherence by comparing FI vs FR
+            # sch_f, sch_Cxy = [], []
+            # for lfp1, lfp2 in zip(lfp_list1, lfp_list2):
+            #     from bvmpc.lfp_coherence import calc_coherence
+            #     f, Cxy = calc_coherence(lfp1, lfp2)
+            #     sch_f.append(f)
+            #     sch_Cxy.append(Cxy)
+            # fig, ax = plt.subplots(figsize=(20, 10))
+            # for f, Cxy in zip(sch_f, sch_Cxy):
+            #     color = gm_sch.get_next_color()
+            #     ax = plot_coherence(f, Cxy, ax=ax, color=color, legend=legend)
+            # plt.xlim(0, 60)
+            # plt.suptitle(fname.split("\\")
+            #              [-1], y=0.95, fontsize=25)
+            # plt.text(x=0.5, y=0.89, s="{}_{} Coherence - Blocks".format(reg_sel[0], reg_sel[1]),
+            #          fontsize=10, ha="center", transform=fig.transFigure)
+            # if artf:
+            #     out_name = os.path.join(wo_dir, fname.split(
+            #         "\\")[-1] + "_cohere_Clean.png")
+            # else:
+            #     out_name = os.path.join(wo_dir, fname.split(
+            #         "\\")[-1] + "_cohere.png")
+            # make_path_if_not_exists(out_name)
+            # print("Saving result to {}".format(out_name))
+            # fig.savefig(out_name)
+            # plt.close()
 
 
 # matlab version of wcoherence
@@ -502,5 +535,5 @@ def main_entry(config_name):
 
 
 if __name__ == "__main__":
-    config_name = "CAR-R1.cfg"
+    config_name = "CAR-SA1.cfg"
     main_entry(config_name)
