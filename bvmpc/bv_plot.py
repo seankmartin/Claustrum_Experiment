@@ -125,7 +125,7 @@ class GroupManager:
         self.info_dict = OrderedDict()
         self.index = 0
         self.color_list = [
-            "Blues", "Oranges", "Greens", "Reds", "Purples", "Greys"]
+            "Blues", "Oranges", "Greens", "Purples", "PuRd", "Greys"]
         set_vals = sorted(set(group_list), key=group_list.index)
         # print(set_vals)
         import numpy as np
