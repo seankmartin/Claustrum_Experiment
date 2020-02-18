@@ -82,6 +82,22 @@ def main(fname, out_main_dir, config):
     o_dir = os.path.join(out_main_dir, "!LFP")
     make_dir_if_not_exists(o_dir)
 
+    # Plots raw LFP for all tetrodes or output csv with artf_removal results
+    r_plot = bool(int(config.get("Setup", "r_plot")))
+    r_csv = bool(int(config.get("Setup", "r_csv")))
+
+    for p, lfp_odict in enumerate(lfp_list):
+        if r_plot:
+            ro_dir = os.path.join(o_dir, "Raw")
+            make_dir_if_not_exists(ro_dir)
+            # Plot raw LFP for all tetrodes in segments
+            plot_lfp(ro_dir, lfp_odict, segment_length=305,
+                     sd=sd_thres, filt=filt, artf=artf, session=s)
+        if r_csv:
+            shut_s, shut_end = p*16, 16+p*16
+            lfp_csv(fname, o_dir, lfp_odict, sd_thres,
+                    min_artf_freq, shuttles[shut_s:shut_end], filt)
+
     if analysis_flags[0]:   # Plot periodograms and ptr for each tetrode seperately
         """
         Plot periodograms and ptr for each tetrode seperately
@@ -91,7 +107,6 @@ def main(fname, out_main_dir, config):
         for p, lfp_odict in enumerate(lfp_list):
             indiv = False   # Set to true for individual periodograms on a 4x4 grid
             spec = False    # Set to true for individual spectrograms per .png
-            raw = True      # Set to true for raw trace
 
             # Old code to plot each periodogram in a seperate .png
             # for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
@@ -187,21 +202,6 @@ def main(fname, out_main_dir, config):
                     print("Saving result to {}".format(out_name))
                     fig.savefig(out_name)
                     plt.close()
-
-            if raw:
-                r_plot = bool(int(config.get("Setup", "r_plot")))
-                r_csv = bool(int(config.get("Setup", "r_csv")))
-
-                if r_plot:
-                    ro_dir = os.path.join(o_dir, "Raw")
-                    make_dir_if_not_exists(ro_dir)
-                    # Plot raw LFP for all tetrodes in segments
-                    plot_lfp(ro_dir, lfp_odict, segment_length=305,
-                             sd=sd_thres, filt=filt, artf=artf, session=s)
-                if r_csv:
-                    shut_s, shut_end = p*16, 16+p*16
-                    lfp_csv(fname, o_dir, lfp_odict, sd_thres,
-                            min_artf_freq, shuttles[shut_s:shut_end], filt)
 
     if analysis_flags[1]:   # Complie graphs per session in a single .png
         spec = False
@@ -535,5 +535,5 @@ def main_entry(config_name):
 
 
 if __name__ == "__main__":
-    config_name = "CAR-SA1.cfg"
+    config_name = "CAR-SA2.cfg"
     main_entry(config_name)
