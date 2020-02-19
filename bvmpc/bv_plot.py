@@ -225,7 +225,7 @@ class ColorManager:
             self.idx = 0
 
 
-def behav_vlines(ax, s, behav_plot):
+def behav_vlines(ax, s, behav_plot, lw=1.5):
     """
     Plots vlines based on desired behaviour related timestamps
 
@@ -241,6 +241,8 @@ def behav_vlines(ax, s, behav_plot):
             # 1 - plot rewards
             # 2 - plot pellets
             # 3 - plot double pells
+    lw: float
+        Sets linewidth of vlines
 
     Returns
     -------
@@ -258,29 +260,29 @@ def behav_vlines(ax, s, behav_plot):
     if behav_plot[0]:
         for lev in lev_ts:  # vline demarcating lev presses
             ax.axvline(lev, linestyle='-',
-                       color='blue', linewidth='1.5')
+                       color='blue', linewidth=lw)
         label = lines.Line2D([], [], color='blue', marker='|', linestyle='None',
-                             markersize=10, markeredgewidth=1.5, label='Lever Press')
+                             markersize=10, markeredgewidth=lw, label='Lever Press')
         legends.append(label)
     if behav_plot[1]:
         for rw in rw_ts:    # vline demarcating reward point/end of trial
             ax.axvline(rw, linestyle='-',
-                       color='orange', linewidth='1.5')
+                       color='orange', linewidth=lw)
         label = lines.Line2D([], [], color='orange', marker='|', linestyle='None',
-                             markersize=10, markeredgewidth=1.5, label='Reward')
+                             markersize=10, markeredgewidth=lw, label='Reward')
         legends.append(label)
     if behav_plot[2]:
         for pell in pell_exd_ts:  # vline demarcating pells
             ax.axvline(pell, linestyle='-',
-                       color='green', linewidth='1.5')
-        label = lines.Line2D([], [], color='green', marker='|', linestyle='None',
-                             markersize=10, markeredgewidth=1.5, label='Pell')
+                       color='w', linewidth=lw)
+        label = lines.Line2D([], [], color='w', marker='|', linestyle='None',
+                             markersize=10, markeredgewidth=lw, label='Pell')
         legends.append(label)
     if behav_plot[3]:
         for d in d_pell_ts:  # vline demarcating double pells
             ax.axvline(d, linestyle='-',
-                       color='magenta', linewidth='1.5')
+                       color='magenta', linewidth=lw)
         label = lines.Line2D([], [], color='magenta', marker='|', linestyle='None',
-                             markersize=10, markeredgewidth=1.5, label='Double Pell')
+                             markersize=10, markeredgewidth=lw, label='Double Pell')
         legends.append(label)
     return ax, legends
