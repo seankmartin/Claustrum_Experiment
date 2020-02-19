@@ -88,10 +88,10 @@ def split_into_amp_phase(lfp, deg=False):
 
 def calc_wave_coherence(
         wave1, wave2, sample_times,
-        min_freq=1, max_freq=40,
+        min_freq=1, max_freq=256,
         sig=False, ax=None, title="Wavelet Coherence",
         plot_arrows=True, plot_coi=True, plot_period=False,
-        resolution=12, all_arrows=True):
+        resolution=12, all_arrows=True, quiv_x=5, quiv_y=24):
     """
     Calculate wavelet coherence between wave1 and wave2 using pycwt.
 
@@ -126,6 +126,10 @@ def calc_wave_coherence(
         How many wavelets should be at each level of the graph
     all_arrows : bool
         Should phase arrows be plotted uniformly or only at high coherence
+    quiv_x : float
+        sets quiver window in time domain in seconds
+    quiv_y : float
+        sets number of quivers evenly distributed across freq limits
 
     Returns
     -------
@@ -141,7 +145,6 @@ def calc_wave_coherence(
     """
     t = np.asarray(sample_times)
     dt = np.mean(np.diff(t))
-
     # Set up the scales to match min max input frequencies
     dj = resolution
     s0 = min_freq * dt
@@ -215,21 +218,31 @@ def calc_wave_coherence(
         ax.contour(t, y_vals, sig,
                    [-99, 1], colors='k', linewidths=2, extent=extent_corr)
 
+    # Add limits, titles, etc.
+    ax.set_ylim(min(y_vals), max(y_vals))
+    ax.set_xlim(t.min(), t.max())
+
+    # TODO split graph into smaller time chunks
+    # Test for smaller timescale
+    # quiv_x = 1
+    # ax.set_xlim(t[0], t[int(60*1/dt)])
+
     # Plot the arrows on the plot
     if plot_arrows:
         # TODO currently this is a uniform grid, could be changed to WCT > 0.5
-        x_res = 120
-        y_res = 3
+
+        x_res = int(1/dt * quiv_x)
+        y_res = int(np.floor(len(y_vals)/quiv_y))
         if all_arrows:
             ax.quiver(t[::x_res], y_vals[::y_res],
                       u[::y_res, ::x_res], v[::y_res, ::x_res], units='height',
-                      angles='uv', pivot='mid', linewidth=1, edgecolor='k',
+                      angles='uv', pivot='mid', linewidth=1, edgecolor='k', scale=30,
                       headwidth=10, headlength=10, headaxislength=5, minshaft=2,
-                      minlength=5)
+                      )
         else:
             # t[::x_res], y_vals[::y_res],
             # u[::y_res, ::x_res], v[::y_res, ::x_res]
-            high_points = np.nonzero(WCT[::y_res, ::x_res] > 0.7)
+            high_points = np.nonzero(WCT[::y_res, ::x_res] > 0.5)
             sub_t = t[::x_res][high_points[1]]
             sub_y = y_vals[::y_res][high_points[0]]
             sub_u = u[::y_res, ::x_res][np.array(
@@ -238,30 +251,27 @@ def calc_wave_coherence(
             res = 1
             ax.quiver(sub_t[::res], sub_y[::res],
                       sub_u[::res], sub_v[::res], units='height',
-                      angles='uv', pivot='mid', linewidth=1, edgecolor='k',
+                      angles='uv', pivot='mid', linewidth=1, edgecolor='k', scale=30,
                       headwidth=10, headlength=10, headaxislength=5, minshaft=2,
-                      minlength=5)
-
+                      )
+    # splits = [0, 60, 120 ...]
     # Add the colorbar to the figure
     if fig is not None:
         fig.colorbar(im)
     else:
         plt.colorbar(im, ax=ax, use_gridspec=True)
 
-    # Add limits, titles, etc.
-    ax.set_ylim(min(y_vals), max(y_vals))
-    ax.set_xlim(t.min(), t.max())
-
     if plot_period:
         y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
         # TODO improve ticks
-        # y_ticks = [np.log2(x) for x in [0.004, 0.008, 0.016,
-        #                                 0.032, 0.064, 0.125, 0.25, 0.5, 1]]
+        y_ticks = [np.log2(x) for x in [0.004, 0.008, 0.016,
+                                        0.032, 0.064, 0.125, 0.25, 0.5, 1]]
         y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
     else:
         y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
         # TODO improve ticks
         # y_ticks = [np.log2(x) for x in [256, 128, 64, 32, 16, 8, 4, 2, 1]]
+        y_ticks = [np.log2(x) for x in [64, 32, 16, 8, 4, 2, 1]]
         y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
     plt.yticks(y_ticks, y_labels)
     ax.set_title(title)
