@@ -377,7 +377,8 @@ def main(fname, out_main_dir, config):
                 sch_name = ["Pre"]
 
             wo_dir = os.path.join(
-                o_dir, "wcohere_T{}vsT{}".format(chan1, chan2))
+                # o_dir, "wcohere_T{}vsT{}".format(chan1, chan2))
+                o_dir, "wcohere_{}vs{}".format(reg_sel[0], reg_sel[1]))
             make_dir_if_not_exists(wo_dir)
 
             # Plots wavelet coherence for each block in a seperate .png
@@ -395,16 +396,25 @@ def main(fname, out_main_dir, config):
                         lfp1, lfp2, rw_ts, sch_n, reg_sel, out_name)
                 from bvmpc.lfp_coherence import calc_wave_coherence
                 fig, ax = plt.subplots(figsize=(24, 10))
-                title = ("{} vs {} Wavelet Coherence {}".format(
+                # title = ("{} vs {} Wavelet Coherence {}".format(
+                #     reg_sel[0], reg_sel[1], sch_n))
+                # _, result = calc_wave_coherence(
+                #     lfp1.get_samples(), lfp2.get_samples(), lfp1.get_timestamp(),
+                #     plot_arrows=True, plot_coi=False, resolution=12, title=title,
+                #     plot_period=False, all_arrows=False, ax=ax, quiv_x=5)
+
+                title = ("{} vs {} Wavelet Correlation {}".format(
                     reg_sel[0], reg_sel[1], sch_n))
-                _, result = calc_wave_coherence(
+                from bvmpc.lfp_coherence import calc_wave_correlation
+                _, result = calc_wave_correlation(
                     lfp1.get_samples(), lfp2.get_samples(), lfp1.get_timestamp(),
-                    plot_arrows=True, plot_coi=False, resolution=12, title=title,
-                    plot_period=False, all_arrows=False, ax=ax, quiv_x=1, block=[0, 60])
+                    plot_coi=False, resolution=12, title=title,
+                    plot_period=False, all_arrows=False, ax=ax, quiv_x=5)
 
                 if behav:
                     # Plot behav timepoints
-                    ax, b_legend = bv_plot.behav_vlines(ax, s, behav_plot)
+                    ax, b_legend = bv_plot.behav_vlines(
+                        ax, s, behav_plot, lw=2)
                     plt.legend(handles=b_legend, fontsize=15,
                                loc='upper right')
 
@@ -414,6 +424,8 @@ def main(fname, out_main_dir, config):
                 ax.yaxis.label.set_size(25)
 
                 ax.set_title(title, fontsize=30, y=1.01)
+                plt.show()
+                exit(-1)
                 print("Saving result to {}".format(out_name[:-4]+'_pycwt.png'))
                 fig.savefig(out_name[:-4]+'_pycwt.png')
 

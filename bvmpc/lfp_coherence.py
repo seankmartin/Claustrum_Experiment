@@ -88,7 +88,7 @@ def split_into_amp_phase(lfp, deg=False):
 
 def calc_wave_coherence(
         wave1, wave2, sample_times,
-        min_freq=5, max_freq=256,
+        min_freq=1, max_freq=256,
         sig=False, ax=None, title="Wavelet Coherence",
         plot_arrows=True, plot_coi=True, plot_period=False,
         resolution=12, all_arrows=True, quiv_x=5, quiv_y=24, block=None):
@@ -287,6 +287,168 @@ def calc_wave_coherence(
         ax.set_ylabel("Frequency (Hz)")
 
     return (fig, [WCT, aWCT, coi, freq, sig])
+
+
+def calc_wave_correlation(
+        wave1, wave2, sample_times,
+        min_freq=1, max_freq=256,
+        sig=False, ax=None, title="Wavelet Correlation",
+        plot_coi=True, plot_period=False,
+        resolution=12, all_arrows=True, quiv_x=5, quiv_y=24, block=None):
+    """
+    Calculate wavelet correlation between wave1 and wave2 using pycwt.
+
+    TODO Fix this function
+    TODO also test out sig on a large dataset
+
+    Parameters
+    ----------
+    wave1 : np.ndarray
+        The values of the first waveform.
+    wave2 : np.ndarray
+        The values of the second waveform.
+    sample_times : np.ndarray
+        The times at which waveform samples occur.
+    min_freq : float
+        Supposed to be minimum frequency, but not quite working.
+    max_freq : float
+        Supposed to be max frequency, but not quite working.
+    sig : bool, default False
+        Optional Should significance of waveform coherence be calculated.
+    ax : plt.axe, default None
+        Optional ax object to plot into.
+    title : str, default "Wavelet Coherence"
+        Optional title for the graph
+    plot_coi : bool, default True
+        Should the cone of influence be plotted
+    plot_period : bool
+        Should the y-axis be in period or in frequency (Hz)
+    resolution : int
+        How many wavelets should be at each level of the graph
+    all_arrows : bool
+        Should phase arrows be plotted uniformly or only at high coherence
+    quiv_x : float
+        sets quiver window in time domain in seconds
+    quiv_y : float
+        sets number of quivers evenly distributed across freq limits
+    block : [int, int]
+        Plots only points between ints.
+
+    Returns
+    -------
+    tuple : (fig, result)
+        Where fig is a matplotlib Figure
+        and result is a tuple consisting of WCT, aWCT, coi, freq, sig
+        WCT - 2D numpy array with coherence values
+        aWCT - 2D numpy array with same shape as aWCT indicating phase angles
+        coi - 1D numpy array with a frequency value for each time 
+        freq - 1D numpy array with the frequencies wavelets were calculated at
+        sig - 2D numpy array indicating where data is significant by monte carlo
+
+    """
+    t = np.asarray(sample_times)
+    dt = np.mean(np.diff(t))
+    # Set up the scales to match min max input frequencies
+    dj = resolution
+    s0 = min_freq * dt
+    if s0 < 2 * dt:
+        s0 = 2 * dt
+    max_J = max_freq * dt
+    J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
+
+    # Do the actual calculation
+    W12, coi, freq, sigif = wavelet.xwt(
+        wave1, wave2, dt,  # Fixed params
+        dj=(1.0 / dj), s0=s0, J=J, normalize=True,
+    )
+
+    # Convert frequency to period if necessary
+    if plot_period:
+        y_vals = np.log2(1 / freq)
+    if not plot_period:
+        y_vals = np.log2(freq)
+
+    if ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig = None
+
+    # Set the x and y axes of the plot
+    extent_corr = [t.min(), t.max(), 0, max(y_vals)]
+
+    # Fill the plot with the magnitude squared correlation values
+    # That is, MSC = abs(Pxy) ^ 2 / (Pxx * Pyy)
+    # TODO I think this might be the wrong way to plot this
+    # It assumes that the samples are linearly spaced
+    im = NonUniformImage(ax, interpolation='bilinear', extent=extent_corr)
+
+    if plot_period:
+        im.set_data(t, y_vals, W12)
+    else:
+        im.set_data(t, y_vals[::-1], W12[::-1, :])
+    ax.images.append(im)
+    # pcm = ax.pcolormesh(WCT)
+
+    # Plot the cone of influence - Periods greater than
+    # those are subject to edge effects.
+    if plot_coi:
+        # Performed by plotting a polygon
+        x_positions = np.zeros(shape=(len(t),))
+        x_positions = t
+
+        y_positions = np.zeros(shape=(len(t),))
+        if plot_period:
+            y_positions = np.log2(coi)
+        else:
+            y_positions = np.log2(1 / coi)
+
+        ax.plot(x_positions, y_positions,
+                'w--', linewidth=2, c="w")
+
+    # Plot the significance level contour plot
+    if sig:
+        ax.contour(t, y_vals, sigif,
+                   [-99, 1], colors='k', linewidths=2, extent=extent_corr)
+
+    # Add limits, titles, etc.
+    ax.set_ylim(min(y_vals), max(y_vals))
+    if block:
+        ax.set_xlim(t[block[0]], t[int(block[1]*1/dt)])
+    else:
+        ax.set_xlim(t.min(), t.max())
+
+    # TODO split graph into smaller time chunks
+    # Test for smaller timescale
+    # quiv_x = 1
+
+    # Add the colorbar to the figure
+    if fig is not None:
+        fig.colorbar(im)
+    else:
+        plt.colorbar(im, ax=ax, use_gridspec=True)
+
+    if plot_period:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        y_ticks = [np.log2(x) for x in [0.004, 0.008, 0.016,
+                                        0.032, 0.064, 0.125, 0.25, 0.5, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+    else:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        # y_ticks = [np.log2(x) for x in [256, 128, 64, 32, 16, 8, 4, 2, 1]]
+        y_ticks = [np.log2(x) for x in [64, 32, 16, 8, 4, 2, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+    plt.yticks(y_ticks, y_labels)
+    ax.set_title(title)
+    ax.set_xlabel("Time (s)")
+
+    if plot_period:
+        ax.set_ylabel("Period")
+    else:
+        ax.set_ylabel("Frequency (Hz)")
+
+    return (fig, [W12, coi, freq, sig])
 
 
 def test_wave_coherence():
