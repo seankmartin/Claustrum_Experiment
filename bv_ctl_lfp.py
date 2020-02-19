@@ -70,13 +70,14 @@ def main(fname, out_main_dir, config):
         lfp_list.append(lfp_odict)
 
     if "Pre" in fname:
-        s = None
-        rw_ts = []
-        sch_type = []
+        behav = False
     else:
+        behav = bool(int(config.get("Behav Params", "behav")))
+        behav_plot = json.loads(config.get("Behav Params", "behav_plot"))
+
+    if behav:
         # Load behaviour-related data
         s = load_bv_from_set(fname)
-        rw_ts = s.get_rw_ts()
         sch_type = s.get_arrays('Trial Type')  # FR = 1, FI = 0
 
     o_dir = os.path.join(out_main_dir, "!LFP")
@@ -182,14 +183,10 @@ def main(fname, out_main_dir, config):
                                 plt.title("T" + key + " " +
                                           regions[i+p*16] + " Spectrogram", fontsize=40, y=1.05)
                             plt.ylim(0, filt_top)
-                            if "Pre" in fname:
-                                continue
-                            else:
-                                for rw in rw_ts:
-                                    ax.axvline(rw, linestyle='-',
-                                               color='orange', linewidth='1.5')    # vline demarcating reward point/end of trial
+                            if behav:
+                                bv_plot.behav_vlines(ax, s, behav_plot)
                                 ax.axvline(tone_ts, linestyle='-',
-                                           color='r', linewidth='1.5')    # vline demarcating end of tone
+                                           color='r', linewidth='1.5')  # vline demarcating end of tone
                         fig = gf.get_fig()
                     else:
                         fig, ax = plt.subplots(figsize=(20, 5))
@@ -234,9 +231,9 @@ def main(fname, out_main_dir, config):
         plt.legend(legend, fontsize=15)
         if artf:
             plt.title(fname.split("\\")[-1][4:] +
-                      " Compiled Periodogram - Thresh", fontsize=40, y=1.02)
+                      " Compiled Periodogram - Clean", fontsize=40, y=1.02)
             out_name = os.path.join(
-                o_dir, fname.split("\\")[-1] + "_p_Thresh.png")
+                o_dir, fname.split("\\")[-1] + "_p_Clean.png")
         else:
             plt.title(fname.split("\\")[-1][4:] +
                       " Compiled Periodogram", fontsize=40, y=1.02)
@@ -340,6 +337,7 @@ def main(fname, out_main_dir, config):
 
     if analysis_flags[3]:   # Compare coherence in terms of freq between ACC & RSC
         # lfp_list = select_lfp(fname, ROI)
+        matlab = False
 
         wchans = [int(x) for x in config.get("Wavelet", "wchans").split(", ")]
         import itertools
@@ -384,16 +382,32 @@ def main(fname, out_main_dir, config):
                     out_name = os.path.join(
                         wo_dir, os.path.basename(fname) + "_wcohere_T{}-T{}_".format(chan1, chan2) + str(b+1) + ".png")
                 sch_n = str(b+1) + "-" + sch
-                test_matlab_wcoherence(
-                    lfp1, lfp2, rw_ts, sch_n, reg_sel, out_name)
-                from plotting_coherence import calc_coherence
-                fig, ax = plt.subplots(figsize=(20, 8))
-                _, result = calc_coherence(
+                if matlab:
+                    rw_ts = s.get_rw_ts()
+                    test_matlab_wcoherence(
+                        lfp1, lfp2, rw_ts, sch_n, reg_sel, out_name)
+                from bvmpc.lfp_coherence import calc_wave_coherence
+                fig, ax = plt.subplots(figsize=(24, 10))
+                title = ("{} vs {} Wavelet Coherence {}".format(
+                    reg_sel[0], reg_sel[1], sch_n))
+                _, result = calc_wave_coherence(
                     lfp1.get_samples(), lfp2.get_samples(), lfp1.get_timestamp(),
-                    plot_arrows=True, plot_coi=False, resolution=12,
-                    plot_period=False, min_freq=1.5, max_freq=120, ax=ax)
-                print("Saving result to {}".format(out_name[:-4]+'python.png'))
-                fig.savefig(out_name[:-4]+'python.png')
+                    plot_arrows=True, plot_coi=False, resolution=12, title=title,
+                    plot_period=False, all_arrows=False, ax=ax, quiv_x=5)
+
+                if behav:
+                    # Plot behav timepoints
+                    bv_plot.behav_vlines(ax, s, behav_plot)
+
+                # Plot customization params
+                plt.tick_params(labelsize=20)
+                ax.xaxis.label.set_size(25)
+                ax.yaxis.label.set_size(25)
+
+                ax.set_title(title, fontsize=30, y=1.01)
+                # plt.legend(legend, fontsize=15)
+                print("Saving result to {}".format(out_name[:-4]+'_pycwt.png'))
+                fig.savefig(out_name[:-4]+'_pycwt.png')
 
             # # Plots coherence by comparing FI vs FR
             # sch_f, sch_Cxy = [], []
