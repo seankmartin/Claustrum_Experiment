@@ -223,3 +223,47 @@ class ColorManager:
         self.idx = self.idx + 1
         if self.idx == self.num_colors:
             self.idx = 0
+
+
+def behav_vlines(ax, s, behav_plot):
+    """
+    Plots vlines based on desired behaviour related timestamps
+
+    Parameters
+    ----------
+    ax : plt.axe, default None
+        ax object to plot into.
+    s: object
+        Behavioural session object
+    behav_plot: list[bool]
+        bool list denoting timestamps to plot.
+            # 0 - plot rewards
+            # 1 - plot levers
+            # 2 - plot double pells
+            # 3 - plot pellets
+
+    Returns
+    -------
+    ax : plt.axe, default None
+
+    """
+    rw_ts = s.get_rw_ts()
+    lev_ts = s.get_lever_ts()
+    pell_exd_ts, d_pell_ts = s.split_pell_ts()
+    if behav_plot[0]:
+        for rw in rw_ts:    # vline demarcating reward point/end of trial
+            ax.axvline(rw, linestyle='-.',
+                       color='orange', linewidth='1.5')
+    if behav_plot[1]:
+        for lev in lev_ts:  # vline demarcating lev presses
+            ax.axvline(lev, linestyle='-.',
+                       color='blue', linewidth='1.5')
+    if behav_plot[2]:
+        for d in d_pell_ts:  # vline demarcating double pells
+            ax.axvline(d, linestyle='-.',
+                       color='pink', linewidth='1.5')
+    if behav_plot[3]:
+        for pell in pell_exd_ts:  # vline demarcating pells
+            ax.axvline(pell, linestyle='-.',
+                       color='green', linewidth='1.5')
+    return ax
