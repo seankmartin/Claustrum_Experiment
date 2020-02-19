@@ -71,14 +71,15 @@ def main(fname, out_main_dir, config):
 
     if "Pre" in fname:
         behav = False
+        Pre = True
     else:
+        Pre = False
         behav = bool(int(config.get("Behav Params", "behav")))
         behav_plot = json.loads(config.get("Behav Params", "behav_plot"))
 
-    if behav:
-        # Load behaviour-related data
-        s = load_bv_from_set(fname)
-        sch_type = s.get_arrays('Trial Type')  # FR = 1, FI = 0
+    # Load behaviour-related data
+    s = load_bv_from_set(fname)
+    sch_type = s.get_arrays('Trial Type')  # FR = 1, FI = 0
 
     o_dir = os.path.join(out_main_dir, "!LFP")
     make_dir_if_not_exists(o_dir)
@@ -184,7 +185,8 @@ def main(fname, out_main_dir, config):
                                           regions[i+p*16] + " Spectrogram", fontsize=40, y=1.05)
                             plt.ylim(0, filt_top)
                             if behav:
-                                bv_plot.behav_vlines(ax, s, behav_plot)
+                                ax, b_legend = bv_plot.behav_vlines(
+                                    ax, s, behav_plot)
                                 ax.axvline(tone_ts, linestyle='-',
                                            color='r', linewidth='1.5')  # vline demarcating end of tone
                         fig = gf.get_fig()
@@ -347,27 +349,32 @@ def main(fname, out_main_dir, config):
             reg_sel = []
             for chan in wlet_chans:  # extracts name of regions selected
                 reg_sel.append(regions[chan-1] + "-" + str(chan))
-            gm_sch = bv_plot.GroupManager(list(sch_type))
 
             lfp_odict = LfpODict(fname, channels=wlet_chans, filt_params=(
                 filt, filt_btm, filt_top), artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
             legend = []
-            sch_name = []
-            block_size = 305
             lfp_list1, lfp_list2 = [], []
-            for k, j in enumerate(range(0, block_size*6, block_size)):
-                new_lfp1 = lfp_odict.get_clean_signal(0).subsample(
-                    sample_range=(j, j+block_size))
-                new_lfp2 = lfp_odict.get_clean_signal(1).subsample(
-                    sample_range=(j, j+block_size))
-                if sch_type[k] == 1:
-                    sch_name.append("FR")
-                    legend.append("{}-FR".format(k))
-                elif sch_type[k] == 0:
-                    sch_name.append("FI")
-                    legend.append("{}-FI".format(k))
-                lfp_list1.append(new_lfp1)
-                lfp_list2.append(new_lfp2)
+            if not Pre:
+                sch_name = []
+                block_size = 305
+                gm_sch = bv_plot.GroupManager(list(sch_type))
+                for k, j in enumerate(range(0, block_size*6, block_size)):
+                    new_lfp1 = lfp_odict.get_clean_signal(0).subsample(
+                        sample_range=(j, j+block_size))
+                    new_lfp2 = lfp_odict.get_clean_signal(1).subsample(
+                        sample_range=(j, j+block_size))
+                    if sch_type[k] == 1:
+                        sch_name.append("FR")
+                        legend.append("{}-FR".format(k))
+                    elif sch_type[k] == 0:
+                        sch_name.append("FI")
+                        legend.append("{}-FI".format(k))
+                    lfp_list1.append(new_lfp1)
+                    lfp_list2.append(new_lfp2)
+            else:
+                lfp_list1 = lfp_odict.get_clean_signal(0)
+                lfp_list2 = lfp_odict.get_clean_signal(1)
+                sch_name = ["Pre"]
 
             wo_dir = os.path.join(
                 o_dir, "wcohere_T{}vsT{}".format(chan1, chan2))
@@ -397,7 +404,9 @@ def main(fname, out_main_dir, config):
 
                 if behav:
                     # Plot behav timepoints
-                    bv_plot.behav_vlines(ax, s, behav_plot)
+                    ax, b_legend = bv_plot.behav_vlines(ax, s, behav_plot)
+                    plt.legend(handles=b_legend, fontsize=15,
+                               loc='upper right')
 
                 # Plot customization params
                 plt.tick_params(labelsize=20)
@@ -405,7 +414,6 @@ def main(fname, out_main_dir, config):
                 ax.yaxis.label.set_size(25)
 
                 ax.set_title(title, fontsize=30, y=1.01)
-                # plt.legend(legend, fontsize=15)
                 print("Saving result to {}".format(out_name[:-4]+'_pycwt.png'))
                 fig.savefig(out_name[:-4]+'_pycwt.png')
 
