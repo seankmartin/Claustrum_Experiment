@@ -400,7 +400,7 @@ def main(fname, out_main_dir, config):
                 _, result = calc_wave_coherence(
                     lfp1.get_samples(), lfp2.get_samples(), lfp1.get_timestamp(),
                     plot_arrows=True, plot_coi=False, resolution=12, title=title,
-                    plot_period=False, all_arrows=False, ax=ax, quiv_x=5)
+                    plot_period=False, all_arrows=False, ax=ax, quiv_x=1, block=[0, 60])
 
                 if behav:
                     # Plot behav timepoints

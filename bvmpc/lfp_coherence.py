@@ -88,10 +88,10 @@ def split_into_amp_phase(lfp, deg=False):
 
 def calc_wave_coherence(
         wave1, wave2, sample_times,
-        min_freq=1, max_freq=256,
+        min_freq=5, max_freq=256,
         sig=False, ax=None, title="Wavelet Coherence",
         plot_arrows=True, plot_coi=True, plot_period=False,
-        resolution=12, all_arrows=True, quiv_x=5, quiv_y=24):
+        resolution=12, all_arrows=True, quiv_x=5, quiv_y=24, block=None):
     """
     Calculate wavelet coherence between wave1 and wave2 using pycwt.
 
@@ -130,6 +130,8 @@ def calc_wave_coherence(
         sets quiver window in time domain in seconds
     quiv_y : float
         sets number of quivers evenly distributed across freq limits
+    block : [int, int]
+        Plots only points between ints.
 
     Returns
     -------
@@ -220,12 +222,14 @@ def calc_wave_coherence(
 
     # Add limits, titles, etc.
     ax.set_ylim(min(y_vals), max(y_vals))
-    ax.set_xlim(t.min(), t.max())
+    if block:
+        ax.set_xlim(t[block[0]], t[int(block[1]*1/dt)])
+    else:
+        ax.set_xlim(t.min(), t.max())
 
     # TODO split graph into smaller time chunks
     # Test for smaller timescale
     # quiv_x = 1
-    # ax.set_xlim(t[0], t[int(60*1/dt)])
 
     # Plot the arrows on the plot
     if plot_arrows:
