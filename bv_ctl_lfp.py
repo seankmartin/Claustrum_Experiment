@@ -340,6 +340,8 @@ def main(fname, out_main_dir, config):
     if analysis_flags[3]:   # Compare coherence in terms of freq between ACC & RSC
         # lfp_list = select_lfp(fname, ROI)
         matlab = False
+        cross = True
+        cohere = False
 
         wchans = [int(x) for x in config.get("Wavelet", "wchans").split(", ")]
         import itertools
@@ -390,44 +392,61 @@ def main(fname, out_main_dir, config):
                     out_name = os.path.join(
                         wo_dir, os.path.basename(fname) + "_wcohere_T{}-T{}_".format(chan1, chan2) + str(b+1) + ".png")
                 sch_n = str(b+1) + "-" + sch
-                if matlab:
-                    rw_ts = s.get_rw_ts()
-                    test_matlab_wcoherence(
-                        lfp1, lfp2, rw_ts, sch_n, reg_sel, out_name)
-                from bvmpc.lfp_coherence import calc_wave_coherence
-                fig, ax = plt.subplots(figsize=(24, 10))
-                # title = ("{} vs {} Wavelet Coherence {}".format(
-                #     reg_sel[0], reg_sel[1], sch_n))
-                # _, result = calc_wave_coherence(
-                #     lfp1.get_samples(), lfp2.get_samples(), lfp1.get_timestamp(),
-                #     plot_arrows=True, plot_coi=False, resolution=12, title=title,
-                #     plot_period=False, all_arrows=False, ax=ax, quiv_x=5)
+                if cohere:
+                    if matlab:
+                        rw_ts = s.get_rw_ts()
+                        test_matlab_wcoherence(
+                            lfp1, lfp2, rw_ts, sch_n, reg_sel, out_name)
+                    from bvmpc.lfp_coherence import calc_wave_coherence
+                    fig, ax = plt.subplots(figsize=(24, 10))
+                    title = ("{} vs {} Wavelet Coherence {}".format(
+                        reg_sel[0], reg_sel[1], sch_n))
+                    _, result = calc_wave_coherence(
+                        lfp1.get_samples(), lfp2.get_samples(), lfp1.get_timestamp(),
+                        plot_arrows=True, plot_coi=False, resolution=12, title=title,
+                        plot_period=False, all_arrows=False, ax=ax, quiv_x=5)
 
-                title = ("{} vs {} Wavelet Correlation {}".format(
-                    reg_sel[0], reg_sel[1], sch_n))
-                from bvmpc.lfp_coherence import calc_wave_correlation
-                _, result = calc_wave_correlation(
-                    lfp1.get_samples(), lfp2.get_samples(), lfp1.get_timestamp(),
-                    plot_coi=False, resolution=12, title=title,
-                    plot_period=False, all_arrows=False, ax=ax, quiv_x=5)
+                    if behav:
+                        # Plot behav timepoints
+                        ax, b_legend = bv_plot.behav_vlines(
+                            ax, s, behav_plot, lw=2)
+                        plt.legend(handles=b_legend, fontsize=15,
+                                loc='upper right')
 
-                if behav:
-                    # Plot behav timepoints
-                    ax, b_legend = bv_plot.behav_vlines(
-                        ax, s, behav_plot, lw=2)
-                    plt.legend(handles=b_legend, fontsize=15,
-                               loc='upper right')
+                    # Plot customization params
+                    plt.tick_params(labelsize=20)
+                    ax.xaxis.label.set_size(25)
+                    ax.yaxis.label.set_size(25)
 
-                # Plot customization params
-                plt.tick_params(labelsize=20)
-                ax.xaxis.label.set_size(25)
-                ax.yaxis.label.set_size(25)
+                    ax.set_title(title, fontsize=30, y=1.01)
+                    print("Saving result to {}".format(out_name[:-4]+'_pycwt.png'))
+                    fig.savefig(out_name[:-4]+'_pycwt.png')
+                
+                if cross:
+                    title = ("{} vs {} Cross-Wavelet Correlation {}".format(
+                        reg_sel[0], reg_sel[1], sch_n))
+                    from bvmpc.lfp_coherence import calc_cross_wavelet
+                    _, result = calc_cross_wavelet(
+                        lfp1.get_samples(), lfp2.get_samples(), lfp1.get_timestamp(),
+                        plot_coi=False, resolution=12, title=title,
+                        plot_period=False, all_arrows=False, ax=ax, quiv_x=5)
 
-                ax.set_title(title, fontsize=30, y=1.01)
-                plt.show()
-                exit(-1)
-                print("Saving result to {}".format(out_name[:-4]+'_pycwt.png'))
-                fig.savefig(out_name[:-4]+'_pycwt.png')
+                    if behav:
+                        # Plot behav timepoints
+                        ax, b_legend = bv_plot.behav_vlines(
+                            ax, s, behav_plot, lw=2)
+                        plt.legend(handles=b_legend, fontsize=15,
+                                loc='upper right')
+
+                    # Plot customization params
+                    plt.tick_params(labelsize=20)
+                    ax.xaxis.label.set_size(25)
+                    ax.yaxis.label.set_size(25)
+
+                    ax.set_title(title, fontsize=30, y=1.01)
+                    plt.show()
+                    print("Saving result to {}".format(out_name[:-4]+'_pycwt.png'))
+                    fig.savefig(out_name[:-4]+'_pycwt.png')
 
             # # Plots coherence by comparing FI vs FR
             # sch_f, sch_Cxy = [], []

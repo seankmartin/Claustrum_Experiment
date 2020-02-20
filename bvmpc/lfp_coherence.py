@@ -289,14 +289,14 @@ def calc_wave_coherence(
     return (fig, [WCT, aWCT, coi, freq, sig])
 
 
-def calc_wave_correlation(
+def calc_cross_wavelet(
         wave1, wave2, sample_times,
         min_freq=1, max_freq=256,
-        sig=False, ax=None, title="Wavelet Correlation",
+        sig=False, ax=None, title="Cross-Wavelet",
         plot_coi=True, plot_period=False,
         resolution=12, all_arrows=True, quiv_x=5, quiv_y=24, block=None):
     """
-    Calculate wavelet correlation between wave1 and wave2 using pycwt.
+    Calculate cross wavelet correlation between wave1 and wave2 using pycwt.
 
     TODO Fix this function
     TODO also test out sig on a large dataset
@@ -357,10 +357,14 @@ def calc_wave_correlation(
     J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
 
     # Do the actual calculation
-    W12, coi, freq, sigif = wavelet.xwt(
+    W12, coi, freq, signif = wavelet.xwt(
         wave1, wave2, dt,  # Fixed params
-        dj=(1.0 / dj), s0=s0, J=J, normalize=True,
+        dj=(1.0 / dj), s0=s0, J=J, significance_level=0.8646, normalize=True,
     )
+
+    cross_power = np.abs(W12)**2
+    cross_sig = np.ones([1, n]) * signif[:, None]
+    cross_sig = cross_power / cross_sig  # Power is significant where ratio > 1
 
     # Convert frequency to period if necessary
     if plot_period:
@@ -383,7 +387,7 @@ def calc_wave_correlation(
     im = NonUniformImage(ax, interpolation='bilinear', extent=extent_corr)
 
     if plot_period:
-        im.set_data(t, y_vals, W12)
+        im.set_data(t, y_vals, cross_power)
     else:
         im.set_data(t, y_vals[::-1], W12[::-1, :])
     ax.images.append(im)
@@ -407,7 +411,7 @@ def calc_wave_correlation(
 
     # Plot the significance level contour plot
     if sig:
-        ax.contour(t, y_vals, sigif,
+        ax.contour(t, y_vals, cross_sig,
                    [-99, 1], colors='k', linewidths=2, extent=extent_corr)
 
     # Add limits, titles, etc.
