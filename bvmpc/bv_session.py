@@ -125,7 +125,6 @@ class Session:
 
         return pell_ts_exdouble, dpell
 
-
     def time_taken(self):
         """Calculate how long the Session took in mins."""
         start_time = self.get_metadata("start_time")[-8:].replace(' ', '0')
@@ -180,11 +179,11 @@ class Session:
             incl = '_Correct Only'
 
         split_lever_ts = np.split(lever_ts,
-                                np.searchsorted(lever_ts, blocks))
+                                  np.searchsorted(lever_ts, blocks))
         split_reward_ts = np.split(reward_times,
-                                np.searchsorted(reward_times, blocks))
+                                   np.searchsorted(reward_times, blocks))
         split_double_r_ts = np.split(reward_double,
-                                    np.searchsorted(reward_double, blocks))
+                                     np.searchsorted(reward_double, blocks))
         split_err_ts = np.split(err_lever_ts,
                                 np.searchsorted(err_lever_ts, blocks))
         norm_reward_ts = []
@@ -224,14 +223,14 @@ class Session:
                 row.Levers_ts, bins=8, density=True)[0]
             features[index, 3:11] = lever_hist
             # err_hist = np.histogram(
-                # row.Err_ts, bins=5, density=False)[0]
+            # row.Err_ts, bins=5, density=False)[0]
             features[index, 11] = row.Err_ts.size
         return features
 
     def perform_pca(self, n_components=3, should_scale=True):
         """
         Perform PCA on per trial features 
-        
+
         Parameters
         ------
         n_components : int or float 
@@ -610,17 +609,23 @@ class Session:
                         np.abs(nosepokes - bl[-1]) <= 0.00001)
                     last_nosepoke_idx = last_nosepoke_arr[0][0]
                     break
-
+                print(good_nosepokes)
+                print(nosepokes[-1])
                 # Replaces overflowed nosepoke w block end in main array
-                nosepokes = np.insert(nosepokes, last_nosepoke_idx+1, 305 * (i+1))
+                to_insert = 305 * (i+1)
+                if i == 5:
+                    to_insert = pell_ts_exdouble[-1] + 0.01
+                nosepokes = np.insert(
+                    nosepokes, last_nosepoke_idx+1, to_insert)
+                print(nosepokes[-1])
                 good_nosepokes, un_nosepokes = split_array_with_another(
                     nosepokes, pell_ts_exdouble)
-                if i < 5: # ignores first nosepoke in next block in split arrays
-                    split_nosepokes = split_into_blocks(
-                        good_nosepokes, 305, 6)
-                    split_all_nosepokes = split_into_blocks(
-                        nosepokes, 305, 6)
-                # print("Corrected:", good_nosepokes)
+                # if i < 5: # ignores first nosepoke in next block in split arrays
+                split_nosepokes = split_into_blocks(
+                    good_nosepokes, 305, 6)
+                split_all_nosepokes = split_into_blocks(
+                    nosepokes, 305, 6)
+                print("Corrected:", good_nosepokes)
 
         split_nosepokes = split_into_blocks(
             good_nosepokes, 305, 6)
