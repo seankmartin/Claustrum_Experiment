@@ -378,21 +378,23 @@ def main(fname, out_main_dir, config):
                 lfp_list2 = lfp_odict.get_clean_signal(1)
                 sch_name = ["Pre"]
 
-            wo_dir = os.path.join(
-                # o_dir, "wcohere_T{}vsT{}".format(chan1, chan2))
-                o_dir, "wcohere_{}vs{}".format(reg_sel[0], reg_sel[1]))
-            make_dir_if_not_exists(wo_dir)
+            if cohere:
+                an_name = 'wcohere'
+                wo_dir = os.path.join(
+                    # o_dir, "wcohere_T{}vsT{}".format(chan1, chan2))
+                    o_dir, "{}_{}vs{}".format(an_name, reg_sel[0], reg_sel[1]))
+                make_dir_if_not_exists(wo_dir)
 
-            # Plots wavelet coherence for each block in a seperate .png
-            for b, (lfp1, lfp2, sch) in enumerate(zip(lfp_list1, lfp_list2, sch_name)):
-                if artf:
-                    out_name = os.path.join(
-                        wo_dir, os.path.basename(fname) + "_wcohere_T{}-T{}_Clean_".format(chan1, chan2) + str(b+1) + ".png")
-                else:
-                    out_name = os.path.join(
-                        wo_dir, os.path.basename(fname) + "_wcohere_T{}-T{}_".format(chan1, chan2) + str(b+1) + ".png")
-                sch_n = str(b+1) + "-" + sch
-                if cohere:
+                # Plots wavelet coherence for each block in a seperate .png
+                for b, (lfp1, lfp2, sch) in enumerate(zip(lfp_list1, lfp_list2, sch_name)):
+                    if artf:
+                        out_name = os.path.join(
+                            wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_Clean_".format(an_name, chan1, chan2) + str(b+1) + ".png")
+                    else:
+                        out_name = os.path.join(
+                            wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_".format(an_name, chan1, chan2) + str(b+1) + ".png")
+                    sch_n = str(b+1) + "-" + sch
+
                     if matlab:
                         rw_ts = s.get_rw_ts()
                         test_matlab_wcoherence(
@@ -411,7 +413,7 @@ def main(fname, out_main_dir, config):
                         ax, b_legend = bv_plot.behav_vlines(
                             ax, s, behav_plot, lw=2)
                         plt.legend(handles=b_legend, fontsize=15,
-                                loc='upper right')
+                                   loc='upper right')
 
                     # Plot customization params
                     plt.tick_params(labelsize=20)
@@ -419,10 +421,28 @@ def main(fname, out_main_dir, config):
                     ax.yaxis.label.set_size(25)
 
                     ax.set_title(title, fontsize=30, y=1.01)
-                    print("Saving result to {}".format(out_name[:-4]+'_pycwt.png'))
+                    print("Saving result to {}".format(
+                        out_name[:-4]+'_pycwt.png'))
                     fig.savefig(out_name[:-4]+'_pycwt.png')
-                
-                if cross:
+
+            if cross:
+                an_name = 'crosswave'
+                wo_dir = os.path.join(
+                    # o_dir, "wcohere_T{}vsT{}".format(chan1, chan2))
+                    o_dir, "{}_{}vs{}".format(an_name, reg_sel[0], reg_sel[1]))
+                make_dir_if_not_exists(wo_dir)
+
+                # Plots wavelet coherence for each block in a seperate .png
+                for b, (lfp1, lfp2, sch) in enumerate(zip(lfp_list1, lfp_list2, sch_name)):
+                    if artf:
+                        out_name = os.path.join(
+                            wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_Clean_".format(an_name, chan1, chan2) + str(b+1) + ".png")
+                    else:
+                        out_name = os.path.join(
+                            wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_".format(an_name, chan1, chan2) + str(b+1) + ".png")
+                    sch_n = str(b+1) + "-" + sch
+
+                    fig, ax = plt.subplots(figsize=(24, 10))
                     title = ("{} vs {} Cross-Wavelet Correlation {}".format(
                         reg_sel[0], reg_sel[1], sch_n))
                     from bvmpc.lfp_coherence import calc_cross_wavelet
@@ -436,7 +456,7 @@ def main(fname, out_main_dir, config):
                         ax, b_legend = bv_plot.behav_vlines(
                             ax, s, behav_plot, lw=2)
                         plt.legend(handles=b_legend, fontsize=15,
-                                loc='upper right')
+                                   loc='upper right')
 
                     # Plot customization params
                     plt.tick_params(labelsize=20)
@@ -444,8 +464,8 @@ def main(fname, out_main_dir, config):
                     ax.yaxis.label.set_size(25)
 
                     ax.set_title(title, fontsize=30, y=1.01)
-                    plt.show()
-                    print("Saving result to {}".format(out_name[:-4]+'_pycwt.png'))
+                    print("Saving result to {}".format(
+                        out_name[:-4]+'_pycwt.png'))
                     fig.savefig(out_name[:-4]+'_pycwt.png')
 
             # # Plots coherence by comparing FI vs FR
@@ -588,5 +608,5 @@ def main_entry(config_name):
 
 
 if __name__ == "__main__":
-    config_name = "CAR-SA2.cfg"
+    config_name = "CAR-SA3.cfg"
     main_entry(config_name)
