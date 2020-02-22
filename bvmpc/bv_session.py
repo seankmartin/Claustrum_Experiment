@@ -609,15 +609,13 @@ class Session:
                         np.abs(nosepokes - bl[-1]) <= 0.00001)
                     last_nosepoke_idx = last_nosepoke_arr[0][0]
                     break
-                print(good_nosepokes)
-                print(nosepokes[-1])
+
                 # Replaces overflowed nosepoke w block end in main array
                 to_insert = 305 * (i+1)
                 if i == 5:
                     to_insert = pell_ts_exdouble[-1] + 0.01
                 nosepokes = np.insert(
                     nosepokes, last_nosepoke_idx+1, to_insert)
-                print(nosepokes[-1])
                 good_nosepokes, un_nosepokes = split_array_with_another(
                     nosepokes, pell_ts_exdouble)
                 # if i < 5: # ignores first nosepoke in next block in split arrays
