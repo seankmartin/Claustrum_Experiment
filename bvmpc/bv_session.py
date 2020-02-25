@@ -462,6 +462,18 @@ class Session:
             block_ends = np.arange(trial_len, repeated_trial_len, trial_len)
         return block_ends
 
+    def get_block_starts(self):
+        sound = self.info_arrays.get("sound", [])
+        if len(sound) != 0:
+            # Axona
+            block_starts = np.array(sound-5)
+        else:
+            # MED-PC
+            trial_len = self.get_metadata("trial_length (mins)") * 60
+            repeated_trial_len = (trial_len) * 6
+            block_starts = np.arange(0, repeated_trial_len, trial_len)
+        return block_starts
+
     def _save_neo_info(self, remove_existing):
         """Private function to save info to neo file."""
         if os.path.isfile(self.neo_file):

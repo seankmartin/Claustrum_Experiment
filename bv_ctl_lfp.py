@@ -80,6 +80,9 @@ def main(fname, out_main_dir, config):
     # Load behaviour-related data
     s = load_bv_from_set(fname)
     sch_type = s.get_arrays('Trial Type')  # FR = 1, FI = 0
+    # Tone start times excluding first + end time
+    blocks = np.append(s.get_block_starts()[1:], s.get_block_ends()[-1])
+    # print(blocks)
 
     o_dir = os.path.join(out_main_dir, "!LFP")
     make_dir_if_not_exists(o_dir)
@@ -164,15 +167,19 @@ def main(fname, out_main_dir, config):
                         ptype='psd', prefilt=False,
                         db=True, tr=True)
                     if graph_data['t'][-1] > 305:
-                        block_size = 305
                         rows, cols = [6, 1]
                         gf = bv_plot.GridFig(rows, cols, wspace=0.3,
                                              hspace=0.3, size_multiplier_x=40, tight_layout=False)
-                        for j in range(0, block_size*6, block_size):
-                            tone_ts = range(j+5, j+305, 300)
+                        for k, j in enumerate(blocks):
+                            tone_ts = s.get_block_starts()+5
                             ax = gf.get_next(along_rows=True)
-                            new_lfp = lfp.subsample(
-                                sample_range=(j, j+block_size))
+
+                            if k == 0:
+                                new_lfp = lfp.subsample(
+                                    sample_range=(0, j))
+                            else:
+                                new_lfp = lfp.subsample(
+                                    sample_range=(j[k-1], j))
                             graph_data = new_lfp.spectrum(
                                 ptype='psd', prefilt=False,
                                 db=True, tr=True)
@@ -291,10 +298,12 @@ def main(fname, out_main_dir, config):
             for i, (key, lfp) in enumerate(lfp_odict.get_clean_signal().items()):
                 ax = gf.get_next(along_rows=False)
                 legend = []
-                block_size = 305
                 sch_name = []
-                for k, j in enumerate(range(0, block_size*6, block_size)):
-                    new_lfp = lfp.subsample(sample_range=(j, j+block_size))
+                for k, j in enumerate(blocks):
+                    if k == 0:
+                        new_lfp = lfp.subsample(sample_range=(0, j))
+                    else:
+                        new_lfp = lfp.subsample(sample_range=(j[k-1], j))
                     graph_data = new_lfp.spectrum(
                         ptype='psd', prefilt=False,
                         db=False, tr=False)
@@ -358,13 +367,18 @@ def main(fname, out_main_dir, config):
             lfp_list1, lfp_list2 = [], []
             if not Pre:
                 sch_name = []
-                block_size = 305
                 gm_sch = bv_plot.GroupManager(list(sch_type))
-                for k, j in enumerate(range(0, block_size*6, block_size)):
-                    new_lfp1 = lfp_odict.get_clean_signal(0).subsample(
-                        sample_range=(j, j+block_size))
-                    new_lfp2 = lfp_odict.get_clean_signal(1).subsample(
-                        sample_range=(j, j+block_size))
+                for k, j in enumerate(blocks):
+                    if k == 0:
+                        new_lfp1 = lfp_odict.get_clean_signal(0).subsample(
+                            sample_range=(0, j))
+                        new_lfp2 = lfp_odict.get_clean_signal(1).subsample(
+                            sample_range=(0, j))
+                    else:
+                        new_lfp1 = lfp_odict.get_clean_signal(0).subsample(
+                            sample_range=(j[k-1], j))
+                        new_lfp2 = lfp_odict.get_clean_signal(1).subsample(
+                            sample_range=(j[k-1], j))
                     if sch_type[k] == 1:
                         sch_name.append("FR")
                         legend.append("{}-FR".format(k))
