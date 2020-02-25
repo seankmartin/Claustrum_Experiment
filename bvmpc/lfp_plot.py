@@ -52,7 +52,7 @@ def plot_long_lfp(
     plt.close(fig)
 
 
-def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4, filt=False, artf=False, session=None):
+def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4, filt=False, artf=False, session=None, splits=None):
     """
     Create a number of figures to display lfp signal on multiple channels.
 
@@ -69,7 +69,12 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
             Defaults to None.
         dpi (int, optional): Resulting plot dpi.
         filt (bool): Uses filtered lfp if True
-        csv (bool): Outputs excel with threshold and points crossing threshold
+        artf (bool): Should plot artefacts
+        session (None) : Optional behavioural session to plot data from.
+        splits (np.ndarray) : Optional timepoints to split the lfp at.
+            This should contain a number of elements = num_plots + 1
+            e.g. to split a 300 sec lfp into 0 - 100 and 100 - 300
+            pass splits = [0, 100, 300]
 
     Returns:
         None
@@ -89,12 +94,18 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
                       for lfp in lfp_dict_s.values()])
     y_axis_min = min([min(lfp.get_samples())
                       for lfp in lfp_dict_s.values()])
-    for split in np.arange(in_range[0], in_range[1], segment_length):
+    if splits is None:
+        seg_splits = np.arange(in_range[0], in_range[1], segment_length)
+        if np.abs(in_range[1] - seg_splits[-1]) > 0.0001:
+            seg_splits = np.concatenate([seg_splits, [in_range[1]]])
+    else:
+        seg_splits = splits
+    for j, split in enumerate(seg_splits[:-1]):
         fig, axes = plt.subplots(
             nrows=len(lfp_dict_s),
             figsize=(40, len(lfp_dict_s) * 2))
         a = np.round(split, 2)
-        b = np.round(min(split + segment_length, in_range[1]), 2)
+        b = np.round(min(seg_splits[j+1], in_range[1]), 2)
         if list(lfp_dict_s.keys())[0] == '17':
             out_name = os.path.join(
                 out_dir, "1_{}s_to_{}s.png".format(a, b))

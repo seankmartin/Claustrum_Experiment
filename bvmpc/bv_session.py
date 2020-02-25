@@ -420,22 +420,20 @@ class Session:
 
         reward_times = self.get_arrays("Nosepoke")
         trial_len = self.get_metadata("trial_length (mins)") * 60
-        if stage == '7' or stage == '6':
-            trial_len += 5
-            repeated_trial_len = (trial_len) * 6
 
         if stage == '7' or stage == '6':
             # Check if trial switched before reward collection
             # -> Adds collection as switch time
+            block_ends = self.get_block_ends()
             split_pell_ts = split_into_blocks(
-                pell_ts_exdouble, trial_len, 6)
+                pell_ts_exdouble, blocks=block_ends)
             split_reward_ts = split_into_blocks(
-                reward_times, trial_len, 6)
+                reward_times, blocks=block_ends)
 
             for i, (pell, reward) in enumerate(
                     zip(split_pell_ts, split_reward_ts)):
                 if len(pell) > len(reward):
-                    block_len = trial_len * (i+1)
+                    block_len = block_ends[i]
                     reward_times = np.insert(
                         reward_times, np.searchsorted(
                             reward_times, block_len), block_len)
@@ -445,11 +443,24 @@ class Session:
         # Checks if last block contains responses first
         if reward_times[-1] < pell_ts[-1]:
             if stage == '7' or stage == '6':
-                reward_times = np.append(reward_times, repeated_trial_len)
+                reward_times = np.append(reward_times, block_ends[-1])
             else:
                 reward_times = np.append(reward_times, trial_len)
 
         return np.sort(reward_times, axis=None)
+
+    def get_block_ends(self):
+        sound = self.info_arrays.get("sound", [])
+        if len(sound) != 0:
+            # Axona
+            block_ends = np.concatenate([sound[1:], [sound[-1] + 305]])
+        else:
+            # MED-PC
+            trial_len = self.get_metadata("trial_length (mins)") * 60
+            trial_len += 5
+            repeated_trial_len = (trial_len) * 6
+            block_ends = np.arange(trial_len, repeated_trial_len, trial_len)
+        return block_ends
 
     def _save_neo_info(self, remove_existing):
         """Private function to save info to neo file."""
@@ -578,7 +589,7 @@ class Session:
         left_presses = self.info_arrays.get("left_lever", [])
         right_presses = self.info_arrays.get("right_lever", [])
         nosepokes = self.info_arrays.get("all_nosepokes", [])
-        # print(nosepokes)
+        block_ends = self.get_block_ends()
 
         # Extract nosepokes as necessary and unecessary
         pell_ts_exdouble, _ = self.split_pell_ts()
@@ -586,18 +597,18 @@ class Session:
             nosepokes, pell_ts_exdouble)
 
         split_nosepokes = split_into_blocks(
-            good_nosepokes, 305, 6)
+            good_nosepokes, blocks=block_ends)
         split_pellets = split_into_blocks(
-            pell_ts_exdouble, 305, 6)
+            pell_ts_exdouble, blocks=block_ends)
         split_all_nosepokes = split_into_blocks(
-            nosepokes, 305, 6)
+            nosepokes, blocks=block_ends)
         for i in range(6):
             b1, b2 = split_nosepokes[i], split_pellets[i]
             if len(b2) > len(b1):
-                print("block: {}, End-time: {}".format(i, 305*(i+1)))
-                # print("good nosepokes: {}".format(good_nosepokes))
-                # print("nosepokes: {}".format(b1))
-                # print("pellets: {}".format(b2))
+                print("block: {}, End-time: {}".format(i, block_ends[i]))
+                print("good nosepokes: {}".format(good_nosepokes))
+                print("nosepokes: {}".format(b1))
+                print("pellets: {}".format(b2))
 
                 last_nosepoke_idx = -1
                 for j in range(i, -1, -1):
@@ -611,24 +622,24 @@ class Session:
                     break
 
                 # Replaces overflowed nosepoke w block end in main array
-                to_insert = 305 * (i+1)
-                if i == 5:
-                    to_insert = pell_ts_exdouble[-1] + 0.01
+                to_insert = block_ends[i] - 0.001
+                # if i == 5:
+                #     to_insert = pell_ts_exdouble[-1] + 0.01
                 nosepokes = np.insert(
                     nosepokes, last_nosepoke_idx+1, to_insert)
                 good_nosepokes, un_nosepokes = split_array_with_another(
                     nosepokes, pell_ts_exdouble)
                 # if i < 5: # ignores first nosepoke in next block in split arrays
                 split_nosepokes = split_into_blocks(
-                    good_nosepokes, 305, 6)
+                    good_nosepokes, blocks=block_ends)
                 split_all_nosepokes = split_into_blocks(
-                    nosepokes, 305, 6)
+                    nosepokes, blocks=block_ends)
                 print("Corrected:", good_nosepokes)
 
         split_nosepokes = split_into_blocks(
-            good_nosepokes, 305, 6)
+            good_nosepokes, blocks=block_ends)
         split_pellets = split_into_blocks(
-            pell_ts_exdouble, 305, 6)
+            pell_ts_exdouble, blocks=block_ends)
         for i, (b1, b2) in enumerate(zip(split_nosepokes, split_pellets)):
             if b2.shape != b1.shape:
                 print("Error, nosepokes in blocks don't match pellets")
@@ -657,13 +668,13 @@ class Session:
 
         # Set left presses and unnecessary left presses
         split_left_presses = split_into_blocks(
-            left_presses, 305, 6)
+            left_presses, blocks=block_ends)
         left_presses_fi = np.concatenate(
             split_left_presses[np.nonzero(trial_types == 0)])
         left_presses_fr = np.concatenate(
             split_left_presses[np.nonzero(trial_types == 1)])
         good_nosepokes_fi = np.concatenate(
-            split_into_blocks(good_nosepokes, 305, 6)[
+            split_into_blocks(good_nosepokes, blocks=block_ends)[
                 np.nonzero(trial_types == 0)])
 
         fi_allow_times = np.add(good_nosepokes_fi, fi)
@@ -679,7 +690,7 @@ class Session:
 
         # set right presses and unnecessary right presses
         split_right_presses = split_into_blocks(
-            right_presses, 305, 6)
+            right_presses, blocks=block_ends)
         right_presses_fr = np.concatenate(
             split_right_presses[np.nonzero(trial_types == 1)])
         right_presses_fi = np.concatenate(

@@ -93,7 +93,7 @@ def main(fname, out_main_dir, config):
             ro_dir = os.path.join(o_dir, "Raw")
             make_dir_if_not_exists(ro_dir)
             # Plot raw LFP for all tetrodes in segments
-            plot_lfp(ro_dir, lfp_odict, segment_length=305,
+            plot_lfp(ro_dir, lfp_odict, splits=np.concatenate([[0], s.get_block_ends()]),
                      sd=sd_thres, filt=filt, artf=artf, session=s)
         if r_csv:
             shut_s, shut_end = p*16, 16+p*16
@@ -341,7 +341,7 @@ def main(fname, out_main_dir, config):
         # lfp_list = select_lfp(fname, ROI)
         matlab = False
         cross = True
-        cohere = False
+        cohere = True
 
         wchans = [int(x) for x in config.get("Wavelet", "wchans").split(", ")]
         import itertools
@@ -608,5 +608,6 @@ def main_entry(config_name):
 
 
 if __name__ == "__main__":
-    config_name = "CAR-SA3.cfg"
+    # config_name = "CAR-SA3.cfg"
+    config_name = "Batch_3.cfg"
     main_entry(config_name)

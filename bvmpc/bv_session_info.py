@@ -179,7 +179,8 @@ class SessionInfo:
             "left_out": (1, False),
             "right_out": (2, False),
             "left_light": (4, False),
-            "right_light": (5, False)}
+            "right_light": (5, False),
+            "sound": (8, True)}
 
         self.io_channel_map["6"] = {
             "i": input_dict, "o": output_dict}

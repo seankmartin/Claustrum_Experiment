@@ -3,7 +3,7 @@
 import numpy as np
 
 
-def split_into_blocks(array, block_max, num_blocks):
+def split_into_blocks(array, blocks=None, block_max=None, num_blocks=None):
     """
     Split a sorted array into num_blocks.
 
@@ -16,8 +16,13 @@ def split_into_blocks(array, block_max, num_blocks):
         A list of size num_blocks
 
     """
-    blocks = np.arange(
-        block_max + 0.001, block_max * num_blocks + 0.001, block_max + 0.001)
+    if blocks is None:
+        if (block_max is None) or (num_blocks is None):
+            raise ValueError(
+                "block_max and num_blocks must be passed to" +
+                "split_into_blocks if param blocks is not passed")
+        blocks = np.arange(
+            block_max + 0.001, block_max * num_blocks + 0.001, block_max + 0.001)
     return np.array(np.split(array, np.searchsorted(array, blocks)))
 
 
