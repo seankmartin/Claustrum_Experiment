@@ -363,7 +363,11 @@ def calc_cross_wavelet(
     )
 
     cross_power = np.abs(W12)**2
-    cross_sig = np.ones([1, n]) * signif[:, None]
+    cross_power = np.clip(cross_power, 0, 6**2)
+    # print('cross max:', np.max(cross_power))
+    # print('cross min:', np.min(cross_power))
+
+    cross_sig = np.ones([1, len(t)]) * signif[:, None]
     cross_sig = cross_power / cross_sig  # Power is significant where ratio > 1
 
     # Convert frequency to period if necessary
@@ -389,7 +393,7 @@ def calc_cross_wavelet(
     if plot_period:
         im.set_data(t, y_vals, cross_power)
     else:
-        im.set_data(t, y_vals[::-1], W12[::-1, :])
+        im.set_data(t, y_vals[::-1], cross_power[::-1, :])
     ax.images.append(im)
     # pcm = ax.pcolormesh(WCT)
 
@@ -416,6 +420,7 @@ def calc_cross_wavelet(
 
     # Add limits, titles, etc.
     ax.set_ylim(min(y_vals), max(y_vals))
+
     if block:
         ax.set_xlim(t[block[0]], t[int(block[1]*1/dt)])
     else:
