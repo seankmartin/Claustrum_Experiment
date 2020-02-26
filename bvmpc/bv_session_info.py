@@ -307,7 +307,7 @@ class SessionInfo:
 
         Returns
         -------
-        int: The channel for the given key
+        int: The channel for the given date
         Dict: If key is None, the full dictionary of channels.
 
         """

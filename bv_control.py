@@ -317,6 +317,7 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags, su
         for single_date in daterange(start_date, end_date):
             d.append(single_date.isoformat()[-5:])
 
+        print('Extracting sessions on {} for subjects {}...'.format(d, sub_list))
         s_grp = extract_sessions(in_dir, sub_list, d_list=d)
 
         plot_set = chunks(s_grp, 4)  # splits s_grp into groups of 4
@@ -682,7 +683,10 @@ def timeline_plot(
             interval = s.get_interval()
             s_type = s.get_metadata('name')[:2]
             timestamps = s.get_arrays()
-            date = s.get_metadata('start_date')[3:5]
+
+            date = s.get_metadata('start_date')  # Display mm/dd/yy
+            date = s.get_metadata('start_date')[:-3]  # Display mm/dd only
+            # date = s.get_metadata('start_date').split("/")[1]  # Display dd only
             subject = s.get_metadata('subject')
             pell_ts = timestamps["Reward"]
             pell_double = np.nonzero(np.diff(pell_ts) < 0.5)[0]
@@ -999,7 +1003,7 @@ def extract_sessions(
         subject = splits[0]
         subject = str(subject)
         # NOTE date not have year
-        date = splits[1][:5]
+        date = splits[1][:-3]
         s_type = splits[3]
         subject_ok = should_use(subject, sub_list)
         type_ok = should_use(s_type, s_list)

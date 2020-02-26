@@ -48,6 +48,7 @@ def mycolors(subject, colors_dict=None):
     except ValueError:
         if colors_dict == None:
             print('Color input for required')
+            exit(-1)
         color = colors_dict[subject]
     return color
 
