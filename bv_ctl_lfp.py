@@ -140,7 +140,8 @@ def main(fname, out_main_dir, config):
                         db=False, tr=False)
                     ax = gf.get_next(along_rows=False)
                     color = gm.get_next_color()
-                    nc_plot.lfp_spectrum(graph_data, ax, color)
+                    nc_plot.lfp_spectrum(
+                        graph_data, ax, color, style="Thin-Dashed")
                     plt.ylim(0, 0.015)
                     # plt.xlim(0, 40)
                     ax.text(0.49, 1.08, regions[i+p*16], fontsize=20,
@@ -179,7 +180,7 @@ def main(fname, out_main_dir, config):
                                     sample_range=(0, j))
                             else:
                                 new_lfp = lfp.subsample(
-                                    sample_range=(j[k-1], j))
+                                    sample_range=(blocks[k-1], j))
                             graph_data = new_lfp.spectrum(
                                 ptype='psd', prefilt=False,
                                 db=True, tr=True)
@@ -225,7 +226,8 @@ def main(fname, out_main_dir, config):
                     ptype='psd', prefilt=False,
                     db=False, tr=False)
                 color = gm.get_next_color()
-                nc_plot.lfp_spectrum(graph_data, ax, color)
+                nc_plot.lfp_spectrum(
+                    graph_data, ax, color, style="Dashed")
                 legend.append(regions[i+p*16] + " T" + key)
                 cur_max_p = max(graph_data['Pxx'])
                 if cur_max_p > max_p:
@@ -303,7 +305,7 @@ def main(fname, out_main_dir, config):
                     if k == 0:
                         new_lfp = lfp.subsample(sample_range=(0, j))
                     else:
-                        new_lfp = lfp.subsample(sample_range=(j[k-1], j))
+                        new_lfp = lfp.subsample(sample_range=(blocks[k-1], j))
                     graph_data = new_lfp.spectrum(
                         ptype='psd', prefilt=False,
                         db=False, tr=False)
@@ -315,7 +317,8 @@ def main(fname, out_main_dir, config):
                     elif sch_type[k] == 0:
                         sch_name.append("FI")
                         legend.append("{}-FI".format(k))
-                    nc_plot.lfp_spectrum(graph_data, ax, color)
+                    nc_plot.lfp_spectrum(
+                        graph_data, ax, color, style='Thin-Dashed')
                     plt.ylim(0, 0.0045)
                     plt.xlim(0, filt_top)
                 # plt.tick_params(labelsize=15)
@@ -349,7 +352,7 @@ def main(fname, out_main_dir, config):
     if analysis_flags[3]:   # Compare coherence in terms of freq between ACC & RSC
         # lfp_list = select_lfp(fname, ROI)
         matlab = False
-        cross = True
+        cross = False
         cohere = True
 
         wchans = [int(x) for x in config.get("Wavelet", "wchans").split(", ")]
@@ -376,9 +379,9 @@ def main(fname, out_main_dir, config):
                             sample_range=(0, j))
                     else:
                         new_lfp1 = lfp_odict.get_clean_signal(0).subsample(
-                            sample_range=(j[k-1], j))
+                            sample_range=(blocks[k-1], j))
                         new_lfp2 = lfp_odict.get_clean_signal(1).subsample(
-                            sample_range=(j[k-1], j))
+                            sample_range=(blocks[k-1], j))
                     if sch_type[k] == 1:
                         sch_name.append("FR")
                         legend.append("{}-FR".format(k))
@@ -622,6 +625,6 @@ def main_entry(config_name):
 
 
 if __name__ == "__main__":
-    # config_name = "CAR-SA3.cfg"
-    config_name = "Batch_3.cfg"
+    config_name = "CAR-SA2.cfg"
+    # config_name = "Batch_3.cfg"
     main_entry(config_name)

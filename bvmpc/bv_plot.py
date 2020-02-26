@@ -225,7 +225,7 @@ class ColorManager:
             self.idx = 0
 
 
-def behav_vlines(ax, s, behav_plot, lw=1.5):
+def behav_vlines(ax, s, behav_plot, lw=1):
     """
     Plots vlines based on desired behaviour related timestamps
 
@@ -260,7 +260,7 @@ def behav_vlines(ax, s, behav_plot, lw=1.5):
     if behav_plot[0]:
         for lev in lev_ts:  # vline demarcating lev presses
             ax.axvline(lev, linestyle='-',
-                       color='blue', linewidth=lw)
+                       color='blue', linewidth=lw/2)
         label = lines.Line2D([], [], color='blue', marker='|', linestyle='None',
                              markersize=10, markeredgewidth=lw, label='Lever Press')
         legends.append(label)
