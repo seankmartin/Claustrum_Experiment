@@ -162,7 +162,10 @@ def calc_wave_coherence(
         wave1, wave2, dt,  # Fixed params
         dj=(1.0 / dj), s0=s0, J=J, sig=sig, normalize=True, freqs=freqs,
     )
-
+    if np.max(WCT) > 1 or np.min(WCT) < 0:
+        print('WCT was out of range: min{},max{}'.format(
+            np.min(WCT), np.max(WCT)))
+        WCT = np.clip(WCT, 0, 1)
     # Convert frequency to period if necessary
     if plot_period:
         y_vals = np.log2(1 / freq)
@@ -363,7 +366,11 @@ def calc_cross_wavelet(
     )
 
     cross_power = np.abs(W12)**2
-    cross_power = np.clip(cross_power, 0, 6**2)
+
+    if np.max(W12) > 6**2 or np.min(W12) < 0:
+        print('W12 was out of range: min{},max{}'.format(
+            np.min(W12), np.max(W12)))
+        cross_power = np.clip(cross_power, 0, 6**2)
     # print('cross max:', np.max(cross_power))
     # print('cross min:', np.min(cross_power))
 
