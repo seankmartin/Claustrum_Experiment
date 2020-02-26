@@ -35,16 +35,21 @@ def make_dir_if_not_exists(location):
     os.makedirs(location, exist_ok=True)
 
 
-def mycolors(subject):
+def mycolors(subject, colors_dict=None):
     """Colour options for subject based on number."""
-    i = int(subject)
-    if i > 10:
-        i = i % 4
-
-    mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange',
-                'tab:brown', 'deeppink', 'tab:olive', 'tab:pink',
-                'steelblue', 'firebrick', 'mediumseagreen']
-    return mycolors[i]
+    try:
+        i = int(subject)
+        if i > 10:
+            i = i % 4
+        mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange',
+                    'tab:brown', 'deeppink', 'tab:olive', 'tab:pink',
+                    'steelblue', 'firebrick', 'mediumseagreen']
+        color = mycolors[i]
+    except ValueError:
+        if colors_dict == None:
+            print('Color input for required')
+        color = colors_dict[subject]
+    return color
 
 
 def split_list(list, chunk_limit):
