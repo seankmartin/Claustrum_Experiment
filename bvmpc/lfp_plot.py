@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from bvmpc.bv_utils import make_dir_if_not_exists, find_in, ordered_set
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_utils import butter_filter
+import bvmpc.bv_plot as bv_plot
 
 
 def plot_long_lfp(
@@ -48,7 +49,7 @@ def plot_long_lfp(
             lfp.get_samples()[start:end], color='k')
         ax.set_ylim(ylim)
     plt.tight_layout()
-    fig.savefig(out_name, dpi=400)
+    bv_plot.savefig(fig, out_name, dpi=400)
     plt.close(fig)
 
 
@@ -146,8 +147,7 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
             axes[i].set_ylim(y_axis_min, y_axis_max)
             axes[i].set_xlim(a, b)
 
-        print("Saving result to {}".format(out_name))
-        fig.savefig(out_name, dpi=dpi)
+        bv_plot.savefig(fig, out_name)
         plt.close("all")
 
 

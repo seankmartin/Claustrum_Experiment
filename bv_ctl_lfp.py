@@ -124,7 +124,7 @@ def main(fname, out_main_dir, config):
             #     out_name = os.path.join(o_dir, "p", key + "p.png")
             #     make_path_if_not_exists(out_name)
             #     fig.suptitle("T" + key + " " + regions[i] + " Periodogram")
-            #     fig.savefig(out_name)
+            #     bv_plot.savefig(fig, out_name)
             #     plt.close()
 
             if indiv:
@@ -157,8 +157,7 @@ def main(fname, out_main_dir, config):
                     out_name = os.path.join(
                         o_dir, fname.split("\\")[-1] + "_p_sum.png")
                 make_path_if_not_exists(out_name)
-                print("Saving result to {}".format(out_name))
-                gf.fig.savefig(out_name)
+                bv_plot.savefig(gf.get_fig(), out_name)
                 plt.close()
 
             if spec:
@@ -206,8 +205,7 @@ def main(fname, out_main_dir, config):
                                      regions[i+p*16] + " Spectrogram")
                     out_name = os.path.join(o_dir, "ptr", key + "ptr.png")
                     make_path_if_not_exists(out_name)
-                    print("Saving result to {}".format(out_name))
-                    fig.savefig(out_name)
+                    bv_plot.savefig(fig, out_name)
                     plt.close()
 
     if analysis_flags[1]:   # Complie graphs per session in a single .png
@@ -250,8 +248,7 @@ def main(fname, out_main_dir, config):
                       " Compiled Periodogram", fontsize=40, y=1.02)
             out_name = os.path.join(o_dir, fname.split("\\")[-1] + "_p.png")
         make_path_if_not_exists(out_name)
-        print("Saving result to {}".format(out_name))
-        fig.savefig(out_name)
+        bv_plot.savefig(fig, out_name)
         plt.close()
 
         if spec:
@@ -287,8 +284,7 @@ def main(fname, out_main_dir, config):
                     out_name = os.path.join(
                         o_dir, "Sum_ptr", fname.split("\\")[-1] + "_ptr_sum.png")
                 make_path_if_not_exists(out_name)
-                print("Saving result to {}".format(out_name))
-                gf.fig.savefig(out_name)
+                bv_plot.savefig(gf.get_fig(), out_name)
                 plt.close()
 
     if analysis_flags[2]:    # Compare periodograms for FR and FI for specific eegs
@@ -345,8 +341,7 @@ def main(fname, out_main_dir, config):
                     out_name = os.path.join(o_dir, fname.split(
                         "\\")[-1] + "_p_com.png")
             make_path_if_not_exists(out_name)
-            print("Saving result to {}".format(out_name))
-            gf.fig.savefig(out_name)
+            bv_plot.savefig(gf.get_fig(), out_name)
             plt.close()
 
     if analysis_flags[3]:   # Compare coherence in terms of freq between ACC & RSC
@@ -438,9 +433,7 @@ def main(fname, out_main_dir, config):
                     ax.yaxis.label.set_size(25)
 
                     ax.set_title(title, fontsize=30, y=1.01)
-                    print("Saving result to {}".format(
-                        out_name[:-4]+'_pycwt.png'))
-                    fig.savefig(out_name[:-4]+'_pycwt.png')
+                    bv_plot.savefig(fig, out_name[:-4]+'_pycwt.png')
 
             if cross:
                 an_name = 'crosswave'
@@ -481,9 +474,7 @@ def main(fname, out_main_dir, config):
                     ax.yaxis.label.set_size(25)
 
                     ax.set_title(title, fontsize=30, y=1.01)
-                    print("Saving result to {}".format(
-                        out_name[:-4]+'_pycwt.png'))
-                    fig.savefig(out_name[:-4]+'_pycwt.png')
+                    bv_plot.savefig(fig, out_name[:-4]+'_pycwt.png')
 
             # # Plots coherence by comparing FI vs FR
             # sch_f, sch_Cxy = [], []
@@ -508,8 +499,7 @@ def main(fname, out_main_dir, config):
             #     out_name = os.path.join(wo_dir, fname.split(
             #         "\\")[-1] + "_cohere.png")
             # make_path_if_not_exists(out_name)
-            # print("Saving result to {}".format(out_name))
-            # fig.savefig(out_name)
+            # bv_plot.savefig(fig, out_name)
             # plt.close()
 
 

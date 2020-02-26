@@ -286,3 +286,14 @@ def behav_vlines(ax, s, behav_plot, lw=1):
                              markersize=10, markeredgewidth=lw, label='Double Pell')
         legends.append(label)
     return ax, legends
+
+
+def savefig(fig, name):
+    """
+    Saves figure using the custom settings:
+        dpi=400 
+        bbox_inches='tight'
+        pad_inches=0.5
+    """
+    print("Saving result to {}".format(name))
+    fig.savefig(name, dpi=400, bbox_inches='tight', pad_inches=0.5)

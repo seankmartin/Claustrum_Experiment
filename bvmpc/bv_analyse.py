@@ -14,6 +14,7 @@ from sklearn.cluster import KMeans
 import seaborn as sns
 
 from bvmpc.bv_utils import mycolors
+import bvmpc.bv_plot as bv_plot
 
 
 def split_lever_ts(session):
@@ -291,7 +292,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
                     len(lever_ts), len(reward_times) + len(reward_double),
                     dr_print, rw_print, err_print))
             ax.text(0.55, 0.15, text, transform=ax.transAxes)
-        fig.savefig(out_name, dpi=400)
+        bv_plot.savefig(fig, out_name, dpi=400)
         plt.close()
     else:
         # Text Display on Graph
@@ -396,7 +397,7 @@ def IRT(session, out_dir, ax=None, showIRT=False):
                     session_type[:-2] + "_" + date + ".png")
         print("Saved figure to {}".format(
             os.path.join(out_dir, out_name)))
-        fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+        bv_plot.savefig(fig, os.path.join(out_dir, out_name))
         plt.close()
     else:
         return ax

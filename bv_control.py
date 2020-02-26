@@ -382,7 +382,7 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags, su
             # out_name += ".png"
             # print("Saved figure to {}".format(
             #     os.path.join(out_dir, out_name)))
-            # fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+            # bv_plot.savefig(fig, os.path.join(out_dir, out_name))
             # plt.close()
             gf.save_fig(df_date, df_sub, df_stage, plot_type, out_dir, j)
 
@@ -537,7 +537,7 @@ def plot_sessions(
                 out_name = "Sum_" + subject + "_" + d_print + "_" + s_print + ".png"
                 print("Saved figure to {}".format(
                     os.path.join(out_dir, out_name)))
-                fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+                bv_plot.savefig(fig, os.path.join(out_dir, out_name))
                 plt.close()
             else:
                 sum_plot(s_grp, idx, out_dir, single=single)
@@ -635,7 +635,7 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
                 s_print + "_" + str(idx) + ".png"
     print("Saved figure to {}".format(
         os.path.join(out_dir, out_name)))
-    fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+    bv_plot.savefig(fig, os.path.join(out_dir, out_name))
     plt.close()
 
 
@@ -962,7 +962,7 @@ def timeline_plot(
             out_name += ".png"
             print("Saved figure to {}".format(
                 os.path.join(out_dir, out_name)))
-            fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+            bv_plot.savefig(fig, os.path.join(out_dir, out_name))
             plt.close()
 
     if not single_plot:
@@ -980,7 +980,7 @@ def timeline_plot(
         out_name += ".png"
         print("Saved figure to {}".format(
             os.path.join(out_dir, out_name)))
-        fig.savefig(os.path.join(out_dir, out_name), dpi=400)
+        bv_plot.savefig(fig, os.path.join(out_dir, out_name))
         plt.close()
 
 
