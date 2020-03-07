@@ -142,9 +142,10 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
                                     color='green', linewidth='1.5')    # vline demarcating reward point/end of trial
 
             axes[i].text(
-                0.03, 1, "Channel " + key,
-                transform=axes[i].transAxes, color="k")
+                0.03, 1.02, "Channel " + key,
+                transform=axes[i].transAxes, color="k", fontsize=15)
             axes[i].set_ylim(y_axis_min, y_axis_max)
+            axes[i].tick_params(labelsize=12)
             axes[i].set_xlim(a, b)
 
         bv_plot.savefig(fig, out_name)
