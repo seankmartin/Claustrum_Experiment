@@ -16,6 +16,7 @@ from datetime import date, timedelta, datetime
 
 from bvmpc.lfp_odict import LfpODict
 import neurochat.nc_plot as nc_plot
+from bvmpc.compare_lfp import compare_lfp
 
 from bvmpc.lfp_plot import plot_lfp, plot_coherence, lfp_csv
 
@@ -77,12 +78,13 @@ def main(fname, out_main_dir, config):
         behav = bool(int(config.get("Behav Params", "behav")))
         behav_plot = json.loads(config.get("Behav Params", "behav_plot"))
 
-    # Load behaviour-related data
-    s = load_bv_from_set(fname)
-    sch_type = s.get_arrays('Trial Type')  # FR = 1, FI = 0
-    # Tone start times excluding first + end time
-    blocks = np.append(s.get_block_starts()[1:], s.get_block_ends()[-1])
-    # print(blocks)
+        # s = None
+        # Load behaviour-related data
+        s = load_bv_from_set(fname)
+        sch_type = s.get_arrays('Trial Type')  # FR = 1, FI = 0
+        # Tone start times excluding first + end time
+        blocks = np.append(s.get_block_starts()[1:], s.get_block_ends()[-1])
+        # print(blocks)
 
     o_dir = os.path.join(out_main_dir, "!LFP")
     make_dir_if_not_exists(o_dir)
@@ -96,12 +98,19 @@ def main(fname, out_main_dir, config):
             ro_dir = os.path.join(o_dir, "Raw")
             make_dir_if_not_exists(ro_dir)
             # Plot raw LFP for all tetrodes in segments
-            plot_lfp(ro_dir, lfp_odict, splits=np.concatenate([[0], s.get_block_ends()]),
+            if s:
+                splits = np.concatenate([[0], s.get_block_ends()])
+            else:
+                splits = None
+            plot_lfp(ro_dir, lfp_odict, splits=splits,
                      sd=sd_thres, filt=filt, artf=artf, session=s)
         if r_csv:
             shut_s, shut_end = p*16, 16+p*16
             lfp_csv(fname, o_dir, lfp_odict, sd_thres,
                     min_artf_freq, shuttles[shut_s:shut_end], filt)
+
+    # Plots Similarity Index for LFP tetrodes
+    compare_lfp(fname, o_dir, ch=chan_amount)
 
     if analysis_flags[0]:   # Plot periodograms and ptr for each tetrode seperately
         """
@@ -210,6 +219,7 @@ def main(fname, out_main_dir, config):
 
     if analysis_flags[1]:   # Complie graphs per session in a single .png
         spec = False
+        DR = True  # Differential Recording mode (lfp1 - lfp2 in same shuttle)
         # Plot all periodograms on 1 plot
         fig, ax = plt.subplots(figsize=(20, 20))
         legend = []
@@ -219,11 +229,20 @@ def main(fname, out_main_dir, config):
                 signal_used = lfp_odict.get_clean_signal()
             else:
                 signal_used = lfp_odict.get_filt_signal()
+
+            # if DR:
+            #     for i, ((key, lfp), shut) in enumerate(zip(signal_used.items(), shuttles)):
+            #         print(key, lfp, shut)
+
+            #     exit(-1)
             for i, (key, lfp) in enumerate(signal_used.items()):
+                color = gm.get_next_color()
+                # if i % 2 == 1:
+                #     lfp._set_samples(
+                #         lfp.get_samples() - signal_used[str(i)].get_samples())
                 graph_data = lfp.spectrum(
                     ptype='psd', prefilt=False,
                     db=False, tr=False)
-                color = gm.get_next_color()
                 nc_plot.lfp_spectrum(
                     graph_data, ax, color, style="Dashed")
                 legend.append(regions[i+p*16] + " T" + key)
@@ -242,7 +261,7 @@ def main(fname, out_main_dir, config):
             plt.title(fname.split("\\")[-1][4:] +
                       " Compiled Periodogram - Clean", fontsize=40, y=1.02)
             out_name = os.path.join(
-                o_dir, fname.split("\\")[-1] + "_p_Clean.png")
+                o_dir, fname.split("\\")[-1] + "_p_Clear.png")
         else:
             plt.title(fname.split("\\")[-1][4:] +
                       " Compiled Periodogram", fontsize=40, y=1.02)
@@ -585,7 +604,11 @@ def select_lfp(fname, ROI):  # Select lfp based on region
 
 def load_bv_from_set(fname):
     """ Loads session based from .inp """
-    return Session(axona_file=fname + ".inp")
+    if os.path.isfile(fname + ".inp"):
+        return Session(axona_file=fname + ".inp")
+    else:
+        print(".inp does not exist.")
+        return None
 
 
 def main_entry(config_name):
@@ -615,6 +638,7 @@ def main_entry(config_name):
 
 
 if __name__ == "__main__":
-    config_name = "CAR-SA2.cfg"
-    # config_name = "Batch_3.cfg"
+    # config_name = "Eoin.cfg"
+    # config_name = "CAR-SA2.cfg"
+    config_name = "Batch_3.cfg"
     main_entry(config_name)
