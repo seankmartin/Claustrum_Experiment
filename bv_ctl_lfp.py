@@ -597,30 +597,48 @@ def main(fname, out_main_dir, config):
             lfp1 = lfp_odict.get_clean_signal(0)
             lfp2 = lfp_odict.get_clean_signal(1)
 
-            from bvmpc.lfp_coherence import calc_wave_coherence
+            # Description of alignment
+            # 0 - Align to reward
+            # 1 - Align to pellet drop
+            # 2 - Align to FI
+            # 3 - Align to Tone
+            alignment = [0, 1, 0, 0]
             trial_df = s.get_trial_df()
-            rw_df = trial_df['Reward_ts']
+
+            if alignment[0]:
+                align_df = trial_df['Reward_ts']
+            elif alignment[1]:
+                align_df = trial_df['Pellet_ts']
+            elif alignment[2]:
+                align_df = np.empty_like(trial_df['Pellet_ts'])
+                align_df.fill(30)
+            elif alignment[3]:
+                align_df = s.get_block_starts()+5
+
+            t_sch = trial_df['Schedule']
             trials = []
             t_duration = []
-            t_win = -30  # Set time window for plotting from reward
-            for t, rw in enumerate(rw_df):
+            t_win = [-30, 5]  # Set time window for plotting from reward
+
+            for t, ts in enumerate(align_df):
                 if t_win:
-                    trials.append([rw+t_win, rw])
+                    trials.append([ts+t_win[0], ts+t_win[1]])
                 else:
                     if t == 0:
-                        trials.append([0, rw])
-                        t_duration.append(rw)
+                        trials.append([0, ts])
+                        t_duration.append(ts)
                     else:
-                        trials.append([rw_df[t-1], rw])
-                        t_duration.append(rw - rw_df[t-1])
+                        trials.append([align_df[t-1], ts])
+                        t_duration.append(ts - align_df[t-1])
             # get_dist(t_duration, plot=True)
             # trials = [[0, 60], [60, 120]]
 
             if trials:
-                quiv_x = 1
+                quiv_x = 0.5
             else:
                 quiv_x = 5
 
+            from bvmpc.lfp_coherence import calc_wave_coherence
             _, result = calc_wave_coherence(
                 lfp1.get_samples(
                 ), lfp2.get_samples(), lfp1.get_timestamp(),
@@ -665,13 +683,13 @@ def main(fname, out_main_dir, config):
             if trials:
                 tr_out_name = os.path.join(
                     wo_dir, "Trials", os.path.basename(out_name))
-                for t, (b_start, b_end) in enumerate(trials):
+                for t, ((b_start, b_end), sch) in enumerate(zip(trials, t_sch)):
                     fig1, a1 = fig, ax
                     a1.set_xlim(b_start, b_end)
                     name = '{}_pycwt_Tr{}.png'.format(
                         tr_out_name[:-4], t+1)
                     make_path_if_not_exists(name)
-                    a1.set_title(title+' Tr'+str(t),
+                    a1.set_title("{} Tr{} {}".format(title, str(t), sch),
                                  fontsize=30, y=1.01)
                     print("Saving result to {}".format(name))
                     # bv_plot.savefig(fig1, name)
