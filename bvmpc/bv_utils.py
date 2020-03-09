@@ -1,5 +1,6 @@
 """This holds utility functions."""
 
+from statistics import mean
 import os
 import re
 import sys
@@ -13,6 +14,8 @@ import logging
 import configparser
 from pprint import pprint
 import argparse
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def boolean_indexing(v, fillval=np.nan):
@@ -310,6 +313,22 @@ def ordered_set(arr):
         if x not in set_a:
             set_a.append(x)
     return set_a
+
+
+def get_dist(x, plot=False):
+    """
+    x: list
+        Prints Min, Max, Mean and Values in x
+    plot: boolean, False
+        Shows plot of distribution
+
+    """
+    print("Min: ", min(x), "\nMax: ", max(x),
+          "\nMean: ", mean(x), "\nValues: ", x)
+    if plot:
+        sns.distplot(x)
+        plt.show()
+    exit(-1)
 
 
 if __name__ == "__main__":
