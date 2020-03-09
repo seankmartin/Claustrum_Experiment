@@ -158,10 +158,14 @@ def calc_wave_coherence(
     freqs = None
 
     # Do the actual calculation
+    print("Calculating coherence...")
+    import time
+    start_time = time.time()
     WCT, aWCT, coi, freq, sig = wavelet.wct(
         wave1, wave2, dt,  # Fixed params
         dj=(1.0 / dj), s0=s0, J=J, sig=sig, normalize=True, freqs=freqs,
     )
+    print("Time Taken: %s s" % (time.time() - start_time))
     if np.max(WCT) > 1 or np.min(WCT) < 0:
         print('WCT was out of range: min{},max{}'.format(
             np.min(WCT), np.max(WCT)))

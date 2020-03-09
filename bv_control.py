@@ -535,10 +535,7 @@ def plot_sessions(
                 s_print = np.array_str(np.unique(np.array(s_passed)))
                 d_print = np.array_str(np.unique(np.array(d_passed)))
                 out_name = "Sum_" + subject + "_" + d_print + "_" + s_print + ".png"
-                print("Saved figure to {}".format(
-                    os.path.join(out_dir, out_name)))
                 bv_plot.savefig(fig, os.path.join(out_dir, out_name))
-                plt.close()
             else:
                 sum_plot(s_grp, idx, out_dir, single=single)
 
@@ -1184,5 +1181,5 @@ def main(config_name):
 
 
 if __name__ == "__main__":
-    config_name = "Batch2_Rec.cfg"
+    config_name = "Batch3_Rec.cfg"
     main(config_name)

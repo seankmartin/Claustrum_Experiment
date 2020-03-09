@@ -296,4 +296,6 @@ def savefig(fig, name):
         pad_inches=0.5
     """
     print("Saving result to {}".format(name))
+    # fig.savefig(name, dpi=150)
     fig.savefig(name, dpi=150, bbox_inches='tight', pad_inches=0.5)
+    plt.close()

@@ -76,7 +76,7 @@ def compare_lfp(fname, out_base_dir=None, ch=16):
     plt.ylabel('LFP Channels')
     plt.title('Raw LFP Similarity Index')
     fig_path = os.path.join(
-        out_base_dir, os.path.basename(fname) + "LFP_SI.png")
+        out_base_dir, os.path.basename(fname) + "_LFP_SI.png")
     print("Saving figure to {}".format(fig_path))
     plt.savefig(fig_path, dpi=200,
                 bbox_inches='tight', pad_inches=0.1)
