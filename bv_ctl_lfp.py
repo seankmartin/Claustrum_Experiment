@@ -456,11 +456,11 @@ def main(fname, out_main_dir, config):
                         rw_ts = s.get_rw_ts()
                         test_matlab_wcoherence(
                             lfp1, lfp2, rw_ts, sch_n, reg_sel, out_name)
-                    from bvmpc.lfp_coherence import calc_wave_coherence
+                    from bvmpc.lfp_coherence import plot_wave_coherence
                     fig, ax = plt.subplots(figsize=(24, 10))
                     title = ("{} vs {} Wavelet Coherence {}".format(
                         reg_sel[0], reg_sel[1], sch_n))
-                    _, result = calc_wave_coherence(
+                    _, result = plot_wave_coherence(
                         lfp1.get_samples(), lfp2.get_samples(), lfp1.get_timestamp(),
                         plot_arrows=True, plot_coi=False, resolution=12, title=title,
                         plot_period=False, all_arrows=False, ax=ax, quiv_x=5)
@@ -500,8 +500,8 @@ def main(fname, out_main_dir, config):
                     fig, ax = plt.subplots(figsize=(24, 10))
                     title = ("{} vs {} Cross-Wavelet Correlation {}".format(
                         reg_sel[0], reg_sel[1], sch_n))
-                    from bvmpc.lfp_coherence import calc_cross_wavelet
-                    _, result = calc_cross_wavelet(
+                    from bvmpc.lfp_coherence import plot_cross_wavelet
+                    _, result = plot_cross_wavelet(
                         lfp1.get_samples(), lfp2.get_samples(), lfp1.get_timestamp(),
                         plot_coi=False, resolution=12, title=title,
                         plot_period=False, all_arrows=False, ax=ax, quiv_x=5)
@@ -591,8 +591,6 @@ def main(fname, out_main_dir, config):
                 o_dir, "{}_{}vs{}".format(an_name, reg_sel[0], reg_sel[1]))
             make_dir_if_not_exists(wo_dir)
 
-            fig, ax = plt.subplots(figsize=(24, 10))
-
             lfp1 = lfp_odict.get_clean_signal(0)
             lfp2 = lfp_odict.get_clean_signal(1)
 
@@ -637,12 +635,20 @@ def main(fname, out_main_dir, config):
             else:
                 quiv_x = 5
 
-            from bvmpc.lfp_coherence import calc_wave_coherence
-            _, result = calc_wave_coherence(
-                lfp1.get_samples(
-                ), lfp2.get_samples(), lfp1.get_timestamp(),
-                plot_arrows=True, plot_coi=False, resolution=12,
-                plot_period=False, all_arrows=False, ax=ax, quiv_x=quiv_x)
+            fig, ax = plt.subplots(figsize=(24, 10))
+
+            # from bvmpc.lfp_coherence import plot_wave_coherence
+            # _, result = plot_wave_coherence(
+            #     lfp1.get_samples(
+            #     ), lfp2.get_samples(), lfp1.get_timestamp(),
+            #     plot_arrows=True, plot_coi=False, resolution=12,
+            #     plot_period=False, all_arrows=False, ax=ax, quiv_x=quiv_x)
+
+            from bvmpc.lfp_coherence import calc_wave_coherence, plot_wcohere, plot_arrows
+            wcohere_results = calc_wave_coherence(lfp1.get_samples(
+            ), lfp2.get_samples(), lfp1.get_timestamp())
+            _, wcohere_pvals = plot_wcohere(wcohere_results, ax=ax)
+            plot_arrows(ax, wcohere_pvals, quiv_x=5)
 
             if behav:
                     # Plot behav timepoints
@@ -665,19 +671,20 @@ def main(fname, out_main_dir, config):
             title = ("{} vs {} Wavelet Coherence".format(
                 reg_sel[0], reg_sel[1]))
 
-            # p_blocks = False
-            # if p_blocks:
-            #     for b, ((b_start, b_end), sch) in enumerate(zip(blocks_re, sch_name)):
-            #         o_name = out_name + str(b+1) + "_pycwt.png"
-            #         sch_n = str(b+1) + "-" + sch
+            p_blocks = True
+            if p_blocks:
+                for b, ((b_start, b_end), sch) in enumerate(zip(blocks_re, sch_name)):
+                    o_name = out_name + str(b+1) + "_pycwt.png"
+                    sch_n = str(b+1) + "-" + sch
 
-            #         fig1, a1 = fig, ax
-            #         a1.set_xlim(b_start, b_end)
-            #         a1.set_title(title+sch_n, fontsize=30, y=1.01)
-            #         print("Saving result to {}".format(o_name))
-            #         fig1.savefig(out_name, dpi=150)
-            #         # bv_plot.savefig(fig1, o_name)
-            #         plt.close(fig1)
+                    fig1, a1 = fig, ax
+                    a1.set_xlim(b_start, b_end)
+                    a1.set_title(title+sch_n, fontsize=30, y=1.01)
+                    print("Saving result to {}".format(o_name))
+                    fig1.savefig(o_name, dpi=150)
+                    # bv_plot.savefig(fig1, o_name)
+                    plt.close(fig1)
+                exit(-1)
 
             if trials:
                 tr_out_name = os.path.join(
