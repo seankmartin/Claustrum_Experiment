@@ -557,7 +557,8 @@ def main(fname, out_main_dir, config):
             reg_sel = []
             for chan in wlet_chans:  # extracts name of regions selected
                 reg_sel.append(regions[chan-1] + "-" + str(chan))
-
+            print("Analysing coherencec for {} vs {}...".format(
+                reg_sel[0], reg_sel[1]))
             lfp_odict = LfpODict(fname, channels=wlet_chans, filt_params=(
                 filt, filt_btm, filt_top), artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
             legend = []
@@ -604,13 +605,17 @@ def main(fname, out_main_dir, config):
 
             if alignment[0]:
                 align_df = trial_df['Reward_ts']
+                align_txt = "Reward"
             elif alignment[1]:
                 align_df = trial_df['Pellet_ts']
+                align_txt = "Pell"
             elif alignment[2]:
                 align_df = np.empty_like(trial_df['Pellet_ts'])
                 align_df.fill(30)
+                align_txt = "FI"
             elif alignment[3]:
                 align_df = s.get_block_starts()+5
+                align_txt = "Tone"
 
             t_sch = trial_df['Schedule']
             trials = []
@@ -630,11 +635,6 @@ def main(fname, out_main_dir, config):
             # get_dist(t_duration, plot=True)
             # trials = [[0, 60], [60, 120]]
 
-            if trials:
-                quiv_x = 0.5
-            else:
-                quiv_x = 5
-
             fig, ax = plt.subplots(figsize=(24, 10))
 
             # from bvmpc.lfp_coherence import plot_wave_coherence
@@ -647,8 +647,13 @@ def main(fname, out_main_dir, config):
             from bvmpc.lfp_coherence import calc_wave_coherence, plot_wcohere, plot_arrows
             wcohere_results = calc_wave_coherence(lfp1.get_samples(
             ), lfp2.get_samples(), lfp1.get_timestamp())
-            _, wcohere_pvals = plot_wcohere(wcohere_results, ax=ax)
-            plot_arrows(ax, wcohere_pvals, quiv_x=5)
+
+            _, wcohere_pvals = plot_wcohere(*wcohere_results[:3], ax=ax)
+
+            # Plot customization params
+            plt.tick_params(labelsize=20)
+            ax.xaxis.label.set_size(25)
+            ax.yaxis.label.set_size(25)
 
             if behav:
                     # Plot behav timepoints
@@ -656,11 +661,6 @@ def main(fname, out_main_dir, config):
                     ax, s, behav_plot, lw=2)
                 plt.legend(handles=b_legend, fontsize=15,
                            loc='upper right')
-
-            # Plot customization params
-            plt.tick_params(labelsize=20)
-            ax.xaxis.label.set_size(25)
-            ax.yaxis.label.set_size(25)
 
             if artf:
                 out_name = os.path.join(
@@ -671,8 +671,9 @@ def main(fname, out_main_dir, config):
             title = ("{} vs {} Wavelet Coherence".format(
                 reg_sel[0], reg_sel[1]))
 
-            p_blocks = True
+            p_blocks = bool(int(config.get("Wavelet", "p_blocks")))
             if p_blocks:
+                plot_arrows(ax, wcohere_pvals, wcohere_results[-1], quiv_x=5)
                 for b, ((b_start, b_end), sch) in enumerate(zip(blocks_re, sch_name)):
                     o_name = out_name + str(b+1) + "_pycwt.png"
                     sch_n = str(b+1) + "-" + sch
@@ -684,9 +685,10 @@ def main(fname, out_main_dir, config):
                     fig1.savefig(o_name, dpi=150)
                     # bv_plot.savefig(fig1, o_name)
                     plt.close(fig1)
-                exit(-1)
 
-            if trials:
+            p_trials = bool(int(config.get("Wavelet", "p_trials")))
+            if p_trials:
+                plot_arrows(ax, wcohere_pvals, wcohere_results[-1], quiv_x=0.5)
                 tr_out_name = os.path.join(
                     wo_dir, "Trials", os.path.basename(out_name))
                 for t, ((b_start, b_end), sch) in enumerate(zip(trials, t_sch)):
@@ -701,6 +703,27 @@ def main(fname, out_main_dir, config):
                     fig1.savefig(name, dpi=150)
                     # bv_plot.savefig(fig1, name)
                     plt.close(fig1)
+
+            p_wcohere_mean = bool(int(config.get("Wavelet", "p_wcohere_mean")))
+            if p_wcohere_mean:  # Plot average coherence across t_blocks
+                o_name = out_name + "mean_pycwt.png"
+                fig, ax = plt.subplots(figsize=(24, 10))
+                from bvmpc.lfp_coherence import wcohere_mean
+                mean_WCT, norm_u, norm_v, magnitute = wcohere_mean(
+                    wcohere_results[0], wcohere_results[-1], t_blocks=trials)
+
+                # for i, x in enumerate(magnitute):
+                #     fig3 = sns.distplot(x, hist=False, rug=True, label=i)
+
+                _, wcohere_pvals = plot_wcohere(mean_WCT, np.arange(
+                    t_win[0], t_win[1], 1/250.0), wcohere_results[2], ax=ax)
+                plot_arrows(ax, wcohere_pvals, u=norm_u,
+                            v=norm_v, magnitute=magnitute, quiv_x=0.5)
+                ax.axvline(0, linestyle='-',
+                           color='w', linewidth=1)
+                plt.text(10.1, 0, align_txt, rotation=90)
+
+                bv_plot.savefig(fig, o_name)
 
 
 def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name='default.png'):

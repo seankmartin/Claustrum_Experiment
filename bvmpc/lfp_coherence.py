@@ -170,6 +170,7 @@ def plot_wave_coherence(
         print('WCT was out of range: min {},max {}'.format(
             np.min(WCT), np.max(WCT)))
         WCT = np.clip(WCT, 0, 1)
+
     # Convert frequency to period if necessary
     if plot_period:
         y_vals = np.log2(1 / freq)
@@ -317,11 +318,13 @@ def calc_wave_coherence(wave1, wave2, sample_times, min_freq=1, max_freq=256, si
 
     Returns
     -------
-    WCT - 2D numpy array with coherence values
-    aWCT - 2D numpy array with same shape as aWCT indicating phase angles
-    coi - 1D numpy array with a frequency value for each time 
-    freq - 1D numpy array with the frequencies wavelets were calculated at
-    sig - 2D numpy array indicating where data is significant by monte carlo
+    WCT, t, freq, coi, sig, aWCT
+        WCT - 2D numpy array with coherence values
+        t - 2D numpy array with sample_times
+        freq - 1D numpy array with the frequencies wavelets were calculated at
+        coi - 1D numpy array with a frequency value for each time 
+        sig - 2D numpy array indicating where data is significant by monte carlo
+        aWCT - 2D numpy array with same shape as aWCT indicating phase angles
     """
 
     t = np.asarray(sample_times)
@@ -345,21 +348,23 @@ def calc_wave_coherence(wave1, wave2, sample_times, min_freq=1, max_freq=256, si
             np.min(WCT), np.max(WCT)))
         WCT = np.clip(WCT, 0, 1)
 
-    return WCT, aWCT, coi, freq, sig, t
+    return WCT, t, freq, coi, sig, aWCT
 
 
-def plot_wcohere(wcohere_results, sig=False, plot_coi=False, plot_period=False, ax=None, title="Wavelet Coherence", block=None):
+def plot_wcohere(WCT, t, freq, coi=None, sig=None, plot_period=False, ax=None, title="Wavelet Coherence", block=None):
     """
     Plot wavelet coherence using results from calc_wave_coherence.
 
     Parameters
     ----------
-    wcohere_results:
-        output from calc_wave_coherence. includes [WCT, aWCT, coi, freq, sig, t]
-    sig : bool, default False
-        Optional Should significance of waveform coherence be calculated.
-    plot_coi : bool, default True
-        Should the cone of influence be plotted
+    *First 5 parameters can be obtained from from calc_wave_coherence
+        WCT: 2D numpy array with coherence values
+        t : 2D numpy array with sample_times
+        freq : 1D numpy array with the frequencies wavelets were calculated at
+        sig : 2D numpy array, default None
+            Optional. Plots significance of waveform coherence contours.
+        coi : 2D numpy array, default None
+            Optional. Pass coi to plot cone of influence
     plot_period : bool
         Should the y-axis be in period or in frequency (Hz)
     ax : plt.axe, default None
@@ -373,18 +378,14 @@ def plot_wcohere(wcohere_results, sig=False, plot_coi=False, plot_period=False, 
     -------
     tuple : (fig, wcohere_pvals)
         Where fig is a matplotlib Figure
-        and result is a tuple consisting of t, y_vals, u, v, WCT
+        and result is a tuple consisting of [WCT, t, y_vals]
     """
-    WCT, aWCT, coi, freq, sig, t = wcohere_results
     dt = np.mean(np.diff(t))
 
     if plot_period:
         y_vals = np.log2(1 / freq)
     if not plot_period:
         y_vals = np.log2(freq)
-
-    angle = 0.5 * np.pi - aWCT
-    u, v = np.cos(angle), np.sin(angle)
 
     if ax is None:
         fig, ax = plt.subplots()
@@ -393,17 +394,17 @@ def plot_wcohere(wcohere_results, sig=False, plot_coi=False, plot_period=False, 
 
     # Set the x and y axes of the plot
     extent_corr = [t.min(), t.max(), 0, max(y_vals)]
-
     # Fill the plot with the magnitude squared coherence values
     im = NonUniformImage(ax, interpolation='bilinear', extent=extent_corr)
     if plot_period:
         im.set_data(t, y_vals, WCT)
     else:
         im.set_data(t, y_vals[::-1], WCT[::-1, :])
+    im.set_clim(0, 1)
     ax.images.append(im)
 
     # Plot the cone of influence - Periods greater thanthose are subject to edge effects.
-    if plot_coi:
+    if coi is not None:
         # Performed by plotting a polygon
         x_positions = np.zeros(shape=(len(t),))
         x_positions = t
@@ -418,7 +419,7 @@ def plot_wcohere(wcohere_results, sig=False, plot_coi=False, plot_period=False, 
                 'w--', linewidth=2, c="w")
 
     # Plot the significance level contour plot
-    if sig:
+    if sig is not None:
         ax.contour(t, y_vals, sig,
                    [-99, 1], colors='k', linewidths=2, extent=extent_corr)
 
@@ -452,17 +453,24 @@ def plot_wcohere(wcohere_results, sig=False, plot_coi=False, plot_period=False, 
     ax.set_title(title)
     ax.set_xlabel("Time (s)")
 
-    return fig, [WCT, t, y_vals, u, v]
+    return fig, [WCT, t, y_vals]
 
 
-def plot_arrows(ax, wcohere_pvals, quiv_x=5, quiv_y=24, all_arrows=False):
+def plot_arrows(ax, wcohere_pvals, aWCT=None, u=None, v=None, magnitute=None, quiv_x=5, quiv_y=24, all_arrows=False):
     """
     Plots phase arrows for wavelet coherence plot using results from plot_wcohere
 
     Parameters
     ----------
     wcohere_pvals:
-        output from plot_wcohere. includes [WCT, t, y_vals, u, v]
+        input structure, includes [WCT, t, y_vals]
+        the first three parameters are out from plot_wcohere
+    aWCT : 2D numpy
+        array with same shape as aWCT indicating phase angles
+        *Can be obtained from last value in calc_wave_coherence
+    u : 2D numpy array of unit vector's cos angle
+    v : 2D numpy array of unit vector's sin angle
+    magnitute : 2D numpy array of vector magnitute at each freq and timepoint
     quiv_x : float
         sets quiver window in time domain in seconds
     quiv_y : float
@@ -471,7 +479,14 @@ def plot_arrows(ax, wcohere_pvals, quiv_x=5, quiv_y=24, all_arrows=False):
         Should phase arrows be plotted uniformly or only at high coherence
 
     """
-    WCT, t, y_vals, u, v = wcohere_pvals
+    WCT, t, y_vals = wcohere_pvals
+
+    if aWCT is not None:
+        angle = 0.5 * np.pi - aWCT
+        u, v = np.cos(angle), np.sin(angle)
+    elif u is None or v is None:
+        raise ValueError("Must pass aWCT or [u, v]")
+
     dt = np.mean(np.diff(t))
 
     x_res = int(1/dt * quiv_x)
@@ -485,7 +500,18 @@ def plot_arrows(ax, wcohere_pvals, quiv_x=5, quiv_y=24, all_arrows=False):
     else:
         # t[::x_res], y_vals[::y_res],
         # u[::y_res, ::x_res], v[::y_res, ::x_res]
-        high_points = np.nonzero(WCT[::y_res, ::x_res] > 0.5)
+        if magnitute is not None:
+            f_mean = np.empty_like(magnitute)
+            for i, f in enumerate(magnitute):
+                # Plot arrows if magnitute > mean of particular frequency
+                f_mean[i, :] = np.mean(f)
+            high_points = np.nonzero(
+                magnitute[::y_res, ::x_res] > f_mean[::y_res, ::x_res])
+
+        # TODO ASK SEAN HOW THIS CAN BE DONE? np.nonzero for each row
+
+        else:
+            high_points = np.nonzero(WCT[::y_res, ::x_res] > 0.5)
         sub_t = t[::x_res][high_points[1]]
         sub_y = y_vals[::y_res][high_points[0]]
         sub_u = u[::y_res, ::x_res][np.array(
@@ -499,6 +525,91 @@ def plot_arrows(ax, wcohere_pvals, quiv_x=5, quiv_y=24, all_arrows=False):
                   )
 
     return ax
+
+
+def wcohere_mean(WCT, aWCT, t_blocks=None):
+    """
+    Calculates mean of WCT and corresponding vector magnitute and phase across t_blocks
+
+    Parameters
+    ----------
+    WCT: 2D numpy array with coherence values
+    aWCT : 2D numpy
+        array with same shape as aWCT indicating phase angles
+        *Can be obtained from last value in calc_wave_coherence
+    t_blocks : list, [start end]
+        list of 2 elements with start and end time of each alignment block
+    Returns
+    -------
+    mean_WCT : Mean WCT across blocks
+    norm_u : unit u across blocks
+    norm_v : unit v across blocks
+    magnitute : magnitute of vector summed across blocks
+
+    """
+
+    angle = 0.5 * np.pi - aWCT
+    u, v = np.cos(angle), np.sin(angle)
+
+    t_win = int((t_blocks[0][1] - t_blocks[0][0])*250)
+    print("t_win:", t_win)
+
+    WCT_trial = np.empty((
+        len(t_blocks), WCT.shape[0], t_win), dtype=np.float32)
+    all_u = np.empty((
+        len(t_blocks), u.shape[0], t_win), dtype=np.float32)
+    all_v = np.empty((
+        len(t_blocks), v.shape[0], t_win), dtype=np.float32)
+    WCT_trial.fill(np.nan)
+    all_u.fill(np.nan)
+    all_v.fill(np.nan)
+
+    for i, (a, b) in enumerate(t_blocks):
+        start_idx = int(a*250)
+        end_idx = start_idx + t_win
+        if a >= 0:
+            WCT_this_trial = WCT[:, start_idx:end_idx]
+            u_this_trial = u[:, start_idx:end_idx]
+            v_this_trial = v[:, start_idx:end_idx]
+
+        else:
+            WCT_this_trial = np.empty(
+                (WCT.shape[0], t_win), dtype=np.float32)
+            u_this_trial = np.empty(
+                (u.shape[0], t_win), dtype=np.float32)
+            v_this_trial = np.empty(
+                (v.shape[0], t_win), dtype=np.float32)
+            WCT_this_trial.fill(np.nan)
+            u_this_trial.fill(np.nan)
+            v_this_trial.fill(np.nan)
+            WCT_this_trial[:, -start_idx:] = WCT[:, 0:end_idx]
+            u_this_trial[:, -start_idx:] = u[:, 0:end_idx]
+            v_this_trial[:, -start_idx:] = v[:, 0:end_idx]
+            # print(a, b)
+            # print(WCT_trial)
+        WCT_trial[i] = WCT_this_trial
+        all_u[i] = u_this_trial
+        all_v[i] = v_this_trial
+        # else:
+        # wcohere_trial = np.dstack(wcohere_trial, WCT[:, int(a):int(b)])
+        # print(wcohere_trial[:, :, i])
+        # print("Shape:", wcohere_trial.shape)
+        # exit(-1)
+    mean_WCT = np.nanmean(WCT_trial, axis=0)
+
+    sum_u = np.nansum(all_u, axis=0)
+    sum_v = np.nansum(all_v, axis=0)
+
+    # magnitute = np.linalg.norm(np.array(sum_u, sum_v))
+    magnitute = np.sqrt(np.square(sum_u) + np.square(sum_v))
+    # Normalise vectors to obtain unit vector
+    norm_u = sum_u / magnitute
+    norm_v = sum_v / magnitute
+
+    print(len(norm_u))
+
+    # TODO validate length threshold and which arrows to plot....
+    return mean_WCT, norm_u, norm_v, magnitute
 
 
 def plot_cross_wavelet(
@@ -695,7 +806,7 @@ def test_wave_coherence():
     temp.fill(0)
     np.sin(2 * np.pi * 50 * t, where=((t >= 0.4) & (t < 1.6)), out=temp)
     y += temp
-    fig, data = calc_wave_coherence(
+    fig, data = plot_wave_coherence(
         x, y, t, min_freq=2, max_freq=1000,
         plot_arrows=True, plot_coi=True, plot_period=True,
         resolution=12, all_arrows=True)
