@@ -323,8 +323,14 @@ def get_dist(x, plot=False):
         Shows plot of distribution
 
     """
-    print("Min: ", min(x), "\nMax: ", max(x),
-          "\nMean: ", mean(x), "\nValues: ", x)
+    if type(x) is np.ndarray:
+        print("Min: ", np.min(x), "\nMax: ", np.max(x),
+              "\nMean: ", np.mean(x), "\nValues: ", x)
+
+    elif type(x) is list:
+        print("Min: ", min(x), "\nMax: ", max(x),
+              "\nMean: ", mean(x), "\nValues: ", x)
+
     if plot:
         sns.distplot(x)
         plt.show()
