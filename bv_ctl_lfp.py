@@ -547,8 +547,7 @@ def main(fname, out_main_dir, config):
             # bv_plot.savefig(fig, out_name)
             # plt.close()
 
-    if analysis_flags[4]:   # Calculate coherence using axis limits
-            # lfp_list = select_lfp(fname, ROI)
+    if analysis_flags[4]:   # Calculate coherence and plot based on trials
 
         wchans = [int(x) for x in config.get("Wavelet", "wchans").split(", ")]
         import itertools
@@ -602,7 +601,7 @@ def main(fname, out_main_dir, config):
             # 1 - Align to pellet drop
             # 2 - Align to FI
             # 3 - Align to Tone
-            alignment = [0, 1, 0, 0]
+            # alignment = [0, 1, 0, 0]
             trial_df = s.get_trial_df()
 
             if alignment[0]:
@@ -666,19 +665,19 @@ def main(fname, out_main_dir, config):
             title = ("{} vs {} Wavelet Coherence".format(
                 reg_sel[0], reg_sel[1]))
 
-            p_blocks = False
-            if p_blocks:
-                for b, ((b_start, b_end), sch) in enumerate(zip(blocks_re, sch_name)):
-                    out_name = out_name + str(b+1) + "_pycwt.png"
-                    sch_n = str(b+1) + "-" + sch
+            # p_blocks = False
+            # if p_blocks:
+            #     for b, ((b_start, b_end), sch) in enumerate(zip(blocks_re, sch_name)):
+            #         o_name = out_name + str(b+1) + "_pycwt.png"
+            #         sch_n = str(b+1) + "-" + sch
 
-                    fig1, a1 = fig, ax
-                    a1.set_xlim(b_start, b_end)
-                    a1.set_title(title+sch_n, fontsize=30, y=1.01)
-                    print("Saving result to {}".format(out_name))
-                    # bv_plot.savefig(fig1, out_name)
-                    fig1.savefig(out_name, dpi=150)
-                    plt.close()
+            #         fig1, a1 = fig, ax
+            #         a1.set_xlim(b_start, b_end)
+            #         a1.set_title(title+sch_n, fontsize=30, y=1.01)
+            #         print("Saving result to {}".format(o_name))
+            #         fig1.savefig(out_name, dpi=150)
+            #         # bv_plot.savefig(fig1, o_name)
+            #         plt.close(fig1)
 
             if trials:
                 tr_out_name = os.path.join(
@@ -692,10 +691,9 @@ def main(fname, out_main_dir, config):
                     a1.set_title("{} Tr{} {}".format(title, str(t), sch),
                                  fontsize=30, y=1.01)
                     print("Saving result to {}".format(name))
-                    # bv_plot.savefig(fig1, name)
                     fig1.savefig(name, dpi=150)
-                    plt.close()
-            exit(-1)
+                    # bv_plot.savefig(fig1, name)
+                    plt.close(fig1)
 
 
 def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name='default.png'):

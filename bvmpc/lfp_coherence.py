@@ -167,7 +167,7 @@ def calc_wave_coherence(
     )
     print("Time Taken: %s s" % (time.time() - start_time))
     if np.max(WCT) > 1 or np.min(WCT) < 0:
-        print('WCT was out of range: min{},max{}'.format(
+        print('WCT was out of range: min {},max {}'.format(
             np.min(WCT), np.max(WCT)))
         WCT = np.clip(WCT, 0, 1)
     # Convert frequency to period if necessary
