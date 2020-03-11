@@ -504,7 +504,7 @@ def plot_arrows(ax, wcohere_pvals, aWCT=None, u=None, v=None, magnitute=None, qu
             f_mean = np.empty_like(magnitute)
             for i, f in enumerate(magnitute):
                 # Plot arrows if magnitute > mean of particular frequency
-                f_mean[i, :] = np.mean(f)
+                f_mean[i, :] = np.mean(f) + np.std(f)
             high_points = np.nonzero(
                 magnitute[::y_res, ::x_res] > f_mean[::y_res, ::x_res])
 
@@ -567,26 +567,29 @@ def wcohere_mean(WCT, aWCT, t_blocks=None):
     for i, (a, b) in enumerate(t_blocks):
         start_idx = int(a*250)
         end_idx = start_idx + t_win
+
+        WCT_this_trial = np.empty(
+            (WCT.shape[0], t_win), dtype=np.float32)
+        u_this_trial = np.empty(
+            (u.shape[0], t_win), dtype=np.float32)
+        v_this_trial = np.empty(
+            (v.shape[0], t_win), dtype=np.float32)
+        WCT_this_trial.fill(np.nan)
+        u_this_trial.fill(np.nan)
+        v_this_trial.fill(np.nan)
+
         if a >= 0:
             WCT_this_trial = WCT[:, start_idx:end_idx]
             u_this_trial = u[:, start_idx:end_idx]
             v_this_trial = v[:, start_idx:end_idx]
-
         else:
-            WCT_this_trial = np.empty(
-                (WCT.shape[0], t_win), dtype=np.float32)
-            u_this_trial = np.empty(
-                (u.shape[0], t_win), dtype=np.float32)
-            v_this_trial = np.empty(
-                (v.shape[0], t_win), dtype=np.float32)
-            WCT_this_trial.fill(np.nan)
-            u_this_trial.fill(np.nan)
-            v_this_trial.fill(np.nan)
+            # for blocks shorter then t_win with missing values before alignment point (eg. first trial)
             WCT_this_trial[:, -start_idx:] = WCT[:, 0:end_idx]
             u_this_trial[:, -start_idx:] = u[:, 0:end_idx]
             v_this_trial[:, -start_idx:] = v[:, 0:end_idx]
             # print(a, b)
             # print(WCT_trial)
+
         WCT_trial[i] = WCT_this_trial
         all_u[i] = u_this_trial
         all_v[i] = v_this_trial

@@ -557,7 +557,7 @@ def main(fname, out_main_dir, config):
             reg_sel = []
             for chan in wlet_chans:  # extracts name of regions selected
                 reg_sel.append(regions[chan-1] + "-" + str(chan))
-            print("Analysing coherencec for {} vs {}...".format(
+            print("Analysing coherence for {} vs {}...".format(
                 reg_sel[0], reg_sel[1]))
             lfp_odict = LfpODict(fname, channels=wlet_chans, filt_params=(
                 filt, filt_btm, filt_top), artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
@@ -599,32 +599,49 @@ def main(fname, out_main_dir, config):
             # 0 - Align to reward
             # 1 - Align to pellet drop
             # 2 - Align to FI
-            # 3 - Align to Tone
-            # alignment = [0, 1, 0, 0]
+            # 3 - Align to Double Reward
+            # 4 - Align to Tone
+            # alignment = [0, 1, 0, 0, 0]
             trial_df = s.get_trial_df()
 
             if alignment[0]:
                 align_df = trial_df['Reward_ts']
                 align_txt = "Reward"
+                t_win = [-10, 5]  # Set time window for plotting from reward
+                quiv_x = 0.2
             elif alignment[1]:
                 align_df = trial_df['Pellet_ts']
                 align_txt = "Pell"
+                t_win = [-30, 5]  # Set time window for plotting from reward
+                quiv_x = 0.5
             elif alignment[2]:
-                align_df = np.empty_like(trial_df['Pellet_ts'])
-                align_df.fill(30)
-                align_txt = "FI"
+                align_df = trial_df['Reward_ts']
+                # Exclude first and last trial
+                align_df = align_df[1:-1].add(30)
+                t_win = [-30, 5]  # Set time window for plotting from reward
+                align_txt = "Interval"
+                quiv_x = 0.5
             elif alignment[3]:
+                align_df = trial_df['D_Pellet_ts']
+                align_txt = "DPell"
+                t_win = [-30, 5]  # Set time window for plotting from reward
+                quiv_x = 0.5
+            elif alignment[4]:
                 align_df = s.get_block_starts()+5
                 align_txt = "Tone"
+                t_win = [-10, 25]  # Set time window for plotting from reward
+                quiv_x = 0.5
 
             t_sch = trial_df['Schedule']
             trials = []
             t_duration = []
-            t_win = [-30, 5]  # Set time window for plotting from reward
 
             for t, ts in enumerate(align_df):
                 if t_win:
-                    trials.append([ts+t_win[0], ts+t_win[1]])
+                    if not ts:
+                        continue
+                    else:
+                        trials.append([ts+t_win[0], ts+t_win[1]])
                 else:
                     if t == 0:
                         trials.append([0, ts])
@@ -668,7 +685,7 @@ def main(fname, out_main_dir, config):
             else:
                 out_name = os.path.join(
                     wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_".format(an_name, chan1, chan2))
-            title = ("{} vs {} Wavelet Coherence".format(
+            title = ("{} vs {} Wavelet Coherence ".format(
                 reg_sel[0], reg_sel[1]))
 
             p_blocks = bool(int(config.get("Wavelet", "p_blocks")))
@@ -697,7 +714,7 @@ def main(fname, out_main_dir, config):
                     name = '{}_pycwt_Tr{}.png'.format(
                         tr_out_name[:-4], t+1)
                     make_path_if_not_exists(name)
-                    a1.set_title("{} Tr{} {}".format(title, str(t), sch),
+                    a1.set_title("{}Tr{} {}".format(title, str(t), sch),
                                  fontsize=30, y=1.01)
                     print("Saving result to {}".format(name))
                     fig1.savefig(name, dpi=150)
@@ -705,25 +722,53 @@ def main(fname, out_main_dir, config):
                     plt.close(fig1)
 
             p_wcohere_mean = bool(int(config.get("Wavelet", "p_wcohere_mean")))
+            split_sch = bool(int(config.get("Wavelet", "split_sch")))
             if p_wcohere_mean:  # Plot average coherence across t_blocks
-                o_name = out_name + "mean_pycwt.png"
-                fig, ax = plt.subplots(figsize=(24, 10))
-                from bvmpc.lfp_coherence import wcohere_mean
-                mean_WCT, norm_u, norm_v, magnitute = wcohere_mean(
-                    wcohere_results[0], wcohere_results[-1], t_blocks=trials)
+                t_block_list, t_block_sch, fr_blocks, fi_blocks = [], [], [], []
+                if split_sch:
+                    for i, (sch, block) in enumerate(zip(t_sch, trials)):
+                        if sch == 'FR':
+                            fr_blocks.append(block)
+                        elif sch == 'FI':
+                            fi_blocks.append(block)
+                    if not len(fr_blocks) == 0:
+                        t_block_list.append(fr_blocks)
+                        t_block_sch.append("FR")
+                    if not len(fi_blocks) == 0:
+                        t_block_list.append(fi_blocks)
+                        t_block_sch.append("FI")
+                else:
+                    t_block_list.append(trials)
+                    t_block_sch.append("")
 
-                # for i, x in enumerate(magnitute):
-                #     fig3 = sns.distplot(x, hist=False, rug=True, label=i)
+                for i, (trials, b_sch) in enumerate(zip(t_block_list, t_block_sch)):
+                    if split_sch:
+                        sch_print = "_{}_{}".format(align_txt, b_sch)
+                    else:
+                        sch_print = "_{}".format(align_txt)
+                    o_name = out_name + "mean{}_pycwt.png".format(sch_print)
+                    fig, ax = plt.subplots(figsize=(24, 10))
+                    from bvmpc.lfp_coherence import wcohere_mean
+                    mean_WCT, norm_u, norm_v, magnitute = wcohere_mean(
+                        wcohere_results[0], wcohere_results[-1], t_blocks=trials)
 
-                _, wcohere_pvals = plot_wcohere(mean_WCT, np.arange(
-                    t_win[0], t_win[1], 1/250.0), wcohere_results[2], ax=ax)
-                plot_arrows(ax, wcohere_pvals, u=norm_u,
-                            v=norm_v, magnitute=magnitute, quiv_x=0.5)
-                ax.axvline(0, linestyle='-',
-                           color='w', linewidth=1)
-                plt.text(10.1, 0, align_txt, rotation=90)
+                    # for i, x in enumerate(magnitute):
+                    #     fig3 = sns.distplot(x, hist=False, rug=True, label=i)
 
-                bv_plot.savefig(fig, o_name)
+                    _, wcohere_pvals = plot_wcohere(mean_WCT, np.arange(
+                        t_win[0], t_win[1], 1/250.0), wcohere_results[2], ax=ax)
+                    plot_arrows(ax, wcohere_pvals, u=norm_u,
+                                v=norm_v, magnitute=magnitute, quiv_x=quiv_x)
+                    ax.axvline(0, linestyle='-',
+                               color='w', linewidth=1)
+                    plt.text(-0.1, 0, align_txt, rotation=90,
+                             color='w', va='bottom', ha='right')
+                    plt.text(0.1, 0, "n = " + str(len(trials)), rotation=90,
+                             color='w', va='bottom', ha='left')
+                    ax.set_title("{}Mean{}".format(title, sch_print),
+                                 fontsize=30, y=1.01)
+
+                    bv_plot.savefig(fig, o_name)
 
 
 def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name='default.png'):
