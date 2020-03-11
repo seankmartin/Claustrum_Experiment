@@ -60,6 +60,8 @@ def compare_variables(start_dir):
     plt.show()
 
 # Originally in bv_control
+
+
 def grp_errors(s_grp):
     grp_FRerr = []
     grp_FIerr = []
@@ -67,7 +69,7 @@ def grp_errors(s_grp):
         err_FI = 0
         err_FR = 0
         _, _, norm_err_ts, _, _ = s.split_sess(
-            plot_all=True)
+            all_levers=True)
         sch_type = s.get_arrays('Trial Type')
         for i, _ in enumerate(norm_err_ts):
             if sch_type[i] == 1:

@@ -137,7 +137,7 @@ class Session:
         return tdelta_mins
 
     def split_sess(
-            self, norm=True, blocks=None, plot_error=False, plot_all=False):
+            self, norm=True, blocks=None, error_only=False, all_levers=False):
         """
         Split a session up into multiple blocks.
 
@@ -154,7 +154,7 @@ class Session:
         timestamps = self.get_arrays()
         lever_ts = self.get_lever_ts()
         pell_ts = timestamps["Reward"]
-        pell_double = np.nonzero(np.diff(pell_ts) < 0.5)
+        pell_double = np.nonzero(np.diff(pell_ts) < 0.8)
         # returns reward ts after d_pell
         reward_double = reward_times[
             np.searchsorted(
@@ -167,10 +167,10 @@ class Session:
             blocks = np.arange(5, 1830, 305)  # Default split into schedules
 
         incl = ""  # Initialize print for type of extracted lever_ts
-        if stage == '7' and plot_error:  # plots errors only
+        if stage == '7' and error_only:  # plots errors only
             incl = '_Errors_Only'
             lever_ts = self.get_err_lever_ts()
-        elif stage == '7' and plot_all:  # plots all responses incl. errors
+        elif stage == '7' and all_levers:  # plots all responses incl. errors
             incl = '_All'
             err_lever_ts = self.get_err_lever_ts()
             lever_ts = np.sort(np.concatenate((
@@ -763,7 +763,7 @@ class Session:
         schedule_type = []
         if stage == '7' or stage == '6':
             norm_r_ts, _, _, _, _ = self.split_sess(
-                norm=False, plot_all=True)
+                norm=False, all_levers=True)
             sch_type = self.get_arrays('Trial Type')
 
             for i, block in enumerate(norm_r_ts):

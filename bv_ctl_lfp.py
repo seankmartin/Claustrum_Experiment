@@ -19,6 +19,7 @@ import neurochat.nc_plot as nc_plot
 from bvmpc.compare_lfp import compare_lfp
 
 from bvmpc.lfp_plot import plot_lfp, plot_coherence, lfp_csv
+import bvmpc.bv_analyse as bv_an
 
 
 def main(fname, out_main_dir, config):
@@ -29,7 +30,10 @@ def main(fname, out_main_dir, config):
         filenames to be analysed
 
     Saves plots in a !LFP folder inside out_main_dir
+
     '''
+    o_dir = os.path.join(out_main_dir, "!LFP")
+    make_dir_if_not_exists(o_dir)
 
     analysis_flags = json.loads(config.get("Setup", "analysis_flags"))
     alignment = json.loads(config.get("Setup", "alignment"))
@@ -82,12 +86,39 @@ def main(fname, out_main_dir, config):
         # Load behaviour-related data
         s = load_bv_from_set(fname)
         sch_type = s.get_arrays('Trial Type')  # FR = 1, FI = 0
+
+        # Plot behaviour-related plots
+        bv_hist = bool(int(config.get("Behav Plot", "hist")))
+        if bv_hist:
+            hist_name = os.path.join(
+                o_dir, os.path.basename(fname) + "_bv_hist.png")
+            fig = bv_an.trial_length_hist(s)
+            bv_plot.savefig(fig, hist_name)
+
+        bv_raster = bool(int(config.get("Behav Plot", "raster")))
+        if bv_raster:
+            if alignment[0]:
+                align_txt = "_rw"
+            if alignment[1]:
+                align_txt = "_pell"
+            if alignment[2]:
+                align_txt = "_int"
+            raster_name = os.path.join(
+                o_dir, os.path.basename(fname) + "_bv_raster{}.png".format(align_txt))
+            fig = bv_an.plot_raster_trials(s, align=alignment[:3])
+            bv_plot.savefig(fig, raster_name)
+
+        bv_cum = bool(int(config.get("Behav Plot", "cumulative")))
+        if bv_cum:
+            cum_name = os.path.join(
+                o_dir, os.path.basename(fname) + "_bv_cum.png")
+            fig = bv_an.cumplot_axona(s)
+
+            bv_plot.savefig(fig, cum_name)
+
         # Tone start times excluding first + end time
         blocks = np.append(s.get_block_starts()[1:], s.get_block_ends()[-1])
         # print(blocks)
-
-    o_dir = os.path.join(out_main_dir, "!LFP")
-    make_dir_if_not_exists(o_dir)
 
     # Plots raw LFP for all tetrodes or output csv with artf_removal results
     r_SI = bool(int(config.get("Setup", "r_SI")))
@@ -612,8 +643,8 @@ def main(fname, out_main_dir, config):
             elif alignment[1]:
                 align_df = trial_df['Pellet_ts']
                 align_txt = "Pell"
-                t_win = [-30, 5]  # Set time window for plotting from reward
-                quiv_x = 0.5
+                t_win = [-10, 5]  # Set time window for plotting from reward
+                quiv_x = 0.2
             elif alignment[2]:
                 align_df = trial_df['Reward_ts']
                 # Exclude first and last trial
@@ -691,8 +722,10 @@ def main(fname, out_main_dir, config):
             p_blocks = bool(int(config.get("Wavelet", "p_blocks")))
             if p_blocks:
                 plot_arrows(ax, wcohere_pvals, wcohere_results[-1], quiv_x=5)
+                b_out_name = os.path.join(
+                    wo_dir, "Blocks", os.path.basename(out_name))
                 for b, ((b_start, b_end), sch) in enumerate(zip(blocks_re, sch_name)):
-                    o_name = out_name + str(b+1) + "_pycwt.png"
+                    o_name = b_out_name + str(b+1) + ".png"
                     sch_n = str(b+1) + "-" + sch
 
                     fig1, a1 = fig, ax
@@ -711,7 +744,7 @@ def main(fname, out_main_dir, config):
                 for t, ((b_start, b_end), sch) in enumerate(zip(trials, t_sch)):
                     fig1, a1 = fig, ax
                     a1.set_xlim(b_start, b_end)
-                    name = '{}_pycwt_Tr{}.png'.format(
+                    name = '{}_Tr{}.png'.format(
                         tr_out_name[:-4], t+1)
                     make_path_if_not_exists(name)
                     a1.set_title("{}Tr{} {}".format(title, str(t), sch),
@@ -746,7 +779,7 @@ def main(fname, out_main_dir, config):
                         sch_print = "_{}_{}".format(align_txt, b_sch)
                     else:
                         sch_print = "_{}".format(align_txt)
-                    o_name = out_name + "mean{}_pycwt.png".format(sch_print)
+                    o_name = out_name + "mean{}.png".format(sch_print)
                     fig, ax = plt.subplots(figsize=(24, 10))
                     from bvmpc.lfp_coherence import wcohere_mean
                     mean_WCT, norm_u, norm_v, magnitute = wcohere_mean(
