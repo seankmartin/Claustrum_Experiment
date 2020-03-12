@@ -99,10 +99,12 @@ def main(fname, out_main_dir, config):
         if bv_raster:
             if alignment[0]:
                 align_txt = "_rw"
-            if alignment[1]:
+            elif alignment[1]:
                 align_txt = "_pell"
-            if alignment[2]:
+            elif alignment[2]:
                 align_txt = "_int"
+            else:
+                align_txt = "_start"
             raster_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_raster{}.png".format(align_txt))
             fig = bv_an.plot_raster_trials(s, align=alignment[:3])
@@ -189,7 +191,7 @@ def main(fname, out_main_dir, config):
                     plt.ylim(0, 0.015)
                     # plt.xlim(0, 40)
                     ax.text(0.49, 1.08, regions[i+p*16], fontsize=20,
-                            horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+                            ha='center', va='center', transform=ax.transAxes)
                 if p:
                     gf.fig.suptitle(
                         (fname.split("\\")[-1][4:] + " Periodogram " + str(p)), fontsize=30)
@@ -345,7 +347,7 @@ def main(fname, out_main_dir, config):
                     # plt.xlim(0, 40)
                     color = gm.get_next_color()
                     ax.text(0.49, 1.08, regions[i+p*16], fontsize=20, color=color,
-                            horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+                            ha='center', va='center', transform=ax.transAxes)
 
                 if p:
                     gf.fig.suptitle(
@@ -638,7 +640,7 @@ def main(fname, out_main_dir, config):
             if alignment[0]:
                 align_df = trial_df['Reward_ts']
                 align_txt = "Reward"
-                t_win = [-10, 5]  # Set time window for plotting from reward
+                t_win = [-5, 30]  # Set time window for plotting from reward
                 quiv_x = 0.2
             elif alignment[1]:
                 align_df = trial_df['Pellet_ts']
@@ -662,24 +664,32 @@ def main(fname, out_main_dir, config):
                 align_txt = "Tone"
                 t_win = [-10, 25]  # Set time window for plotting from reward
                 quiv_x = 0.5
-
+            else:  # Start aligned
+                # TODO fix this...
+                align_df = trial_df['Reward_ts']
+                align_txt = "Start"
+                t_win = [0, 40]
             t_sch = trial_df['Schedule']
             trials = []
             t_duration = []
 
             for t, ts in enumerate(align_df):
                 if t_win:
-                    if not ts:
+                    if not ts:  # To skip empty ts (eg. double pellet only)
                         continue
                     else:
                         trials.append([ts+t_win[0], ts+t_win[1]])
                 else:
-                    if t == 0:
+                    if t == 0:  # From start of trial
                         trials.append([0, ts])
                         t_duration.append(ts)
                     else:
+                        # Appends [start end] of each trial
                         trials.append([align_df[t-1], ts])
                         t_duration.append(ts - align_df[t-1])
+            print(trials)
+            exit(-1)
+
             # get_dist(t_duration, plot=True)
             # trials = [[0, 60], [60, 120]]
 

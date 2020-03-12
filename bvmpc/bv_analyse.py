@@ -620,7 +620,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
         dict with subject: colors, used to assign color to title
     align : list of bool, [1, 0, 0]
         input structure - [align_rw, align_pell, align_FI]
-
+        if [0, 0, 0], start aligned.
 
     '''
     if ax is None:
@@ -629,7 +629,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
         fig = None
 
     # alignment decision
-    align_rw, align_pell, align_FI = [0, 1, 0]
+    align_rw, align_pell, align_FI = align
 
     # Retrive session related variables
     date = s.get_metadata('start_date').replace('/', '_')
