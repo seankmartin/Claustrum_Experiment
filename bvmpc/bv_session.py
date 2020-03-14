@@ -279,7 +279,16 @@ class Session:
         self._save_neo_info(remove_existing)
 
     def get_trial_df(self):
-        """Get dataframe split into trials without normalisation (time)."""
+        """Get dataframe split into trials without normalisation (time).
+            trial_df = {
+                'Reward_ts': reward_times,
+                'Pellet_ts': pell_ts_exdouble,
+                'D_Pellet_ts': trial_dr_ts,
+                'Schedule': schedule_type,
+                'Levers_ts': trial_lever_ts,
+                'Err_ts': trial_err_ts
+            }
+        """
         if self.trial_df is None:
             self.init_trial_dataframe()
         return self.trial_df
@@ -805,11 +814,23 @@ class Session:
         err_arr = np.empty((len(reward_times), trials_max_err,))
         err_arr.fill(np.nan)
 
+        # 2D array of lever timestamps
+        for i, (l, err) in enumerate(zip(trial_lever_ts, trial_err_ts)):
+            l_end = len(l)
+            lever_arr[i,:l_end] = l[:]
+            err_end = len(err)
+            err_arr[i,:err_end] = err[:]
+        # Splits lever ts in each trial into seperate np.arrs for handling in pandas
+        # lever_arr = np.vsplit(lever_arr, i+1)
+        # err_arr = np.vsplit(err_arr, i+1)
+        lever_arr = list(lever_arr)
+        err_arr = list(err_arr)
+
         # Arrays used for normalization of timestamps to trials
         from copy import deepcopy
         trial_norm = np.insert(reward_times, 0, 0)
-        norm_lever = deepcopy(trial_lever_ts)
-        norm_err = deepcopy(trial_err_ts)
+        norm_lever = deepcopy(lever_arr)
+        norm_err = deepcopy(err_arr)
         norm_dr = deepcopy(trial_dr_ts)
         norm_rw = deepcopy(reward_times)
         norm_pell = deepcopy(pell_ts_exdouble)
@@ -821,13 +842,6 @@ class Session:
             norm_dr[i] -= trial_norm[i]
             norm_pell[i] -= trial_norm[i]
             norm_rw[i] -= trial_norm[i]
-
-        # # 2D array of lever timestamps (Incomplete)
-        # for i, (l, err) in enumerate(zip(trial_lever_ts, trial_err_ts)):
-        #     l_end = len(l)
-        #     lever_arr[i,:l_end] = l[:]
-        #     err_end = len(err)
-        #     err_arr[i,:err_end] = err[:]
 
         # Timestamps kept as original starting from session start
         session_dict = {

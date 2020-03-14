@@ -94,6 +94,18 @@ def main(fname, out_main_dir, config):
                 o_dir, os.path.basename(fname) + "_bv_hist.png")
             fig = bv_an.trial_length_hist(s)
             bv_plot.savefig(fig, hist_name)
+        
+        bv_hist_lev = bool(int(config.get("Behav Plot", "hist_lev")))
+        split_t = True
+        if bv_hist_lev:
+            if split_t:
+                txt = "_t"
+            else:
+                txt = ""
+            hist_name = os.path.join(
+                o_dir, os.path.basename(fname) + "_bv_hist-lev{}.png".format(txt))
+            fig = bv_an.lever_hist(s, split_t=split_t)
+            bv_plot.savefig(fig, hist_name)
 
         bv_raster = bool(int(config.get("Behav Plot", "raster")))
         if bv_raster:

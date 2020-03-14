@@ -543,6 +543,73 @@ def show_IRT_details(IRT, maxidx, hist_bins):
     print('IRTs: ', np.round(IRT, decimals=2))
 
 
+def lever_hist(s, ax=None, split_t=False, sub_colors_dict=None):
+    ''' 
+    Plot histrogram of lever presses
+
+    Parameters
+    ----------
+    s : session object
+    ax : plt.axe, default None
+        Optional. ax object to plot into.
+    split_t : bool, False
+        Optional. Plots lever histogram by trials
+
+    '''
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(10, 10))
+    else:
+        fig = None
+
+    t_df = s.get_trial_df_norm()
+
+    if split_t:
+        gm = bv_plot.GroupManager(t_df['Schedule'].values.tolist())
+        for idx, row in t_df.iterrows():
+            color = gm.get_next_color()
+
+            lev_ts = row['Levers_ts']
+            x = lev_ts[~np.isnan(lev_ts)]  # Remove NaN from lever timestamps
+
+            if row['Schedule'] == 'FR':
+                sns.distplot(x, ax=ax, 
+                            label='FR-t{}'.format(idx+1), color=color, hist=True)
+            elif row['Schedule'] == 'FI':
+                sns.distplot(x, ax=ax,
+                            label='FI-t{}'.format(idx+1), color=color, hist=True)
+        legend_size = 6
+    else:
+        gm = bv_plot.GroupManager(['FI', 'FR'])
+        t_lev = {
+            'FI': t_df[t_df['Schedule'] == 'FI']['Levers_ts'],
+            'FR': t_df[t_df['Schedule'] == 'FR']['Levers_ts']}
+        for key, x in t_lev.items():   
+            c = gm.get_next_color()     
+            x = x.to_numpy()  # convert pandas to numpy
+            x = np.concatenate(x).ravel()  # flatten nested numpy into single numpy
+            x = x[~np.isnan(x)]  # remove NaN from numpy
+            sns.distplot(x, ax=ax, label=key, color=c)
+        legend_size = 10
+    
+    # Plot customization
+    date = s.get_metadata('start_date').replace('/', '_')
+    sub = s.get_metadata('subject')
+    stage = s.get_stage()
+    plot_name = 'Lever Hist'
+
+    ax.tick_params(axis='both', labelsize=15)
+    ax.set_xlabel('Time (s)', fontsize=20)
+    # ax.set_ylabel('Trials', fontsize=20)
+    if sub_colors_dict == None:
+        color = "k"
+    else:
+        color = mycolors(sub, sub_colors_dict)
+    ax.set_title('{} {} S{} {}'.format(sub, date, stage, plot_name),
+                 y=1.02, fontsize=25, color=color)
+    ax.legend(fontsize=legend_size, ncol=2)
+    return fig
+
+
 def trial_length_hist(s, ax=None, loop=None, sub_colors_dict=None):
     ''' 
     Plot histrogram of trial durations 
@@ -568,8 +635,8 @@ def trial_length_hist(s, ax=None, loop=None, sub_colors_dict=None):
 
     # Trial duration in ms for FR and FI
     t_len = {
-        'FR': t_df[t_df['Schedule'] == 'FR']['Reward_ts'],
-        'FI': t_df[t_df['Schedule'] == 'FI']['Reward_ts']}
+        'FI': t_df[t_df['Schedule'] == 'FI']['Reward_ts'],
+        'FR': t_df[t_df['Schedule'] == 'FR']['Reward_ts']}
 
     if loop:
         txt = "_p" + str(loop)
