@@ -119,13 +119,16 @@ class GridFig:
 
 class GroupManager:
 
-    def __init__(self, group_list):
+    def __init__(self, group_list, color_list=None):
         self.group_list = group_list
         # print(self.group_list)
         self.info_dict = OrderedDict()
         self.index = 0
-        self.color_list = [
-            "Blues", "Oranges", "Greens", "Purples", "PuRd", "Greys"]
+        if color_list is not None:
+            self.set_color_list(color_list)
+        else:
+            self.color_list = [
+                "Blues", "Oranges", "Greens", "Purples", "PuRd", "Greys"]
         set_vals = sorted(set(group_list), key=group_list.index)
         # print(set_vals)
         import numpy as np
@@ -165,6 +168,23 @@ class GroupManager:
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
         fig.savefig("test.png", dpi=400)
+    
+    def set_color_list(self, color_list):
+        """
+        Sets color list
+
+        Parameters
+        ----------
+        samples : list or ndarray
+            colors
+
+        Returns
+        -------
+        None
+
+        """
+        self.color_list = color_list
+
 
 
 class ColorManager:
