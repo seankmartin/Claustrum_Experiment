@@ -91,7 +91,7 @@ def main(fname, out_main_dir, config):
         bv_hist = bool(int(config.get("Behav Plot", "hist")))
         if bv_hist:
             hist_name = os.path.join(
-                o_dir, os.path.basename(fname) + "_bv_hist.png")
+                o_dir, os.path.basename(fname) + "_bv_h-tlen.png")
             fig = bv_an.trial_length_hist(s)
             bv_plot.savefig(fig, hist_name)
         
@@ -99,11 +99,11 @@ def main(fname, out_main_dir, config):
         split_t = True
         if bv_hist_lev:
             if split_t:
-                txt = "_t"
+                txt = "-t"
             else:
                 txt = ""
             hist_name = os.path.join(
-                o_dir, os.path.basename(fname) + "_bv_hist-lev{}.png".format(txt))
+                o_dir, os.path.basename(fname) + "_bv_h-lev{}.png".format(txt))
             fig = bv_an.lever_hist(s, split_t=split_t)
             bv_plot.savefig(fig, hist_name)
 

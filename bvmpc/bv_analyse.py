@@ -597,7 +597,8 @@ def lever_hist(s, ax=None, split_t=False, sub_colors_dict=None):
     stage = s.get_stage()
     plot_name = 'Lever Hist'
 
-    ax.tick_params(axis='both', labelsize=15)
+    ax.tick_params(axis='both', labelsize=12)
+    ax.set_ylabel('Probability Density', fontsize=20)
     ax.set_xlabel('Time (s)', fontsize=20)
     # ax.set_ylabel('Trials', fontsize=20)
     if sub_colors_dict == None:
@@ -637,6 +638,7 @@ def trial_length_hist(s, ax=None, loop=None, sub_colors_dict=None):
     t_len = {
         'FI': t_df[t_df['Schedule'] == 'FI']['Reward_ts'],
         'FR': t_df[t_df['Schedule'] == 'FR']['Reward_ts']}
+    gm = bv_plot.GroupManager(['FI', 'FR'])
 
     if loop:
         txt = "_p" + str(loop)
@@ -644,16 +646,11 @@ def trial_length_hist(s, ax=None, loop=None, sub_colors_dict=None):
         txt = ""
 
     log = False
-    if log:
-        sns.distplot(np.log(t_len['FR']), ax=ax,
-                     label='FR{}'.format(txt))
-        sns.distplot(np.log(t_len['FI']), ax=ax,
-                     label='FI{}'.format(txt))
-    else:
-        sns.distplot((t_len['FR']), ax=ax,
-                     label='FR{}'.format(txt))
-        sns.distplot((t_len['FI']), ax=ax,
-                     label='FI{}'.format(txt))
+    for key, x in t_len.items():
+        c = gm.get_next_color()
+        if log:
+            x = np.log(x)
+        sns.distplot(x, ax=ax, label='{}{}'.format(key, txt), color=c)
 
     # Plot customization
     date = s.get_metadata('start_date').replace('/', '_')
@@ -661,7 +658,8 @@ def trial_length_hist(s, ax=None, loop=None, sub_colors_dict=None):
     stage = s.get_stage()
     plot_name = 'Hist'
 
-    ax.tick_params(axis='both', labelsize=15)
+    ax.tick_params(axis='both', labelsize=12)
+    ax.set_ylabel('Probability Density', fontsize=20)
     ax.set_xlabel('Time (s)', fontsize=20)
     # ax.set_ylabel('Trials', fontsize=20)
     if sub_colors_dict == None:
