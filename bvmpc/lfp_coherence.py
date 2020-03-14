@@ -579,9 +579,10 @@ def wcohere_mean(WCT, aWCT, t_blocks=None):
         v_this_trial.fill(np.nan)
 
         if a >= 0:
-            WCT_this_trial = WCT[:, start_idx:end_idx]
-            u_this_trial = u[:, start_idx:end_idx]
-            v_this_trial = v[:, start_idx:end_idx]
+            _, y = WCT[:, start_idx:end_idx].shape  # For when window exceeds session length (eg. Last trial)
+            WCT_this_trial[:, :y] = WCT[:, start_idx:end_idx]
+            u_this_trial[:, :y] = u[:, start_idx:end_idx]
+            v_this_trial[:, :y] = v[:, start_idx:end_idx]
         else:
             # for blocks shorter then t_win with missing values before alignment point (eg. first trial)
             WCT_this_trial[:, -start_idx:] = WCT[:, 0:end_idx]

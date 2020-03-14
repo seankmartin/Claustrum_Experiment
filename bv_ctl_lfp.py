@@ -665,10 +665,10 @@ def main(fname, out_main_dir, config):
                 t_win = [-10, 25]  # Set time window for plotting from reward
                 quiv_x = 0.5
             else:  # Start aligned
-                # TODO fix this...
                 align_df = trial_df['Reward_ts']
                 align_txt = "Start"
-                t_win = [0, 40]
+                t_win = None
+                quiv_x = 0.5
             t_sch = trial_df['Schedule']
             trials = []
             t_duration = []
@@ -679,7 +679,13 @@ def main(fname, out_main_dir, config):
                         continue
                     else:
                         trials.append([ts+t_win[0], ts+t_win[1]])
-                else:
+                elif align_txt == "Start":
+                    t_win = [0, 40]  # Time window for start based plotting set here
+                    if t == 0:
+                        trials.append([0, t_win[1]])
+                    else:
+                        trials.append([ts[t-1], ts+t_win[1]])
+                else:  # Obtains start and end trial times in a list
                     if t == 0:  # From start of trial
                         trials.append([0, ts])
                         t_duration.append(ts)
@@ -687,8 +693,6 @@ def main(fname, out_main_dir, config):
                         # Appends [start end] of each trial
                         trials.append([align_df[t-1], ts])
                         t_duration.append(ts - align_df[t-1])
-            print(trials)
-            exit(-1)
 
             # get_dist(t_duration, plot=True)
             # trials = [[0, 60], [60, 120]]
