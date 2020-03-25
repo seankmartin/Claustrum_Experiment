@@ -97,15 +97,13 @@ def main(fname, out_main_dir, config):
             bv_plot.savefig(fig, hist_name)
 
         bv_hist_lev = bool(int(config.get("Behav Plot", "hist_lev")))
-        split_t = True
+        # split_t = True
         if bv_hist_lev:
-            if split_t:
-                txt = "-t"
-            else:
-                txt = ""
+            fig, ax = plt.subplots(1, 2, figsize=(20, 10))
             hist_name = os.path.join(
-                o_dir, os.path.basename(fname) + "_bv_h-lev{}.png".format(txt))
-            fig = bv_an.lever_hist(s, valid=valid, split_t=split_t)
+                o_dir, os.path.basename(fname) + "_bv_h-lev.png")
+            bv_an.lever_hist(s, ax=ax[0], valid=valid, split_t=False)
+            bv_an.lever_hist(s, ax=ax[1], valid=valid, split_t=True)
             bv_plot.savefig(fig, hist_name)
 
         bv_raster = bool(int(config.get("Behav Plot", "raster")))

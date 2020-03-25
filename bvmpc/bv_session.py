@@ -901,6 +901,7 @@ class Session:
         norm_rw = deepcopy(reward_times)
         norm_pell = deepcopy(pell_ts_exdouble)
         norm_tone = deepcopy(trial_tone_start)
+        norm_trial_s = deepcopy(trial_norm[:-1])
 
         # Normalize timestamps based on start of trial
         for i, _ in enumerate(norm_rw):
@@ -910,6 +911,7 @@ class Session:
             norm_pell[i] -= trial_norm[i]
             norm_rw[i] -= trial_norm[i]
             norm_tone[i] -= trial_norm[i]
+            norm_trial_s[i] -= trial_norm[i]
 
         # Timestamps kept as original starting from session start
         session_dict = {
@@ -933,6 +935,7 @@ class Session:
             'Levers_ts': norm_lever,
             'Err_ts': norm_err,
             'Tone_s': norm_tone,
+            'Trial_s': norm_trial_s,
             'Mod': mod
         }
 
@@ -947,6 +950,7 @@ class Session:
         Returns trial_df of excluding:
             First trial in FI blocks
             Trials with post-hoc modification of reward timestamp
+            Trials > 60s
 
         Parameters
         ----------
@@ -960,11 +964,15 @@ class Session:
             df = self.get_trial_df_norm()
         else:
             df = self.get_trial_df()
-        mod_mask = df.Mod.notnull()
-        # Selects first trial in FI blocks
-        FI_s_mask = (df.Tone_s.str.len() != 0) & (df.Schedule == 'FI')
 
-        df = df[(~mod_mask) & (~FI_s_mask)]
+        # Masks used for filtering trials
+        mod_mask = df.Mod.notnull()  # trials with post-hoc rw correction
+        FI_s_mask = (df.Tone_s.str.len() != 0) & (
+            df.Schedule == 'FI')  # 1st trial of each FI blocks
+        tlen_mask = (df.Reward_ts - df.Trial_s) > 60  # trials longer then 60s
+
+        df = df[(~mod_mask) & (~FI_s_mask) & (~tlen_mask)]
+
         if excl_dr:
             dr_mask = df.D_Pellet_ts.str.len() != 0
             df = df[(~dr_mask)]

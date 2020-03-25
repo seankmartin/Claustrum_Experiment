@@ -9,6 +9,9 @@ import os.path
 import math
 
 import matplotlib.pyplot as plt
+from matplotlib import lines
+import matplotlib.patches as mpatches
+
 import numpy as np
 from sklearn.cluster import KMeans
 import seaborn as sns
@@ -543,8 +546,8 @@ def show_IRT_details(IRT, maxidx, hist_bins):
     print('IRTs: ', np.round(IRT, decimals=2))
 
 
-def lever_hist(s, ax=None, split_t=False, sub_colors_dict=None):
-    ''' 
+def lever_hist(s, ax=None, valid=True, split_t=False, sub_colors_dict=None):
+    '''
     Plot histrogram of lever presses
 
     Parameters
@@ -561,7 +564,10 @@ def lever_hist(s, ax=None, split_t=False, sub_colors_dict=None):
     else:
         fig = None
 
-    t_df = s.get_trial_df_norm()
+    if valid:
+        t_df = s.get_valid_tdf(norm=True)
+    else:
+        t_df = s.get_trial_df_norm()
 
     if split_t:
         gm = bv_plot.GroupManager(t_df['Schedule'].values.tolist())
@@ -572,30 +578,35 @@ def lever_hist(s, ax=None, split_t=False, sub_colors_dict=None):
             x = lev_ts[~np.isnan(lev_ts)]  # Remove NaN from lever timestamps
 
             if row['Schedule'] == 'FR':
-                sns.distplot(x, ax=ax, 
-                            label='FR-t{}'.format(idx+1), color=color, hist=True)
+                sns.distplot(x, ax=ax,
+                             label='FR-t{}'.format(idx+1), color=color, hist=True)
             elif row['Schedule'] == 'FI':
                 sns.distplot(x, ax=ax,
-                            label='FI-t{}'.format(idx+1), color=color, hist=True)
+                             label='FI-t{}'.format(idx+1), color=color, hist=True)
         legend_size = 6
     else:
         gm = bv_plot.GroupManager(['FI', 'FR'])
         t_lev = {
             'FI': t_df[t_df['Schedule'] == 'FI']['Levers_ts'],
             'FR': t_df[t_df['Schedule'] == 'FR']['Levers_ts']}
-        for key, x in t_lev.items():   
-            c = gm.get_next_color()     
+        for key, x in t_lev.items():
+            c = gm.get_next_color()
             x = x.to_numpy()  # convert pandas to numpy
-            x = np.concatenate(x).ravel()  # flatten nested numpy into single numpy
+            # flatten nested numpy into single numpy
+            x = np.concatenate(x).ravel()
             x = x[~np.isnan(x)]  # remove NaN from numpy
             sns.distplot(x, ax=ax, label=key, color=c)
         legend_size = 10
-    
+
     # Plot customization
     date = s.get_metadata('start_date').replace('/', '_')
     sub = s.get_metadata('subject')
     stage = s.get_stage()
-    plot_name = 'Lever Hist'
+    plot_name = 'Lever Response Hist'
+    if split_t:
+        plot_name += ' (Trials)'
+    if valid:
+        plot_name += '_v'
 
     ax.tick_params(axis='both', labelsize=12)
     ax.set_ylabel('Probability Density', fontsize=20)
@@ -605,15 +616,17 @@ def lever_hist(s, ax=None, split_t=False, sub_colors_dict=None):
         color = "k"
     else:
         color = mycolors(sub, sub_colors_dict)
-    ax.set_title('{} {} S{} {}'.format(sub, date, stage, plot_name),
-                 y=1.02, fontsize=25, color=color)
+    ax.set_title('  {}'.format(plot_name),
+                 y=1.04, ha='center', fontsize=25, color=color)
+    ax.text(0.5, 1.015, '{} {} S{}'.format(sub, date, stage),
+            ha='center', transform=ax.transAxes, fontsize=12, color=color)
     ax.legend(fontsize=legend_size, ncol=2)
     return fig
 
 
-def trial_length_hist(s, ax=None, loop=None, sub_colors_dict=None):
-    ''' 
-    Plot histrogram of trial durations 
+def trial_length_hist(s, valid=True, ax=None, loop=None, sub_colors_dict=None):
+    '''
+    Plot histrogram of trial durations
 
     Parameters
     ----------
@@ -632,7 +645,10 @@ def trial_length_hist(s, ax=None, loop=None, sub_colors_dict=None):
     else:
         fig = None
 
-    t_df = s.get_trial_df_norm()
+    if valid:
+        t_df = s.get_valid_tdf(norm=True)
+    else:
+        t_df = s.get_trial_df_norm()
 
     # Trial duration in ms for FR and FI
     t_len = {
@@ -656,7 +672,9 @@ def trial_length_hist(s, ax=None, loop=None, sub_colors_dict=None):
     date = s.get_metadata('start_date').replace('/', '_')
     sub = s.get_metadata('subject')
     stage = s.get_stage()
-    plot_name = 'Hist'
+    plot_name = 'Trial Length Hist'
+    if valid:
+        plot_name += '_v'
 
     ax.tick_params(axis='both', labelsize=12)
     ax.set_ylabel('Probability Density', fontsize=20)
@@ -666,14 +684,16 @@ def trial_length_hist(s, ax=None, loop=None, sub_colors_dict=None):
         color = "k"
     else:
         color = mycolors(sub, sub_colors_dict)
-    ax.set_title('{} {} S{} {}'.format(sub, date, stage, plot_name),
-                 y=1.02, fontsize=25, color=color)
+    ax.set_title('  {}'.format(plot_name),
+                 y=1.04, ha='center', fontsize=25, color=color)
+    ax.text(0.5, 1.015, '{} {} S{}'.format(sub, date, stage),
+            ha='center', transform=ax.transAxes, fontsize=12, color=color)
     ax.legend(fontsize=20)
     return fig
 
 
 def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
-    ''' 
+    '''
     Plot raster of behaviour related ts aligned to different points.
 
     Parameters
@@ -708,6 +728,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
     norm_pell = []
     norm_rw = []
     schedule_type = []
+    norm_tone = []
 
     # Extract data from pandas_df
     norm_lever[:] = trial_df['Levers_ts']
@@ -716,6 +737,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
     norm_pell[:] = trial_df['Pellet_ts']
     norm_rw[:] = trial_df['Reward_ts']
     schedule_type[:] = trial_df['Schedule']
+    norm_tone[:] = trial_df['Tone_s']
 
     color = []
 
@@ -736,8 +758,10 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
     else:
         plot_type = 'Start-Aligned'
         norm_arr = np.zeros_like(norm_rw)
-        xmax = 60
-        xmin = 0
+        xmax = None
+        xmin = None
+        # xmax = 60
+        # xmin = -10
     plot_name = 'Raster ({})'.format(plot_type)
 
     ax.axvline(0, linestyle='-.', color='g',
@@ -758,6 +782,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
         norm_dr[i] -= norm_arr[i]
         norm_pell[i] -= norm_arr[i]
         norm_rw[i] -= norm_arr[i]
+        norm_tone[i] -= norm_arr[i]
 
     # Plotting of raster
     ax.eventplot(norm_lever[:], color=color)
@@ -766,6 +791,15 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
                          color='orange', label='Reward Collection')
     ax.eventplot(
         norm_dr[:], color='magenta')
+
+    # Legend construction (Standard items)
+    FR_label = lines.Line2D([], [], color='black', marker='|', linestyle='None',
+                            markersize=10, markeredgewidth=1.5, label='FR press')
+    FI_label = lines.Line2D([], [], color='b', marker='|', linestyle='None',
+                            markersize=10, markeredgewidth=1.5, label='FI press')
+    drw_label = lines.Line2D([], [], color='magenta', marker='|', linestyle='None',
+                             markersize=10, markeredgewidth=1.5, label='Double Reward')
+    handles = [FR_label, FI_label, drw_label, rw_plot]
 
     # Figure labels
     ax.set_xlim(xmin, xmax)  # Uncomment to set x limit
@@ -782,16 +816,34 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
     ax.set_title('{} {} S{} {}'.format(sub, date, stage, plot_name),
                  y=1.02, fontsize=25, color=color)
 
-    # Legend construction
-    from matplotlib import lines
-    FR_label = lines.Line2D([], [], color='black', marker='|', linestyle='None',
-                            markersize=10, markeredgewidth=1.5, label='FR press')
-    FI_label = lines.Line2D([], [], color='b', marker='|', linestyle='None',
-                            markersize=10, markeredgewidth=1.5, label='FI press')
-    drw_label = lines.Line2D([], [], color='magenta', marker='|', linestyle='None',
-                             markersize=10, markeredgewidth=1.5, label='Double Reward')
+    # Optional plot options [Pell, Tone, dr_win]
+    opt_plot = [1, 1, 1]
+    if opt_plot[0]:
+        # Plot pellet drops
+        x = np.array(norm_pell).reshape(-1, 1)
+        ax.eventplot(x, color='green')
+        pell_label = lines.Line2D([], [], color='green', marker='|', linestyle='None',
+                                  markersize=10, markeredgewidth=1.5, label='Pell')
+        handles.append(pell_label)
 
-    ax.legend(handles=[FR_label, FI_label, drw_label, rw_plot], fontsize=12)
+    if opt_plot[1]:
+        for i, x in enumerate(norm_tone):  # Plot Tone presentation
+            if x:
+                plt.barh(i, x, color='grey', hatch='///', alpha=0.05)
+        tone_label = mpatches.Patch(
+            facecolor='grey', alpha=0.05, hatch='///', label='Tone')
+        handles.append(tone_label)
+
+    if opt_plot[2]:
+        for i, (x, sch) in enumerate(zip(norm_rw, schedule_type)):  # Plot DR window
+            if sch == 'FI':
+                plt.barh(i, left=norm_arr[i]+20, width=20,
+                         color='magenta', alpha=0.05)
+        drwin_label = mpatches.Patch(
+            color='magenta', alpha=0.05, label='dr_win')
+        handles.append(drwin_label)
+
+    ax.legend(handles=handles, fontsize=12)
 
     # Highlight specific trials
     hline, h_ref = [], []
