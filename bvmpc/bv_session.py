@@ -62,6 +62,7 @@ class Session:
         self.out_dir = None
         self.trial_df = None
         self.trial_df_norm = None
+        self.insert = []  # Stores inserted reward ts due to post-hoc correction
 
         a = 0 if lines is None else 1
         b = 0 if h5_file is None else 1
@@ -105,6 +106,22 @@ class Session:
     def init_trial_dataframe(self):
         """Initialise the trial based Pandas dataframe for this session."""
         self._init_trial_df()
+
+    def get_insert(self):
+        """
+        Return a list of inserted reward timestamps due to post-hoc correction.
+
+        """
+        return self.insert
+
+    def add_insert(self, to_insert):
+        """
+        Add to list of inserted reward timestamps due to post-hoc correction.
+
+        """
+        insert_list = self.get_insert()
+        insert_list.append(to_insert)
+        self.insert = insert_list
 
     def split_pell_ts(self):
         """
@@ -164,7 +181,8 @@ class Session:
         if blocks is not None:
             pass
         else:
-            blocks = np.arange(5, 1830, 305)  # Default split into schedules
+            # blocks = np.arange(5, 1830, 305)  # Default split into schedules
+            blocks = self.get_block_starts()+5  # Default split into schedules
 
         incl = ""  # Initialize print for type of extracted lever_ts
         if stage == '7' and error_only:  # plots errors only
@@ -195,7 +213,7 @@ class Session:
                 norm_lever_ts.append(np.append([0], l - blocks[i], axis=0))
                 norm_reward_ts.append(split_reward_ts[i + 1] - blocks[i])
                 norm_double_r_ts.append(split_double_r_ts[i + 1] - blocks[i])
-                if stage == '7' and plot_all:  # plots all responses incl. errors
+                if stage == '7' and all_levers:  # plots all responses incl. errors
                     norm_err_ts.append(split_err_ts[i + 1] - blocks[i])
         else:
             norm_lever_ts = split_lever_ts[1:]
@@ -229,11 +247,11 @@ class Session:
 
     def perform_pca(self, n_components=3, should_scale=True):
         """
-        Perform PCA on per trial features 
+        Perform PCA on per trial features
 
         Parameters
         ------
-        n_components : int or float 
+        n_components : int or float
             the number of PCA components to compute
             if float, uses enough components to reach that much variance
         should_scale - whether to scale the data to unit variance
@@ -280,13 +298,21 @@ class Session:
 
     def get_trial_df(self):
         """Get dataframe split into trials without normalisation (time).
+
+        Returns
+        -------
+        mod: used to identify trials where reward timestamps modified post-hoc
+
             trial_df = {
                 'Reward_ts': reward_times,
                 'Pellet_ts': pell_ts_exdouble,
                 'D_Pellet_ts': trial_dr_ts,
                 'Schedule': schedule_type,
                 'Levers_ts': trial_lever_ts,
-                'Err_ts': trial_err_ts
+                'Err_ts': trial_err_ts,
+                'Tone_s': trial_tone_start,
+                'Trial_s': trial_norm[:-1],
+                'Mod': mod
             }
         """
         if self.trial_df is None:
@@ -643,7 +669,11 @@ class Session:
                     break
 
                 # Replaces overflowed nosepoke w block end in main array
+                # TODO check with Sean if this hard fix is appropriate
+                # to_insert = round((block_ends[i] - 0.001), 3)
                 to_insert = block_ends[i] - 0.001
+                print(' Insert: ', to_insert)
+                self.add_insert(to_insert)
                 # if i == 5:
                 #     to_insert = pell_ts_exdouble[-1] + 0.01
                 nosepokes = np.insert(
@@ -762,6 +792,8 @@ class Session:
         return self.info_arrays
 
     def _init_trial_df(self):
+        """ Generates pandas dataframe based on trials per row. """
+
         session_type = self.get_metadata('name')
         stage = session_type[:2].replace('_', '')  # Obtain stage number w/o _
 
@@ -770,9 +802,21 @@ class Session:
 
         # Assign schedule type to trials
         schedule_type = []
+        mod = []
+        mod_rw = self.get_insert()  # reward times artificially inserted
+
         if stage == '7' or stage == '6':
+            block_s = self.get_block_starts() + 5  # End of tone
+            blocks = np.append(self.get_block_starts()[
+                               0], self.get_block_ends()[:-1])
+
+            # from matplotlib import pyplot as plt
+            # plt.eventplot(blocks, colors='r', label='s')
+            # plt.eventplot(mod_rw, colors='g', label='e')
+            # plt.legend()
+            # plt.show()
             norm_r_ts, _, _, _, _ = self.split_sess(
-                norm=False, all_levers=True)
+                blocks=blocks, norm=False, all_levers=True)
             sch_type = self.get_arrays('Trial Type')
 
             for i, block in enumerate(norm_r_ts):
@@ -780,7 +824,7 @@ class Session:
                     b_type = 'FR'
                 elif sch_type[i] == 0:
                     b_type = 'FI'
-                for _, _ in enumerate(block):
+                for rw in block:
                     schedule_type.append(b_type)
         else:
             if stage == '4':
@@ -791,8 +835,15 @@ class Session:
                 b_type = 'FI'
             else:
                 b_type = 'NA'
-            for i in reward_times:
+            for _ in reward_times:
                 schedule_type.append(b_type)
+
+        # Assign mod value to trial type:
+        for rw in reward_times:
+            if np.isclose(rw, mod_rw):
+                mod.append(1)
+            else:
+                mod.append(None)
 
         # Rearrange timestamps based on trial per row
         lever_ts = self.get_lever_ts(True)
@@ -803,6 +854,15 @@ class Session:
             err_ts, (np.searchsorted(err_ts, reward_times)[:-1]))
         trial_dr_ts = np.split(
             dpell, (np.searchsorted(dpell, reward_times)[:-1]))
+        trial_tone_end = np.split(
+            block_s, (np.searchsorted(block_s, reward_times)[:-1]))  # Tone end ts
+
+        # Reconstruct Tone start times in correct trial location
+        from copy import deepcopy
+        trial_tone_start = deepcopy(trial_tone_end)
+        for i, t in enumerate(trial_tone_end):
+            if not len(t) == 0:
+                trial_tone_start[i] = trial_tone_end[i] - 5
 
         # Initialize array for lever timestamps
         # Max lever press per trial
@@ -817,9 +877,9 @@ class Session:
         # 2D array of lever timestamps
         for i, (l, err) in enumerate(zip(trial_lever_ts, trial_err_ts)):
             l_end = len(l)
-            lever_arr[i,:l_end] = l[:]
+            lever_arr[i, :l_end] = l[:]
             err_end = len(err)
-            err_arr[i,:err_end] = err[:]
+            err_arr[i, :err_end] = err[:]
         # Splits lever ts in each trial into seperate np.arrs for handling in pandas
         # lever_arr = np.vsplit(lever_arr, i+1)
         # err_arr = np.vsplit(err_arr, i+1)
@@ -827,13 +887,20 @@ class Session:
         err_arr = list(err_arr)
 
         # Arrays used for normalization of timestamps to trials
-        from copy import deepcopy
-        trial_norm = np.insert(reward_times, 0, 0)
+        if block_s[0] == 0:
+            trial_norm = np.insert(reward_times, 0, 0)
+        else:  # Account for delays in trial start in Axona
+            trial_norm = np.insert(reward_times, 0, block_s[0])
+        for i, rw in enumerate(reward_times[:-1]):
+            if trial_tone_end[i+1] > rw:
+                trial_norm[i+1] = trial_tone_end[i+1]
+
         norm_lever = deepcopy(lever_arr)
         norm_err = deepcopy(err_arr)
         norm_dr = deepcopy(trial_dr_ts)
         norm_rw = deepcopy(reward_times)
         norm_pell = deepcopy(pell_ts_exdouble)
+        norm_tone = deepcopy(trial_tone_start)
 
         # Normalize timestamps based on start of trial
         for i, _ in enumerate(norm_rw):
@@ -842,6 +909,7 @@ class Session:
             norm_dr[i] -= trial_norm[i]
             norm_pell[i] -= trial_norm[i]
             norm_rw[i] -= trial_norm[i]
+            norm_tone[i] -= trial_norm[i]
 
         # Timestamps kept as original starting from session start
         session_dict = {
@@ -850,7 +918,10 @@ class Session:
             'D_Pellet_ts': trial_dr_ts,
             'Schedule': schedule_type,
             'Levers_ts': trial_lever_ts,
-            'Err_ts': trial_err_ts
+            'Err_ts': trial_err_ts,
+            'Tone_s': trial_tone_start,
+            'Trial_s': trial_norm[:-1],
+            'Mod': mod
         }
 
         # Timestamps normalised to each trial start
@@ -860,7 +931,9 @@ class Session:
             'D_Pellet_ts': norm_dr,
             'Schedule': schedule_type,
             'Levers_ts': norm_lever,
-            'Err_ts': norm_err
+            'Err_ts': norm_err,
+            'Tone_s': norm_tone,
+            'Mod': mod
         }
 
         for key, val in trial_dict.items():
@@ -868,6 +941,35 @@ class Session:
 
         self.trial_df = pd.DataFrame(session_dict)
         self.trial_df_norm = pd.DataFrame(trial_dict)
+
+    def get_valid_tdf(self, excl_dr=False, norm=False):
+        """ 
+        Returns trial_df of excluding:
+            First trial in FI blocks
+            Trials with post-hoc modification of reward timestamp
+
+        Parameters
+        ----------
+        excl_dr : bool, False
+            Optional. Excludes double reward trials
+        norm : bool, False
+            Optional. Return trial_df_norm with masks applied
+
+        """
+        if norm:
+            df = self.get_trial_df_norm()
+        else:
+            df = self.get_trial_df()
+        mod_mask = df.Mod.notnull()
+        # Selects first trial in FI blocks
+        FI_s_mask = (df.Tone_s.str.len() != 0) & (df.Schedule == 'FI')
+
+        df = df[(~mod_mask) & (~FI_s_mask)]
+        if excl_dr:
+            dr_mask = df.D_Pellet_ts.str.len() != 0
+            df = df[(~dr_mask)]
+
+        return df
 
     @staticmethod
     def _extract_array(lines, start_char, end_char):

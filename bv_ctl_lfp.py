@@ -89,12 +89,13 @@ def main(fname, out_main_dir, config):
 
         # Plot behaviour-related plots
         bv_hist = bool(int(config.get("Behav Plot", "hist")))
+        valid = True
         if bv_hist:
             hist_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_h-tlen.png")
-            fig = bv_an.trial_length_hist(s)
+            fig = bv_an.trial_length_hist(s, valid=valid)
             bv_plot.savefig(fig, hist_name)
-        
+
         bv_hist_lev = bool(int(config.get("Behav Plot", "hist_lev")))
         split_t = True
         if bv_hist_lev:
@@ -104,7 +105,7 @@ def main(fname, out_main_dir, config):
                 txt = ""
             hist_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_h-lev{}.png".format(txt))
-            fig = bv_an.lever_hist(s, split_t=split_t)
+            fig = bv_an.lever_hist(s, valid=valid, split_t=split_t)
             bv_plot.savefig(fig, hist_name)
 
         bv_raster = bool(int(config.get("Behav Plot", "raster")))
@@ -692,7 +693,8 @@ def main(fname, out_main_dir, config):
                     else:
                         trials.append([ts+t_win[0], ts+t_win[1]])
                 elif align_txt == "Start":
-                    t_win = [0, 40]  # Time window for start based plotting set here
+                    # Time window for start based plotting set here
+                    t_win = [0, 40]
                     if t == 0:
                         trials.append([0, t_win[1]])
                     else:
@@ -730,7 +732,7 @@ def main(fname, out_main_dir, config):
             ax.yaxis.label.set_size(25)
 
             if behav:
-                    # Plot behav timepoints
+                # Plot behav timepoints
                 ax, b_legend = bv_plot.behav_vlines(
                     ax, s, behav_plot, lw=2)
                 plt.legend(handles=b_legend, fontsize=15,
