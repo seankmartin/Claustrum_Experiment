@@ -546,7 +546,7 @@ def show_IRT_details(IRT, maxidx, hist_bins):
     print('IRTs: ', np.round(IRT, decimals=2))
 
 
-def lever_hist(s, ax=None, valid=True, split_t=False, sub_colors_dict=None):
+def lever_hist(s, ax=None, valid=True, excl_dr=False, split_t=False, sub_colors_dict=None):
     '''
     Plot histrogram of lever presses
 
@@ -565,7 +565,7 @@ def lever_hist(s, ax=None, valid=True, split_t=False, sub_colors_dict=None):
         fig = None
 
     if valid:
-        t_df = s.get_valid_tdf(norm=True)
+        t_df = s.get_valid_tdf(excl_dr=excl_dr, norm=True)
     else:
         t_df = s.get_trial_df_norm()
 
@@ -607,6 +607,8 @@ def lever_hist(s, ax=None, valid=True, split_t=False, sub_colors_dict=None):
         plot_name += ' (Trials)'
     if valid:
         plot_name += '_v'
+    if excl_dr:
+        plot_name += '_exdr'
 
     ax.tick_params(axis='both', labelsize=12)
     ax.set_ylabel('Probability Density', fontsize=20)

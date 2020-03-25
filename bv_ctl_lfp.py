@@ -90,24 +90,30 @@ def main(fname, out_main_dir, config):
         # Plot behaviour-related plots
         bv_hist = bool(int(config.get("Behav Plot", "hist")))
         valid = True
-        if bv_hist:
+        if bv_hist:  # Plot trial length histogram
             hist_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_h-tlen.png")
             fig = bv_an.trial_length_hist(s, valid=valid)
             bv_plot.savefig(fig, hist_name)
 
         bv_hist_lev = bool(int(config.get("Behav Plot", "hist_lev")))
-        # split_t = True
-        if bv_hist_lev:
+        if bv_hist_lev:  # Plot lever response histogram
+            excl_dr = False  # Exclude double reward trials from lever hist
+            if excl_dr:
+                txt = '_exdr'
+            else:
+                txt = ''
             fig, ax = plt.subplots(1, 2, figsize=(20, 10))
             hist_name = os.path.join(
-                o_dir, os.path.basename(fname) + "_bv_h-lev.png")
-            bv_an.lever_hist(s, ax=ax[0], valid=valid, split_t=False)
-            bv_an.lever_hist(s, ax=ax[1], valid=valid, split_t=True)
+                o_dir, os.path.basename(fname) + "_bv_h-lev{}.png".format(txt))
+            bv_an.lever_hist(s, ax=ax[0], valid=valid,
+                             excl_dr=excl_dr, split_t=False)
+            bv_an.lever_hist(s, ax=ax[1], valid=valid,
+                             excl_dr=excl_dr, split_t=True)
             bv_plot.savefig(fig, hist_name)
 
         bv_raster = bool(int(config.get("Behav Plot", "raster")))
-        if bv_raster:
+        if bv_raster:  # Plot behaviour raster
             if alignment[0]:
                 align_txt = "_rw"
             elif alignment[1]:
