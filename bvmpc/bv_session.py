@@ -979,8 +979,6 @@ class Session:
 
         self.trial_df = pd.DataFrame(session_dict)
         self.trial_df_norm = pd.DataFrame(trial_dict)
-        print(self.trial_df)
-        exit(-1)
 
         # from bvmpc.bv_utils import check_fn
         # self.trial_df = pd.DataFrame(session_dict).applymap(check_fn)
