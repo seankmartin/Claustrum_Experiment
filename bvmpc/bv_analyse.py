@@ -789,10 +789,10 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
     # Plotting of raster
     ax.eventplot(norm_lever[:], color=color)
     ax.eventplot(norm_err[:], color='red')
-    # for i, x in enumerate(norm_rw):
-    #     if len(x) == 0:
-    #         norm_rw[i] = None
-    rw_plot = ax.scatter(norm_rw[:], np.arange(len(norm_rw)), s=5,
+    for i, x in enumerate(norm_rw):
+        if len(x) == 0:
+            norm_rw[i] = None
+    rw_plot = ax.scatter(norm_rw, np.arange(len(norm_rw)), s=5,
                          color='orange', label='Reward Collection')
     ax.eventplot(
         norm_dr[:], color='magenta')
@@ -825,7 +825,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
     opt_plot = [1, 1, 1]
     if opt_plot[0]:
         # Plot pellet drops
-        x = np.array(norm_pell).reshape(-1, 1)
+        x = norm_pell
         ax.eventplot(x, color='green')
         pell_label = lines.Line2D([], [], color='green', marker='|', linestyle='None',
                                   markersize=10, markeredgewidth=1.5, label='Pell')

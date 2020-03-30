@@ -775,7 +775,7 @@ class Session:
                 x[-1] = tone_end
             t_start.append(np.array(x))
         t_start = np.concatenate(t_start).ravel()
-        t_start = np.insert(t_start, 0, block_s[0]-5)
+        t_start = np.insert(t_start, 0, block_s[0])
         # Trials start after tone ends
         self.info_arrays["Trial_Start"] = t_start[:-1]
 
@@ -979,6 +979,12 @@ class Session:
 
         self.trial_df = pd.DataFrame(session_dict)
         self.trial_df_norm = pd.DataFrame(trial_dict)
+        print(self.trial_df)
+        exit(-1)
+
+        # from bvmpc.bv_utils import check_fn
+        # self.trial_df = pd.DataFrame(session_dict).applymap(check_fn)
+        # self.trial_df_norm = pd.DataFrame(trial_dict).applymap(check_fn)
 
     def get_valid_tdf(self, excl_dr=False, norm=False):
         """ 

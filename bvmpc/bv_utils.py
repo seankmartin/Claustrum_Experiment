@@ -18,6 +18,13 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
+def check_fn(item):
+    if isinstance(item, list) or isinstance(item, np.ndarray):
+        if len(item) == 0:
+            return np.nan
+    return item
+
+
 def boolean_indexing(v, fillval=np.nan):
     """Index a numpy array using a boolean mask."""
     lens = np.array([len(item) for item in v])
