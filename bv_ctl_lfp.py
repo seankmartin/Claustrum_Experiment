@@ -136,7 +136,7 @@ def main(fname, out_main_dir, config):
             bv_plot.savefig(fig, cum_name)
 
         # Tone start times excluding first + end time
-        blocks = np.append(s.get_block_starts()[1:], s.get_block_ends()[-1])
+        blocks = np.append(s.get_tone_starts()[1:], s.get_block_ends()[-1])
         # print(blocks)
 
     # Plots raw LFP for all tetrodes or output csv with artf_removal results
@@ -234,7 +234,7 @@ def main(fname, out_main_dir, config):
                         gf = bv_plot.GridFig(rows, cols, wspace=0.3,
                                              hspace=0.3, size_multiplier_x=40, tight_layout=False)
                         for k, j in enumerate(blocks):
-                            tone_ts = s.get_block_starts()+5
+                            tone_ts = s.get_tone_starts()+5
                             ax = gf.get_next(along_rows=True)
 
                             if k == 0:
@@ -679,7 +679,7 @@ def main(fname, out_main_dir, config):
                 t_win = [-30, 5]  # Set time window for plotting from reward
                 quiv_x = 0.5
             elif alignment[4]:
-                align_df = s.get_block_starts()+5
+                align_df = s.get_tone_starts()+5
                 align_txt = "Tone"
                 t_win = [-10, 25]  # Set time window for plotting from reward
                 quiv_x = 0.5

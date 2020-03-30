@@ -182,7 +182,7 @@ class Session:
             pass
         else:
             # blocks = np.arange(5, 1830, 305)  # Default split into schedules
-            blocks = self.get_block_starts()+5  # Default split into schedules
+            blocks = self.get_tone_starts()+5  # Default split into schedules
 
         incl = ""  # Initialize print for type of extracted lever_ts
         if stage == '7' and error_only:  # plots errors only
@@ -485,6 +485,7 @@ class Session:
         return np.sort(reward_times, axis=None)
 
     def get_block_ends(self):
+        """Return block end times - Tone end times + end of session"""
         sound = self.info_arrays.get("sound", [])
         if len(sound) != 0:
             # Axona
@@ -497,7 +498,8 @@ class Session:
             block_ends = np.arange(trial_len, repeated_trial_len, trial_len)
         return block_ends
 
-    def get_block_starts(self):
+    def get_tone_starts(self):
+        """Return tone start times"""
         sound = self.info_arrays.get("sound", [])
         if len(sound) != 0:
             # Axona
@@ -759,16 +761,21 @@ class Session:
 
         # extract trial start times
         reward_times = self.get_rw_ts()
-        block_s = self.get_block_starts() + 5  # End of tone
-        trial_tone_end = np.split(
-            block_s, (np.searchsorted(block_s, reward_times)[:-1]))  # Tone end ts
+        block_s = self.get_tone_starts() + 5  # End of tone
+        block_e = self.get_block_ends()
 
-        # if block was empty. Add block in as empty trial
-        for i, t in enumerate(trial_tone_end):
-            if len(t) > 1:
-                reward_times = np.insert(
-                    reward_times, np.searchsorted(reward_times, t), t)
-        t_start = np.insert(reward_times, 0, block_s[0]-5)
+        t_start_blocks = np.split(
+            reward_times, np.searchsorted(reward_times, block_e))
+
+        t_start = []
+        for i, (x, tone_end) in enumerate(zip(t_start_blocks, block_e)):
+            if len(x) == 0:  # replace trial start w next block start if empty
+                x = np.array([tone_end])
+            elif x[-1] < tone_end:  # replace last start in block w next block start
+                x[-1] = tone_end
+            t_start.append(np.array(x))
+        t_start = np.concatenate(t_start).ravel()
+        t_start = np.insert(t_start, 0, block_s[0]-5)
         # Trials start after tone ends
         self.info_arrays["Trial_Start"] = t_start[:-1]
 
@@ -822,8 +829,7 @@ class Session:
         mod_rw = self.get_insert()  # reward times artificially inserted
 
         if stage == '7' or stage == '6':
-            block_s = self.get_block_starts() + 5  # End of tone
-            block_e = self.get_block_ends()[:-1]
+            block_s = self.get_tone_starts() + 5  # End of tone
 
             # from matplotlib import pyplot as plt
             # plt.eventplot(blocks, colors='r', label='s')
@@ -831,9 +837,8 @@ class Session:
             # plt.legend()
             # plt.show()
             tstarts_in_blocks = np.split(
-                trial_starts, np.searchsorted(trial_starts, block_e))
+                trial_starts, np.searchsorted(trial_starts, block_s[1:]))
             sch_type = self.get_arrays('Trial Type')
-
             for i, block in enumerate(tstarts_in_blocks):
                 if sch_type[i] == 1:
                     b_type = 'FR'
@@ -841,6 +846,7 @@ class Session:
                     b_type = 'FI'
                 for rw in block:
                     schedule_type.append(b_type)
+                print(i, b_type, block, block_s[i])
         else:
             if stage == '4':
                 b_type = 'CR'
@@ -850,7 +856,7 @@ class Session:
                 b_type = 'FI'
             else:
                 b_type = 'NA'
-            for _ in reward_times:
+            for _ in trial_starts:
                 schedule_type.append(b_type)
 
         # Rearrange timestamps based on trial per row
@@ -951,8 +957,10 @@ class Session:
             'Trial_s': trial_starts,
             'Mod': mod
         }
-        for key, x in session_dict.items():
-            print(key, len(x))
+
+        # for key, x in session_dict.items():
+        #     print(key, len(x))
+
         # Timestamps normalised to each trial start
         trial_dict = {
             'Reward_ts': norm_rw,
@@ -971,8 +979,6 @@ class Session:
 
         self.trial_df = pd.DataFrame(session_dict)
         self.trial_df_norm = pd.DataFrame(trial_dict)
-        print(self.trial_df)
-        exit(-1)
 
     def get_valid_tdf(self, excl_dr=False, norm=False):
         """ 

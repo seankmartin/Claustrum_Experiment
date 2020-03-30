@@ -86,7 +86,7 @@ def cumplot_axona(s, ax=None, p_errors=False, p_all=False):
     date = s.get_metadata('start_date').replace('/', '_')
     sub = s.get_metadata('subject')
     stage = s.get_stage()
-    blocks = s.get_block_starts()
+    blocks = s.get_tone_starts()
     lever_ts = s.get_lever_ts()
     reward_times = s.get_rw_ts()
     pell_ts = s.get_arrays("Reward")
@@ -789,7 +789,10 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
     # Plotting of raster
     ax.eventplot(norm_lever[:], color=color)
     ax.eventplot(norm_err[:], color='red')
-    rw_plot = ax.scatter(norm_rw, np.arange(len(norm_rw)), s=5,
+    # for i, x in enumerate(norm_rw):
+    #     if len(x) == 0:
+    #         norm_rw[i] = None
+    rw_plot = ax.scatter(norm_rw[:], np.arange(len(norm_rw)), s=5,
                          color='orange', label='Reward Collection')
     ax.eventplot(
         norm_dr[:], color='magenta')
