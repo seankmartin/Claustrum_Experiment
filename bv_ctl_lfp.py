@@ -651,8 +651,10 @@ def main(fname, out_main_dir, config):
             # 2 - Align to FI
             # 3 - Align to Double Reward
             # 4 - Align to Tone
+
             # alignment = [0, 1, 0, 0, 0]
-            trial_df = s.get_trial_df()
+            # trial_df = s.get_trial_df()
+            trial_df = s.get_valid_tdf()
 
             if alignment[0]:
                 align_df = trial_df['Reward_ts']
@@ -682,7 +684,7 @@ def main(fname, out_main_dir, config):
                 t_win = [-10, 25]  # Set time window for plotting from reward
                 quiv_x = 0.5
             else:  # Start aligned
-                align_df = trial_df['Reward_ts']
+                align_df = trial_df['Trial_s']
                 align_txt = "Start"
                 t_win = None
                 quiv_x = 0.5

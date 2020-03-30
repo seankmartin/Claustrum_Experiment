@@ -757,6 +757,21 @@ class Session:
         self.info_arrays["Un_FI_Err"] = un_fi_err
         self.info_arrays["FI_Err"] = fi_err
 
+        # extract trial start times
+        reward_times = self.get_rw_ts()
+        block_s = self.get_block_starts() + 5  # End of tone
+        trial_tone_end = np.split(
+            block_s, (np.searchsorted(block_s, reward_times)[:-1]))  # Tone end ts
+
+        # if block was empty. Add block in as empty trial
+        for i, t in enumerate(trial_tone_end):
+            if len(t) > 1:
+                reward_times = np.insert(
+                    reward_times, np.searchsorted(reward_times, t), t)
+        t_start = np.insert(reward_times, 0, block_s[0]-5)
+        # Trials start after tone ends
+        self.info_arrays["Trial_Start"] = t_start[:-1]
+
     def _extract_metadata(self):
         """Private function to pull metadata out of lines."""
         for i, name in enumerate(self.session_info.get_metadata()):
@@ -799,6 +814,7 @@ class Session:
 
         pell_ts_exdouble, dpell = self.split_pell_ts()
         reward_times = self.get_rw_ts()
+        trial_starts = self.get_arrays("Trial_Start")
 
         # Assign schedule type to trials
         schedule_type = []
@@ -807,19 +823,18 @@ class Session:
 
         if stage == '7' or stage == '6':
             block_s = self.get_block_starts() + 5  # End of tone
-            blocks = np.append(self.get_block_starts()[
-                               0], self.get_block_ends()[:-1])
+            block_e = self.get_block_ends()[:-1]
 
             # from matplotlib import pyplot as plt
             # plt.eventplot(blocks, colors='r', label='s')
             # plt.eventplot(mod_rw, colors='g', label='e')
             # plt.legend()
             # plt.show()
-            norm_r_ts, _, _, _, _ = self.split_sess(
-                blocks=blocks, norm=False, all_levers=True)
+            tstarts_in_blocks = np.split(
+                trial_starts, np.searchsorted(trial_starts, block_e))
             sch_type = self.get_arrays('Trial Type')
 
-            for i, block in enumerate(norm_r_ts):
+            for i, block in enumerate(tstarts_in_blocks):
                 if sch_type[i] == 1:
                     b_type = 'FR'
                 elif sch_type[i] == 0:
@@ -838,24 +853,41 @@ class Session:
             for _ in reward_times:
                 schedule_type.append(b_type)
 
-        # Assign mod value to trial type:
-        for rw in reward_times:
-            if np.isclose(rw, mod_rw):
-                mod.append(1)
-            else:
-                mod.append(None)
-
         # Rearrange timestamps based on trial per row
         lever_ts = self.get_lever_ts(True)
         err_ts = self.get_err_lever_ts(True)
+
+        trial_rw_ts = np.split(
+            reward_times, (np.searchsorted(reward_times, trial_starts, side='right')[1:]))
+        trial_pell_ts = np.split(
+            pell_ts_exdouble, (np.searchsorted(pell_ts_exdouble, trial_starts)[1:]))
         trial_lever_ts = np.split(
-            lever_ts, (np.searchsorted(lever_ts, reward_times)[:-1]))
+            lever_ts, (np.searchsorted(lever_ts, trial_starts)[1:]))
         trial_err_ts = np.split(
-            err_ts, (np.searchsorted(err_ts, reward_times)[:-1]))
+            err_ts, (np.searchsorted(err_ts, trial_starts)[1:]))
         trial_dr_ts = np.split(
-            dpell, (np.searchsorted(dpell, reward_times)[:-1]))
+            dpell, (np.searchsorted(dpell, trial_starts)[1:]))
         trial_tone_end = np.split(
-            block_s, (np.searchsorted(block_s, reward_times)[:-1]))  # Tone end ts
+            block_s, (np.searchsorted(block_s, trial_starts)[1:]))  # Tone end ts
+
+        # # Testing - print values
+        # x = trial_rw_ts
+        # for i, (a, b) in enumerate(zip(x, trial_starts)):
+        #     print("Trial ", i)
+        #     print("T_start: ", b)
+        #     print(a)
+        # exit(-1)
+
+        # Assign mod value to trial type:
+        for rw in trial_rw_ts:
+            print(rw)
+            if rw:
+                if np.isclose(rw, mod_rw):
+                    mod.append(1)
+                else:
+                    mod.append(None)
+            else:
+                mod.append(None)
 
         # Reconstruct Tone start times in correct trial location
         from copy import deepcopy
@@ -867,11 +899,11 @@ class Session:
         # Initialize array for lever timestamps
         # Max lever press per trial
         trials_max_l = len(max(trial_lever_ts, key=len))
-        lever_arr = np.empty((len(reward_times), trials_max_l,))
+        lever_arr = np.empty((len(trial_starts), trials_max_l,))
         lever_arr.fill(np.nan)
         trials_max_err = len(max(trial_err_ts, key=len)
                              )  # Max err press per trial
-        err_arr = np.empty((len(reward_times), trials_max_err,))
+        err_arr = np.empty((len(trial_starts), trials_max_err,))
         err_arr.fill(np.nan)
 
         # 2D array of lever timestamps
@@ -887,21 +919,15 @@ class Session:
         err_arr = list(err_arr)
 
         # Arrays used for normalization of timestamps to trials
-        if block_s[0] == 0:
-            trial_norm = np.insert(reward_times, 0, 0)
-        else:  # Account for delays in trial start in Axona
-            trial_norm = np.insert(reward_times, 0, block_s[0])
-        for i, rw in enumerate(reward_times[:-1]):
-            if trial_tone_end[i+1] > rw:
-                trial_norm[i+1] = trial_tone_end[i+1]
+        trial_norm = trial_starts
 
+        norm_rw = deepcopy(trial_rw_ts)
+        norm_pell = deepcopy(trial_pell_ts)
         norm_lever = deepcopy(lever_arr)
-        norm_err = deepcopy(err_arr)
         norm_dr = deepcopy(trial_dr_ts)
-        norm_rw = deepcopy(reward_times)
-        norm_pell = deepcopy(pell_ts_exdouble)
+        norm_err = deepcopy(err_arr)
         norm_tone = deepcopy(trial_tone_start)
-        norm_trial_s = deepcopy(trial_norm[:-1])
+        norm_trial_s = deepcopy(trial_starts)
 
         # Normalize timestamps based on start of trial
         for i, _ in enumerate(norm_rw):
@@ -915,17 +941,18 @@ class Session:
 
         # Timestamps kept as original starting from session start
         session_dict = {
-            'Reward_ts': reward_times,
-            'Pellet_ts': pell_ts_exdouble,
+            'Reward_ts': trial_rw_ts,
+            'Pellet_ts': trial_pell_ts,
             'D_Pellet_ts': trial_dr_ts,
             'Schedule': schedule_type,
             'Levers_ts': trial_lever_ts,
             'Err_ts': trial_err_ts,
             'Tone_s': trial_tone_start,
-            'Trial_s': trial_norm[:-1],
+            'Trial_s': trial_starts,
             'Mod': mod
         }
-
+        for key, x in session_dict.items():
+            print(key, len(x))
         # Timestamps normalised to each trial start
         trial_dict = {
             'Reward_ts': norm_rw,
@@ -944,6 +971,8 @@ class Session:
 
         self.trial_df = pd.DataFrame(session_dict)
         self.trial_df_norm = pd.DataFrame(trial_dict)
+        print(self.trial_df)
+        exit(-1)
 
     def get_valid_tdf(self, excl_dr=False, norm=False):
         """ 
