@@ -136,7 +136,7 @@ def main(fname, out_main_dir, config):
             bv_plot.savefig(fig, cum_name)
 
         bv_clust = bool(int(config.get("Behav Plot", "clust")))
-        if bv_clus:
+        if bv_clust:
             clust_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_PCAclust.png")
             fig = bv_an.trial_clustering(s, should_pca=True, num_clusts=5)
