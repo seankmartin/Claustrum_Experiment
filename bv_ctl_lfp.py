@@ -139,7 +139,7 @@ def main(fname, out_main_dir, config):
         if bv_clust:
             clust_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_PCAclust.png")
-            fig = bv_an.trial_clustering(s, should_pca=True, num_clusts=5)
+            fig = bv_an.trial_clustering(s, should_pca=False, num_clusts=4)
             bv_plot.savefig(fig, clust_name)
 
         # Tone start times excluding first + end time

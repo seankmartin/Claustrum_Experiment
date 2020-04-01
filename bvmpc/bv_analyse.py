@@ -880,24 +880,48 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
     return fig
 
 
-def trial_clustering(session, ax=None, should_pca=False, num_clusts=2):
+def trial_clustering(s, ax=None, should_pca=False, num_clusts=2):
+    '''
+    Plot cluster results for trials
 
+    Parameters
+    ----------
+    s : session object
+    ax : plt.axe, default None
+        Optional ax object to plot into.
+    should_pca: bool, False
+        Optional. Determines if PCA should be run on features
+    num_clus: int, 2
+        Optional. Sets number of clusters desired.
+
+    '''
     if ax is None:
         fig, ax = plt.subplots(figsize=(20, 10))
     else:
         fig = None
 
     if should_pca:
-        data = session.perform_pca(should_scale=False)[1]
+        data = s.perform_pca(should_scale=False)[1]
     else:
-        data = session.extract_features()
+        data = s.extract_features()
     cluster = KMeans(num_clusts)
     cluster.fit_predict(data)
-    markers = session.trial_df_norm["Schedule"]
+    markers = s.trial_df_norm["Schedule"]
     plot_dim1 = 0
     plot_dim2 = 1
     sns.scatterplot(
         data[:, plot_dim1], data[:, plot_dim2], ax=ax,
         style=markers, hue=cluster.labels_)
+
+    # Plot cosmetics
+    date = s.get_metadata('start_date').replace('/', '_')
+    sub = s.get_metadata('subject')
+    stage = s.get_stage()
+    plot_name = 'Clust'
+    ax.set_title('  {}'.format(plot_name),
+                 y=1.04, ha='center', fontsize=25)
+    ax.text(0.5, 1.015, '{} {} S{}'.format(sub, date, stage),
+            ha='center', transform=ax.transAxes, fontsize=12)
+    ax.legend(fontsize=20)
     # plot_loc = os.path.join("PCAclust.png")
     return fig
