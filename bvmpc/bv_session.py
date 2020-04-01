@@ -13,6 +13,7 @@ from sklearn.preprocessing import StandardScaler
 
 from bvmpc.bv_session_info import SessionInfo
 from bvmpc.bv_axona import AxonaInput, AxonaSet
+from bvmpc.bv_array_methods import check_error_during_tone
 from bvmpc.bv_array_methods import split_into_blocks
 from bvmpc.bv_array_methods import split_array
 from bvmpc.bv_array_methods import split_array_with_another
@@ -226,7 +227,7 @@ class Session:
     def extract_features(self):
         if self.trial_df_norm is None:
             self.init_trial_dataframe()
-        features = np.zeros(shape=(len(self.trial_df_norm.index), 12))
+        features = np.zeros(shape=(len(self.trial_df_norm.index), 13))
         for row in self.trial_df_norm.itertuples():
             index = row.Index
             features[index, 0] = row.Reward_ts
@@ -237,12 +238,15 @@ class Session:
             else:
                 d_pell_feature = double_pellet_time
             features[index, 2] = d_pell_feature
+            x = row.Levers_ts
             lever_hist = np.histogram(
-                row.Levers_ts, bins=8, density=True)[0]
+                x[~np.isnan(x)], bins=8, density=True)[0]
             features[index, 3:11] = lever_hist
             # err_hist = np.histogram(
             # row.Err_ts, bins=5, density=False)[0]
             features[index, 11] = row.Err_ts.size
+
+            features[index, 12] = row.First_response
         return features
 
     def perform_pca(self, n_components=3, should_scale=True):
@@ -639,6 +643,11 @@ class Session:
         right_presses = self.info_arrays.get("right_lever", [])
         nosepokes = self.info_arrays.get("all_nosepokes", [])
         block_ends = self.get_block_ends()
+        block_s = self.get_tone_starts() + 5  # End of tone
+
+        # Check for errors in presses during Tone presentation
+        left_presses = check_error_during_tone(left_presses, block_s)
+        right_presses = check_error_during_tone(right_presses, block_s)
 
         # Extract nosepokes as necessary and unecessary
         pell_ts_exdouble, _ = self.split_pell_ts()
@@ -761,14 +770,12 @@ class Session:
 
         # extract trial start times
         reward_times = self.get_rw_ts()
-        block_s = self.get_tone_starts() + 5  # End of tone
-        block_e = self.get_block_ends()
 
         t_start_blocks = np.split(
-            reward_times, np.searchsorted(reward_times, block_e))
+            reward_times, np.searchsorted(reward_times, block_ends))
 
         t_start = []
-        for i, (x, tone_end) in enumerate(zip(t_start_blocks, block_e)):
+        for i, (x, tone_end) in enumerate(zip(t_start_blocks, block_ends)):
             if len(x) == 0:  # replace trial start w next block start if empty
                 x = np.array([tone_end])
             elif x[-1] < tone_end:  # replace last start in block w next block start
@@ -846,7 +853,6 @@ class Session:
                     b_type = 'FI'
                 for rw in block:
                     schedule_type.append(b_type)
-                print(i, b_type, block, block_s[i])
         else:
             if stage == '4':
                 b_type = 'CR'
@@ -886,7 +892,6 @@ class Session:
 
         # Assign mod value to trial type:
         for rw in trial_rw_ts:
-            print(rw)
             if rw:
                 if np.isclose(rw, mod_rw):
                     mod.append(1)
@@ -907,6 +912,7 @@ class Session:
         trials_max_l = len(max(trial_lever_ts, key=len))
         lever_arr = np.empty((len(trial_starts), trials_max_l,))
         lever_arr.fill(np.nan)
+        first_response_arr = np.full((len(trial_starts)), np.nan)
         trials_max_err = len(max(trial_err_ts, key=len)
                              )  # Max err press per trial
         err_arr = np.empty((len(trial_starts), trials_max_err,))
@@ -918,6 +924,8 @@ class Session:
             lever_arr[i, :l_end] = l[:]
             err_end = len(err)
             err_arr[i, :err_end] = err[:]
+            first_response_arr[i] = l[0]
+
         # Splits lever ts in each trial into seperate np.arrs for handling in pandas
         # lever_arr = np.vsplit(lever_arr, i+1)
         # err_arr = np.vsplit(err_arr, i+1)
@@ -934,6 +942,7 @@ class Session:
         norm_err = deepcopy(err_arr)
         norm_tone = deepcopy(trial_tone_start)
         norm_trial_s = deepcopy(trial_starts)
+        norm_first_response = deepcopy(first_response_arr)
 
         # Normalize timestamps based on start of trial
         for i, _ in enumerate(norm_rw):
@@ -944,6 +953,7 @@ class Session:
             norm_rw[i] -= trial_norm[i]
             norm_tone[i] -= trial_norm[i]
             norm_trial_s[i] -= trial_norm[i]
+            norm_first_response[i] -= trial_norm[i]
 
         # Timestamps kept as original starting from session start
         session_dict = {
@@ -955,9 +965,9 @@ class Session:
             'Err_ts': trial_err_ts,
             'Tone_s': trial_tone_start,
             'Trial_s': trial_starts,
+            'First_response': first_response_arr,
             'Mod': mod
         }
-
         # for key, x in session_dict.items():
         #     print(key, len(x))
 
@@ -971,6 +981,7 @@ class Session:
             'Err_ts': norm_err,
             'Tone_s': norm_tone,
             'Trial_s': norm_trial_s,
+            'First_response': norm_first_response,
             'Mod': mod
         }
 

@@ -880,7 +880,13 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
     return fig
 
 
-def trial_clustering(session, should_pca=False, num_clusts=2):
+def trial_clustering(session, ax=None, should_pca=False, num_clusts=2):
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(20, 10))
+    else:
+        fig = None
+
     if should_pca:
         data = session.perform_pca(should_scale=False)[1]
     else:
@@ -890,9 +896,8 @@ def trial_clustering(session, should_pca=False, num_clusts=2):
     markers = session.trial_df_norm["Schedule"]
     plot_dim1 = 0
     plot_dim2 = 1
-    fig, ax = plt.subplots()
     sns.scatterplot(
         data[:, plot_dim1], data[:, plot_dim2], ax=ax,
         style=markers, hue=cluster.labels_)
-    plot_loc = os.path.join("PCAclust.png")
-    fig.savefig(plot_loc, dpi=400)
+    # plot_loc = os.path.join("PCAclust.png")
+    return fig

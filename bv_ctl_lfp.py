@@ -128,12 +128,19 @@ def main(fname, out_main_dir, config):
             bv_plot.savefig(fig, raster_name)
 
         bv_cum = bool(int(config.get("Behav Plot", "cumulative")))
-        if bv_cum:
+        if bv_cum:  # Plot cummulative lever response
             cum_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_cum.png")
             fig = bv_an.cumplot_axona(s)
 
             bv_plot.savefig(fig, cum_name)
+
+        bv_clust = bool(int(config.get("Behav Plot", "clust")))
+        if bv_clus:
+            clust_name = os.path.join(
+                o_dir, os.path.basename(fname) + "_bv_PCAclust.png")
+            fig = bv_an.trial_clustering(s, should_pca=True, num_clusts=5)
+            bv_plot.savefig(fig, clust_name)
 
         # Tone start times excluding first + end time
         blocks = np.append(s.get_tone_starts()[1:], s.get_block_ends()[-1])
