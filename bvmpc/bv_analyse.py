@@ -848,7 +848,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
             color='magenta', alpha=0.05, label='dr_win')
         handles.append(drwin_label)
 
-    ax.legend(handles=handles, fontsize=12)
+    ax.legend(handles=handles, fontsize=12, loc='upper right')
 
     # Highlight specific trials
     hline, h_ref = [], []
@@ -882,7 +882,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
 
 def trial_clustering(s, ax=None, should_pca=False, num_clusts=2):
     '''
-    Plot cluster results for trials
+    Plot cluster results for trials.
 
     Parameters
     ----------
@@ -893,6 +893,13 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2):
         Optional. Determines if PCA should be run on features
     num_clus: int, 2
         Optional. Sets number of clusters desired.
+    plot_feats: bool, False
+        Optional. Plots boxplot of features, and exits. For validation of features.
+
+    Returns
+    ----------
+    fig : plot of first and second features
+    data : pd.Dataframe of features
 
     '''
     if ax is None:
@@ -904,13 +911,14 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2):
         data = s.perform_pca(should_scale=False)[1]
     else:
         data = s.extract_features()
+
     cluster = KMeans(num_clusts)
     cluster.fit_predict(data)
     markers = s.trial_df_norm["Schedule"]
     plot_dim1 = 0
     plot_dim2 = 1
     sns.scatterplot(
-        data[:, plot_dim1], data[:, plot_dim2], ax=ax,
+        data.iloc[:, plot_dim1], data.iloc[:, plot_dim2], ax=ax,
         style=markers, hue=cluster.labels_)
 
     # Plot cosmetics
@@ -924,4 +932,17 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2):
             ha='center', transform=ax.transAxes, fontsize=12)
     ax.legend(fontsize=20)
     # plot_loc = os.path.join("PCAclust.png")
+    return fig, data
+
+
+def plot_feats(feat_df, ax=None):
+    ''' Plot feature boxplots used for clustering. '''
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(20, 10))
+    else:
+        fig = Nonefig, ax = plt.subplots(figsize=(20, 10))
+
+    sns.boxplot(data=feat_df)
+    ax.set_title('Cluster Features Boxplot',
+                 y=1.04, ha='center', fontsize=25)
     return fig

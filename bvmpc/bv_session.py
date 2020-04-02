@@ -8,6 +8,8 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
@@ -18,6 +20,7 @@ from bvmpc.bv_array_methods import split_into_blocks
 from bvmpc.bv_array_methods import split_array
 from bvmpc.bv_array_methods import split_array_with_another
 from bvmpc.bv_array_methods import split_array_in_between_two
+import bvmpc.bv_plot as bv_plot
 
 
 class Session:
@@ -56,6 +59,7 @@ class Session:
             neo_backend="nix", verbose=False, file_origin=None):
         """See help(Session) for more info."""
         self.session_info = SessionInfo()
+        self.fname = None
         self.metadata = {}
         self.info_arrays = {}
         self.verbose = verbose
@@ -98,6 +102,7 @@ class Session:
             self.s_type = s_type
             self.file_origin = axona_file
             self.axona_file = axona_file
+            self.fname = axona_file[:-3]
             self._extract_axona_info()
 
         else:
@@ -228,6 +233,15 @@ class Session:
         if self.trial_df_norm is None:
             self.init_trial_dataframe()
         features = np.zeros(shape=(len(self.trial_df_norm.index), 13))
+        feat_names = ["Reward", "Pell", "D_Pell", "Err", "1st_Resp"]
+
+        # Number of features before lever histogram
+        n_feat_bh = len(feat_names)
+        h_bin = 8  # Set hist bin size for lever responses here
+        for i in np.arange(h_bin):
+            feat_names.append("L_Hist-{}".format(i))
+
+        trial_idx = []
         for row in self.trial_df_norm.itertuples():
             index = row.Index
             features[index, 0] = row.Reward_ts
@@ -238,16 +252,22 @@ class Session:
             else:
                 d_pell_feature = double_pellet_time
             features[index, 2] = d_pell_feature
-            x = row.Levers_ts
-            lever_hist = np.histogram(
-                x[~np.isnan(x)], bins=8, density=True)[0]
-            features[index, 3:11] = lever_hist
             # err_hist = np.histogram(
             # row.Err_ts, bins=5, density=False)[0]
-            features[index, 11] = row.Err_ts.size
 
-            features[index, 12] = row.First_response
-        return features
+            features[index, 3] = row.Err_ts.size
+
+            features[index, 4] = row.First_response
+
+            x = row.Levers_ts
+            lever_hist = np.histogram(
+                x[~np.isnan(x)], bins=h_bin, density=True)[0]
+            features[index, n_feat_bh:(n_feat_bh+h_bin)] = lever_hist
+            trial_idx.append(index)
+
+        features_df = pd.DataFrame(features, columns=feat_names)
+
+        return features_df
 
     def perform_pca(self, n_components=3, should_scale=True):
         """

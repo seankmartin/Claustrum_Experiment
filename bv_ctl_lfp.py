@@ -136,11 +136,19 @@ def main(fname, out_main_dir, config):
             bv_plot.savefig(fig, cum_name)
 
         bv_clust = bool(int(config.get("Behav Plot", "clust")))
+        plot_feat = True
         if bv_clust:
             clust_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_PCAclust.png")
-            fig = bv_an.trial_clustering(s, should_pca=False, num_clusts=4)
+            fig, feat_df = bv_an.trial_clustering(
+                s, should_pca=False, num_clusts=4)
             bv_plot.savefig(fig, clust_name)
+
+            if plot_feat:
+                fig = bv_an.plot_feats(feat_df)
+                feat_plot_name = os.path.join(
+                    o_dir, os.path.basename(fname) + "_bv_feats.png")
+                bv_plot.savefig(fig, feat_plot_name)
 
         # Tone start times excluding first + end time
         blocks = np.append(s.get_tone_starts()[1:], s.get_block_ends()[-1])
