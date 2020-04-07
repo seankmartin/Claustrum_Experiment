@@ -232,32 +232,38 @@ class Session:
     def extract_features(self):
         if self.trial_df_norm is None:
             self.init_trial_dataframe()
-        features = np.zeros(shape=(len(self.trial_df_norm.index), 13))
-        feat_names = ["Reward", "Pell", "D_Pell", "Err", "1st_Resp"]
-
+        feat_names = ["Trial_Len", "Pell",
+                      "Rw_lat", "Err", "1st_Resp", "Resp_n"]
         # Number of features before lever histogram
         n_feat_bh = len(feat_names)
+
         h_bin = 8  # Set hist bin size for lever responses here
         for i in np.arange(h_bin):
             feat_names.append("L_Hist-{}".format(i))
 
+        features = np.zeros(
+            shape=(len(self.trial_df_norm.index), len(feat_names)))
         trial_idx = []
         for row in self.trial_df_norm.itertuples():
             index = row.Index
-            features[index, 0] = row.Reward_ts
-            features[index, 1] = row.Pellet_ts
-            double_pellet_time = row.D_Pellet_ts
-            if len(double_pellet_time) == 0:
-                d_pell_feature = 0
-            else:
-                d_pell_feature = double_pellet_time
-            features[index, 2] = d_pell_feature
+            features[index, 0] = row.Reward_ts  # Trial duration
+            features[index, 1] = row.Pellet_ts  # Completion Latency
+            features[index, 2] = row.Reward_ts - \
+                row.Pellet_ts  # Reward Latency
+            # double_pellet_time = row.D_Pellet_ts
+            # if len(double_pellet_time) == 0:
+            #     d_pell_feature = 0
+            # else:
+            #     d_pell_feature = double_pellet_time
+            # features[index, 2] = d_pell_feature
             # err_hist = np.histogram(
             # row.Err_ts, bins=5, density=False)[0]
 
-            features[index, 3] = row.Err_ts.size
+            features[index, 3] = row.Err_ts.size  # number of err responses
 
-            features[index, 4] = row.First_response
+            features[index, 4] = row.First_response  # Time to first response
+            features[index, 5] = np.count_nonzero(
+                ~np.isnan(row.Levers_ts))  # number of lever responses
 
             x = row.Levers_ts
             lever_hist = np.histogram(
@@ -265,9 +271,12 @@ class Session:
             features[index, n_feat_bh:(n_feat_bh+h_bin)] = lever_hist
             trial_idx.append(index)
 
-        features_df = pd.DataFrame(features, columns=feat_names)
+        feat_df = pd.DataFrame(features, columns=feat_names)
 
-        return features_df
+        # Drop columns with all zeros
+        feat_df = feat_df.loc[:, (feat_df != 0).any(axis=0)]
+
+        return feat_df
 
     def perform_pca(self, n_components=3, should_scale=True):
         """
@@ -291,8 +300,8 @@ class Session:
 
         # Standardise the data to improve PCA performance
         if should_scale:
-            std_data = scaler.fit_transform(data)
-            after_pca = pca.fit_transform(std_data)
+            data = scaler.fit_transform(data)
+            after_pca = pca.fit_transform(data)
         else:
             after_pca = pca.fit_transform(data)
 

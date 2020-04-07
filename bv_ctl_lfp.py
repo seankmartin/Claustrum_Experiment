@@ -136,18 +136,28 @@ def main(fname, out_main_dir, config):
             bv_plot.savefig(fig, cum_name)
 
         bv_clust = bool(int(config.get("Behav Plot", "clust")))
-        plot_feat = True
+        plot_feat = False
         if bv_clust:
             clust_name = os.path.join(
-                o_dir, os.path.basename(fname) + "_bv_PCAclust.png")
-            fig, feat_df = bv_an.trial_clustering(
-                s, should_pca=False, num_clusts=4)
+                o_dir, os.path.basename(fname) + "_bv_clust-KMeans.png")
+            fig, feat_df, bef_PCA = bv_an.trial_clustering(
+                s, should_pca=True, num_clusts=4)
+            bv_plot.savefig(fig, clust_name)
+
+            fig = bv_an.trial_clust_hier(s)
+            clust_name = os.path.join(
+                o_dir, os.path.basename(fname) + "_bv_clust-hier.png")
             bv_plot.savefig(fig, clust_name)
 
             if plot_feat:
                 fig = bv_an.plot_feats(feat_df)
                 feat_plot_name = os.path.join(
-                    o_dir, os.path.basename(fname) + "_bv_feats.png")
+                    o_dir, os.path.basename(fname) + "_bv_c_feats.png")
+                bv_plot.savefig(fig, feat_plot_name)
+
+                fig = bv_an.plot_feats(bef_PCA)
+                feat_plot_name = os.path.join(
+                    o_dir, os.path.basename(fname) + "_bv_c_feats_bef.png")
                 bv_plot.savefig(fig, feat_plot_name)
 
         # Tone start times excluding first + end time

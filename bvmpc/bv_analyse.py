@@ -12,8 +12,10 @@ import matplotlib.pyplot as plt
 from matplotlib import lines
 import matplotlib.patches as mpatches
 
+import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 import seaborn as sns
 
 from bvmpc.bv_utils import mycolors
@@ -694,7 +696,7 @@ def trial_length_hist(s, valid=True, ax=None, loop=None, sub_colors_dict=None):
     return fig
 
 
-def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
+def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0], reindex=None):
     '''
     Plot raster of behaviour related ts aligned to different points.
 
@@ -705,9 +707,11 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
         Optional ax object to plot into.
     sub_colors_dict: dict, None
         dict with subject: colors, used to assign color to title
-    align : list of bool, [1, 0, 0]
+    align : list of bool, [0, 0, 0]
         input structure - [align_rw, align_pell, align_FI]
         if [0, 0, 0], start aligned.
+    reindex: list, None
+        list of which to reorder trials by
 
     '''
     if ax is None:
@@ -723,6 +727,9 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
     sub = s.get_metadata('subject')
     stage = s.get_stage()
     trial_df = s.get_trial_df_norm()
+    if reindex is not None:
+        trial_df = trial_df.reindex(reindex)
+        plt.yticks(np.arange(len(reindex)), reindex, fontsize=10)
 
     norm_lever = []
     norm_err = []
@@ -818,8 +825,10 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[1, 0, 0]):
     else:
         color = mycolors(sub, sub_colors_dict)
 
-    ax.set_title('{} {} S{} {}'.format(sub, date, stage, plot_name),
-                 y=1.02, fontsize=25, color=color)
+    ax.set_title('  {}'.format(plot_name),
+                 y=1.04, ha='center', fontsize=25)
+    ax.text(0.5, 1.015, '{} {} S{}'.format(sub, date, stage),
+            ha='center', transform=ax.transAxes, fontsize=12)
 
     # Optional plot options [Pell, Tone, dr_win]
     opt_plot = [1, 1, 1]
@@ -893,13 +902,12 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2):
         Optional. Determines if PCA should be run on features
     num_clus: int, 2
         Optional. Sets number of clusters desired.
-    plot_feats: bool, False
-        Optional. Plots boxplot of features, and exits. For validation of features.
 
     Returns
     ----------
     fig : plot of first and second features
-    data : pd.Dataframe of features
+    data : pd.Dataframe or np.arr of features after PCA or normalization
+    bef_PCA: pd.Dataframe or np.arr of features before PCA or normalization
 
     '''
     if ax is None:
@@ -908,18 +916,23 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2):
         fig = None
 
     if should_pca:
-        data = s.perform_pca(should_scale=False)[1]
+        bef_PCA, data, _ = s.perform_pca(should_scale=True)
     else:
         data = s.extract_features()
+        from scipy import stats
+        bef_PCA = data
+        data = stats.zscore(data)
 
     cluster = KMeans(num_clusts)
     cluster.fit_predict(data)
+    centroids = cluster.cluster_centers_
     markers = s.trial_df_norm["Schedule"]
     plot_dim1 = 0
     plot_dim2 = 1
     sns.scatterplot(
-        data.iloc[:, plot_dim1], data.iloc[:, plot_dim2], ax=ax,
+        data[:, plot_dim1], data[:, plot_dim2], ax=ax,
         style=markers, hue=cluster.labels_)
+    plt.scatter(centroids[:, 0], centroids[:, 1], c='red', s=25)
 
     # Plot cosmetics
     date = s.get_metadata('start_date').replace('/', '_')
@@ -932,7 +945,7 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2):
             ha='center', transform=ax.transAxes, fontsize=12)
     ax.legend(fontsize=20)
     # plot_loc = os.path.join("PCAclust.png")
-    return fig, data
+    return fig, data, bef_PCA
 
 
 def plot_feats(feat_df, ax=None):
@@ -940,9 +953,84 @@ def plot_feats(feat_df, ax=None):
     if ax is None:
         fig, ax = plt.subplots(figsize=(20, 10))
     else:
-        fig = Nonefig, ax = plt.subplots(figsize=(20, 10))
+        fig = None
+
+    # from scipy import stats
+    # data = stats.zscore(feat_df)
 
     sns.boxplot(data=feat_df)
     ax.set_title('Cluster Features Boxplot',
                  y=1.04, ha='center', fontsize=25)
+    return fig
+
+
+def trial_clust_hier(s, ax=None):
+    '''
+    Plot dendogram for trial-based hierarchical clustering results.
+
+    Parameters
+    ----------
+    s : session object
+    ax : plt.axe, default None
+        Optional ax object to plot into.
+    should_pca: bool, False
+        Optional. Determines if PCA should be run on features
+
+    Returns
+    ----------
+    fig : plot of first and second features
+    data : pd.Dataframe of features
+
+    '''
+    if ax is None:
+        fig, ax = plt.subplots(1, 2, figsize=(20, 10))
+    else:
+        fig = None
+
+    data = s.extract_features()
+
+    # Normalize features
+    scaler = StandardScaler()
+    data_scaled = scaler.fit_transform(data)
+    data_scaled = pd.DataFrame(data_scaled, columns=data.columns)
+    df = s.trial_df_norm
+    df["Temp"] = (df.index.map(str)) + " " + df["Schedule"]
+    label = s.trial_df_norm["Temp"].tolist()
+    import scipy.cluster.hierarchy as shc
+    dend = shc.dendrogram(shc.linkage(
+        data_scaled, method='ward'), ax=ax[0])
+    reindex = list(map(int, dend['ivl']))
+    ax[0].set_xticklabels(label[x] for x in reindex)
+
+    # plt.axhline(y=6, color='r', linestyle='--')
+
+    # Plot cosmetics
+    date = s.get_metadata('start_date').replace('/', '_')
+    sub = s.get_metadata('subject')
+    stage = s.get_stage()
+    plot_name = 'Dendogram'
+    ax[0].set_title('  {}'.format(plot_name),
+                    y=1.04, ha='center', fontsize=25)
+    ax[0].text(0.5, 1.015, '{} {} S{}'.format(sub, date, stage),
+               ha='center', transform=ax[0].transAxes, fontsize=12)
+    ax[0].legend(fontsize=20)
+
+    # plot_loc = os.path.join("PCAclust.png")
+    plot_raster_trials(s, ax[1], reindex=reindex)
+    ax[1].tick_params(axis='y', labelsize=10)
+    # for color in dend['color_list']:
+    #     ax[1].hline()
+
+    # # Plot cluster using hier clustering results
+    # from sklearn.cluster import AgglomerativeClustering
+    # cluster1 = AgglomerativeClustering(
+    #     n_clusters=3, affinity='euclidean', linkage='ward')
+    # cluster1.fit_predict(data_scaled)
+    # markers = s.trial_df_norm["Schedule"]
+    # plot_dim1, plot_dim2 = [0, 1]
+    # sns.scatterplot(
+    #     data_scaled.iloc[:, plot_dim1], data_scaled.iloc[:,
+    #                                                      plot_dim2], ax=ax[1],
+    #     style=markers, hue=cluster1.labels_,)
+
     return fig
