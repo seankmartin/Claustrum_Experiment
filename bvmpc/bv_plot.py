@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from collections import OrderedDict
 import seaborn as sns
+import numpy as np
 
 
 class GridFig:
@@ -168,7 +169,7 @@ class GroupManager:
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
         fig.savefig("test.png", dpi=400)
-    
+
     def set_color_list(self, color_list):
         """
         Sets color list
@@ -184,7 +185,6 @@ class GroupManager:
 
         """
         self.color_list = color_list
-
 
 
 class ColorManager:
@@ -306,6 +306,17 @@ def behav_vlines(ax, s, behav_plot, lw=1):
                              markersize=10, markeredgewidth=lw, label='Double Pell')
         legends.append(label)
     return ax, legends
+
+
+def dend_leaf_colors(dend):
+    """ Returns np.array of dend leaf colors in plot order """
+    leaf_colors = np.empty_like(dend['ivl'])
+    for c, pi in zip(dend['color_list'], dend['icoord']):
+        for leg in pi[1:3]:
+            i = (leg - 5.0) / 10.0
+            if abs(i - int(i)) < 1e-5:
+                leaf_colors[int(i)] = c
+    return leaf_colors
 
 
 def savefig(fig, name):

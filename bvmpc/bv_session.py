@@ -3,6 +3,8 @@ This module is a representation of a single Operant box Session.
 
 Written by Sean Martin and Gao Xiang Ham
 """
+from scipy.spatial.distance import pdist
+from scipy.cluster.hierarchy import cophenet
 import os
 from datetime import datetime
 
@@ -21,6 +23,8 @@ from bvmpc.bv_array_methods import split_array
 from bvmpc.bv_array_methods import split_array_with_another
 from bvmpc.bv_array_methods import split_array_in_between_two
 import bvmpc.bv_plot as bv_plot
+
+import scipy.cluster.hierarchy as shc
 
 
 class Session:
@@ -67,6 +71,8 @@ class Session:
         self.out_dir = None
         self.trial_df = None
         self.trial_df_norm = None
+        self.cluster_results = None
+        self.clust_reord_trial_df = None
         self.insert = []  # Stores inserted reward ts due to post-hoc correction
 
         a = 0 if lines is None else 1
@@ -229,7 +235,20 @@ class Session:
         return (
             norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts, incl)
 
-    def extract_features(self):
+    def extract_features(self, should_scale=True):
+        """
+        Extract per trial features
+
+        Parameters
+        ------
+        should_scale : bool, True
+            Optional. Whether to scale the data to unit variance
+
+        Returns
+        -------
+        feat_df : pd.df
+            pandas dataframe with 
+        """
         if self.trial_df_norm is None:
             self.init_trial_dataframe()
         feat_names = ["Trial_Len", "Pell",
@@ -276,6 +295,11 @@ class Session:
         # Drop columns with all zeros
         feat_df = feat_df.loc[:, (feat_df != 0).any(axis=0)]
 
+        if should_scale:  # Normalize features
+            scaler = StandardScaler()
+            data_scaled = scaler.fit_transform(feat_df)
+            feat_df = pd.DataFrame(data_scaled, columns=feat_df.columns)
+
         return feat_df
 
     def perform_pca(self, n_components=3, should_scale=True):
@@ -293,21 +317,86 @@ class Session:
         -------
         tuple : (ndarray, ndarray, PCA)
             (features 2d array, PCA of features, PCA object)
+
         """
-        data = self.extract_features()
-        scaler = StandardScaler()
+        data = self.extract_features(should_scale=should_scale)
         pca = PCA(n_components=n_components)
 
-        # Standardise the data to improve PCA performance
-        if should_scale:
-            data = scaler.fit_transform(data)
-            after_pca = pca.fit_transform(data)
-        else:
-            after_pca = pca.fit_transform(data)
+        after_pca = pca.fit_transform(data)
 
         print(
             "PCA fraction of explained variance", pca.explained_variance_ratio_)
         return data, after_pca, pca
+
+    def hier_cluster(self, should_scale=True, cutoff=None):
+        """
+        Perform hierarchical clustering on per trial features
+
+        Parameters
+        ------
+        n_components : int or float
+            the number of PCA components to compute
+            if float, uses enough components to reach that much variance
+        should_scale : bool, True
+            whether to scale the data to unit variance
+        cutoff: int, None
+            Optional. Level at which to cutoff dendrogram
+
+        Returns
+        -------
+        dict: {'Z' : np.array, 'reindex' : list[int], 'clusters' : np.array}
+            {linkage matrix, index for sorting trials, cluster indices}
+
+        """
+        data = self.extract_features(should_scale=should_scale)
+
+        Z = shc.linkage(data, method='ward')  # linkage matrix
+
+        c, coph_dists = cophenet(Z, pdist(data))
+        print('Cophentic Correlation Coefficient: ', c)
+
+        dend = shc.dendrogram(Z, no_plot=True, color_threshold=cutoff)
+
+        reindex = list(map(int, dend['ivl']))  # index for sorting trials
+
+        if cutoff is None:
+            cutoff = 0.7*max(Z[:, 2])
+
+        clusters = shc.fcluster(Z, cutoff, criterion='distance')
+        self.cluster_results = {
+            'Z': Z,
+            'reindex': reindex,
+            'clusters': clusters,
+        }
+
+        return self.cluster_results
+
+    def get_cluster_results(self, cutoff=None):
+        """ 
+        Returns cluster results from hier_cluster
+
+        Returns
+        -------
+        dict: {'Z' : np.array, 'reindex' : list[int], 'clusters' : np.array}
+            {linkage matrix, index for sorting trials, cluster indices}
+
+        """
+        if self.cluster_results is None:
+            self.hier_cluster(cutoff=cutoff)
+        return self.cluster_results
+
+    def get_cluster_ordering(self):
+        """ Returns cluster ordering from hier_cluster """
+        if self.cluster_results is None:
+            self.hier_cluster()
+        return self.cluster_results['reindex']
+
+    def get_cluster_ordered_df(self):
+        """ Returns trial_df_norm in cluster order """
+        if self.clust_reord_trial_df is None:
+            reindex = self.cluster_results['reindex']
+            self.clust_reord_trial_df = self.get_trial_df_norm().reindex(reindex)
+        return self.clust_reord_trial_df
 
     def save_to_h5(self, out_dir, name=None):
         """Save information to a h5 file."""

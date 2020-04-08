@@ -144,7 +144,7 @@ def main(fname, out_main_dir, config):
                 s, should_pca=True, num_clusts=4)
             bv_plot.savefig(fig, clust_name)
 
-            fig = bv_an.trial_clust_hier(s)
+            fig = bv_an.trial_clust_hier(s, cutoff=None)
             clust_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_clust-hier.png")
             bv_plot.savefig(fig, clust_name)

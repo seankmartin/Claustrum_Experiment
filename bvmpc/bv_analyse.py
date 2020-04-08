@@ -916,11 +916,11 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2):
         fig = None
 
     if should_pca:
-        bef_PCA, data, _ = s.perform_pca(should_scale=True)
+        feat_df, data, _ = s.perform_pca(should_scale=True)
     else:
-        data = s.extract_features()
+        data = s.extract_features(should_scale=False)
         from scipy import stats
-        bef_PCA = data
+        feat_df = data
         data = stats.zscore(data)
 
     cluster = KMeans(num_clusts)
@@ -945,7 +945,7 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2):
             ha='center', transform=ax.transAxes, fontsize=12)
     ax.legend(fontsize=20)
     # plot_loc = os.path.join("PCAclust.png")
-    return fig, data, bef_PCA
+    return fig, data, feat_df
 
 
 def plot_feats(feat_df, ax=None):
@@ -964,17 +964,17 @@ def plot_feats(feat_df, ax=None):
     return fig
 
 
-def trial_clust_hier(s, ax=None):
+def trial_clust_hier(s, ax=None, cutoff=None):
     '''
-    Plot dendogram for trial-based hierarchical clustering results.
+    Plot dendrogram for trial-based hierarchical clustering results.
 
     Parameters
     ----------
     s : session object
     ax : plt.axe, default None
         Optional ax object to plot into.
-    should_pca: bool, False
-        Optional. Determines if PCA should be run on features
+    cutoff: int, None
+        Optional. Level at which to cutoff dendrogram
 
     Returns
     ----------
@@ -987,39 +987,43 @@ def trial_clust_hier(s, ax=None):
     else:
         fig = None
 
-    data = s.extract_features()
-
-    # Normalize features
-    scaler = StandardScaler()
-    data_scaled = scaler.fit_transform(data)
-    data_scaled = pd.DataFrame(data_scaled, columns=data.columns)
     df = s.trial_df_norm
     df["Temp"] = (df.index.map(str)) + " " + df["Schedule"]
     label = s.trial_df_norm["Temp"].tolist()
-    import scipy.cluster.hierarchy as shc
-    dend = shc.dendrogram(shc.linkage(
-        data_scaled, method='ward'), ax=ax[0])
-    reindex = list(map(int, dend['ivl']))
-    ax[0].set_xticklabels(label[x] for x in reindex)
 
-    # plt.axhline(y=6, color='r', linestyle='--')
+    clust_results = s.get_cluster_results(cutoff=cutoff)
+    import scipy.cluster.hierarchy as shc
+    Z = clust_results['Z']
+    dend = shc.dendrogram(Z, ax=ax[0], color_threshold=cutoff)
+    reindex = clust_results['reindex']
+    ax[0].set_xticklabels(label[x] for x in reindex)
+    if cutoff is None:
+        cutoff = 0.7*max(Z[:, 2])
+        ax[0].text(ax[0].set_xlim()[1]*0.9, cutoff,
+                   'Default', ha='right', va='center', backgroundcolor='w', fontsize=8)
+    else:
+        ax[0].text(ax[0].set_xlim()[1]*0.9, cutoff,
+                   'Cutoff = {}'.format(cutoff), ha='right', va='center', backgroundcolor='w', fontsize=8)
+    ax[0].axhline(y=cutoff, c='k')
 
     # Plot cosmetics
     date = s.get_metadata('start_date').replace('/', '_')
     sub = s.get_metadata('subject')
     stage = s.get_stage()
-    plot_name = 'Dendogram'
+    plot_name = 'Dendrogram'
     ax[0].set_title('  {}'.format(plot_name),
                     y=1.04, ha='center', fontsize=25)
     ax[0].text(0.5, 1.015, '{} {} S{}'.format(sub, date, stage),
                ha='center', transform=ax[0].transAxes, fontsize=12)
     ax[0].legend(fontsize=20)
 
-    # plot_loc = os.path.join("PCAclust.png")
+    leaf_colors = bv_plot.dend_leaf_colors(dend)
+
     plot_raster_trials(s, ax[1], reindex=reindex)
     ax[1].tick_params(axis='y', labelsize=10)
-    # for color in dend['color_list']:
-    #     ax[1].hline()
+
+    for i, color in enumerate(leaf_colors):
+        ax[1].get_yticklabels()[i].set_color(color)
 
     # # Plot cluster using hier clustering results
     # from sklearn.cluster import AgglomerativeClustering
@@ -1031,6 +1035,6 @@ def trial_clust_hier(s, ax=None):
     # sns.scatterplot(
     #     data_scaled.iloc[:, plot_dim1], data_scaled.iloc[:,
     #                                                      plot_dim2], ax=ax[1],
-    #     style=markers, hue=cluster1.labels_,)
+    #     style=markers, c=cluster1.labels_, cmap='rainbow')
 
     return fig
