@@ -889,7 +889,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0], reinde
     return fig
 
 
-def trial_clustering(s, ax=None, should_pca=False, num_clusts=2):
+def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     '''
     Plot cluster results for trials.
 
@@ -902,6 +902,8 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2):
         Optional. Determines if PCA should be run on features
     num_clus: int, 2
         Optional. Sets number of clusters desired.
+    p_2d: bool, False
+        Optional. Forces a 2D plot despite insufficient variance accounted in PC 1 & 2.
 
     Returns
     ----------
@@ -911,40 +913,79 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2):
 
     '''
     if ax is None:
-        fig, ax = plt.subplots(figsize=(20, 10))
+        fig = plt.figure(figsize=(20, 10))
     else:
         fig = None
 
     if should_pca:
-        feat_df, data, _ = s.perform_pca(should_scale=True)
+        feat_df, data, pca = s.perform_pca(should_scale=True)
+        if (sum(pca.explained_variance_ratio_[:3]) < 0.8) and (p_2D is False):
+            xs, ys, zs = data[:, 0], data[:, 1], data[:, 2]  # Plot PC 1-3
+            # fig = plt.figure(figsize=plt.figaspect(0.85))
+            ax = fig.add_subplot(1, 2, 1, projection='3d')
+        else:
+            ax = fig.add_subplot(1, 2, 1)
+            xs, ys, zs = data[:, 0], data[:, 1], None  # Plot PC 1 and 2 only
+        ax.set_xlabel('PC1')
+        ax.set_ylabel('PC2')
+
     else:
         data = s.extract_features(should_scale=False)
         from scipy import stats
         feat_df = data
         data = stats.zscore(data)
+        plot_dims1, plot_dims2 = [0, 1]  # Index for dimensions to be plot
+        xs, ys, zs = data.iloc[:, plot_dims1], data.iloc[:, plot_dims2], None
 
     cluster = KMeans(num_clusts)
     cluster.fit_predict(data)
     centroids = cluster.cluster_centers_
-    markers = s.trial_df_norm["Schedule"]
-    plot_dim1 = 0
-    plot_dim2 = 1
-    sns.scatterplot(
-        data[:, plot_dim1], data[:, plot_dim2], ax=ax,
-        style=markers, hue=cluster.labels_)
-    plt.scatter(centroids[:, 0], centroids[:, 1], c='red', s=25)
+    df = s.trial_df_norm
+    markers = df["Schedule"]
+    cmap = sns.color_palette("bright")
+    if zs is None:
+        sns.scatterplot(xs, ys, ax=ax, style=markers,
+                        hue=cluster.labels_, palette='bright')
+    else:
+        # ax.scatter(xs, ys, zs, c=cluster.labels_, cmap='rainbow')
+        mask = {'FR': 'x', 'FI': '^'}
+        PCA_colors = []
+        for i in np.arange(len(xs)):
+            ic = cmap[cluster.labels_[i]]
+            ax.scatter(xs[i], ys[i], zs[i],
+                       marker=mask[markers[i]], c=[ic])
+            PCA_colors.append(ic)
+        ax.set_zlabel('PC3')
+        ax.dist = 10
+
+    plt.scatter(centroids[:, 0], centroids[:, 1], c='grey', s=25)
 
     # Plot cosmetics
     date = s.get_metadata('start_date').replace('/', '_')
     sub = s.get_metadata('subject')
     stage = s.get_stage()
-    plot_name = 'Clust'
+    plot_name = 'PCA Clustering - kmeans c={}'.format(num_clusts)
     ax.set_title('  {}'.format(plot_name),
                  y=1.04, ha='center', fontsize=25)
-    ax.text(0.5, 1.015, '{} {} S{}'.format(sub, date, stage),
-            ha='center', transform=ax.transAxes, fontsize=12)
-    ax.legend(fontsize=20)
+    if zs is None:
+        ax.text(0.5, 1.015, '{} {} S{}'.format(sub, date, stage),
+                ha='center', transform=ax.transAxes, fontsize=12)
+    ax.legend(fontsize=20, loc='upper right')
     # plot_loc = os.path.join("PCAclust.png")
+
+    # Plot raster sorted by PCA clustering
+    df['PCA_Clus'] = cluster.labels_
+    df['colors'] = PCA_colors
+    sorted_df = df.sort_values('PCA_Clus')
+    reindex = sorted_df.index
+    leaf_colors = sorted_df['colors']
+
+    ax1 = fig.add_subplot(1, 2, 2)
+    plot_raster_trials(s, ax1, reindex=reindex)
+    ax1.tick_params(axis='y', labelsize=10)
+    for i, color in enumerate(leaf_colors):
+        ax1.get_yticklabels()[i].set_color(color)
+
     return fig, data, feat_df
 
 
@@ -994,7 +1035,7 @@ def trial_clust_hier(s, ax=None, cutoff=None):
     clust_results = s.get_cluster_results(cutoff=cutoff)
     import scipy.cluster.hierarchy as shc
     Z = clust_results['Z']
-    dend = shc.dendrogram(Z, ax=ax[0], color_threshold=cutoff)
+    dend = shc.dendrogram(Z, ax=ax[0], color_threshold=cutoff, count_sort=True)
     reindex = clust_results['reindex']
     ax[0].set_xticklabels(label[x] for x in reindex)
     if cutoff is None:

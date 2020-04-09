@@ -136,15 +136,15 @@ def main(fname, out_main_dir, config):
             bv_plot.savefig(fig, cum_name)
 
         bv_clust = bool(int(config.get("Behav Plot", "clust")))
-        plot_feat = False
+        plot_feat = True
         if bv_clust:
             clust_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_clust-KMeans.png")
             fig, feat_df, bef_PCA = bv_an.trial_clustering(
-                s, should_pca=True, num_clusts=4)
+                s, should_pca=True, num_clusts=4, p_2D=False)
             bv_plot.savefig(fig, clust_name)
 
-            fig = bv_an.trial_clust_hier(s, cutoff=None)
+            fig = bv_an.trial_clust_hier(s, cutoff=8.5)
             clust_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_clust-hier.png")
             bv_plot.savefig(fig, clust_name)

@@ -302,7 +302,7 @@ class Session:
 
         return feat_df
 
-    def perform_pca(self, n_components=3, should_scale=True):
+    def perform_pca(self, n_components=4, should_scale=True):
         """
         Perform PCA on per trial features
 
