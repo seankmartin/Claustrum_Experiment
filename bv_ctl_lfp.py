@@ -138,6 +138,9 @@ def main(fname, out_main_dir, config):
         bv_clust = bool(int(config.get("Behav Plot", "clust")))
         plot_feat = True
         if bv_clust:
+            # s.perform_UMAP()  # Testing out UMAP
+            # s.perform_HDBSCAN()  # Testing out HDBSCAN
+
             clust_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_clust-KMeans.png")
             fig, feat_df, bef_PCA = bv_an.trial_clustering(

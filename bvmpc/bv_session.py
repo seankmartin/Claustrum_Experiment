@@ -23,7 +23,7 @@ from bvmpc.bv_array_methods import split_array
 from bvmpc.bv_array_methods import split_array_with_another
 from bvmpc.bv_array_methods import split_array_in_between_two
 import bvmpc.bv_plot as bv_plot
-
+import umap
 import scipy.cluster.hierarchy as shc
 
 
@@ -74,6 +74,7 @@ class Session:
         self.cluster_results = None
         self.clust_reord_trial_df = None
         self.insert = []  # Stores inserted reward ts due to post-hoc correction
+        self.title = None
 
         a = 0 if lines is None else 1
         b = 0 if h5_file is None else 1
@@ -115,9 +116,19 @@ class Session:
             print("Error: Unknown situation in Session init")
             exit(-1)
 
+        self.get_title()
+
     def init_trial_dataframe(self):
         """Initialise the trial based Pandas dataframe for this session."""
         self._init_trial_df()
+
+    def get_title(self):
+        if self.title is None:
+            date = self.get_metadata('start_date').replace('/', '_')
+            sub = self.get_metadata('subject')
+            stage = self.get_stage()
+            self.title = '{} {} S{}'.format(sub, date, stage)
+        return self.title
 
     def get_insert(self):
         """
@@ -247,7 +258,7 @@ class Session:
         Returns
         -------
         feat_df : pd.df
-            pandas dataframe with 
+            pandas dataframe with
         """
         if self.trial_df_norm is None:
             self.init_trial_dataframe()
@@ -328,36 +339,81 @@ class Session:
             "PCA fraction of explained variance", pca.explained_variance_ratio_)
         return data, after_pca, pca
 
+    def perform_HDBSCAN(self, should_scale=True):
+        """ Testing purposes only. Perform HDBSCAN on per trial features. """
+
+        fig, ax = plt.subplots(1, 2, figsize=(15, 8))
+        import hdbscan
+        _, data, _ = self.perform_pca(
+            n_components=None, should_scale=should_scale)
+        ax[0].set_xlabel('PCA 1')
+        ax[0].set_ylabel('PCA 2')
+
+        df = self.get_trial_df_norm()
+        markers = df['Schedule']
+        clusterer = hdbscan.HDBSCAN(
+            min_cluster_size=2)
+        clusterer.fit(data)
+        print(clusterer.labels_.max())
+        # HDBSCAN(algorithm='best', alpha=1.0, approx_min_span_tree=True,
+        #         gen_min_span_tree=False, leaf_size=40, memory=Memory(cachedir=None),
+        #         metric='euclidean', min_cluster_size=5, min_samples=None, p=None)
+
+        sns.scatterplot(data[:, 0], data[:, 1], s=50, linewidth=0,
+                        style=markers, hue=clusterer.labels_, palette='deep', ax=ax[0])
+
+        clusterer.condensed_tree_.plot(select_clusters=True,
+                                       selection_palette=sns.color_palette('deep')[1:], axis=ax[1])  # Plots condensed dendogram
+        plt.suptitle('HDBSCAN', fontsize=24)
+        fig.text(0.5, 0.91, self.get_title(),
+                 transform=fig.transFigure, ha='center')
+
+        plt.show()
+        exit(-1)
+
     def perform_UMAP(self, should_scale=True):
-        """
-        Perform UMAP on per trial features
-
-        Parameters
-        ------
-        n_components : int or float
-            the number of PCA components to compute
-            if float, uses enough components to reach that much variance
-        should_scale - whether to scale the data to unit variance
-
-        Returns
-        -------
-        tuple : (ndarray, ndarray, PCA)
-            (features 2d array, PCA of features, PCA object)
-
-        """
+        """ Testing purposes only. Perform UMAP on per trial features. """
         data = self.extract_features(should_scale=should_scale)
         df = self.get_trial_df_norm()
+        color = [sns.color_palette()[x]
+                 for x in df.Schedule.astype('category').cat.codes]
 
-        import umap
-        reducer = umap.UMAP()
-        embedding = reducer.fit_transform(data)
-        plt.scatter(embedding[:, 0], embedding[:, 1], c=[
-                    sns.color_palette()[x] for x in df.Schedule.astype('category').cat.codes])
-        plt.gca().set_aspect('equal', 'datalim')
-        plt.title('UMAP projection of the Behav', fontsize=24)
+        for n in (2, 5, 10, 20, 50, 100, 200):
+            self.draw_umap(data, color, n_neighbors=n,
+                           title='n_neighbors = {}'.format(n))
         plt.show()
+        exit(-1)
+
+        # reducer = umap.UMAP()
+        # embedding = reducer.fit_transform(data)
+        # plt.scatter(embedding[:, 0], embedding[:, 1], c=[
+        #             sns.color_palette()[x] for x in df.Schedule.astype('category').cat.codes])
+        # plt.gca().set_aspect('equal', 'datalim')
+        # plt.title('UMAP projection of the Behav', fontsize=24)
+        # plt.show()
 
         return data
+
+    def draw_umap(self, data, c, n_neighbors=15, min_dist=0.1, n_components=2, metric='euclidean', title=''):
+        """ For testing out UMAP parameters """
+        fit = umap.UMAP(
+            n_neighbors=n_neighbors,
+            min_dist=min_dist,
+            n_components=n_components,
+            metric=metric
+        )
+        u = fit.fit_transform(data)
+        fig = plt.figure()
+        if n_components == 1:
+            ax = fig.add_subplot(111)
+            ax.scatter(u[:, 0], range(len(u)), c=c)
+        if n_components == 2:
+            ax = fig.add_subplot(111)
+            ax.scatter(u[:, 0], u[:, 1], c=c)
+        if n_components == 3:
+            ax = fig.add_subplot(111, projection='3d')
+            ax.scatter(u[:, 0], u[:, 1], u[:, 2], c=c, s=100)
+        plt.title(title, fontsize=18)
 
     def hier_cluster(self, should_scale=True, cutoff=None):
         """
