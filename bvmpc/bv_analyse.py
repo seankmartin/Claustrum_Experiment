@@ -908,8 +908,8 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     Returns
     ----------
     fig : plot of first and second features
-    data : pd.Dataframe or np.arr of features after PCA or normalization
-    bef_PCA: pd.Dataframe or np.arr of features before PCA or normalization
+    data : pd.Dataframe of features after PCA or normalization
+    feat_df: pd.Dataframe of features before PCA or normalization
 
     '''
     if ax is None:

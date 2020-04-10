@@ -324,7 +324,7 @@ class Session:
 
         Returns
         -------
-        tuple : (ndarray, ndarray, PCA)
+        tuple : (pd.df, pd.df, PCA)
             (features 2d array, PCA of features, PCA object)
 
         """
