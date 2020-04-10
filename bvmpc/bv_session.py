@@ -328,6 +328,37 @@ class Session:
             "PCA fraction of explained variance", pca.explained_variance_ratio_)
         return data, after_pca, pca
 
+    def perform_UMAP(self, should_scale=True):
+        """
+        Perform UMAP on per trial features
+
+        Parameters
+        ------
+        n_components : int or float
+            the number of PCA components to compute
+            if float, uses enough components to reach that much variance
+        should_scale - whether to scale the data to unit variance
+
+        Returns
+        -------
+        tuple : (ndarray, ndarray, PCA)
+            (features 2d array, PCA of features, PCA object)
+
+        """
+        data = self.extract_features(should_scale=should_scale)
+        df = self.get_trial_df_norm()
+
+        import umap
+        reducer = umap.UMAP()
+        embedding = reducer.fit_transform(data)
+        plt.scatter(embedding[:, 0], embedding[:, 1], c=[
+                    sns.color_palette()[x] for x in df.Schedule.astype('category').cat.codes])
+        plt.gca().set_aspect('equal', 'datalim')
+        plt.title('UMAP projection of the Behav', fontsize=24)
+        plt.show()
+
+        return data
+
     def hier_cluster(self, should_scale=True, cutoff=None):
         """
         Perform hierarchical clustering on per trial features

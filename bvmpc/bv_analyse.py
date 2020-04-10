@@ -964,7 +964,7 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     date = s.get_metadata('start_date').replace('/', '_')
     sub = s.get_metadata('subject')
     stage = s.get_stage()
-    plot_name = 'PCA Clustering - kmeans c={}'.format(num_clusts)
+    plot_name = 'PCA Clustering - C={}'.format(num_clusts)
     ax.set_title('  {}'.format(plot_name),
                  y=1.04, ha='center', fontsize=25)
     if zs is None:
