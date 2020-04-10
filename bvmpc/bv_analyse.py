@@ -920,12 +920,14 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     if should_pca:
         feat_df, data, pca = s.perform_pca(should_scale=True)
         if (sum(pca.explained_variance_ratio_[:3]) < 0.8) and (p_2D is False):
-            xs, ys, zs = data[:, 0], data[:, 1], data[:, 2]  # Plot PC 1-3
+            xs, ys, zs = data.iloc[:, 0], data.iloc[:,
+                                                    1], data.iloc[:, 2]  # Plot PC 1-3
             # fig = plt.figure(figsize=plt.figaspect(0.85))
             ax = fig.add_subplot(1, 2, 1, projection='3d')
         else:
             ax = fig.add_subplot(1, 2, 1)
-            xs, ys, zs = data[:, 0], data[:, 1], None  # Plot PC 1 and 2 only
+            xs, ys, zs = data.iloc[:, 0], data.iloc[:,
+                                                    1], None  # Plot PC 1 and 2 only
         ax.set_xlabel('PC1')
         ax.set_ylabel('PC2')
 
@@ -961,14 +963,11 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     plt.scatter(centroids[:, 0], centroids[:, 1], c='grey', s=25)
 
     # Plot cosmetics
-    date = s.get_metadata('start_date').replace('/', '_')
-    sub = s.get_metadata('subject')
-    stage = s.get_stage()
     plot_name = 'PCA Clustering - C={}'.format(num_clusts)
     ax.set_title('  {}'.format(plot_name),
                  y=1.04, ha='center', fontsize=25)
     if zs is None:
-        ax.text(0.5, 1.015, '{} {} S{}'.format(sub, date, stage),
+        ax.text(0.5, 1.015, s.get_title(),
                 ha='center', transform=ax.transAxes, fontsize=12)
     ax.legend(fontsize=20, loc='upper right')
     # plot_loc = os.path.join("PCAclust.png")
@@ -1002,6 +1001,7 @@ def plot_feats(feat_df, ax=None):
     sns.boxplot(data=feat_df)
     ax.set_title('Cluster Features Boxplot',
                  y=1.04, ha='center', fontsize=25)
+
     return fig
 
 

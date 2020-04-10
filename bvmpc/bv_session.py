@@ -116,8 +116,6 @@ class Session:
             print("Error: Unknown situation in Session init")
             exit(-1)
 
-        self.get_title()
-
     def init_trial_dataframe(self):
         """Initialise the trial based Pandas dataframe for this session."""
         self._init_trial_df()
@@ -334,6 +332,8 @@ class Session:
         pca = PCA(n_components=n_components)
 
         after_pca = pca.fit_transform(data)
+        after_pca = pd.DataFrame(
+            after_pca, columns=['PC{}'.format(x) for x in np.arange(n_components)+1])
 
         print(
             "PCA fraction of explained variance", pca.explained_variance_ratio_)
@@ -421,9 +421,6 @@ class Session:
 
         Parameters
         ------
-        n_components : int or float
-            the number of PCA components to compute
-            if float, uses enough components to reach that much variance
         should_scale : bool, True
             whether to scale the data to unit variance
         cutoff: int, None

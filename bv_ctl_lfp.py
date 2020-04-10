@@ -154,11 +154,15 @@ def main(fname, out_main_dir, config):
 
             if plot_feat:
                 fig = bv_an.plot_feats(feat_df)
+                fig.text(0.5, 0.895, s.get_title(),
+                         transform=fig.transFigure, ha='center')
                 feat_plot_name = os.path.join(
                     o_dir, os.path.basename(fname) + "_bv_c_feats.png")
                 bv_plot.savefig(fig, feat_plot_name)
 
                 fig = bv_an.plot_feats(bef_PCA)
+                fig.text(0.5, 0.895, s.get_title(),
+                         transform=fig.transFigure, ha='center')
                 feat_plot_name = os.path.join(
                     o_dir, os.path.basename(fname) + "_bv_c_feats_bef.png")
                 bv_plot.savefig(fig, feat_plot_name)
