@@ -335,7 +335,7 @@ class Session:
             after_pca, columns=['PC{}'.format(x) for x in np.arange(after_pca.shape[1])+1])
 
         print(
-            "PCA fraction of explained variance", pca.explained_variance_ratio_)
+            "\nPCA fraction of explained variance", pca.explained_variance_ratio_)
         print(
             "Total explained variance: ", sum(pca.explained_variance_ratio_))
         return data, after_pca, pca
@@ -416,7 +416,7 @@ class Session:
             ax.scatter(u[:, 0], u[:, 1], u[:, 2], c=c, s=100)
         plt.title(title, fontsize=18)
 
-    def hier_cluster(self, should_scale=True, cutoff=None):
+    def hier_cluster(self, should_scale=True, should_pca=True, cutoff=None):
         """
         Perform hierarchical clustering on per trial features
 
@@ -433,8 +433,12 @@ class Session:
             {linkage matrix, index for sorting trials, cluster indices}
 
         """
-        # data = self.extract_features(should_scale=should_scale)
-        _, data, _ = self.perform_pca(n_components=5)
+        if should_pca:
+            _, data, _ = self.perform_pca(
+                n_components=5)  # Use PCA as features
+        else:
+            data = self.extract_features(
+                should_scale=should_scale)  # Use raw features
 
         Z = shc.linkage(data, method='ward')  # linkage matrix
 
@@ -457,7 +461,7 @@ class Session:
 
         return self.cluster_results
 
-    def get_cluster_results(self, cutoff=None):
+    def get_cluster_results(self, should_pca=True, cutoff=None):
         """ 
         Returns cluster results from hier_cluster
 
@@ -468,7 +472,7 @@ class Session:
 
         """
         if self.cluster_results is None:
-            self.hier_cluster(cutoff=cutoff)
+            self.hier_cluster(should_pca=should_pca, cutoff=cutoff)
         return self.cluster_results
 
     def get_cluster_ordering(self):

@@ -838,7 +838,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0, 0], rei
         color = mycolors(sub, sub_colors_dict)
 
     ax.set_title('  {}'.format(plot_name),
-                 y=1.04, ha='center', fontsize=25)
+                 y=1.04, ha='center', fontsize=20)
     ax.text(0.5, 1.015, '{} {} S{}'.format(sub, date, stage),
             ha='center', transform=ax.transAxes, fontsize=12)
 
@@ -961,6 +961,7 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     if zs is None:
         sns.scatterplot(xs, ys, ax=ax, style=markers,
                         hue=cluster.labels_, palette='bright')
+        ax.legend(fontsize=20, loc='upper right')
     else:
         # ax.scatter(xs, ys, zs, c=cluster.labels_, cmap='rainbow')
         mask = {'FR': 'x', 'FI': '^'}
@@ -968,21 +969,27 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
         for i in np.arange(len(xs)):
             ic = cmap[cluster.labels_[i]]
             ax.scatter(xs[i], ys[i], zs[i],
-                       marker=mask[markers[i]], c=[ic])
+                       marker=mask[markers[i]], c=[ic], s=40)
             PCA_colors.append(ic)
         ax.set_zlabel('PC3')
         ax.dist = 10
+        legend_c = [lines.Line2D([], [], color=cmap[c], ls='', marker='s', label='c{}'.format(c))
+                    for c in np.unique(cluster.labels_)]
+        legend_c.append(lines.Line2D([], [], color='k',
+                                     ls='', marker='x', label='FR'))
+        legend_c.append(lines.Line2D([], [], color='k',
+                                     ls='', marker='^', label='FI'))
+        ax.legend(handles=legend_c, fontsize=10, loc='upper right')
 
     plt.scatter(centroids[:, 0], centroids[:, 1], c='grey', s=25)
 
     # Plot cosmetics
-    plot_name = 'PCA Clustering - C={}'.format(num_clusts)
+    plot_name = 'Clusters = {}'.format(num_clusts)
     ax.set_title('  {}'.format(plot_name),
-                 y=1.04, ha='center', fontsize=25)
+                 y=1.04, ha='center', fontsize=20)
     if zs is None:
         ax.text(0.5, 1.015, s.get_title(),
                 ha='center', transform=ax.transAxes, fontsize=12)
-    ax.legend(fontsize=20, loc='upper right')
     # plot_loc = os.path.join("PCAclust.png")
 
     # Plot raster sorted by PCA clustering
@@ -998,6 +1005,12 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     ax1.tick_params(axis='y', labelsize=10)
     for i, color in enumerate(leaf_colors):
         ax1.get_yticklabels()[i].set_color(color)
+
+    # Figure title
+    plot_title = 'K-Means Clustering'
+    if should_pca:
+        plot_title += '_PCA'
+    fig.suptitle(plot_title, ha='center', fontsize=25)
 
     return fig, data, feat_df
 
@@ -1019,7 +1032,7 @@ def plot_feats(feat_df, ax=None):
     return fig
 
 
-def trial_clust_hier(s, ax=None, cutoff=None):
+def trial_clust_hier(s, ax=None, should_pca=True, cutoff=None):
     '''
     Plot dendrogram for trial-based hierarchical clustering results.
 
@@ -1046,7 +1059,7 @@ def trial_clust_hier(s, ax=None, cutoff=None):
     df["Temp"] = (df.index.map(str)) + " " + df["Schedule"]
     label = df["Temp"].tolist()
 
-    clust_results = s.get_cluster_results(cutoff=cutoff)
+    clust_results = s.get_cluster_results(should_pca=should_pca, cutoff=cutoff)
     import scipy.cluster.hierarchy as shc
     Z = clust_results['Z']
     dend = shc.dendrogram(Z, ax=ax[0], color_threshold=cutoff, count_sort=True)
@@ -1067,7 +1080,7 @@ def trial_clust_hier(s, ax=None, cutoff=None):
     stage = s.get_stage()
     plot_name = 'Dendrogram'
     ax[0].set_title('  {}'.format(plot_name),
-                    y=1.04, ha='center', fontsize=25)
+                    y=1.04, ha='center', fontsize=20)
     ax[0].text(0.5, 1.015, '{} {} S{}'.format(sub, date, stage),
                ha='center', transform=ax[0].transAxes, fontsize=12)
     ax[0].legend(fontsize=20)
@@ -1079,6 +1092,12 @@ def trial_clust_hier(s, ax=None, cutoff=None):
 
     for i, color in enumerate(leaf_colors):
         ax[1].get_yticklabels()[i].set_color(color)
+
+    # Figure title
+    plot_title = 'Hierarchical Clustering'
+    if should_pca:
+        plot_title += '_PCA'
+    fig.suptitle(plot_title, ha='center', fontsize=25)
 
     # # Plot cluster using hier clustering results
     # from sklearn.cluster import AgglomerativeClustering
