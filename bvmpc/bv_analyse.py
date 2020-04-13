@@ -696,7 +696,7 @@ def trial_length_hist(s, valid=True, ax=None, loop=None, sub_colors_dict=None):
     return fig
 
 
-def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0], reindex=None):
+def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0, 0], reindex=None):
     '''
     Plot raster of behaviour related ts aligned to different points.
 
@@ -707,9 +707,9 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0], reinde
         Optional ax object to plot into.
     sub_colors_dict: dict, None
         dict with subject: colors, used to assign color to title
-    align : list of bool, [0, 0, 0]
-        input structure - [align_rw, align_pell, align_FI]
-        if [0, 0, 0], start aligned.
+    align : list of bool, [0, 0, 0, 0]
+        input structure - [align_rw, align_pell, align_FI, align_FRes]
+        if [0, 0, 0, 0], start aligned.
     reindex: list, None
         list of which to reorder trials by
 
@@ -720,7 +720,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0], reinde
         fig = None
 
     # alignment decision
-    align_rw, align_pell, align_FI = align
+    align_rw, align_pell, align_FI, align_FRes = align
 
     # Retrive session related variables
     date = s.get_metadata('start_date').replace('/', '_')
@@ -736,8 +736,10 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0], reinde
     norm_dr = []
     norm_pell = []
     norm_rw = []
+    norm_FRes = []
     schedule_type = []
     norm_tone = []
+    norm_start = []
 
     # Extract data from pandas_df
     norm_lever[:] = trial_df['Levers_ts']
@@ -745,8 +747,10 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0], reinde
     norm_dr[:] = trial_df['D_Pellet_ts']
     norm_pell[:] = trial_df['Pellet_ts']
     norm_rw[:] = trial_df['Reward_ts']
+    norm_FRes[:] = trial_df['First_response']
     schedule_type[:] = trial_df['Schedule']
     norm_tone[:] = trial_df['Tone_s']
+    norm_start[:] = trial_df['Trial_s']
 
     color = []
 
@@ -760,13 +764,19 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0], reinde
         norm_arr = np.copy(norm_pell)
         xmax = 5
         xmin = -30
+
     elif align_FI:
         plot_type = 'Interval-Aligned'
         norm_arr = np.empty_like(norm_rw)
         norm_arr.fill(30)
+    elif align_FRes:
+        plot_type = 'First_Resp-Aligned'
+        norm_arr = np.copy(norm_FRes)
+        xmax = -10
+        xmin = 40
     else:
         plot_type = 'Start-Aligned'
-        norm_arr = np.zeros_like(norm_rw)
+        norm_arr = np.copy(norm_start)
         xmax = None
         xmin = None
         # xmax = 60
@@ -792,6 +802,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0], reinde
         norm_pell[i] -= norm_arr[i]
         norm_rw[i] -= norm_arr[i]
         norm_tone[i] -= norm_arr[i]
+        norm_start[i] -= norm_arr[i]
 
     # Plotting of raster
     ax.eventplot(norm_lever[:], color=color)
@@ -843,16 +854,17 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0], reinde
     if opt_plot[1]:
         for i, x in enumerate(norm_tone):  # Plot Tone presentation
             if x:
-                plt.barh(i, x, color='grey', hatch='///', alpha=0.05)
+                plt.broken_barh([(x, 5)], (i-.5, 1), color='grey', alpha=0.2,
+                                hatch='///', edgecolor='k')
         tone_label = mpatches.Patch(
-            facecolor='grey', alpha=0.05, hatch='///', label='Tone')
+            facecolor='grey', hatch='///', edgecolor='k', alpha=0.2, label='Tone')
         handles.append(tone_label)
 
     if opt_plot[2]:
-        for i, (x, sch) in enumerate(zip(norm_rw, schedule_type)):  # Plot DR window
+        for i, (x, sch) in enumerate(zip(norm_start, schedule_type)):  # Plot DR window
             if sch == 'FI':
-                plt.barh(i, left=norm_arr[i]+20, width=20,
-                         color='magenta', alpha=0.05)
+                plt.broken_barh([(x+20, 20)], (i-.4, 0.8),
+                                color='magenta', alpha=0.05)
         drwin_label = mpatches.Patch(
             color='magenta', alpha=0.05, label='dr_win')
         handles.append(drwin_label)
@@ -942,7 +954,7 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     cluster = KMeans(num_clusts)
     cluster.fit_predict(data)
     centroids = cluster.cluster_centers_
-    df = s.trial_df_norm
+    df = s.get_trial_df_norm()
     markers = df["Schedule"]
     cmap = sns.color_palette("bright")
     if zs is None:
@@ -980,6 +992,7 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     leaf_colors = sorted_df['colors']
 
     ax1 = fig.add_subplot(1, 2, 2)
+
     plot_raster_trials(s, ax1, reindex=reindex)
     ax1.tick_params(axis='y', labelsize=10)
     for i, color in enumerate(leaf_colors):
@@ -1028,9 +1041,9 @@ def trial_clust_hier(s, ax=None, cutoff=None):
     else:
         fig = None
 
-    df = s.trial_df_norm
+    df = s.get_trial_df_norm()
     df["Temp"] = (df.index.map(str)) + " " + df["Schedule"]
-    label = s.trial_df_norm["Temp"].tolist()
+    label = df["Temp"].tolist()
 
     clust_results = s.get_cluster_results(cutoff=cutoff)
     import scipy.cluster.hierarchy as shc
@@ -1071,7 +1084,7 @@ def trial_clust_hier(s, ax=None, cutoff=None):
     # cluster1 = AgglomerativeClustering(
     #     n_clusters=3, affinity='euclidean', linkage='ward')
     # cluster1.fit_predict(data_scaled)
-    # markers = s.trial_df_norm["Schedule"]
+    # markers = s.get_trial_df_norm["Schedule"]
     # plot_dim1, plot_dim2 = [0, 1]
     # sns.scatterplot(
     #     data_scaled.iloc[:, plot_dim1], data_scaled.iloc[:,

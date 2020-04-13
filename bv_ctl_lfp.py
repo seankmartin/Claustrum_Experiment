@@ -120,11 +120,13 @@ def main(fname, out_main_dir, config):
                 align_txt = "_pell"
             elif alignment[2]:
                 align_txt = "_int"
+            elif alignment[3]:
+                align_txt = "_FRes"
             else:
                 align_txt = "_start"
             raster_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_raster{}.png".format(align_txt))
-            fig = bv_an.plot_raster_trials(s, align=alignment[:3])
+            fig = bv_an.plot_raster_trials(s, align=alignment[:4])
             bv_plot.savefig(fig, raster_name)
 
         bv_cum = bool(int(config.get("Behav Plot", "cumulative")))
@@ -136,7 +138,7 @@ def main(fname, out_main_dir, config):
             bv_plot.savefig(fig, cum_name)
 
         bv_clust = bool(int(config.get("Behav Plot", "clust")))
-        plot_feat = True
+        plot_feat = False
         if bv_clust:
             # s.perform_UMAP()  # Testing out UMAP
             # s.perform_HDBSCAN()  # Testing out HDBSCAN
@@ -153,6 +155,7 @@ def main(fname, out_main_dir, config):
             bv_plot.savefig(fig, clust_name)
 
             if plot_feat:
+                # Boxplot for feat_df
                 fig = bv_an.plot_feats(feat_df)
                 fig.text(0.5, 0.895, s.get_title(),
                          transform=fig.transFigure, ha='center')
@@ -160,12 +163,42 @@ def main(fname, out_main_dir, config):
                     o_dir, os.path.basename(fname) + "_bv_c_feats.png")
                 bv_plot.savefig(fig, feat_plot_name)
 
+                # Boxplot for bef_PCA
                 fig = bv_an.plot_feats(bef_PCA)
                 fig.text(0.5, 0.895, s.get_title(),
                          transform=fig.transFigure, ha='center')
                 feat_plot_name = os.path.join(
                     o_dir, os.path.basename(fname) + "_bv_c_feats_bef.png")
                 bv_plot.savefig(fig, feat_plot_name)
+
+                hue_grouping = ''
+                if hue_grouping == 'Schedule':
+                    # Markers based on schedule
+                    df = s.get_trial_df_norm()
+                    feat_df['markers'] = df["Schedule"].astype('category')
+                    bef_PCA['markers'] = df["Schedule"].astype('category')
+                    hue = 'markers'
+
+                elif hue_grouping == 'clusters':
+                    # Markers based on hier_clustering
+                    clusters = s.get_cluster_results()['clusters']
+                    feat_df['markers'] = pd.Categorical(clusters)
+                    bef_PCA['markers'] = pd.Categorical(clusters)
+                    hue = 'markers'
+                else:
+                    hue = None
+
+                # Pairplot for feat_df
+                pp = sns.pairplot(feat_df, hue=hue)
+                sns_plot_name = os.path.join(
+                    o_dir, os.path.basename(fname) + "_bv_c_feats_pp.png")
+                pp.savefig(sns_plot_name)
+
+                # Pairplot for bef_PCA
+                pp = sns.pairplot(bef_PCA, hue=hue)
+                sns_plot_name = os.path.join(
+                    o_dir, os.path.basename(fname) + "_bv_c_feats_befpp.png")
+                pp.savefig(sns_plot_name)
 
         # Tone start times excluding first + end time
         blocks = np.append(s.get_tone_starts()[1:], s.get_block_ends()[-1])

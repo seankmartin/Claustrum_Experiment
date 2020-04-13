@@ -258,8 +258,7 @@ class Session:
         feat_df : pd.df
             pandas dataframe with
         """
-        if self.trial_df_norm is None:
-            self.init_trial_dataframe()
+        df = self.get_trial_df_norm()
         feat_names = ["Trial_Len", "Pell",
                       "Rw_lat", "Err", "1st_Resp", "Resp_n"]
         # Number of features before lever histogram
@@ -270,9 +269,9 @@ class Session:
             feat_names.append("L_Hist-{}".format(i))
 
         features = np.zeros(
-            shape=(len(self.trial_df_norm.index), len(feat_names)))
+            shape=(len(df.index), len(feat_names)))
         trial_idx = []
-        for row in self.trial_df_norm.itertuples():
+        for row in df.itertuples():
             index = row.Index
             features[index, 0] = row.Reward_ts  # Trial duration
             features[index, 1] = row.Pellet_ts  # Completion Latency
@@ -301,7 +300,7 @@ class Session:
 
         feat_df = pd.DataFrame(features, columns=feat_names)
 
-        # Drop columns with all zeros
+        # Drop features/columns with all zeros
         feat_df = feat_df.loc[:, (feat_df != 0).any(axis=0)]
 
         if should_scale:  # Normalize features
@@ -311,7 +310,7 @@ class Session:
 
         return feat_df
 
-    def perform_pca(self, n_components=4, should_scale=True):
+    def perform_pca(self, n_components=5, should_scale=True):
         """
         Perform PCA on per trial features
 
@@ -333,10 +332,12 @@ class Session:
 
         after_pca = pca.fit_transform(data)
         after_pca = pd.DataFrame(
-            after_pca, columns=['PC{}'.format(x) for x in np.arange(n_components)+1])
+            after_pca, columns=['PC{}'.format(x) for x in np.arange(after_pca.shape[1])+1])
 
         print(
             "PCA fraction of explained variance", pca.explained_variance_ratio_)
+        print(
+            "Total explained variance: ", sum(pca.explained_variance_ratio_))
         return data, after_pca, pca
 
     def perform_HDBSCAN(self, should_scale=True):
@@ -432,7 +433,8 @@ class Session:
             {linkage matrix, index for sorting trials, cluster indices}
 
         """
-        data = self.extract_features(should_scale=should_scale)
+        # data = self.extract_features(should_scale=should_scale)
+        _, data, _ = self.perform_pca(n_components=5)
 
         Z = shc.linkage(data, method='ward')  # linkage matrix
 

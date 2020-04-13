@@ -200,7 +200,7 @@ def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags, su
                     ax = gf.get_multi_ax(
                         k, k+2, 4*int(i/2), 4*math.ceil((i+1)/2))
                     bv_an.plot_raster_trials(
-                        s, ax, sub_colors_dict, align=[1, 0, 0])
+                        s, ax, sub_colors_dict, align=[0, 0, 1, 0])
                     plot_type = 'Raster_'  # Plot name for saving
 
                 if plt_flags["hist"] == 1:
