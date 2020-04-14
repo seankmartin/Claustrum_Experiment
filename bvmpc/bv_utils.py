@@ -344,6 +344,39 @@ def get_dist(x, plot=False):
     exit(-1)
 
 
+def test_all_hier_clustering(data, verbose=False):
+    """ For testing all perumatations for hierarchical clustering linkage """
+    import pandas as pd
+    import scipy.cluster.hierarchy as shc
+    from scipy.cluster.hierarchy import cophenet
+    from scipy.spatial.distance import pdist
+
+    link_methods = ['single', 'complete',
+                    'average', 'weighted', 'centroid', 'median', 'ward']
+    link_metric = ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', 'euclidean', 'hamming', 'jaccard', 'jensenshannon',
+                   'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule']
+
+    coph = np.zeros((len(link_methods), len(link_metric)))
+    for i, link in enumerate(link_methods):
+        for j, metric in enumerate(link_metric):
+            try:
+                Z = shc.linkage(data, method=link, metric=metric)
+                c, coph_dists = cophenet(Z, pdist(data))
+                coph[i, j] = c
+            except:
+                coph[i, j] = None
+
+    max_coph = np.nanmax(coph)
+    a, b = np.where(coph == max_coph)
+    coph_df = pd.DataFrame(coph, index=link_methods,
+                           columns=link_metric)
+    if verbose:
+        print(coph_df)
+    print('\nMax Cophentic Correlation Coefficient: ',
+          coph_df.index.values[a], coph_df.columns.values[b], max_coph)
+    exit(-1)
+
+
 if __name__ == "__main__":
     """Main entry point."""
     PARSER = argparse.ArgumentParser(

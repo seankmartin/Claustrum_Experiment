@@ -440,9 +440,12 @@ class Session:
             data = self.extract_features(
                 should_scale=should_scale)  # Use raw features
 
-        Z = shc.linkage(data, method='ward')  # linkage matrix
+        from bvmpc.bv_utils import test_all_hier_clustering
+        test_all_hier_clustering(data, verbose=False)
 
+        Z = shc.linkage(data, method='centroid')  # linkage matrix
         c, coph_dists = cophenet(Z, pdist(data))
+
         print('Cophentic Correlation Coefficient: ', c)
 
         dend = shc.dendrogram(Z, no_plot=True, color_threshold=cutoff)

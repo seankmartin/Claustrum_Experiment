@@ -138,7 +138,8 @@ def main(fname, out_main_dir, config):
             bv_plot.savefig(fig, cum_name)
 
         bv_clust = bool(int(config.get("Behav Plot", "clust")))
-        plot_feat = False
+        plot_feat_box, plot_feat_pp = [0, 0]  # True to plot feat details
+
         if bv_clust:
             # s.perform_UMAP()  # Testing out UMAP
             # s.perform_HDBSCAN()  # Testing out HDBSCAN
@@ -154,7 +155,7 @@ def main(fname, out_main_dir, config):
                 o_dir, os.path.basename(fname) + "_bv_clust-hier.png")
             bv_plot.savefig(fig, clust_name)
 
-            if plot_feat:
+            if plot_feat_box:
                 # Boxplot for feat_df
                 fig = bv_an.plot_feats(feat_df)
                 fig.text(0.5, 0.895, s.get_title(),
@@ -171,7 +172,8 @@ def main(fname, out_main_dir, config):
                     o_dir, os.path.basename(fname) + "_bv_c_feats_bef.png")
                 bv_plot.savefig(fig, feat_plot_name)
 
-                hue_grouping = ''
+            if plot_feat_pp:
+                hue_grouping = 'Schedule'
                 if hue_grouping == 'Schedule':
                     # Markers based on schedule
                     df = s.get_trial_df_norm()

@@ -508,8 +508,6 @@ def plot_arrows(ax, wcohere_pvals, aWCT=None, u=None, v=None, magnitute=None, qu
             high_points = np.nonzero(
                 magnitute[::y_res, ::x_res] > f_mean[::y_res, ::x_res])
 
-        # TODO ASK SEAN HOW THIS CAN BE DONE? np.nonzero for each row
-
         else:
             high_points = np.nonzero(WCT[::y_res, ::x_res] > 0.5)
         sub_t = t[::x_res][high_points[1]]
@@ -579,7 +577,8 @@ def wcohere_mean(WCT, aWCT, t_blocks=None):
         v_this_trial.fill(np.nan)
 
         if a >= 0:
-            _, y = WCT[:, start_idx:end_idx].shape  # For when window exceeds session length (eg. Last trial)
+            # For when window exceeds session length (eg. Last trial)
+            _, y = WCT[:, start_idx:end_idx].shape
             WCT_this_trial[:, :y] = WCT[:, start_idx:end_idx]
             u_this_trial[:, :y] = u[:, start_idx:end_idx]
             v_this_trial[:, :y] = v[:, start_idx:end_idx]
