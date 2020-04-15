@@ -716,17 +716,20 @@ def main(fname, out_main_dir, config):
             # 0 - Align to reward
             # 1 - Align to pellet drop
             # 2 - Align to FI
-            # 3 - Align to Double Reward
-            # 4 - Align to Tone
+            # 3 - Align to First Response
+            # 4 - Align to Double Reward
+            # 5 - Align to Tone
+            # if all 0, plots from start of trial
 
-            # alignment = [0, 1, 0, 0, 0]
-            # trial_df = s.get_trial_df()
+            # alignment = [0, 0, 0, 0, 0, 0]
+
             trial_df = s.get_valid_tdf()
+            # trial_df = s.get_trial_df()
 
             if alignment[0]:
                 align_df = trial_df['Reward_ts']
                 align_txt = "Reward"
-                t_win = [-5, 30]  # Set time window for plotting from reward
+                t_win = [-10, 10]  # Set time window for plotting from reward
                 quiv_x = 0.2
             elif alignment[1]:
                 align_df = trial_df['Pellet_ts']
@@ -741,11 +744,16 @@ def main(fname, out_main_dir, config):
                 align_txt = "Interval"
                 quiv_x = 0.5
             elif alignment[3]:
+                align_df = trial_df['First_response']
+                align_txt = "FResp"
+                t_win = [-10, 5]  # Set time window for plotting from pell
+                quiv_x = 0.2
+            elif alignment[4]:
                 align_df = trial_df['D_Pellet_ts']
                 align_txt = "DPell"
                 t_win = [-30, 5]  # Set time window for plotting from dpell
                 quiv_x = 0.5
-            elif alignment[4]:
+            elif alignment[5]:
                 align_df = s.get_tone_starts()+5
                 align_txt = "Tone"
                 t_win = [-10, 25]  # Set time window for plotting from tone
@@ -798,7 +806,7 @@ def main(fname, out_main_dir, config):
 
             # Pickle wcohere_results for faster performance
             overwrite_pickles = bool(
-                int(config.get("Wavelet", "p_wcohere_mean")))
+                int(config.get("Wavelet", "overwrite_pickles")))
             pickle_name = os.path.join(wo_dir, "wcohere_results.p")
             if overwrite_pickles:
                 print('Delete pickle wcohere_results from', pickle_name)
@@ -814,6 +822,28 @@ def main(fname, out_main_dir, config):
                 print('Saving pickle wcohere_results to', pickle_name)
 
             _, wcohere_pvals = plot_wcohere(*wcohere_results[:3], ax=ax)
+
+            # TODO Finish signle frequency extraction
+            # # Extract wcohere of target frequency
+            # target_freq = 8
+            # WCT, t, freq, coi, sig, aWCT = wcohere_results
+            # freq_idx = np.where(np.round(freq, decimals=1) == target_freq)
+            # t_freq_wcohere = np.empty((len(trials), np.diff(t_win)[0]*250))
+            # print('min phase: ', np.nanmin(np.abs(aWCT)))
+            # print('max phase: ', np.nanmax(np.abs(aWCT)))
+
+            # fig, ax = plt.subplots()
+            # print(trial_df)
+            # for i, (a, b) in enumerate(trials):
+            #     print(i,  int(a*250), int(b*250))
+            #     t_freq_wcohere[i, :] = WCT[freq_idx, int(a*250):int(b*250)]
+            # t_freq_df = pd.DataFrame(
+            #     t_freq_wcohere, columns=np.arange(*t_win, 1/250))
+            # t_freq_df['Schedule'] = trial_df['Schedule']
+            # sns.lineplot(x="columns", y="index", data=t_freq_df, ax=ax,
+            #              hue=trial_df['Schedule'])
+            # plt.show()
+            # exit(-1)
 
             # Plot customization params
             plt.tick_params(labelsize=20)
@@ -856,7 +886,8 @@ def main(fname, out_main_dir, config):
 
             p_trials = bool(int(config.get("Wavelet", "p_trials")))
             if p_trials:
-                plot_arrows(ax, wcohere_pvals, wcohere_results[-1], quiv_x=0.5)
+                plot_arrows(ax, wcohere_pvals,
+                            wcohere_results[-1], quiv_x=0.5)
                 tr_out_name = os.path.join(
                     wo_dir, "Trials", os.path.basename(out_name))
                 for t, ((b_start, b_end), sch) in enumerate(zip(trials, t_sch)):
@@ -891,9 +922,6 @@ def main(fname, out_main_dir, config):
                 else:
                     t_block_list.append(trials)
                     t_block_sch.append("")
-                print(trial_df)
-                print(t_block_list)
-                exit(-1)
 
                 for i, (trials, b_sch) in enumerate(zip(t_block_list, t_block_sch)):
                     if split_sch:
