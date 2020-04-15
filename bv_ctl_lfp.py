@@ -825,17 +825,18 @@ def main(fname, out_main_dir, config):
                 plot_arrows(ax, wcohere_pvals, wcohere_results[-1], quiv_x=5)
                 b_out_name = os.path.join(
                     wo_dir, "Blocks", os.path.basename(out_name))
+
                 for b, ((b_start, b_end), sch) in enumerate(zip(blocks_re, sch_name)):
                     o_name = b_out_name + str(b+1) + ".png"
+                    make_path_if_not_exists(o_name)
                     sch_n = str(b+1) + "-" + sch
-
                     fig1, a1 = fig, ax
                     a1.set_xlim(b_start, b_end)
                     a1.set_title(title+sch_n, fontsize=30, y=1.01)
                     print("Saving result to {}".format(o_name))
                     fig1.savefig(o_name, dpi=150)
                     # bv_plot.savefig(fig1, o_name)
-                    plt.close(fig1)
+                plt.close(fig1)
 
             p_trials = bool(int(config.get("Wavelet", "p_trials")))
             if p_trials:

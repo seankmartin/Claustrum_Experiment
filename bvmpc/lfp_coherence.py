@@ -294,10 +294,9 @@ def plot_wave_coherence(
     return (fig, [WCT, aWCT, coi, freq, sig])
 
 
-def calc_wave_coherence(wave1, wave2, sample_times, min_freq=1, max_freq=256, sig=False, resolution=12):
+def calc_wave_coherence(wave1, wave2, sample_times, min_freq=1, max_freq=128, sig=False, resolution=12):
     """
     Calculate wavelet coherence between wave1 and wave2 using pycwt.
-    TODO fix min_freq, max_freq
 
     Parameters
     ----------
@@ -328,13 +327,21 @@ def calc_wave_coherence(wave1, wave2, sample_times, min_freq=1, max_freq=256, si
     """
 
     t = np.asarray(sample_times)
-    dt = np.mean(np.diff(t))
+    dt = np.mean(np.diff(t))  # dt = 0.004
+
     dj = resolution
-    s0 = min_freq * dt
-    if s0 < 2 * dt:
+    s0 = 1/max_freq
+    if s0 < (2 * dt):
         s0 = 2 * dt
-    max_J = max_freq * dt
+    max_J = 1/min_freq
     J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
+
+    # # Original by Sean
+    # s0 = min_freq * dt
+    # if s0 < (2 * dt):
+    #     s0 = 2 * dt
+    # max_J = max_freq * dt
+    # J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
 
     # Do the actual calculation
     print("Calculating coherence...")
