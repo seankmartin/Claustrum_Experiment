@@ -1211,7 +1211,7 @@ class Session:
         Returns trial_df of excluding:
             First trial in FI blocks
             Trials with post-hoc modification of reward timestamp
-            Trials > 60s
+            Trials more than 60s
 
         Parameters
         ----------

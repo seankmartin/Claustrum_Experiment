@@ -731,24 +731,24 @@ def main(fname, out_main_dir, config):
             elif alignment[1]:
                 align_df = trial_df['Pellet_ts']
                 align_txt = "Pell"
-                t_win = [-10, 5]  # Set time window for plotting from reward
+                t_win = [-10, 5]  # Set time window for plotting from pell
                 quiv_x = 0.2
             elif alignment[2]:
                 align_df = trial_df['Reward_ts']
                 # Exclude first and last trial
                 align_df = align_df[1:-1].add(30)
-                t_win = [-30, 5]  # Set time window for plotting from reward
+                t_win = [-30, 5]  # Set time window for plotting from interval
                 align_txt = "Interval"
                 quiv_x = 0.5
             elif alignment[3]:
                 align_df = trial_df['D_Pellet_ts']
                 align_txt = "DPell"
-                t_win = [-30, 5]  # Set time window for plotting from reward
+                t_win = [-30, 5]  # Set time window for plotting from dpell
                 quiv_x = 0.5
             elif alignment[4]:
                 align_df = s.get_tone_starts()+5
                 align_txt = "Tone"
-                t_win = [-10, 25]  # Set time window for plotting from reward
+                t_win = [-10, 25]  # Set time window for plotting from tone
                 quiv_x = 0.5
             else:  # Start aligned
                 align_df = trial_df['Trial_s']
@@ -794,8 +794,24 @@ def main(fname, out_main_dir, config):
             #     plot_period=False, all_arrows=False, ax=ax, quiv_x=quiv_x)
 
             from bvmpc.lfp_coherence import calc_wave_coherence, plot_wcohere, plot_arrows
-            wcohere_results = calc_wave_coherence(lfp1.get_samples(
-            ), lfp2.get_samples(), lfp1.get_timestamp())
+            import pickle
+
+            # Pickle wcohere_results for faster performance
+            overwrite_pickles = bool(
+                int(config.get("Wavelet", "p_wcohere_mean")))
+            pickle_name = os.path.join(wo_dir, "wcohere_results.p")
+            if overwrite_pickles:
+                print('Delete pickle wcohere_results from', pickle_name)
+                os.remove(pickle_name)
+            try:
+                wcohere_results = pickle.load(open(pickle_name, "rb"))
+                print('Loading pickle wcohere_results from', pickle_name)
+
+            except:
+                wcohere_results = calc_wave_coherence(lfp1.get_samples(
+                ), lfp2.get_samples(), lfp1.get_timestamp())
+                pickle.dump(wcohere_results, open(pickle_name, "wb"))
+                print('Saving pickle wcohere_results to', pickle_name)
 
             _, wcohere_pvals = plot_wcohere(*wcohere_results[:3], ax=ax)
 
@@ -875,6 +891,9 @@ def main(fname, out_main_dir, config):
                 else:
                     t_block_list.append(trials)
                     t_block_sch.append("")
+                print(trial_df)
+                print(t_block_list)
+                exit(-1)
 
                 for i, (trials, b_sch) in enumerate(zip(t_block_list, t_block_sch)):
                     if split_sch:
