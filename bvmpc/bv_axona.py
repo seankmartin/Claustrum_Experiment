@@ -256,6 +256,7 @@ class AxonaSet:
         day, month, year = rest.split(" ")
         month = change[month]
         month = "0" + str(month) if month < 10 else month
+        day = "0" + day if int(day) < 10 else day
         output = "{}/{}/{}".format(month, day, year[2:])
         return output
 

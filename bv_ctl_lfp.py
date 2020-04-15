@@ -7,7 +7,7 @@ import seaborn as sns
 from bvmpc.bv_session_extractor import SessionExtractor
 from bvmpc.bv_session import Session
 import bvmpc.bv_analyse as bv_an
-from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list, get_all_files_in_dir, log_exception, chunks, save_dict_to_csv, make_path_if_not_exists, read_cfg, parse_args
+from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list, get_all_files_in_dir, log_exception, chunks, save_dict_to_csv, make_path_if_not_exists, read_cfg, parse_args, get_dist
 import bvmpc.bv_plot as bv_plot
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -16,8 +16,10 @@ from datetime import date, timedelta, datetime
 
 from bvmpc.lfp_odict import LfpODict
 import neurochat.nc_plot as nc_plot
+from bvmpc.compare_lfp import compare_lfp
 
 from bvmpc.lfp_plot import plot_lfp, plot_coherence, lfp_csv
+import bvmpc.bv_analyse as bv_an
 
 
 def main(fname, out_main_dir, config):
@@ -28,7 +30,10 @@ def main(fname, out_main_dir, config):
         filenames to be analysed
 
     Saves plots in a !LFP folder inside out_main_dir
+
     '''
+    o_dir = os.path.join(out_main_dir, "!LFP")
+    make_dir_if_not_exists(o_dir)
 
     analysis_flags = json.loads(config.get("Setup", "analysis_flags"))
     alignment = json.loads(config.get("Setup", "alignment"))
@@ -77,28 +82,156 @@ def main(fname, out_main_dir, config):
         behav = bool(int(config.get("Behav Params", "behav")))
         behav_plot = json.loads(config.get("Behav Params", "behav_plot"))
 
-    # Load behaviour-related data
-    s = load_bv_from_set(fname)
-    sch_type = s.get_arrays('Trial Type')  # FR = 1, FI = 0
+        # s = None
+        # Load behaviour-related data
+        s = load_bv_from_set(fname)
+        sch_type = s.get_arrays('Trial Type')  # FR = 1, FI = 0
 
-    o_dir = os.path.join(out_main_dir, "!LFP")
-    make_dir_if_not_exists(o_dir)
+        # Plot behaviour-related plots
+        bv_hist = bool(int(config.get("Behav Plot", "hist")))
+        valid = True
+        if bv_hist:  # Plot trial length histogram
+            hist_name = os.path.join(
+                o_dir, os.path.basename(fname) + "_bv_h-tlen.png")
+            fig = bv_an.trial_length_hist(s, valid=valid)
+            bv_plot.savefig(fig, hist_name)
+
+        bv_hist_lev = bool(int(config.get("Behav Plot", "hist_lev")))
+        if bv_hist_lev:  # Plot lever response histogram
+            excl_dr = False  # Exclude double reward trials from lever hist
+            if excl_dr:
+                txt = '_exdr'
+            else:
+                txt = ''
+            fig, ax = plt.subplots(1, 2, figsize=(20, 10))
+            hist_name = os.path.join(
+                o_dir, os.path.basename(fname) + "_bv_h-lev{}.png".format(txt))
+            bv_an.lever_hist(s, ax=ax[0], valid=valid,
+                             excl_dr=excl_dr, split_t=False)
+            bv_an.lever_hist(s, ax=ax[1], valid=valid,
+                             excl_dr=excl_dr, split_t=True)
+            bv_plot.savefig(fig, hist_name)
+
+        bv_raster = bool(int(config.get("Behav Plot", "raster")))
+        if bv_raster:  # Plot behaviour raster
+            if alignment[0]:
+                align_txt = "_rw"
+            elif alignment[1]:
+                align_txt = "_pell"
+            elif alignment[2]:
+                align_txt = "_int"
+            elif alignment[3]:
+                align_txt = "_FRes"
+            else:
+                align_txt = "_start"
+            raster_name = os.path.join(
+                o_dir, os.path.basename(fname) + "_bv_raster{}.png".format(align_txt))
+            fig = bv_an.plot_raster_trials(s, align=alignment[:4])
+            bv_plot.savefig(fig, raster_name)
+
+        bv_cum = bool(int(config.get("Behav Plot", "cumulative")))
+        if bv_cum:  # Plot cummulative lever response
+            cum_name = os.path.join(
+                o_dir, os.path.basename(fname) + "_bv_cum.png")
+            fig = bv_an.cumplot_axona(s)
+
+            bv_plot.savefig(fig, cum_name)
+
+        bv_clust = bool(int(config.get("Behav Plot", "clust")))
+        plot_feat_box, plot_feat_pp = [0, 0]  # True to plot feat details
+
+        if bv_clust:
+            # s.perform_UMAP()  # Testing out UMAP
+            # s.perform_HDBSCAN()  # Testing out HDBSCAN
+
+            clust_name = os.path.join(
+                o_dir, os.path.basename(fname) + "_bv_clust-KMeans.png")
+            fig, feat_df, bef_PCA = bv_an.trial_clustering(
+                s, should_pca=True, num_clusts=4, p_2D=False)
+            bv_plot.savefig(fig, clust_name)
+
+            fig = bv_an.trial_clust_hier(s, should_pca=True, cutoff=8.5)
+            clust_name = os.path.join(
+                o_dir, os.path.basename(fname) + "_bv_clust-hier.png")
+            bv_plot.savefig(fig, clust_name)
+
+            if plot_feat_box:
+                # Boxplot for feat_df
+                fig = bv_an.plot_feats(feat_df)
+                fig.text(0.5, 0.895, s.get_title(),
+                         transform=fig.transFigure, ha='center')
+                feat_plot_name = os.path.join(
+                    o_dir, os.path.basename(fname) + "_bv_c_feats.png")
+                bv_plot.savefig(fig, feat_plot_name)
+
+                # Boxplot for bef_PCA
+                fig = bv_an.plot_feats(bef_PCA)
+                fig.text(0.5, 0.895, s.get_title(),
+                         transform=fig.transFigure, ha='center')
+                feat_plot_name = os.path.join(
+                    o_dir, os.path.basename(fname) + "_bv_c_feats_bef.png")
+                bv_plot.savefig(fig, feat_plot_name)
+
+            if plot_feat_pp:
+                hue_grouping = 'Schedule'
+                if hue_grouping == 'Schedule':
+                    # Markers based on schedule
+                    df = s.get_trial_df_norm()
+                    feat_df['markers'] = df["Schedule"].astype('category')
+                    bef_PCA['markers'] = df["Schedule"].astype('category')
+                    hue = 'markers'
+
+                elif hue_grouping == 'clusters':
+                    # Markers based on hier_clustering
+                    clusters = s.get_cluster_results()['clusters']
+                    feat_df['markers'] = pd.Categorical(clusters)
+                    bef_PCA['markers'] = pd.Categorical(clusters)
+                    hue = 'markers'
+                else:
+                    hue = None
+
+                # Pairplot for feat_df
+                pp = sns.pairplot(feat_df, hue=hue)
+                sns_plot_name = os.path.join(
+                    o_dir, os.path.basename(fname) + "_bv_c_feats_pp.png")
+                pp.savefig(sns_plot_name)
+
+                # Pairplot for bef_PCA
+                pp = sns.pairplot(bef_PCA, hue=hue)
+                sns_plot_name = os.path.join(
+                    o_dir, os.path.basename(fname) + "_bv_c_feats_befpp.png")
+                pp.savefig(sns_plot_name)
+
+        # Tone start times excluding first + end time
+        blocks = np.append(s.get_tone_starts()[1:], s.get_block_ends()[-1])
+        # print(blocks)
 
     # Plots raw LFP for all tetrodes or output csv with artf_removal results
+    r_SI = bool(int(config.get("Setup", "r_SI")))
     r_plot = bool(int(config.get("Setup", "r_plot")))
     r_csv = bool(int(config.get("Setup", "r_csv")))
+    # Differential Recording mode (lfp1 - lfp2 in same shuttle)
+    DR = bool(int(config.get("Setup", "DR")))
 
     for p, lfp_odict in enumerate(lfp_list):
         if r_plot:
             ro_dir = os.path.join(o_dir, "Raw")
             make_dir_if_not_exists(ro_dir)
             # Plot raw LFP for all tetrodes in segments
-            plot_lfp(ro_dir, lfp_odict, splits=np.concatenate([[0], s.get_block_ends()]),
+            if s:
+                splits = np.concatenate([[0], s.get_block_ends()])
+            else:
+                splits = None
+            plot_lfp(ro_dir, lfp_odict, splits=splits,
                      sd=sd_thres, filt=filt, artf=artf, session=s)
         if r_csv:
             shut_s, shut_end = p*16, 16+p*16
             lfp_csv(fname, o_dir, lfp_odict, sd_thres,
                     min_artf_freq, shuttles[shut_s:shut_end], filt)
+
+    # Plots Similarity Index for LFP tetrodes
+    if r_SI:
+        compare_lfp(fname, o_dir, ch=chan_amount)
 
     if analysis_flags[0]:   # Plot periodograms and ptr for each tetrode seperately
         """
@@ -121,7 +254,7 @@ def main(fname, out_main_dir, config):
             #     out_name = os.path.join(o_dir, "p", key + "p.png")
             #     make_path_if_not_exists(out_name)
             #     fig.suptitle("T" + key + " " + regions[i] + " Periodogram")
-            #     fig.savefig(out_name)
+            #     bv_plot.savefig(fig, out_name)
             #     plt.close()
 
             if indiv:
@@ -137,11 +270,12 @@ def main(fname, out_main_dir, config):
                         db=False, tr=False)
                     ax = gf.get_next(along_rows=False)
                     color = gm.get_next_color()
-                    nc_plot.lfp_spectrum(graph_data, ax, color)
+                    nc_plot.lfp_spectrum(
+                        graph_data, ax, color, style="Thin-Dashed")
                     plt.ylim(0, 0.015)
                     # plt.xlim(0, 40)
                     ax.text(0.49, 1.08, regions[i+p*16], fontsize=20,
-                            horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+                            ha='center', va='center', transform=ax.transAxes)
                 if p:
                     gf.fig.suptitle(
                         (fname.split("\\")[-1][4:] + " Periodogram " + str(p)), fontsize=30)
@@ -153,8 +287,7 @@ def main(fname, out_main_dir, config):
                     out_name = os.path.join(
                         o_dir, fname.split("\\")[-1] + "_p_sum.png")
                 make_path_if_not_exists(out_name)
-                print("Saving result to {}".format(out_name))
-                gf.fig.savefig(out_name)
+                bv_plot.savefig(gf.get_fig(), out_name)
                 plt.close()
 
             if spec:
@@ -164,15 +297,19 @@ def main(fname, out_main_dir, config):
                         ptype='psd', prefilt=False,
                         db=True, tr=True)
                     if graph_data['t'][-1] > 305:
-                        block_size = 305
                         rows, cols = [6, 1]
                         gf = bv_plot.GridFig(rows, cols, wspace=0.3,
                                              hspace=0.3, size_multiplier_x=40, tight_layout=False)
-                        for j in range(0, block_size*6, block_size):
-                            tone_ts = range(j+5, j+305, 300)
+                        for k, j in enumerate(blocks):
+                            tone_ts = s.get_tone_starts()+5
                             ax = gf.get_next(along_rows=True)
-                            new_lfp = lfp.subsample(
-                                sample_range=(j, j+block_size))
+
+                            if k == 0:
+                                new_lfp = lfp.subsample(
+                                    sample_range=(0, j))
+                            else:
+                                new_lfp = lfp.subsample(
+                                    sample_range=(blocks[k-1], j))
                             graph_data = new_lfp.spectrum(
                                 ptype='psd', prefilt=False,
                                 db=True, tr=True)
@@ -198,8 +335,7 @@ def main(fname, out_main_dir, config):
                                      regions[i+p*16] + " Spectrogram")
                     out_name = os.path.join(o_dir, "ptr", key + "ptr.png")
                     make_path_if_not_exists(out_name)
-                    print("Saving result to {}".format(out_name))
-                    fig.savefig(out_name)
+                    bv_plot.savefig(fig, out_name)
                     plt.close()
 
     if analysis_flags[1]:   # Complie graphs per session in a single .png
@@ -213,36 +349,66 @@ def main(fname, out_main_dir, config):
                 signal_used = lfp_odict.get_clean_signal()
             else:
                 signal_used = lfp_odict.get_filt_signal()
+
             for i, (key, lfp) in enumerate(signal_used.items()):
-                graph_data = lfp.spectrum(
-                    ptype='psd', prefilt=False,
-                    db=False, tr=False)
                 color = gm.get_next_color()
-                nc_plot.lfp_spectrum(graph_data, ax, color)
-                legend.append(regions[i+p*16] + " T" + key)
-                cur_max_p = max(graph_data['Pxx'])
-                if cur_max_p > max_p:
-                    max_p = cur_max_p
+                if DR:  # Hardfix for DR mode
+                    if i % 2 == 1:
+                        lfp._set_samples(
+                            lfp.get_samples() - signal_used[str(i)].get_samples())
+                        graph_data = lfp.spectrum(
+                            ptype='psd', prefilt=False,
+                            db=False, tr=False)
+                        nc_plot.lfp_spectrum(
+                            graph_data, ax, color, style="Dashed")
+                        legend.append(regions[i+p*16] + " T" + key)
+                        cur_max_p = max(graph_data['Pxx'])
+                        if cur_max_p > max_p:
+                            max_p = cur_max_p
+                        else:
+                            continue
                 else:
-                    continue
+                    graph_data = lfp.spectrum(
+                        ptype='psd', prefilt=False,
+                        db=False, tr=False)
+                    nc_plot.lfp_spectrum(
+                        graph_data, ax, color, style="Dashed")
+                    legend.append(regions[i+p*16] + " T" + key)
+                    cur_max_p = max(graph_data['Pxx'])
+                    if cur_max_p > max_p:
+                        max_p = cur_max_p
+                    else:
+                        continue
         plt.tick_params(labelsize=20)
         ax.xaxis.label.set_size(25)
         ax.yaxis.label.set_size(25)
         plt.ylim(0, max_p+max_p*0.1)
         plt.xlim(0, filt_top)
         plt.legend(legend, fontsize=15)
-        if artf:
-            plt.title(fname.split("\\")[-1][4:] +
-                      " Compiled Periodogram - Clean", fontsize=40, y=1.02)
-            out_name = os.path.join(
-                o_dir, fname.split("\\")[-1] + "_p_Clean.png")
+        if DR:  # Hard fix for naming if Differential recording is used
+            if artf:
+                plt.title(fname.split("\\")[-1][4:] +
+                          " Compiled Periodogram - Clean_dr", fontsize=40, y=1.02)
+                out_name = os.path.join(
+                    o_dir, fname.split("\\")[-1] + "_p_Clear_dr.png")
+            else:
+                plt.title(fname.split("\\")[-1][4:] +
+                          " Compiled Periodogram_dr", fontsize=40, y=1.02)
+                out_name = os.path.join(
+                    o_dir, fname.split("\\")[-1] + "_p_dr.png")
         else:
-            plt.title(fname.split("\\")[-1][4:] +
-                      " Compiled Periodogram", fontsize=40, y=1.02)
-            out_name = os.path.join(o_dir, fname.split("\\")[-1] + "_p.png")
+            if artf:
+                plt.title(fname.split("\\")[-1][4:] +
+                          " Compiled Periodogram - Clean", fontsize=40, y=1.02)
+                out_name = os.path.join(
+                    o_dir, fname.split("\\")[-1] + "_p_Clear.png")
+            else:
+                plt.title(fname.split("\\")[-1][4:] +
+                          " Compiled Periodogram", fontsize=40, y=1.02)
+                out_name = os.path.join(
+                    o_dir, fname.split("\\")[-1] + "_p.png")
         make_path_if_not_exists(out_name)
-        print("Saving result to {}".format(out_name))
-        fig.savefig(out_name)
+        bv_plot.savefig(fig, out_name)
         plt.close()
 
         if spec:
@@ -265,7 +431,7 @@ def main(fname, out_main_dir, config):
                     # plt.xlim(0, 40)
                     color = gm.get_next_color()
                     ax.text(0.49, 1.08, regions[i+p*16], fontsize=20, color=color,
-                            horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+                            ha='center', va='center', transform=ax.transAxes)
 
                 if p:
                     gf.fig.suptitle(
@@ -278,8 +444,7 @@ def main(fname, out_main_dir, config):
                     out_name = os.path.join(
                         o_dir, "Sum_ptr", fname.split("\\")[-1] + "_ptr_sum.png")
                 make_path_if_not_exists(out_name)
-                print("Saving result to {}".format(out_name))
-                gf.fig.savefig(out_name)
+                bv_plot.savefig(gf.get_fig(), out_name)
                 plt.close()
 
     if analysis_flags[2]:    # Compare periodograms for FR and FI for specific eegs
@@ -291,10 +456,12 @@ def main(fname, out_main_dir, config):
             for i, (key, lfp) in enumerate(lfp_odict.get_clean_signal().items()):
                 ax = gf.get_next(along_rows=False)
                 legend = []
-                block_size = 305
                 sch_name = []
-                for k, j in enumerate(range(0, block_size*6, block_size)):
-                    new_lfp = lfp.subsample(sample_range=(j, j+block_size))
+                for k, j in enumerate(blocks):
+                    if k == 0:
+                        new_lfp = lfp.subsample(sample_range=(0, j))
+                    else:
+                        new_lfp = lfp.subsample(sample_range=(blocks[k-1], j))
                     graph_data = new_lfp.spectrum(
                         ptype='psd', prefilt=False,
                         db=False, tr=False)
@@ -306,9 +473,11 @@ def main(fname, out_main_dir, config):
                     elif sch_type[k] == 0:
                         sch_name.append("FI")
                         legend.append("{}-FI".format(k))
-                    nc_plot.lfp_spectrum(graph_data, ax, color)
+                    nc_plot.lfp_spectrum(
+                        graph_data, ax, color, style='Thin-Dashed')
                     plt.ylim(0, 0.0045)
-                    plt.xlim(0, filt_top)
+                    plt.xlim(0, 40)
+                    # plt.xlim(0, filt_top)
                 # plt.tick_params(labelsize=15)
                 plt.legend(legend)
                 reg_color = gm.get_next_color()
@@ -333,14 +502,13 @@ def main(fname, out_main_dir, config):
                     out_name = os.path.join(o_dir, fname.split(
                         "\\")[-1] + "_p_com.png")
             make_path_if_not_exists(out_name)
-            print("Saving result to {}".format(out_name))
-            gf.fig.savefig(out_name)
+            bv_plot.savefig(gf.get_fig(), out_name)
             plt.close()
 
-    if analysis_flags[3]:   # Compare coherence in terms of freq between ACC & RSC
+    if analysis_flags[3]:   # Compare coherence in terms of freq between pairs of areas
         # lfp_list = select_lfp(fname, ROI)
         matlab = False
-        cross = True
+        cross = False
         cohere = True
 
         wchans = [int(x) for x in config.get("Wavelet", "wchans").split(", ")]
@@ -357,14 +525,20 @@ def main(fname, out_main_dir, config):
             legend = []
             lfp_list1, lfp_list2 = [], []
             if not Pre:
+                blocks_re = []
                 sch_name = []
-                block_size = 305
                 gm_sch = bv_plot.GroupManager(list(sch_type))
-                for k, j in enumerate(range(0, block_size*6, block_size)):
-                    new_lfp1 = lfp_odict.get_clean_signal(0).subsample(
-                        sample_range=(j, j+block_size))
-                    new_lfp2 = lfp_odict.get_clean_signal(1).subsample(
-                        sample_range=(j, j+block_size))
+                for k, j in enumerate(blocks):
+                    if k == 0:
+                        new_lfp1 = lfp_odict.get_clean_signal(0).subsample(
+                            sample_range=(0, j))
+                        new_lfp2 = lfp_odict.get_clean_signal(1).subsample(
+                            sample_range=(0, j))
+                    else:
+                        new_lfp1 = lfp_odict.get_clean_signal(0).subsample(
+                            sample_range=(blocks[k-1], j))
+                        new_lfp2 = lfp_odict.get_clean_signal(1).subsample(
+                            sample_range=(blocks[k-1], j))
                     if sch_type[k] == 1:
                         sch_name.append("FR")
                         legend.append("{}-FR".format(k))
@@ -399,11 +573,11 @@ def main(fname, out_main_dir, config):
                         rw_ts = s.get_rw_ts()
                         test_matlab_wcoherence(
                             lfp1, lfp2, rw_ts, sch_n, reg_sel, out_name)
-                    from bvmpc.lfp_coherence import calc_wave_coherence
+                    from bvmpc.lfp_coherence import plot_wave_coherence
                     fig, ax = plt.subplots(figsize=(24, 10))
                     title = ("{} vs {} Wavelet Coherence {}".format(
                         reg_sel[0], reg_sel[1], sch_n))
-                    _, result = calc_wave_coherence(
+                    _, result = plot_wave_coherence(
                         lfp1.get_samples(), lfp2.get_samples(), lfp1.get_timestamp(),
                         plot_arrows=True, plot_coi=False, resolution=12, title=title,
                         plot_period=False, all_arrows=False, ax=ax, quiv_x=5)
@@ -421,9 +595,7 @@ def main(fname, out_main_dir, config):
                     ax.yaxis.label.set_size(25)
 
                     ax.set_title(title, fontsize=30, y=1.01)
-                    print("Saving result to {}".format(
-                        out_name[:-4]+'_pycwt.png'))
-                    fig.savefig(out_name[:-4]+'_pycwt.png')
+                    bv_plot.savefig(fig, out_name[:-4]+'_pycwt.png')
 
             if cross:
                 an_name = 'crosswave'
@@ -445,8 +617,8 @@ def main(fname, out_main_dir, config):
                     fig, ax = plt.subplots(figsize=(24, 10))
                     title = ("{} vs {} Cross-Wavelet Correlation {}".format(
                         reg_sel[0], reg_sel[1], sch_n))
-                    from bvmpc.lfp_coherence import calc_cross_wavelet
-                    _, result = calc_cross_wavelet(
+                    from bvmpc.lfp_coherence import plot_cross_wavelet
+                    _, result = plot_cross_wavelet(
                         lfp1.get_samples(), lfp2.get_samples(), lfp1.get_timestamp(),
                         plot_coi=False, resolution=12, title=title,
                         plot_period=False, all_arrows=False, ax=ax, quiv_x=5)
@@ -464,9 +636,7 @@ def main(fname, out_main_dir, config):
                     ax.yaxis.label.set_size(25)
 
                     ax.set_title(title, fontsize=30, y=1.01)
-                    print("Saving result to {}".format(
-                        out_name[:-4]+'_pycwt.png'))
-                    fig.savefig(out_name[:-4]+'_pycwt.png')
+                    bv_plot.savefig(fig, out_name[:-4]+'_pycwt.png')
 
             # # Plots coherence by comparing FI vs FR
             # sch_f, sch_Cxy = [], []
@@ -491,12 +661,270 @@ def main(fname, out_main_dir, config):
             #     out_name = os.path.join(wo_dir, fname.split(
             #         "\\")[-1] + "_cohere.png")
             # make_path_if_not_exists(out_name)
-            # print("Saving result to {}".format(out_name))
-            # fig.savefig(out_name)
+            # bv_plot.savefig(fig, out_name)
             # plt.close()
 
+    if analysis_flags[4]:   # Calculate coherence and plot based on trials
 
-# matlab version of wcoherence
+        wchans = [int(x) for x in config.get("Wavelet", "wchans").split(", ")]
+        import itertools
+        wave_combi = list(itertools.combinations(wchans, 2))
+        for chan1, chan2 in wave_combi:
+            wlet_chans = [chan1, chan2]
+            reg_sel = []
+            for chan in wlet_chans:  # extracts name of regions selected
+                reg_sel.append(regions[chan-1] + "-" + str(chan))
+            print("Analysing coherence for {} vs {}...".format(
+                reg_sel[0], reg_sel[1]))
+            lfp_odict = LfpODict(fname, channels=wlet_chans, filt_params=(
+                filt, filt_btm, filt_top), artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
+            legend = []
+            lfp_list1, lfp_list2 = [], []
+            if not Pre:
+                blocks_re = []
+                sch_name = []
+                gm_sch = bv_plot.GroupManager(list(sch_type))
+                for k, j in enumerate(blocks):
+                    if k == 0:
+                        blocks_re.append([0, j])
+                    else:
+                        blocks_re.append([blocks[k-1], j])
+                    if sch_type[k] == 1:
+                        sch_name.append("FR")
+                        legend.append("{}-FR".format(k))
+                    elif sch_type[k] == 0:
+                        sch_name.append("FI")
+                        legend.append("{}-FI".format(k))
+                    # lfp_list1.append(new_lfp1)
+                    # lfp_list2.append(new_lfp2)
+            else:
+                lfp_list1 = lfp_odict.get_clean_signal(0)
+                lfp_list2 = lfp_odict.get_clean_signal(1)
+                sch_name = ["Pre"]
+
+            # Test full wcohere using axis lims to plot
+            an_name = 'wcohere'
+            wo_dir = os.path.join(
+                # o_dir, "wcohere_T{}vsT{}".format(chan1, chan2))
+                o_dir, "{}_{}vs{}".format(an_name, reg_sel[0], reg_sel[1]))
+            make_dir_if_not_exists(wo_dir)
+
+            lfp1 = lfp_odict.get_clean_signal(0)
+            lfp2 = lfp_odict.get_clean_signal(1)
+
+            # Description of alignment
+            # 0 - Align to reward
+            # 1 - Align to pellet drop
+            # 2 - Align to FI
+            # 3 - Align to Double Reward
+            # 4 - Align to Tone
+
+            # alignment = [0, 1, 0, 0, 0]
+            # trial_df = s.get_trial_df()
+            trial_df = s.get_valid_tdf()
+
+            if alignment[0]:
+                align_df = trial_df['Reward_ts']
+                align_txt = "Reward"
+                t_win = [-5, 30]  # Set time window for plotting from reward
+                quiv_x = 0.2
+            elif alignment[1]:
+                align_df = trial_df['Pellet_ts']
+                align_txt = "Pell"
+                t_win = [-10, 5]  # Set time window for plotting from pell
+                quiv_x = 0.2
+            elif alignment[2]:
+                align_df = trial_df['Reward_ts']
+                # Exclude first and last trial
+                align_df = align_df[1:-1].add(30)
+                t_win = [-30, 5]  # Set time window for plotting from interval
+                align_txt = "Interval"
+                quiv_x = 0.5
+            elif alignment[3]:
+                align_df = trial_df['D_Pellet_ts']
+                align_txt = "DPell"
+                t_win = [-30, 5]  # Set time window for plotting from dpell
+                quiv_x = 0.5
+            elif alignment[4]:
+                align_df = s.get_tone_starts()+5
+                align_txt = "Tone"
+                t_win = [-10, 25]  # Set time window for plotting from tone
+                quiv_x = 0.5
+            else:  # Start aligned
+                align_df = trial_df['Trial_s']
+                align_txt = "Start"
+                t_win = None
+                quiv_x = 0.5
+            t_sch = trial_df['Schedule']
+            trials = []
+            t_duration = []
+
+            for t, ts in enumerate(align_df):
+                if t_win:
+                    if not ts:  # To skip empty ts (eg. double pellet only)
+                        continue
+                    else:
+                        trials.append([ts+t_win[0], ts+t_win[1]])
+                elif align_txt == "Start":
+                    # Time window for start based plotting set here
+                    t_win = [0, 40]
+                    if t == 0:
+                        trials.append([0, t_win[1]])
+                    else:
+                        trials.append([ts[t-1], ts+t_win[1]])
+                else:  # Obtains start and end trial times in a list
+                    if t == 0:  # From start of trial
+                        trials.append([0, ts])
+                        t_duration.append(ts)
+                    else:
+                        # Appends [start end] of each trial
+                        trials.append([align_df[t-1], ts])
+                        t_duration.append(ts - align_df[t-1])
+
+            # get_dist(t_duration, plot=True)
+            # trials = [[0, 60], [60, 120]]
+
+            fig, ax = plt.subplots(figsize=(24, 10))
+
+            # from bvmpc.lfp_coherence import plot_wave_coherence
+            # _, result = plot_wave_coherence(
+            #     lfp1.get_samples(
+            #     ), lfp2.get_samples(), lfp1.get_timestamp(),
+            #     plot_arrows=True, plot_coi=False, resolution=12,
+            #     plot_period=False, all_arrows=False, ax=ax, quiv_x=quiv_x)
+
+            from bvmpc.lfp_coherence import calc_wave_coherence, plot_wcohere, plot_arrows
+            import pickle
+
+            # Pickle wcohere_results for faster performance
+            overwrite_pickles = bool(
+                int(config.get("Wavelet", "p_wcohere_mean")))
+            pickle_name = os.path.join(wo_dir, "wcohere_results.p")
+            if overwrite_pickles:
+                print('Delete pickle wcohere_results from', pickle_name)
+                os.remove(pickle_name)
+            try:
+                wcohere_results = pickle.load(open(pickle_name, "rb"))
+                print('Loading pickle wcohere_results from', pickle_name)
+
+            except:
+                wcohere_results = calc_wave_coherence(lfp1.get_samples(
+                ), lfp2.get_samples(), lfp1.get_timestamp())
+                pickle.dump(wcohere_results, open(pickle_name, "wb"))
+                print('Saving pickle wcohere_results to', pickle_name)
+
+            _, wcohere_pvals = plot_wcohere(*wcohere_results[:3], ax=ax)
+
+            # Plot customization params
+            plt.tick_params(labelsize=20)
+            ax.xaxis.label.set_size(25)
+            ax.yaxis.label.set_size(25)
+
+            if behav:
+                # Plot behav timepoints
+                ax, b_legend = bv_plot.behav_vlines(
+                    ax, s, behav_plot, lw=2)
+                plt.legend(handles=b_legend, fontsize=15,
+                           loc='upper right')
+
+            if artf:
+                out_name = os.path.join(
+                    wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_Clean_".format(an_name, chan1, chan2))
+            else:
+                out_name = os.path.join(
+                    wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_".format(an_name, chan1, chan2))
+            title = ("{} vs {} Wavelet Coherence ".format(
+                reg_sel[0], reg_sel[1]))
+
+            p_blocks = bool(int(config.get("Wavelet", "p_blocks")))
+            if p_blocks:
+                plot_arrows(ax, wcohere_pvals, wcohere_results[-1], quiv_x=5)
+                b_out_name = os.path.join(
+                    wo_dir, "Blocks", os.path.basename(out_name))
+
+                for b, ((b_start, b_end), sch) in enumerate(zip(blocks_re, sch_name)):
+                    o_name = b_out_name + str(b+1) + ".png"
+                    make_path_if_not_exists(o_name)
+                    sch_n = str(b+1) + "-" + sch
+                    fig1, a1 = fig, ax
+                    a1.set_xlim(b_start, b_end)
+                    a1.set_title(title+sch_n, fontsize=30, y=1.01)
+                    print("Saving result to {}".format(o_name))
+                    fig1.savefig(o_name, dpi=150)
+                    # bv_plot.savefig(fig1, o_name)
+                plt.close(fig1)
+
+            p_trials = bool(int(config.get("Wavelet", "p_trials")))
+            if p_trials:
+                plot_arrows(ax, wcohere_pvals, wcohere_results[-1], quiv_x=0.5)
+                tr_out_name = os.path.join(
+                    wo_dir, "Trials", os.path.basename(out_name))
+                for t, ((b_start, b_end), sch) in enumerate(zip(trials, t_sch)):
+                    fig1, a1 = fig, ax
+                    a1.set_xlim(b_start, b_end)
+                    name = '{}_Tr{}.png'.format(
+                        tr_out_name[:-4], t+1)
+                    make_path_if_not_exists(name)
+                    a1.set_title("{}Tr{} {}".format(title, str(t), sch),
+                                 fontsize=30, y=1.01)
+                    print("Saving result to {}".format(name))
+                    fig1.savefig(name, dpi=150)
+                    # bv_plot.savefig(fig1, name)
+                    plt.close(fig1)
+
+            p_wcohere_mean = bool(int(config.get("Wavelet", "p_wcohere_mean")))
+            split_sch = bool(int(config.get("Wavelet", "split_sch")))
+            if p_wcohere_mean:  # Plot average coherence across t_blocks
+                t_block_list, t_block_sch, fr_blocks, fi_blocks = [], [], [], []
+                if split_sch:
+                    for i, (sch, block) in enumerate(zip(t_sch, trials)):
+                        if sch == 'FR':
+                            fr_blocks.append(block)
+                        elif sch == 'FI':
+                            fi_blocks.append(block)
+                    if not len(fr_blocks) == 0:
+                        t_block_list.append(fr_blocks)
+                        t_block_sch.append("FR")
+                    if not len(fi_blocks) == 0:
+                        t_block_list.append(fi_blocks)
+                        t_block_sch.append("FI")
+                else:
+                    t_block_list.append(trials)
+                    t_block_sch.append("")
+                print(trial_df)
+                print(t_block_list)
+                exit(-1)
+
+                for i, (trials, b_sch) in enumerate(zip(t_block_list, t_block_sch)):
+                    if split_sch:
+                        sch_print = "_{}_{}".format(align_txt, b_sch)
+                    else:
+                        sch_print = "_{}".format(align_txt)
+                    o_name = out_name + "mean{}.png".format(sch_print)
+                    fig, ax = plt.subplots(figsize=(24, 10))
+                    from bvmpc.lfp_coherence import wcohere_mean
+                    mean_WCT, norm_u, norm_v, magnitute = wcohere_mean(
+                        wcohere_results[0], wcohere_results[-1], t_blocks=trials)
+
+                    # for i, x in enumerate(magnitute):
+                    #     fig3 = sns.distplot(x, hist=False, rug=True, label=i)
+
+                    _, wcohere_pvals = plot_wcohere(mean_WCT, np.arange(
+                        t_win[0], t_win[1], 1/250.0), wcohere_results[2], ax=ax)
+                    plot_arrows(ax, wcohere_pvals, u=norm_u,
+                                v=norm_v, magnitute=magnitute, quiv_x=quiv_x)
+                    ax.axvline(0, linestyle='-',
+                               color='w', linewidth=1)
+                    plt.text(-0.1, 0, align_txt, rotation=90,
+                             color='w', va='bottom', ha='right')
+                    plt.text(0.1, 0, "n = " + str(len(trials)), rotation=90,
+                             color='w', va='bottom', ha='left')
+                    ax.set_title("{}Mean{}".format(title, sch_print),
+                                 fontsize=30, y=1.01)
+
+                    bv_plot.savefig(fig, o_name)
+
+
 def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name='default.png'):
     import matlab.engine
     import numpy as np
@@ -578,7 +1006,11 @@ def select_lfp(fname, ROI):  # Select lfp based on region
 
 def load_bv_from_set(fname):
     """ Loads session based from .inp """
-    return Session(axona_file=fname + ".inp")
+    if os.path.isfile(fname + ".inp"):
+        return Session(axona_file=fname + ".inp")
+    else:
+        print(".inp does not exist.")
+        return None
 
 
 def main_entry(config_name):
@@ -608,6 +1040,7 @@ def main_entry(config_name):
 
 
 if __name__ == "__main__":
-    # config_name = "CAR-SA3.cfg"
+    # config_name = "Eoin.cfg"
+    # config_name = "CAR-SA2.cfg"
     config_name = "Batch_3.cfg"
     main_entry(config_name)

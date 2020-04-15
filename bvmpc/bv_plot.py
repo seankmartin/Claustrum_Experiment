@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from collections import OrderedDict
 import seaborn as sns
+import numpy as np
 
 
 class GridFig:
@@ -119,13 +120,16 @@ class GridFig:
 
 class GroupManager:
 
-    def __init__(self, group_list):
+    def __init__(self, group_list, color_list=None):
         self.group_list = group_list
         # print(self.group_list)
         self.info_dict = OrderedDict()
         self.index = 0
-        self.color_list = [
-            "Blues", "Oranges", "Greens", "Purples", "PuRd", "Greys"]
+        if color_list is not None:
+            self.set_color_list(color_list)
+        else:
+            self.color_list = [
+                "Blues", "Oranges", "Greens", "Purples", "PuRd", "Greys"]
         set_vals = sorted(set(group_list), key=group_list.index)
         # print(set_vals)
         import numpy as np
@@ -165,6 +169,22 @@ class GroupManager:
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
         fig.savefig("test.png", dpi=400)
+
+    def set_color_list(self, color_list):
+        """
+        Sets color list
+
+        Parameters
+        ----------
+        samples : list or ndarray
+            colors
+
+        Returns
+        -------
+        None
+
+        """
+        self.color_list = color_list
 
 
 class ColorManager:
@@ -225,7 +245,7 @@ class ColorManager:
             self.idx = 0
 
 
-def behav_vlines(ax, s, behav_plot, lw=1.5):
+def behav_vlines(ax, s, behav_plot, lw=1):
     """
     Plots vlines based on desired behaviour related timestamps
 
@@ -260,7 +280,7 @@ def behav_vlines(ax, s, behav_plot, lw=1.5):
     if behav_plot[0]:
         for lev in lev_ts:  # vline demarcating lev presses
             ax.axvline(lev, linestyle='-',
-                       color='blue', linewidth=lw)
+                       color='blue', linewidth=lw/2)
         label = lines.Line2D([], [], color='blue', marker='|', linestyle='None',
                              markersize=10, markeredgewidth=lw, label='Lever Press')
         legends.append(label)
@@ -286,3 +306,27 @@ def behav_vlines(ax, s, behav_plot, lw=1.5):
                              markersize=10, markeredgewidth=lw, label='Double Pell')
         legends.append(label)
     return ax, legends
+
+
+def dend_leaf_colors(dend):
+    """ Returns np.array of dend leaf colors in plot order """
+    leaf_colors = np.empty_like(dend['ivl'])
+    for c, pi in zip(dend['color_list'], dend['icoord']):
+        for leg in pi[1:3]:
+            i = (leg - 5.0) / 10.0
+            if abs(i - int(i)) < 1e-5:
+                leaf_colors[int(i)] = c
+    return leaf_colors
+
+
+def savefig(fig, name):
+    """
+    Saves figure using the custom settings:
+        dpi=400 
+        bbox_inches='tight'
+        pad_inches=0.5
+    """
+    print("Saving result to {}".format(name))
+    # fig.savefig(name, dpi=150)
+    fig.savefig(name, dpi=150, bbox_inches='tight', pad_inches=0.5)
+    plt.close()

@@ -180,7 +180,7 @@ class SessionInfo:
             "right_out": (2, False),
             "left_light": (4, False),
             "right_light": (5, False),
-            "sound": (8, True)}
+            "sound": (8, True)}  # ts when sound is turned OFF
 
         self.io_channel_map["6"] = {
             "i": input_dict, "o": output_dict}
@@ -307,7 +307,7 @@ class SessionInfo:
 
         Returns
         -------
-        int: The channel for the given key
+        int: The channel for the given date
         Dict: If key is None, the full dictionary of channels.
 
         """

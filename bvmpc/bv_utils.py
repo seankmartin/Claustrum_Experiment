@@ -1,5 +1,6 @@
 """This holds utility functions."""
 
+from statistics import mean
 import os
 import re
 import sys
@@ -13,6 +14,15 @@ import logging
 import configparser
 from pprint import pprint
 import argparse
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+
+def check_fn(item):
+    if isinstance(item, list) or isinstance(item, np.ndarray):
+        if len(item) == 0:
+            return np.nan
+    return item
 
 
 def boolean_indexing(v, fillval=np.nan):
@@ -35,16 +45,22 @@ def make_dir_if_not_exists(location):
     os.makedirs(location, exist_ok=True)
 
 
-def mycolors(subject):
+def mycolors(subject, colors_dict=None):
     """Colour options for subject based on number."""
-    i = int(subject)
-    if i > 10:
-        i = i % 4
-
-    mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange',
-                'tab:brown', 'deeppink', 'tab:olive', 'tab:pink',
-                'steelblue', 'firebrick', 'mediumseagreen']
-    return mycolors[i]
+    try:
+        i = int(subject)
+        if i > 10:
+            i = i % 4
+        mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange',
+                    'tab:brown', 'deeppink', 'tab:olive', 'tab:pink',
+                    'steelblue', 'firebrick', 'mediumseagreen']
+        color = mycolors[i]
+    except ValueError:
+        if colors_dict == None:
+            print('Color input for required')
+            exit(-1)
+        color = colors_dict[subject]
+    return color
 
 
 def split_list(list, chunk_limit):
@@ -304,6 +320,61 @@ def ordered_set(arr):
         if x not in set_a:
             set_a.append(x)
     return set_a
+
+
+def get_dist(x, plot=False):
+    """
+    x: list
+        Prints Min, Max, Mean and Values in x
+    plot: boolean, False
+        Shows plot of distribution
+
+    """
+    if type(x) is np.ndarray:
+        print("Min: ", np.min(x), "\nMax: ", np.max(x),
+              "\nMean: ", np.mean(x), "\nValues: ", x)
+
+    elif type(x) is list:
+        print("Min: ", min(x), "\nMax: ", max(x),
+              "\nMean: ", mean(x), "\nValues: ", x)
+
+    if plot:
+        sns.distplot(x)
+        plt.show()
+    exit(-1)
+
+
+def test_all_hier_clustering(data, verbose=False):
+    """ For testing all perumatations for hierarchical clustering linkage """
+    import pandas as pd
+    import scipy.cluster.hierarchy as shc
+    from scipy.cluster.hierarchy import cophenet
+    from scipy.spatial.distance import pdist
+
+    link_methods = ['single', 'complete',
+                    'average', 'weighted', 'centroid', 'median', 'ward']
+    link_metric = ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', 'euclidean', 'hamming', 'jaccard', 'jensenshannon',
+                   'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule']
+
+    coph = np.zeros((len(link_methods), len(link_metric)))
+    for i, link in enumerate(link_methods):
+        for j, metric in enumerate(link_metric):
+            try:
+                Z = shc.linkage(data, method=link, metric=metric)
+                c, coph_dists = cophenet(Z, pdist(data))
+                coph[i, j] = c
+            except:
+                coph[i, j] = None
+
+    max_coph = np.nanmax(coph)
+    a, b = np.where(coph == max_coph)
+    coph_df = pd.DataFrame(coph, index=link_methods,
+                           columns=link_metric)
+    if verbose:
+        print(coph_df)
+    print('\nMax Cophentic Correlation Coefficient: ',
+          coph_df.index.values[a], coph_df.columns.values[b], max_coph)
+    exit(-1)
 
 
 if __name__ == "__main__":

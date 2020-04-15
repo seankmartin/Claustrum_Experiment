@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from bvmpc.bv_utils import make_dir_if_not_exists, find_in, ordered_set
 from neurochat.nc_lfp import NLfp
 from neurochat.nc_utils import butter_filter
+import bvmpc.bv_plot as bv_plot
+import pycwt as wavelet
 
 
 def plot_long_lfp(
@@ -48,7 +50,7 @@ def plot_long_lfp(
             lfp.get_samples()[start:end], color='k')
         ax.set_ylim(ylim)
     plt.tight_layout()
-    fig.savefig(out_name, dpi=400)
+    bv_plot.savefig(fig, out_name, dpi=400)
     plt.close(fig)
 
 
@@ -141,13 +143,13 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
                                     color='green', linewidth='1.5')    # vline demarcating reward point/end of trial
 
             axes[i].text(
-                0.03, 1, "Channel " + key,
-                transform=axes[i].transAxes, color="k")
+                0.03, 1.02, "Channel " + key,
+                transform=axes[i].transAxes, color="k", fontsize=15)
             axes[i].set_ylim(y_axis_min, y_axis_max)
+            axes[i].tick_params(labelsize=12)
             axes[i].set_xlim(a, b)
 
-        print("Saving result to {}".format(out_name))
-        fig.savefig(out_name, dpi=dpi)
+        bv_plot.savefig(fig, out_name)
         plt.close("all")
 
 
@@ -338,3 +340,71 @@ def _make_ax_if_none(ax, **kwargs):
         fig = plt.figure()
         ax = plt.gca(**kwargs)
     return ax, fig
+
+
+def calc_wPowerSpectrum(dat, sample_times, min_freq=1, max_freq=256, detrend=True, c_sig=False, resolution=12):
+    """
+    Calculate wavelet power spectrum using pycwt.
+
+    Parameters
+    ----------
+    dat : np.ndarray
+        The values of the waveform.
+    sample_times : : np.ndarray
+        The times at which waveform samples occur.
+    min_freq : float
+        Supposed to be minimum frequency, but not quite working.
+    max_freq : float
+        Supposed to be max frequency, but not quite working.
+    c_sig : bool, default False
+        Optional. Calculate significance.
+    detrend : bool, default False
+        Optional. Detrend and normalize the input data by its standard deviation.
+    resolution : int
+        How many wavelets should be at each level. Number of sub-octaves per octaves
+
+    """
+    t = np.asarray(sample_times)
+    dt = np.mean(np.diff(t))
+    dj = resolution
+    # TODO correct calculation below. Convert freq to period and work with that first?
+    s0 = min_freq * dt
+    if s0 < 2 * dt:
+        s0 = 2 * dt
+    max_J = max_freq * dt
+    J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
+
+    # alpha, _, _ = wavelet.ar1(dat)  # Lag-1 autocorrelation for red artf
+
+    if detrend:
+        p = np.polyfit(t - t[0], dat, 1)
+        dat_notrend = dat - np.polyval(p, t - t[0])
+        std = dat_notrend.std()  # Standard deviation
+        var = std ** 2  # Variance
+        dat_norm = dat_notrend / std  # Normalized dataset
+    else:
+        std = dat.std()  # Standard deviation
+        dat_nomean = dat - np.mean(dat)
+        dat_norm = dat_nomean / std  # Normalized dataset
+
+    wave, scales, freqs, coi, fft, fftfreqs = wavelet.cwt(
+        dat_norm, dt, dj, s0, J)
+
+    power = (np.abs(wave)) ** 2
+    fft_power = np.abs(fft) ** 2
+    period = 1 / freqs
+
+    if c_sig:
+        # calculate the normalized wavelet and Fourier power spectra, and the Fourier equivalent periods for each wavelet scale.
+        signif, fft_theor = wavelet.significance(1.0, dt, scales, 0, alpha,
+                                                 significance_level=0.95,
+                                                 wavelet=mother)
+        sig95 = np.ones([1, N]) * signif[:, None]
+        sig95 = power / sig95
+
+        # Calculate the global wavelet spectrum and determine its significance level.
+        glbl_power = power.mean(axis=1)
+        dof = N - scales  # Correction for padding at edges
+        glbl_signif, tmp = wavelet.significance(var, dt, scales, 1, alpha,
+                                                significance_level=0.95, dof=dof,
+                                                wavelet=mother)
