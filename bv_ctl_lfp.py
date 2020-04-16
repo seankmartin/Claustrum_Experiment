@@ -38,7 +38,7 @@ def main(fname, out_main_dir, config):
     analysis_flags = json.loads(config.get("Setup", "analysis_flags"))
     alignment = json.loads(config.get("Setup", "alignment"))
     chan_amount = int(config.get("Setup", "chans"))
-    chans = [i for i in range(1, chan_amount+1)]
+    chans = [i for i in range(1, chan_amount + 1)]
     region_dict = config._sections["Regions"]
     regions = []
     for _, val in region_dict.items():
@@ -225,7 +225,7 @@ def main(fname, out_main_dir, config):
             plot_lfp(ro_dir, lfp_odict, splits=splits,
                      sd=sd_thres, filt=filt, artf=artf, session=s)
         if r_csv:
-            shut_s, shut_end = p*16, 16+p*16
+            shut_s, shut_end = p * 16, 16 + p * 16
             lfp_csv(fname, o_dir, lfp_odict, sd_thres,
                     min_artf_freq, shuttles[shut_s:shut_end], filt)
 
@@ -274,7 +274,7 @@ def main(fname, out_main_dir, config):
                         graph_data, ax, color, style="Thin-Dashed")
                     plt.ylim(0, 0.015)
                     # plt.xlim(0, 40)
-                    ax.text(0.49, 1.08, regions[i+p*16], fontsize=20,
+                    ax.text(0.49, 1.08, regions[i + p * 16], fontsize=20,
                             ha='center', va='center', transform=ax.transAxes)
                 if p:
                     gf.fig.suptitle(
@@ -301,7 +301,7 @@ def main(fname, out_main_dir, config):
                         gf = bv_plot.GridFig(rows, cols, wspace=0.3,
                                              hspace=0.3, size_multiplier_x=40, tight_layout=False)
                         for k, j in enumerate(blocks):
-                            tone_ts = s.get_tone_starts()+5
+                            tone_ts = s.get_tone_starts() + 5
                             ax = gf.get_next(along_rows=True)
 
                             if k == 0:
@@ -309,7 +309,7 @@ def main(fname, out_main_dir, config):
                                     sample_range=(0, j))
                             else:
                                 new_lfp = lfp.subsample(
-                                    sample_range=(blocks[k-1], j))
+                                    sample_range=(blocks[k - 1], j))
                             graph_data = new_lfp.spectrum(
                                 ptype='psd', prefilt=False,
                                 db=True, tr=True)
@@ -319,7 +319,7 @@ def main(fname, out_main_dir, config):
                             ax.yaxis.label.set_size(25)
                             if j == 0:
                                 plt.title("T" + key + " " +
-                                          regions[i+p*16] + " Spectrogram", fontsize=40, y=1.05)
+                                          regions[i + p * 16] + " Spectrogram", fontsize=40, y=1.05)
                             plt.ylim(0, filt_top)
                             if behav:
                                 ax, b_legend = bv_plot.behav_vlines(
@@ -332,7 +332,7 @@ def main(fname, out_main_dir, config):
                         nc_plot.lfp_spectrum_tr(graph_data, ax)
                         plt.ylim(0, filt_top)
                         fig.suptitle("T" + key + " " +
-                                     regions[i+p*16] + " Spectrogram")
+                                     regions[i + p * 16] + " Spectrogram")
                     out_name = os.path.join(o_dir, "ptr", key + "ptr.png")
                     make_path_if_not_exists(out_name)
                     bv_plot.savefig(fig, out_name)
@@ -361,7 +361,7 @@ def main(fname, out_main_dir, config):
                             db=False, tr=False)
                         nc_plot.lfp_spectrum(
                             graph_data, ax, color, style="Dashed")
-                        legend.append(regions[i+p*16] + " T" + key)
+                        legend.append(regions[i + p * 16] + " T" + key)
                         cur_max_p = max(graph_data['Pxx'])
                         if cur_max_p > max_p:
                             max_p = cur_max_p
@@ -373,7 +373,7 @@ def main(fname, out_main_dir, config):
                         db=False, tr=False)
                     nc_plot.lfp_spectrum(
                         graph_data, ax, color, style="Dashed")
-                    legend.append(regions[i+p*16] + " T" + key)
+                    legend.append(regions[i + p * 16] + " T" + key)
                     cur_max_p = max(graph_data['Pxx'])
                     if cur_max_p > max_p:
                         max_p = cur_max_p
@@ -382,7 +382,7 @@ def main(fname, out_main_dir, config):
         plt.tick_params(labelsize=20)
         ax.xaxis.label.set_size(25)
         ax.yaxis.label.set_size(25)
-        plt.ylim(0, max_p+max_p*0.1)
+        plt.ylim(0, max_p + max_p * 0.1)
         plt.xlim(0, filt_top)
         plt.legend(legend, fontsize=15)
         if DR:  # Hard fix for naming if Differential recording is used
@@ -430,7 +430,7 @@ def main(fname, out_main_dir, config):
                     plt.ylim(0, 40)
                     # plt.xlim(0, 40)
                     color = gm.get_next_color()
-                    ax.text(0.49, 1.08, regions[i+p*16], fontsize=20, color=color,
+                    ax.text(0.49, 1.08, regions[i + p * 16], fontsize=20, color=color,
                             ha='center', va='center', transform=ax.transAxes)
 
                 if p:
@@ -461,7 +461,8 @@ def main(fname, out_main_dir, config):
                     if k == 0:
                         new_lfp = lfp.subsample(sample_range=(0, j))
                     else:
-                        new_lfp = lfp.subsample(sample_range=(blocks[k-1], j))
+                        new_lfp = lfp.subsample(
+                            sample_range=(blocks[k - 1], j))
                     graph_data = new_lfp.spectrum(
                         ptype='psd', prefilt=False,
                         db=False, tr=False)
@@ -481,7 +482,7 @@ def main(fname, out_main_dir, config):
                 # plt.tick_params(labelsize=15)
                 plt.legend(legend)
                 reg_color = gm.get_next_color()
-                plt.title(regions[i+p*16] + " T" + key,
+                plt.title(regions[i + p * 16] + " T" + key,
                           fontsize=15, color=reg_color)
             if p:
                 plt.suptitle(fname.split(
@@ -518,7 +519,7 @@ def main(fname, out_main_dir, config):
             wlet_chans = [chan1, chan2]
             reg_sel = []
             for chan in wlet_chans:  # extracts name of regions selected
-                reg_sel.append(regions[chan-1] + "-" + str(chan))
+                reg_sel.append(regions[chan - 1] + "-" + str(chan))
 
             lfp_odict = LfpODict(fname, channels=wlet_chans, filt_params=(
                 filt, filt_btm, filt_top), artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
@@ -536,9 +537,9 @@ def main(fname, out_main_dir, config):
                             sample_range=(0, j))
                     else:
                         new_lfp1 = lfp_odict.get_clean_signal(0).subsample(
-                            sample_range=(blocks[k-1], j))
+                            sample_range=(blocks[k - 1], j))
                         new_lfp2 = lfp_odict.get_clean_signal(1).subsample(
-                            sample_range=(blocks[k-1], j))
+                            sample_range=(blocks[k - 1], j))
                     if sch_type[k] == 1:
                         sch_name.append("FR")
                         legend.append("{}-FR".format(k))
@@ -563,11 +564,11 @@ def main(fname, out_main_dir, config):
                 for b, (lfp1, lfp2, sch) in enumerate(zip(lfp_list1, lfp_list2, sch_name)):
                     if artf:
                         out_name = os.path.join(
-                            wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_Clean_".format(an_name, chan1, chan2) + str(b+1) + ".png")
+                            wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_Clean_".format(an_name, chan1, chan2) + str(b + 1) + ".png")
                     else:
                         out_name = os.path.join(
-                            wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_".format(an_name, chan1, chan2) + str(b+1) + ".png")
-                    sch_n = str(b+1) + "-" + sch
+                            wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_".format(an_name, chan1, chan2) + str(b + 1) + ".png")
+                    sch_n = str(b + 1) + "-" + sch
 
                     if matlab:
                         rw_ts = s.get_rw_ts()
@@ -595,7 +596,7 @@ def main(fname, out_main_dir, config):
                     ax.yaxis.label.set_size(25)
 
                     ax.set_title(title, fontsize=30, y=1.01)
-                    bv_plot.savefig(fig, out_name[:-4]+'_pycwt.png')
+                    bv_plot.savefig(fig, out_name[:-4] + '_pycwt.png')
 
             if cross:
                 an_name = 'crosswave'
@@ -608,11 +609,11 @@ def main(fname, out_main_dir, config):
                 for b, (lfp1, lfp2, sch) in enumerate(zip(lfp_list1, lfp_list2, sch_name)):
                     if artf:
                         out_name = os.path.join(
-                            wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_Clean_".format(an_name, chan1, chan2) + str(b+1) + ".png")
+                            wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_Clean_".format(an_name, chan1, chan2) + str(b + 1) + ".png")
                     else:
                         out_name = os.path.join(
-                            wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_".format(an_name, chan1, chan2) + str(b+1) + ".png")
-                    sch_n = str(b+1) + "-" + sch
+                            wo_dir, os.path.basename(fname) + "_{}_T{}-T{}_".format(an_name, chan1, chan2) + str(b + 1) + ".png")
+                    sch_n = str(b + 1) + "-" + sch
 
                     fig, ax = plt.subplots(figsize=(24, 10))
                     title = ("{} vs {} Cross-Wavelet Correlation {}".format(
@@ -636,7 +637,7 @@ def main(fname, out_main_dir, config):
                     ax.yaxis.label.set_size(25)
 
                     ax.set_title(title, fontsize=30, y=1.01)
-                    bv_plot.savefig(fig, out_name[:-4]+'_pycwt.png')
+                    bv_plot.savefig(fig, out_name[:-4] + '_pycwt.png')
 
             # # Plots coherence by comparing FI vs FR
             # sch_f, sch_Cxy = [], []
@@ -673,7 +674,7 @@ def main(fname, out_main_dir, config):
             wlet_chans = [chan1, chan2]
             reg_sel = []
             for chan in wlet_chans:  # extracts name of regions selected
-                reg_sel.append(regions[chan-1] + "-" + str(chan))
+                reg_sel.append(regions[chan - 1] + "-" + str(chan))
             print("Analysing coherence for {} vs {}...".format(
                 reg_sel[0], reg_sel[1]))
             lfp_odict = LfpODict(fname, channels=wlet_chans, filt_params=(
@@ -688,7 +689,7 @@ def main(fname, out_main_dir, config):
                     if k == 0:
                         blocks_re.append([0, j])
                     else:
-                        blocks_re.append([blocks[k-1], j])
+                        blocks_re.append([blocks[k - 1], j])
                     if sch_type[k] == 1:
                         sch_name.append("FR")
                         legend.append("{}-FR".format(k))
@@ -754,7 +755,7 @@ def main(fname, out_main_dir, config):
                 t_win = [-30, 5]  # Set time window for plotting from dpell
                 quiv_x = 0.5
             elif alignment[5]:
-                align_df = s.get_tone_starts()+5
+                align_df = s.get_tone_starts() + 5
                 align_txt = "Tone"
                 t_win = [-10, 25]  # Set time window for plotting from tone
                 quiv_x = 0.5
@@ -772,22 +773,22 @@ def main(fname, out_main_dir, config):
                     if not ts:  # To skip empty ts (eg. double pellet only)
                         continue
                     else:
-                        trials.append([ts+t_win[0], ts+t_win[1]])
+                        trials.append([ts + t_win[0], ts + t_win[1]])
                 elif align_txt == "Start":
                     # Time window for start based plotting set here
                     t_win = [0, 40]
                     if t == 0:
                         trials.append([0, t_win[1]])
                     else:
-                        trials.append([ts[t-1], ts+t_win[1]])
+                        trials.append([ts[t - 1], ts + t_win[1]])
                 else:  # Obtains start and end trial times in a list
                     if t == 0:  # From start of trial
                         trials.append([0, ts])
                         t_duration.append(ts)
                     else:
                         # Appends [start end] of each trial
-                        trials.append([align_df[t-1], ts])
-                        t_duration.append(ts - align_df[t-1])
+                        trials.append([align_df[t - 1], ts])
+                        t_duration.append(ts - align_df[t - 1])
 
             # get_dist(t_duration, plot=True)
             # trials = [[0, 60], [60, 120]]
@@ -873,12 +874,12 @@ def main(fname, out_main_dir, config):
                     wo_dir, "Blocks", os.path.basename(out_name))
 
                 for b, ((b_start, b_end), sch) in enumerate(zip(blocks_re, sch_name)):
-                    o_name = b_out_name + str(b+1) + ".png"
+                    o_name = b_out_name + str(b + 1) + ".png"
                     make_path_if_not_exists(o_name)
-                    sch_n = str(b+1) + "-" + sch
+                    sch_n = str(b + 1) + "-" + sch
                     fig1, a1 = fig, ax
                     a1.set_xlim(b_start, b_end)
-                    a1.set_title(title+sch_n, fontsize=30, y=1.01)
+                    a1.set_title(title + sch_n, fontsize=30, y=1.01)
                     print("Saving result to {}".format(o_name))
                     fig1.savefig(o_name, dpi=150)
                     # bv_plot.savefig(fig1, o_name)
@@ -894,7 +895,7 @@ def main(fname, out_main_dir, config):
                     fig1, a1 = fig, ax
                     a1.set_xlim(b_start, b_end)
                     name = '{}_Tr{}.png'.format(
-                        tr_out_name[:-4], t+1)
+                        tr_out_name[:-4], t + 1)
                     make_path_if_not_exists(name)
                     a1.set_title("{}Tr{} {}".format(title, str(t), sch),
                                  fontsize=30, y=1.01)
@@ -938,7 +939,7 @@ def main(fname, out_main_dir, config):
                     #     fig3 = sns.distplot(x, hist=False, rug=True, label=i)
 
                     _, wcohere_pvals = plot_wcohere(mean_WCT, np.arange(
-                        t_win[0], t_win[1], 1/250.0), wcohere_results[2], ax=ax)
+                        t_win[0], t_win[1], 1 / 250.0), wcohere_results[2], ax=ax)
                     plot_arrows(ax, wcohere_pvals, u=norm_u,
                                 v=norm_v, magnitute=magnitute, quiv_x=quiv_x)
                     ax.axvline(0, linestyle='-',
@@ -954,7 +955,11 @@ def main(fname, out_main_dir, config):
 
 
 def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name='default.png'):
-    import matlab.engine
+    try:
+        import matlab.engine
+    except Exception:
+        print("The matlab engine is not available")
+        return
     import numpy as np
     from scipy import signal
 
@@ -988,7 +993,7 @@ def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name='default
 
 def test_wct(lfp1, lfp2, sig=True):  # python CWT
     import pycwt as wavelet
-    dt = 1/lfp1.get_sampling_rate()
+    dt = 1 / lfp1.get_sampling_rate()
     WCT, aWCT, coi, freq, sig = wavelet.wct(
         lfp1.get_samples(), lfp2.get_samples(), dt, sig=sig)
     _, ax = plt.subplots()
