@@ -450,7 +450,7 @@ class Session:
         plt.title(title, fontsize=18)
 
     def hier_cluster(
-            self, should_scale=True, should_pca=True, cutoff=None,
+            self, should_scale=False, should_pca=False, cutoff=None,
             test_methods=False):
         """
         Perform hierarchical clustering on per trial features
