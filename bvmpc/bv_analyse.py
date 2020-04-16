@@ -700,7 +700,6 @@ def plot_raster_trials(
         s, ax=None, sub_colors_dict=None, align=[0, 0, 0, 0], reindex=None):
     '''
     Plot raster of behaviour related ts aligned to different points.
-    TODO: fix bug where alignment after reindexing causes original s.trial_df_norm values to change.
 
     Parameters
     ----------
