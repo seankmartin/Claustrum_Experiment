@@ -858,8 +858,10 @@ class Session:
         block_s = self.get_tone_starts() + 5  # End of tone
 
         # Check for errors in presses during Tone presentation
-        left_presses = check_error_during_tone(left_presses, block_s)
-        right_presses = check_error_during_tone(right_presses, block_s)
+        left_presses = check_error_during_tone(
+            left_presses, block_s, l_type=" left ")
+        right_presses = check_error_during_tone(
+            right_presses, block_s, l_type=" right ")
 
         # Extract nosepokes as necessary and unecessary
         pell_ts_exdouble, _ = self.split_pell_ts()
@@ -1198,8 +1200,10 @@ class Session:
         }
 
         for key, val in trial_dict.items():
-            print(key, ':', len(val))
-
+            print(
+                "Initialised trial dataframe with {} trials and keys {}".format(
+                    len(val), list(trial_dict.keys())))
+            break
         self.trial_df = pd.DataFrame(session_dict)
         self.trial_df_norm = pd.DataFrame(trial_dict)
 
