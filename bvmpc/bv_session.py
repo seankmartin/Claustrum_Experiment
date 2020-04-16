@@ -23,7 +23,6 @@ from bvmpc.bv_array_methods import split_array
 from bvmpc.bv_array_methods import split_array_with_another
 from bvmpc.bv_array_methods import split_array_in_between_two
 import bvmpc.bv_plot as bv_plot
-import umap
 import scipy.cluster.hierarchy as shc
 
 
@@ -203,7 +202,7 @@ class Session:
             pass
         else:
             # blocks = np.arange(5, 1830, 305)  # Default split into schedules
-            blocks = self.get_tone_starts()+5  # Default split into schedules
+            blocks = self.get_tone_starts() + 5  # Default split into schedules
 
         incl = ""  # Initialize print for type of extracted lever_ts
         if stage == '7' and error_only:  # plots errors only
@@ -295,7 +294,7 @@ class Session:
             x = row.Levers_ts
             lever_hist = np.histogram(
                 x[~np.isnan(x)], bins=h_bin, density=True)[0]
-            features[index, n_feat_bh:(n_feat_bh+h_bin)] = lever_hist
+            features[index, n_feat_bh:(n_feat_bh + h_bin)] = lever_hist
             trial_idx.append(index)
 
         feat_df = pd.DataFrame(features, columns=feat_names)
@@ -332,7 +331,7 @@ class Session:
 
         after_pca = pca.fit_transform(data)
         after_pca = pd.DataFrame(
-            after_pca, columns=['PC{}'.format(x) for x in np.arange(after_pca.shape[1])+1])
+            after_pca, columns=['PC{}'.format(x) for x in np.arange(after_pca.shape[1]) + 1])
 
         print(
             "\nPCA fraction of explained variance", pca.explained_variance_ratio_)
@@ -374,6 +373,7 @@ class Session:
 
     def perform_UMAP(self, should_scale=True):
         """ Testing purposes only. Perform UMAP on per trial features. """
+        import umap
         data = self.extract_features(should_scale=should_scale)
         df = self.get_trial_df_norm()
         color = [sns.color_palette()[x]
@@ -397,6 +397,7 @@ class Session:
 
     def draw_umap(self, data, c, n_neighbors=15, min_dist=0.1, n_components=2, metric='euclidean', title=''):
         """ For testing out UMAP parameters """
+        import umap
         fit = umap.UMAP(
             n_neighbors=n_neighbors,
             min_dist=min_dist,
@@ -453,7 +454,7 @@ class Session:
         reindex = list(map(int, dend['ivl']))  # index for sorting trials
 
         if cutoff is None:
-            cutoff = 0.7*max(Z[:, 2])
+            cutoff = 0.7 * max(Z[:, 2])
 
         clusters = shc.fcluster(Z, cutoff, criterion='distance')
         self.cluster_results = {
@@ -718,7 +719,7 @@ class Session:
         sound = self.info_arrays.get("sound", [])
         if len(sound) != 0:
             # Axona
-            block_starts = np.array(sound-5)
+            block_starts = np.array(sound - 5)
         else:
             # MED-PC
             trial_len = self.get_metadata("trial_length (mins)") * 60
@@ -899,7 +900,7 @@ class Session:
                 # if i == 5:
                 #     to_insert = pell_ts_exdouble[-1] + 0.01
                 nosepokes = np.insert(
-                    nosepokes, last_nosepoke_idx+1, to_insert)
+                    nosepokes, last_nosepoke_idx + 1, to_insert)
                 good_nosepokes, un_nosepokes = split_array_with_another(
                     nosepokes, pell_ts_exdouble)
                 # if i < 5: # ignores first nosepoke in next block in split arrays
