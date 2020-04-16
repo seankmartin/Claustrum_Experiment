@@ -60,8 +60,8 @@ def split_lever_ts(session):
             interval_lever_ts.append(split_lever_ts)
         else:
             print('Not Ready for analysis!')
-    print('len of ratio_l'+len(ratio_lever_ts))
-    print('len of interval_l'+len(interval_lever_ts))
+    print('len of ratio_l' + len(ratio_lever_ts))
+    print('len of interval_l' + len(interval_lever_ts))
     return ratio_lever_ts, interval_lever_ts
 
 
@@ -167,11 +167,11 @@ def cumplot_axona(s, ax=None, p_errors=False, p_all=False):
     # Plot cummulative lever press split into blocks
     for i, l in enumerate(norm_l_ts):
         if sch_type[i] == 1:
-            ax[1].step(l, np.arange(l.size), c=ratio_c(i*45), where="post",
-                       label='B'+str(i+1)+' - FR', zorder=1)
+            ax[1].step(l, np.arange(l.size), c=ratio_c(i * 45), where="post",
+                       label='B' + str(i + 1) + ' - FR', zorder=1)
         elif sch_type[i] == 0:
-            ax[1].step(l, np.arange(l.size), c=interval_c(i*45), where="post",
-                       label='B'+str(i+1)+' - FI', zorder=1)
+            ax[1].step(l, np.arange(l.size), c=interval_c(i * 45), where="post",
+                       label='B' + str(i + 1) + ' - FI', zorder=1)
         bins = l
         reward_y = np.digitize(norm_r_ts[i], bins) - 1
         double_y = np.digitize(norm_dr_ts[i], bins) - 1
@@ -269,12 +269,12 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         norm_lever_ts = []
         reward_times_0 = np.append([0], reward_times, axis=0)
         for i, l in enumerate(trial_lever_ts[:-1]):
-            norm_lever_ts.append(np.append([0], l-reward_times_0[i], axis=0))
-            norm_reward_ts.append(reward_times[i]-reward_times_0[i])
+            norm_lever_ts.append(np.append([0], l - reward_times_0[i], axis=0))
+            norm_reward_ts.append(reward_times[i] - reward_times_0[i])
         ax.set_xlim(0, np.max(norm_reward_ts))
         color = plt.cm.get_cmap('autumn')
         for i, l in enumerate(norm_lever_ts):
-            ax.step(l, np.arange(l.size), c=color(i*20), where="post")
+            ax.step(l, np.arange(l.size), c=color(i * 20), where="post")
             bins = l
             reward_y = np.digitize(norm_reward_ts[i], bins) - 1
             plt.scatter(norm_reward_ts[i], reward_y,
@@ -295,11 +295,11 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         ax.set_xlim(0, 305)
         for i, l in enumerate(norm_l_ts):
             if sch_type[i] == 1 and not int_only:
-                ax.step(l, np.arange(l.size), c=ratio_c(i*45), where="post",
-                        label='B'+str(i+1)+' - FR', zorder=1)
+                ax.step(l, np.arange(l.size), c=ratio_c(i * 45), where="post",
+                        label='B' + str(i + 1) + ' - FR', zorder=1)
             elif sch_type[i] == 0:
-                ax.step(l, np.arange(l.size), c=interval_c(i*45), where="post",
-                        label='B'+str(i+1)+' - FI', zorder=1)
+                ax.step(l, np.arange(l.size), c=interval_c(i * 45), where="post",
+                        label='B' + str(i + 1) + ' - FI', zorder=1)
             bins = l
             reward_y = np.digitize(norm_r_ts[i], bins) - 1
             double_y = np.digitize(norm_dr_ts[i], bins) - 1
@@ -340,13 +340,13 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         else:
             return print("Unable to split session")
         # Change values to set division blocks
-        blocks = np.arange(0, 60*30, 300)
+        blocks = np.arange(0, 60 * 30, 300)
         norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, _ = session.split_sess(
             blocks)
         ax.set_xlim(0, 305)
         for i, l in enumerate(norm_l_ts):
             ax.step(l, np.arange(l.size), c=mycolors(i), where="post",
-                    label='B'+str(i+1)+' - {}'.format(sch_type))
+                    label='B' + str(i + 1) + ' - {}'.format(sch_type))
             bins = l
             reward_y = np.digitize(norm_r_ts[i], bins) - 1
             double_y = np.digitize(norm_dr_ts[i], bins) - 1
@@ -365,7 +365,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         lever_times = np.insert(lever_ts, 0, 0, axis=0)
         ax.step(lever_times, np.arange(
             lever_times.size), c=mycolors(subject),
-            where="post", label='Animal'+subject, zorder=1)
+            where="post", label='Animal' + subject, zorder=1)
         if stage == '7':  # plots error press in red
             ax.scatter(err_lever_ts, np.isin(
                 lever_times, err_lever_ts).nonzero()[0],
@@ -473,7 +473,7 @@ def IRT(session, out_dir, ax=None, showIRT=False):
     if session_type == '5a_FixedRatio_p':
         last_lever_ts = []
         for i in b:
-            last_lever_ts.append(good_lever_ts[i-1])
+            last_lever_ts.append(good_lever_ts[i - 1])
     else:
         last_lever_ts = good_lever_ts
     if len(last_lever_ts[1:]) > len(good_rewards[:-1]):
@@ -581,10 +581,10 @@ def lever_hist(s, ax=None, valid=True, excl_dr=False, split_t=False, sub_colors_
 
             if row['Schedule'] == 'FR':
                 sns.distplot(x, ax=ax,
-                             label='FR-t{}'.format(idx+1), color=color, hist=True)
+                             label='FR-t{}'.format(idx + 1), color=color, hist=True)
             elif row['Schedule'] == 'FI':
                 sns.distplot(x, ax=ax,
-                             label='FI-t{}'.format(idx+1), color=color, hist=True)
+                             label='FI-t{}'.format(idx + 1), color=color, hist=True)
         legend_size = 6
     else:
         gm = bv_plot.GroupManager(['FI', 'FR'])
@@ -696,7 +696,8 @@ def trial_length_hist(s, valid=True, ax=None, loop=None, sub_colors_dict=None):
     return fig
 
 
-def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0, 0], reindex=None):
+def plot_raster_trials(
+        s, ax=None, sub_colors_dict=None, align=[0, 0, 0, 0], reindex=None):
     '''
     Plot raster of behaviour related ts aligned to different points.
     TODO: fix bug where alignment after reindexing causes original s.trial_df_norm values to change.
@@ -729,40 +730,30 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0, 0], rei
     stage = s.get_stage()
     trial_df = s.get_trial_df_norm()
     if reindex is not None:
-        trial_df = trial_df.reindex(reindex)
+        trial_df = trial_df.reindex(reindex, copy=False)
         plt.yticks(np.arange(len(reindex)), reindex, fontsize=10)
 
-    norm_lever = []
-    norm_err = []
-    norm_dr = []
-    norm_pell = []
-    norm_rw = []
-    norm_FRes = []
-    schedule_type = []
-    norm_tone = []
-    norm_start = []
-
     # Extract data from pandas_df
-    norm_lever[:] = trial_df['Levers_ts']
-    norm_err[:] = trial_df['Err_ts']
-    norm_dr[:] = trial_df['D_Pellet_ts']
-    norm_pell[:] = trial_df['Pellet_ts']
-    norm_rw[:] = trial_df['Reward_ts']
-    norm_FRes[:] = trial_df['First_response']
-    schedule_type[:] = trial_df['Schedule']
-    norm_tone[:] = trial_df['Tone_s']
-    norm_start[:] = trial_df['Trial_s']
+    norm_lever = trial_df['Levers_ts'].copy(deep=True)
+    norm_err = trial_df['Err_ts'].copy(deep=True)
+    norm_dr = trial_df['D_Pellet_ts'].copy(deep=True)
+    norm_pell = trial_df['Pellet_ts'].copy(deep=True)
+    norm_rw = trial_df['Reward_ts'].copy(deep=True)
+    norm_FRes = trial_df['First_response'].copy(deep=True)
+    schedule_type = trial_df['Schedule'].copy(deep=True)
+    norm_tone = trial_df['Tone_s'].copy(deep=True)
+    norm_start = trial_df['Trial_s'].copy(deep=True)
 
     color = []
 
     # Alignment Specific Parameters
     if align_rw:
         plot_type = 'Reward-Aligned'
-        norm_arr = np.copy(norm_rw)
+        norm_arr = norm_rw
 
     elif align_pell:
         plot_type = 'Pell-Aligned'
-        norm_arr = np.copy(norm_pell)
+        norm_arr = norm_pell
         xmax = 5
         xmin = -30
 
@@ -770,18 +761,21 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0, 0], rei
         plot_type = 'Interval-Aligned'
         norm_arr = np.empty_like(norm_rw)
         norm_arr.fill(30)
+
     elif align_FRes:
         plot_type = 'First_Resp-Aligned'
-        norm_arr = np.copy(norm_FRes)
+        norm_arr = norm_FRes
         xmax = -10
         xmin = 40
+
     else:
         plot_type = 'Start-Aligned'
-        norm_arr = np.copy(norm_start)
+        norm_arr = norm_start
         xmax = None
         xmin = None
         # xmax = 60
         # xmin = -10
+
     plot_name = 'Raster ({})'.format(plot_type)
 
     ax.axvline(0, linestyle='-.', color='g',
@@ -827,7 +821,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0, 0], rei
 
     # Figure labels
     ax.set_xlim(xmin, xmax)  # Uncomment to set x limit
-    ax.set_ylim(-3, len(norm_rw)+3)  # Uncomment to set y limit
+    ax.set_ylim(-3, len(norm_rw) + 3)  # Uncomment to set y limit
     ax.tick_params(axis='both', labelsize=15)
     ax.set_xlabel('Time (s)', fontsize=20)
     ax.set_ylabel('Trials', fontsize=20)
@@ -855,7 +849,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0, 0], rei
     if opt_plot[1]:
         for i, x in enumerate(norm_tone):  # Plot Tone presentation
             if x:
-                plt.broken_barh([(x, 5)], (i-.5, 1), color='grey', alpha=0.2,
+                plt.broken_barh([(x, 5)], (i - .5, 1), color='grey', alpha=0.2,
                                 hatch='///', edgecolor='k')
         tone_label = mpatches.Patch(
             facecolor='grey', hatch='///', edgecolor='k', alpha=0.2, label='Tone')
@@ -864,7 +858,7 @@ def plot_raster_trials(s, ax=None, sub_colors_dict=None, align=[0, 0, 0, 0], rei
     if opt_plot[2]:
         for i, (x, sch) in enumerate(zip(norm_start, schedule_type)):  # Plot DR window
             if sch == 'FI':
-                plt.broken_barh([(x+20, 20)], (i-.4, 0.8),
+                plt.broken_barh([(x + 20, 20)], (i - .4, 0.8),
                                 color='magenta', alpha=0.05)
         drwin_label = mpatches.Patch(
             color='magenta', alpha=0.05, label='dr_win')
@@ -1066,11 +1060,11 @@ def trial_clust_hier(s, ax=None, should_pca=True, cutoff=None):
     reindex = clust_results['reindex']
     ax[0].set_xticklabels(label[x] for x in reindex)
     if cutoff is None:
-        cutoff = 0.7*max(Z[:, 2])
-        ax[0].text(ax[0].set_xlim()[1]*0.9, cutoff,
+        cutoff = 0.7 * max(Z[:, 2])
+        ax[0].text(ax[0].set_xlim()[1] * 0.9, cutoff,
                    'Default', ha='right', va='center', backgroundcolor='w', fontsize=8)
     else:
-        ax[0].text(ax[0].set_xlim()[1]*0.9, cutoff,
+        ax[0].text(ax[0].set_xlim()[1] * 0.9, cutoff,
                    'Cutoff = {}'.format(cutoff), ha='right', va='center', backgroundcolor='w', fontsize=8)
     ax[0].axhline(y=cutoff, c='k')
 
