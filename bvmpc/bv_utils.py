@@ -85,7 +85,7 @@ def get_attrs(d, depth=0):
     """Walk through attributes."""
     for k, v in sorted(d.items(), key=lambda x: x[0]):
         spaces = ("  ") * depth
-        if len(v.attrs) is not 0:
+        if len(v.attrs) != 0:
             print("{}{} has attrs {}".format(
                 spaces, k, list(v.attrs.items())
             ))
@@ -263,7 +263,7 @@ def setup_logging(in_dir):
 
 
 def print_config(config, msg=""):
-    if msg is not "":
+    if msg != "":
         print(msg)
     """Prints the contents of a config file"""
     config_dict = [{x: tuple(config.items(x))} for x in config.sections()]
@@ -284,7 +284,7 @@ def parse_args(verbose=True):
         description='Process modifiable parameters from command line')
     args, unparsed = parser.parse_known_args()
 
-    if len(unparsed) is not 0:
+    if len(unparsed) != 0:
         print("Unrecognised command line argument passed")
         print(unparsed)
         exit(-1)
