@@ -729,7 +729,7 @@ def plot_raster_trials(
     stage = s.get_stage()
     trial_df = s.get_trial_df_norm()
     if reindex is not None:
-        trial_df = trial_df.reindex(reindex, copy=True)
+        trial_df = trial_df.reindex(reindex, copy=True).reset_index()
         plt.yticks(np.arange(len(reindex)), reindex, fontsize=10)
 
     # Extract data from pandas_df
