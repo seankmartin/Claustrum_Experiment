@@ -39,6 +39,7 @@ def main(fname, out_main_dir, config):
     o_dir = os.path.join(out_main_dir, "!LFP")
     make_dir_if_not_exists(o_dir)
 
+    # Parse the config file
     analysis_flags = json.loads(config.get("Setup", "analysis_flags"))
     alignment = json.loads(config.get("Setup", "alignment"))
     chan_amount = int(config.get("Setup", "chans"))
@@ -72,37 +73,42 @@ def main(fname, out_main_dir, config):
 
     gm = bv_plot.GroupManager(regions)
 
+    # Split the LFP signals into chunked sets of size 16
     lfp_list = []
     for chans in chunks(chans, 16):
-        lfp_odict = LfpODict(fname, channels=chans, filt_params=(
-            filt, filt_btm, filt_top), artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
+        lfp_odict = LfpODict(
+            fname, channels=chans,
+            filt_params=(filt, filt_btm, filt_top),
+            artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
         lfp_list.append(lfp_odict)
 
     if "Pre" in fname:
         behav = False
         Pre = True
+
     else:
         Pre = False
         behav = bool(int(config.get("Behav Params", "behav")))
         behav_plot = json.loads(config.get("Behav Params", "behav_plot"))
 
-        # s = None
         # Load behaviour-related data
         s = load_bv_from_set(fname)
         sch_type = s.get_arrays('Trial Type')  # FR = 1, FI = 0
-
-        # Plot behaviour-related plots
-        bv_hist = bool(int(config.get("Behav Plot", "hist")))
         valid = True
-        if bv_hist:  # Plot trial length histogram
+
+        # Plot trial length histogram
+        bv_hist = bool(int(config.get("Behav Plot", "hist")))
+        if bv_hist:
             hist_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_h-tlen.png")
             fig = bv_an.trial_length_hist(s, valid=valid)
             bv_plot.savefig(fig, hist_name)
 
+        # Plot lever response histogram
         bv_hist_lev = bool(int(config.get("Behav Plot", "hist_lev")))
-        if bv_hist_lev:  # Plot lever response histogram
-            excl_dr = False  # Exclude double reward trials from lever hist
+        if bv_hist_lev:
+            # excl_dr True to exclude double reward trials from lever hist
+            excl_dr = False
             if excl_dr:
                 txt = '_exdr'
             else:
@@ -116,8 +122,9 @@ def main(fname, out_main_dir, config):
                              excl_dr=excl_dr, split_t=True)
             bv_plot.savefig(fig, hist_name)
 
+        # Plot behaviour raster
         bv_raster = bool(int(config.get("Behav Plot", "raster")))
-        if bv_raster:  # Plot behaviour raster
+        if bv_raster:
             if alignment[0]:
                 align_txt = "_rw"
             elif alignment[1]:
@@ -133,8 +140,9 @@ def main(fname, out_main_dir, config):
             fig = bv_an.plot_raster_trials(s, align=alignment[:4])
             bv_plot.savefig(fig, raster_name)
 
+        # Plot cumulative lever response
         bv_cum = bool(int(config.get("Behav Plot", "cumulative")))
-        if bv_cum:  # Plot cummulative lever response
+        if bv_cum:
             cum_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_cum.png")
             fig = bv_an.cumplot_axona(s)
@@ -144,6 +152,7 @@ def main(fname, out_main_dir, config):
         bv_clust = bool(int(config.get("Behav Plot", "clust")))
         plot_feat_box, plot_feat_pp = [0, 0]  # True to plot feat details
 
+        # Do trial based clustering based on animal responses.
         if bv_clust:
             # s.perform_UMAP()  # Testing out UMAP
             # s.perform_HDBSCAN()  # Testing out HDBSCAN
@@ -159,8 +168,8 @@ def main(fname, out_main_dir, config):
                 o_dir, os.path.basename(fname) + "_bv_clust-hier.png")
             bv_plot.savefig(fig, clust_name)
 
+            # Boxplot the features in the dataframe.
             if plot_feat_box:
-                # Boxplot for feat_df
                 fig = bv_an.plot_feats(feat_df)
                 fig.text(0.5, 0.895, s.get_title(),
                          transform=fig.transFigure, ha='center')
@@ -176,21 +185,24 @@ def main(fname, out_main_dir, config):
                     o_dir, os.path.basename(fname) + "_bv_c_feats_bef.png")
                 bv_plot.savefig(fig, feat_plot_name)
 
+            # Do a pairplot of the features in the dataframe
             if plot_feat_pp:
                 hue_grouping = 'Schedule'
+
+                # Markers based on schedule
                 if hue_grouping == 'Schedule':
-                    # Markers based on schedule
                     df = s.get_trial_df_norm()
                     feat_df['markers'] = df["Schedule"].astype('category')
                     bef_PCA['markers'] = df["Schedule"].astype('category')
                     hue = 'markers'
 
+                # Markers based on hier_clustering
                 elif hue_grouping == 'clusters':
-                    # Markers based on hier_clustering
                     clusters = s.get_cluster_results()['clusters']
                     feat_df['markers'] = pd.Categorical(clusters)
                     bef_PCA['markers'] = pd.Categorical(clusters)
                     hue = 'markers'
+
                 else:
                     hue = None
 
@@ -214,6 +226,7 @@ def main(fname, out_main_dir, config):
     r_SI = bool(int(config.get("Setup", "r_SI")))
     r_plot = bool(int(config.get("Setup", "r_plot")))
     r_csv = bool(int(config.get("Setup", "r_csv")))
+
     # Differential Recording mode (lfp1 - lfp2 in same shuttle)
     DR = bool(int(config.get("Setup", "DR")))
 
@@ -237,15 +250,18 @@ def main(fname, out_main_dir, config):
     if r_SI:
         compare_lfp(fname, o_dir, ch=chan_amount)
 
-    if analysis_flags[0]:   # Plot periodograms and ptr for each tetrode seperately
+    # Plot periodograms and ptr for each tetrode seperately
+    if analysis_flags[0]:
         """
         Plot periodograms and ptr for each tetrode seperately
-            ptr - includes vlines indicating tone and reward points
+        ptr - includes vlines indicating tone and reward points
 
         """
         for p, lfp_odict in enumerate(lfp_list):
-            indiv = False   # Set to true for individual periodograms on a 4x4 grid
-            spec = False    # Set to true for individual spectrograms per .png
+            # Set indiv to true for individual periodograms on a 4x4 grid
+            indiv = False
+            # Set spec to true for individual spectrograms per .png
+            spec = False
 
             # Old code to plot each periodogram in a seperate .png
             # for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
@@ -268,7 +284,8 @@ def main(fname, out_main_dir, config):
                                      hspace=0.3, tight_layout=False)
 
                 # Plot individual periodograms on a 4x4 grid
-                for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
+                for i, (key, lfp) in enumerate(
+                        lfp_odict.get_filt_signal().items()):
                     graph_data = lfp.spectrum(
                         ptype='psd', prefilt=False,
                         db=False, tr=False)
@@ -280,22 +297,19 @@ def main(fname, out_main_dir, config):
                     # plt.xlim(0, 40)
                     ax.text(0.49, 1.08, regions[i + p * 16], fontsize=20,
                             ha='center', va='center', transform=ax.transAxes)
-                if p:
-                    gf.fig.suptitle(
-                        (fname.split("\\")[-1][4:] + " Periodogram " + str(p)), fontsize=30)
-                    out_name = os.path.join(
-                        o_dir, fname.split("\\")[-1] + "_p_sum_" + str(p) + ".png")
-                else:
-                    gf.fig.suptitle(
-                        (fname.split("\\")[-1][4:] + " Periodogram"), fontsize=30)
-                    out_name = os.path.join(
-                        o_dir, fname.split("\\")[-1] + "_p_sum.png")
+                extra_text_1 = " " + str(p) if p else ""
+                extra_text_2 = "_" + str(p) if p else ""
+                bname = os.path.basename(fname)
+                gf.fig.suptitle(
+                    bname[4:] + " Periodogram" + extra_text_1, fontsize=30)
+                out_name = os.path.join(
+                    o_dir, bname + "_p_sum" + extra_text_2 + ".png")
                 make_path_if_not_exists(out_name)
                 bv_plot.savefig(gf.get_fig(), out_name)
                 plt.close()
 
+            # Plot spectrogram for each eeg as a seperate .png
             if spec:
-                # Plot spectrogram for each eeg as a seperate .png
                 for i, (key, lfp) in enumerate(lfp_odict.get_filt_signal().items()):
                     graph_data = lfp.spectrum(
                         ptype='psd', prefilt=False,
@@ -342,7 +356,8 @@ def main(fname, out_main_dir, config):
                     bv_plot.savefig(fig, out_name)
                     plt.close()
 
-    if analysis_flags[1]:   # Complie graphs per session in a single .png
+    # Compile graphs per session in a single .png
+    if analysis_flags[1]:
         spec = False
         # Plot all periodograms on 1 plot
         fig, ax = plt.subplots(figsize=(20, 20))
@@ -389,6 +404,7 @@ def main(fname, out_main_dir, config):
         plt.ylim(0, max_p + max_p * 0.1)
         plt.xlim(0, filt_top)
         plt.legend(legend, fontsize=15)
+
         if DR:  # Hard fix for naming if Differential recording is used
             if artf:
                 plt.title(fname.split("\\")[-1][4:] +
@@ -451,7 +467,8 @@ def main(fname, out_main_dir, config):
                 bv_plot.savefig(gf.get_fig(), out_name)
                 plt.close()
 
-    if analysis_flags[2]:    # Compare periodograms for FR and FI for specific eegs
+    # Compare periodograms for FR and FI for specific eegs
+    if analysis_flags[2]:
         gm_sch = bv_plot.GroupManager(list(sch_type))
 
         for p, lfp_odict in enumerate(lfp_list):
@@ -510,7 +527,8 @@ def main(fname, out_main_dir, config):
             bv_plot.savefig(gf.get_fig(), out_name)
             plt.close()
 
-    if analysis_flags[3]:   # Compare coherence in terms of freq between pairs of areas
+    # Compare coherence in terms of freq between pairs of areas
+    if analysis_flags[3]:
         # lfp_list = select_lfp(fname, ROI)
         matlab = False
         cross = False
@@ -669,8 +687,8 @@ def main(fname, out_main_dir, config):
             # bv_plot.savefig(fig, out_name)
             # plt.close()
 
-    if analysis_flags[4]:   # Calculate coherence and plot based on trials
-
+    # Calculate coherence and plot based on trials
+    if analysis_flags[4]:
         wchans = [int(x) for x in config.get("Wavelet", "wchans").split(", ")]
         import itertools
         wave_combi = list(itertools.combinations(wchans, 2))
@@ -828,7 +846,7 @@ def main(fname, out_main_dir, config):
 
             _, wcohere_pvals = plot_wcohere(*wcohere_results[:3], ax=ax)
 
-            # TODO Finish signle frequency extraction
+            # TODO Finish single frequency extraction
             # # Extract wcohere of target frequency
             # target_freq = 8
             # WCT, t, freq, coi, sig, aWCT = wcohere_results
