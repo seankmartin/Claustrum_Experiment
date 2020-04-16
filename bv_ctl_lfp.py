@@ -137,9 +137,7 @@ def main(fname, out_main_dir, config):
                 align_txt = "_start"
             raster_name = os.path.join(
                 o_dir, os.path.basename(fname) + "_bv_raster{}.png".format(align_txt))
-            print(s.get_trial_df_norm())
             fig = bv_an.plot_raster_trials(s, align=alignment[:4])
-            print(s.get_trial_df_norm())
             bv_plot.savefig(fig, raster_name)
 
         # Plot cumulative lever response

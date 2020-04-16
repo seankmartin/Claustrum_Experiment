@@ -734,12 +734,20 @@ def plot_raster_trials(
         plt.yticks(np.arange(len(reindex)), reindex, fontsize=10)
 
     # Extract data from pandas_df
-    norm_lever = trial_df['Levers_ts'].copy(deep=True)
-    norm_err = trial_df['Err_ts'].copy(deep=True)
-    norm_dr = trial_df['D_Pellet_ts'].copy(deep=True)
-    norm_pell = trial_df['Pellet_ts'].copy(deep=True)
-    norm_rw = trial_df['Reward_ts'].copy(deep=True)
-    norm_FRes = trial_df['First_response'].copy(deep=True)
+    def df_col_to_2d_list(df, col):
+        df_col = df[col]
+        l = []
+        for i in range(len(df_col)):
+            val = np.copy(df_col.at[i])
+            l.append(val)
+        return l
+
+    norm_lever = df_col_to_2d_list(trial_df, "Levers_ts")
+    norm_err = df_col_to_2d_list(trial_df, "Err_ts")
+    norm_dr = df_col_to_2d_list(trial_df, "D_Pellet_ts")
+    norm_pell = df_col_to_2d_list(trial_df, "Pellet_ts")
+    norm_rw = df_col_to_2d_list(trial_df, "Reward_ts")
+    norm_FRes = df_col_to_2d_list(trial_df, "First_response")
     schedule_type = trial_df['Schedule'].copy(deep=True)
     norm_tone = trial_df['Tone_s'].copy(deep=True)
     norm_start = trial_df['Trial_s'].copy(deep=True)
@@ -783,7 +791,7 @@ def plot_raster_trials(
     ax.text(0.1, -1, plot_type.split('-')[0], fontsize=12,
             color='g', ha='left', va='top')
 
-    for i, _ in enumerate(norm_rw):
+    for i in range(len(norm_rw)):
         # color assigment for trial type
         if schedule_type[i] == 'FR':
             color.append('black')
@@ -791,24 +799,27 @@ def plot_raster_trials(
             color.append('b')
         else:
             color.append('g')
-        norm_lever[i] -= norm_arr[i]
-        norm_err[i] -= norm_arr[i]
-        norm_dr[i] -= norm_arr[i]
-        norm_pell[i] -= norm_arr[i]
-        norm_rw[i] -= norm_arr[i]
-        norm_tone[i] -= norm_arr[i]
-        norm_start[i] -= norm_arr[i]
+        subtract_val = norm_arr[i].flatten()
+        if len(subtract_val) != 1:
+            raise ValueError("Can't align to non single value")
+        subtract_val = subtract_val[0]
+        norm_lever[i] -= subtract_val
+        norm_err[i] -= subtract_val
+        norm_dr[i] -= subtract_val
+        norm_pell[i] -= subtract_val
+        norm_rw[i] -= subtract_val
+        norm_tone[i] -= subtract_val
+        norm_start[i] -= subtract_val
 
     # Plotting of raster
-    ax.eventplot(norm_lever[:], color=color)
-    ax.eventplot(norm_err[:], color='red')
+    ax.eventplot(norm_lever, color=color)
+    ax.eventplot(norm_err, color='red')
     for i, x in enumerate(norm_rw):
         if len(x) == 0:
             norm_rw[i] = None
     rw_plot = ax.scatter(norm_rw, np.arange(len(norm_rw)), s=5,
                          color='orange', label='Reward Collection')
-    ax.eventplot(
-        norm_dr[:], color='magenta')
+    ax.eventplot(norm_dr, color='magenta')
 
     # Legend construction (Standard items)
     FR_label = lines.Line2D([], [], color='black', marker='|', linestyle='None',
