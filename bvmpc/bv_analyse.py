@@ -1063,7 +1063,8 @@ def trial_clust_hier(s, ax=None, should_pca=True, cutoff=None):
     df["Temp"] = (df.index.map(str)) + " " + df["Schedule"]
     label = df["Temp"].tolist()
 
-    clust_results = s.get_cluster_results(should_pca=should_pca, cutoff=cutoff)
+    clust_results = s.get_cluster_results(
+        should_pca=should_pca, cutoff=cutoff)
     import scipy.cluster.hierarchy as shc
     Z = clust_results['Z']
     dend = shc.dendrogram(Z, ax=ax[0], color_threshold=cutoff, count_sort=True)

@@ -364,7 +364,7 @@ def test_all_hier_clustering(data, verbose=False):
                 c, coph_dists = cophenet(Z, pdist(data))
                 coph[i, j] = c
             except:
-                coph[i, j] = None
+                coph[i, j] = np.nan
 
     max_coph = np.nanmax(coph)
     a, b = np.where(coph == max_coph)
@@ -374,7 +374,7 @@ def test_all_hier_clustering(data, verbose=False):
         print(coph_df)
     print('\nMax Cophentic Correlation Coefficient: ',
           coph_df.index.values[a], coph_df.columns.values[b], max_coph)
-    exit(-1)
+    return coph_df
 
 
 if __name__ == "__main__":

@@ -107,7 +107,7 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
             nrows=len(lfp_dict_s),
             figsize=(40, len(lfp_dict_s) * 2))
         a = np.round(split, 2)
-        b = np.round(min(seg_splits[j+1], in_range[1]), 2)
+        b = np.round(min(seg_splits[j + 1], in_range[1]), 2)
         if list(lfp_dict_s.keys())[0] == '17':
             out_name = os.path.join(
                 out_dir, "1_{}s_to_{}s.png".format(a, b))
@@ -132,9 +132,9 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
                 mean = lfp_odict.get_info(key, "mean")
                 std = lfp_odict.get_info(key, "std")
                 # Label thresholds
-                axes[i].axhline(mean-sd*std, linestyle='-',
+                axes[i].axhline(mean - sd * std, linestyle='-',
                                 color='red', linewidth='1.5')
-                axes[i].axhline(mean+sd*std, linestyle='-',
+                axes[i].axhline(mean + sd * std, linestyle='-',
                                 color='red', linewidth='1.5')
 
             if session:
@@ -168,7 +168,7 @@ def lfp_csv(fname, out_dir, lfp_odict, sd, min_artf_freq, shuttles, filt=False):
         mean, std, thr_locs, thr_vals, thr_time, per_removed = lfp.find_artf(
             sd, min_artf_freq)
         tetrodes.append("T" + str(key))
-        threshold.append(sd*std)
+        threshold.append(sd * std)
         ex_thres.append(len(thr_locs))
         mean_list.append(mean)
         std_list.append(std)
@@ -346,6 +346,8 @@ def calc_wPowerSpectrum(dat, sample_times, min_freq=1, max_freq=256, detrend=Tru
     """
     Calculate wavelet power spectrum using pycwt.
 
+    TODO is this function needed?
+
     Parameters
     ----------
     dat : np.ndarray
@@ -367,7 +369,7 @@ def calc_wPowerSpectrum(dat, sample_times, min_freq=1, max_freq=256, detrend=Tru
     t = np.asarray(sample_times)
     dt = np.mean(np.diff(t))
     dj = resolution
-    # TODO correct calculation below. Convert freq to period and work with that first?
+
     s0 = min_freq * dt
     if s0 < 2 * dt:
         s0 = 2 * dt

@@ -187,7 +187,6 @@ class SessionInfo:
         self.io_channel_map["7"] = self.io_channel_map["6"]
 
     def _init_axona_metadata_map(self):
-        # TODO get the right values here
         self.axona_metadata_map = {
             "start_date": "trial_date",
             "end_date": "trial_date",

@@ -18,7 +18,7 @@ def load_lfp(load_loc, i, data):
 def get_normalised_diff(s1, s2):
     # MSE of one divided by MSE of main - Normalized squared differnce
     # Symmetric
-    return np.sum(np.square(s1 - s2)) / (np.sum(np.square(s1) + np.square(s2))/2)
+    return np.sum(np.square(s1 - s2)) / (np.sum(np.square(s1) + np.square(s2)) / 2)
     # return np.sum(np.square(s1 - s2)) / np.sum(np.square(s1))  # Non-symmetric
 
 
@@ -55,7 +55,7 @@ def compare_lfp(fname, out_base_dir=None, ch=16):
         result_a[i] = res
 
     with open(out_loc, "w") as f:
-        headers = [str(i) for i in range(1, ch+1)]
+        headers = [str(i) for i in range(1, ch + 1)]
         out_str = ",".join(headers)
         f.write(out_str)
         out_str = ""
@@ -70,9 +70,11 @@ def compare_lfp(fname, out_base_dir=None, ch=16):
 
     reshaped = np.reshape(result_a, newshape=[ch, ch])
     sns.heatmap(reshaped)
-    plt.xticks(np.arange(0.5, ch+0.5), labels=np.arange(1, ch+1), fontsize=8)
+    plt.xticks(np.arange(0.5, ch + 0.5),
+               labels=np.arange(1, ch + 1), fontsize=8)
     plt.xlabel('LFP Channels')
-    plt.yticks(np.arange(0.5, ch+0.5), labels=np.arange(1, ch+1), fontsize=8)
+    plt.yticks(np.arange(0.5, ch + 0.5),
+               labels=np.arange(1, ch + 1), fontsize=8)
     plt.ylabel('LFP Channels')
     plt.title('Raw LFP Similarity Index')
     fig_path = os.path.join(
@@ -80,7 +82,6 @@ def compare_lfp(fname, out_base_dir=None, ch=16):
     print("Saving figure to {}".format(fig_path))
     plt.savefig(fig_path, dpi=200,
                 bbox_inches='tight', pad_inches=0.1)
-    # TODO set title and axis
     return result_a
 
 

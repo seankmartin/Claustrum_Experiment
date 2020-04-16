@@ -259,23 +259,64 @@ class Session:
         """
         df = self.get_trial_df_norm()
         feat_names = ["Trial_Len", "Pell",
-                      "Rw_lat", "Err", "1st_Resp", "Resp_n"]
+                      "Rw_lat", "Err", "1st_Resp", "Resp_n",
+                      "Avg_Press_Rate", "Avg_Press_Gradient"]
+
         # Number of features before lever histogram
         n_feat_bh = len(feat_names)
 
-        h_bin = 8  # Set hist bin size for lever responses here
-        for i in np.arange(h_bin):
+        # Set hist bin size for lever responses here
+        h_bin_final = 4
+
+        for i in np.arange(h_bin_final):
             feat_names.append("L_Hist-{}".format(i))
 
         features = np.zeros(
             shape=(len(df.index), len(feat_names)))
-        trial_idx = []
+
         for row in df.itertuples():
             index = row.Index
-            features[index, 0] = row.Reward_ts  # Trial duration
-            features[index, 1] = row.Pellet_ts  # Completion Latency
-            features[index, 2] = row.Reward_ts - \
-                row.Pellet_ts  # Reward Latency
+
+            # Trial duration
+            features[index, 0] = row.Reward_ts
+
+            # Completion Latency
+            features[index, 1] = row.Pellet_ts
+
+            # Reward Latency
+            features[index, 2] = row.Reward_ts - row.Pellet_ts
+
+            # Number of err responses
+            features[index, 3] = row.Err_ts.size
+
+            # Time to first response
+            features[index, 4] = row.First_response
+
+            # Number of lever responses
+            features[index, 5] = np.count_nonzero(
+                ~np.isnan(row.Levers_ts))
+
+            x = row.Levers_ts
+            press_times = x[~np.isnan(x)]
+
+            # Average length between lever presses
+            if len(press_times) > 1:
+                features[index, 6] = np.mean(np.diff(press_times))
+            else:
+                features[index, 6] = row.Reward_ts
+
+            # Average rate of change of the rate of change.
+            if len(press_times) > 2:
+                features[index, 7] = np.mean(
+                    np.gradient(np.gradient(press_times, 1), 1))
+            else:
+                features[index, 7] = 0
+
+            # Histogram values of lever responses
+            lever_hist = np.histogram(
+                x[~np.isnan(x)], bins=h_bin_final, density=True)[0]
+            features[index, n_feat_bh:(n_feat_bh + h_bin_final)] = lever_hist
+
             # double_pellet_time = row.D_Pellet_ts
             # if len(double_pellet_time) == 0:
             #     d_pell_feature = 0
@@ -284,18 +325,6 @@ class Session:
             # features[index, 2] = d_pell_feature
             # err_hist = np.histogram(
             # row.Err_ts, bins=5, density=False)[0]
-
-            features[index, 3] = row.Err_ts.size  # number of err responses
-
-            features[index, 4] = row.First_response  # Time to first response
-            features[index, 5] = np.count_nonzero(
-                ~np.isnan(row.Levers_ts))  # number of lever responses
-
-            x = row.Levers_ts
-            lever_hist = np.histogram(
-                x[~np.isnan(x)], bins=h_bin, density=True)[0]
-            features[index, n_feat_bh:(n_feat_bh + h_bin)] = lever_hist
-            trial_idx.append(index)
 
         feat_df = pd.DataFrame(features, columns=feat_names)
 
@@ -417,7 +446,9 @@ class Session:
             ax.scatter(u[:, 0], u[:, 1], u[:, 2], c=c, s=100)
         plt.title(title, fontsize=18)
 
-    def hier_cluster(self, should_scale=True, should_pca=True, cutoff=None):
+    def hier_cluster(
+            self, should_scale=True, should_pca=True, cutoff=None,
+            test_methods=False):
         """
         Perform hierarchical clustering on per trial features
 
@@ -442,7 +473,8 @@ class Session:
                 should_scale=should_scale)  # Use raw features
 
         from bvmpc.bv_utils import test_all_hier_clustering
-        test_all_hier_clustering(data, verbose=False)
+        if test_methods:
+            test_all_hier_clustering(data, verbose=True)
 
         Z = shc.linkage(data, method='centroid')  # linkage matrix
         c, coph_dists = cophenet(Z, pdist(data))
@@ -894,8 +926,6 @@ class Session:
                     break
 
                 # Replaces overflowed nosepoke w block end in main array
-                # TODO check with Sean if this hard fix is appropriate
-                # to_insert = round((block_ends[i] - 0.001), 3)
                 to_insert = block_ends[i] - 0.001
                 print(' Insert: ', to_insert)
                 self.add_insert(to_insert)

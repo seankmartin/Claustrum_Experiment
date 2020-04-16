@@ -86,6 +86,8 @@ def split_into_amp_phase(lfp, deg=False):
     amplitude = np.abs(complex_lfp)
     return amplitude, phase
 
+# TODO is this function needed?
+
 
 def plot_wave_coherence(
         wave1, wave2, sample_times,
@@ -231,7 +233,7 @@ def plot_wave_coherence(
     # Add limits, titles, etc.
     ax.set_ylim(min(y_vals), max(y_vals))
     if block:
-        ax.set_xlim(t[block[0]], t[int(block[1]*1/dt)])
+        ax.set_xlim(t[block[0]], t[int(block[1] * 1 / dt)])
     else:
         ax.set_xlim(t.min(), t.max())
 
@@ -243,8 +245,8 @@ def plot_wave_coherence(
     if plot_arrows:
         # TODO currently this is a uniform grid, could be changed to WCT > 0.5
 
-        x_res = int(1/dt * quiv_x)
-        y_res = int(np.floor(len(y_vals)/quiv_y))
+        x_res = int(1 / dt * quiv_x)
+        y_res = int(np.floor(len(y_vals) / quiv_y))
         if all_arrows:
             ax.quiver(t[::x_res], y_vals[::y_res],
                       u[::y_res, ::x_res], v[::y_res, ::x_res], units='height',
@@ -330,10 +332,10 @@ def calc_wave_coherence(wave1, wave2, sample_times, min_freq=1, max_freq=128, si
     dt = np.mean(np.diff(t))  # dt = 0.004
 
     dj = resolution
-    s0 = 1/max_freq
+    s0 = 1 / max_freq
     if s0 < (2 * dt):
         s0 = 2 * dt
-    max_J = 1/min_freq
+    max_J = 1 / min_freq
     J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
 
     # # Original by Sean
@@ -433,7 +435,7 @@ def plot_wcohere(WCT, t, freq, coi=None, sig=None, plot_period=False, ax=None, t
     # Add limits, titles, etc.
     ax.set_ylim(min(y_vals), max(y_vals))
     if block:
-        ax.set_xlim(t[block[0]], t[int(block[1]*1/dt)])
+        ax.set_xlim(t[block[0]], t[int(block[1] * 1 / dt)])
     else:
         ax.set_xlim(t.min(), t.max())
 
@@ -496,8 +498,8 @@ def plot_arrows(ax, wcohere_pvals, aWCT=None, u=None, v=None, magnitute=None, qu
 
     dt = np.mean(np.diff(t))
 
-    x_res = int(1/dt * quiv_x)
-    y_res = int(np.floor(len(y_vals)/quiv_y))
+    x_res = int(1 / dt * quiv_x)
+    y_res = int(np.floor(len(y_vals) / quiv_y))
     if all_arrows:
         ax.quiver(t[::x_res], y_vals[::y_res],
                   u[::y_res, ::x_res], v[::y_res, ::x_res], units='height',
@@ -556,7 +558,7 @@ def wcohere_mean(WCT, aWCT, t_blocks=None):
     angle = 0.5 * np.pi - aWCT
     u, v = np.cos(angle), np.sin(angle)
 
-    t_win = int((t_blocks[0][1] - t_blocks[0][0])*250)
+    t_win = int((t_blocks[0][1] - t_blocks[0][0]) * 250)
     print("t_win:", t_win)
 
     WCT_trial = np.empty((
@@ -570,7 +572,7 @@ def wcohere_mean(WCT, aWCT, t_blocks=None):
     all_v.fill(np.nan)
 
     for i, (a, b) in enumerate(t_blocks):
-        start_idx = int(a*250)
+        start_idx = int(a * 250)
         end_idx = start_idx + t_win
 
         WCT_this_trial = np.empty(
@@ -759,7 +761,7 @@ def plot_cross_wavelet(
     ax.set_ylim(min(y_vals), max(y_vals))
 
     if block:
-        ax.set_xlim(t[block[0]], t[int(block[1]*1/dt)])
+        ax.set_xlim(t[block[0]], t[int(block[1] * 1 / dt)])
     else:
         ax.set_xlim(t.min(), t.max())
 

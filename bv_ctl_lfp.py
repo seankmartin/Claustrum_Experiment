@@ -150,7 +150,7 @@ def main(fname, out_main_dir, config):
             bv_plot.savefig(fig, cum_name)
 
         bv_clust = bool(int(config.get("Behav Plot", "clust")))
-        plot_feat_box, plot_feat_pp = [0, 0]  # True to plot feat details
+        plot_feat_box, plot_feat_pp = [0, 1]  # True to plot feat details
 
         # Do trial based clustering based on animal responses.
         if bv_clust:
