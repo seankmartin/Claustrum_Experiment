@@ -258,18 +258,19 @@ class Session:
             pandas dataframe with
         """
         df = self.get_trial_df_norm()
-        feat_names = ["Trial_Len", "Pell",
-                      "Rw_lat", "Err", "1st_Resp", "Resp_n",
-                      "Avg_Press_Rate", "Avg_Press_Gradient"]
+        feat_names = ["Trial_Len", "Resp_n",
+                      "Avg_Press_Rate", "Avg_Press_Gradient",
+                      "Max_in_10s"]
 
         # Number of features before lever histogram
         n_feat_bh = len(feat_names)
 
         # Set hist bin size for lever responses here
-        h_bin_final = 4
+        # h_bin_final = 3
+        # bins = np.arange(0, 60 + 0.00001, 60 / h_bin_final)
 
-        for i in np.arange(h_bin_final):
-            feat_names.append("L_Hist-{}".format(i))
+        # for i in np.arange(h_bin_final):
+        #     feat_names.append("L_Hist-{}".format(i))
 
         features = np.zeros(
             shape=(len(df.index), len(feat_names)))
@@ -280,42 +281,44 @@ class Session:
             # Trial duration
             features[index, 0] = row.Reward_ts
 
-            # Completion Latency
-            features[index, 1] = row.Pellet_ts
-
-            # Reward Latency
-            features[index, 2] = row.Reward_ts - row.Pellet_ts
-
-            # Number of err responses
-            features[index, 3] = row.Err_ts.size
-
-            # Time to first response
-            features[index, 4] = row.First_response
-
-            # Number of lever responses
-            features[index, 5] = np.count_nonzero(
-                ~np.isnan(row.Levers_ts))
-
             x = row.Levers_ts
             press_times = x[~np.isnan(x)]
 
+            # Number of lever responses
+            features[index, 1] = np.count_nonzero(
+                ~np.isnan(row.Levers_ts))
+
             # Average length between lever presses
             if len(press_times) > 1:
-                features[index, 6] = np.mean(np.diff(press_times))
+                features[index, 2] = np.mean(np.diff(press_times))
             else:
-                features[index, 6] = row.Reward_ts
+                features[index, 2] = row.Reward_ts
 
             # Average rate of change of the rate of change.
             if len(press_times) > 2:
-                features[index, 7] = np.mean(
+                features[index, 3] = np.mean(
                     np.gradient(np.gradient(press_times, 1), 1))
             else:
-                features[index, 7] = 0
+                features[index, 3] = 0
+
+            # Find the max number of response 10 seconds apart
+            time_len = 10
+            dt = time_len / 2
+            max_val = 0
+            for value in press_times:
+                in_range = np.logical_and(
+                    press_times >= value - dt,
+                    press_times <= value + dt)
+                num_in_range = np.count_nonzero(in_range)
+                if num_in_range > max_val:
+                    max_val = num_in_range
+
+            features[index, 4] = max_val
 
             # Histogram values of lever responses
-            lever_hist = np.histogram(
-                x[~np.isnan(x)], bins=h_bin_final, density=True)[0]
-            features[index, n_feat_bh:(n_feat_bh + h_bin_final)] = lever_hist
+            # lever_hist = np.histogram(
+            #     x[~np.isnan(x)], bins=bins, density=True)[0]
+            # features[index, n_feat_bh:(n_feat_bh + h_bin_final)] = lever_hist
 
             # double_pellet_time = row.D_Pellet_ts
             # if len(double_pellet_time) == 0:
@@ -476,17 +479,17 @@ class Session:
         if test_methods:
             test_all_hier_clustering(data, verbose=True)
 
-        Z = shc.linkage(data, method='centroid')  # linkage matrix
+        Z = shc.linkage(data, method='ward')  # linkage matrix
         c, coph_dists = cophenet(Z, pdist(data))
 
         print('Cophentic Correlation Coefficient: ', c)
 
+        if cutoff is None:
+            cutoff = 0.7 * max(Z[:, 2])
+
         dend = shc.dendrogram(Z, no_plot=True, color_threshold=cutoff)
 
         reindex = list(map(int, dend['ivl']))  # index for sorting trials
-
-        if cutoff is None:
-            cutoff = 0.7 * max(Z[:, 2])
 
         clusters = shc.fcluster(Z, cutoff, criterion='distance')
         self.cluster_results = {

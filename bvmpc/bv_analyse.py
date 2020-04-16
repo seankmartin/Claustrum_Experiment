@@ -935,7 +935,7 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
         fig = None
 
     if should_pca:
-        feat_df, data, pca = s.perform_pca(should_scale=True)
+        feat_df, data, pca = s.perform_pca(should_scale=False)
         if (sum(pca.explained_variance_ratio_[:3]) < 0.8) and (p_2D is False):
             xs, ys, zs = data.iloc[:, 0], data.iloc[:,
                                                     1], data.iloc[:, 2]  # Plot PC 1-3
@@ -961,11 +961,17 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     centroids = cluster.cluster_centers_
     df = s.get_trial_df_norm()
     markers = df["Schedule"]
+
+    # TODO fix some weird colouring bug, had to remove palette from sns.scatter
     cmap = sns.color_palette("bright")
     if zs is None:
         sns.scatterplot(xs, ys, ax=ax, style=markers,
-                        hue=cluster.labels_, palette='bright')
+                        hue=cluster.labels_)
         ax.legend(fontsize=20, loc='upper right')
+        PCA_colors = []
+        for i in np.arange(len(xs)):
+            ic = cmap[cluster.labels_[i]]
+            PCA_colors.append(ic)
     else:
         # ax.scatter(xs, ys, zs, c=cluster.labels_, cmap='rainbow')
         mask = {'FR': 'x', 'FI': '^'}
