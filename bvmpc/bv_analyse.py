@@ -1112,3 +1112,68 @@ def trial_clust_hier(s, ax=None, should_pca=True, cutoff=None):
     #     style=markers, c=cluster1.labels_, cmap='rainbow')
 
     return fig
+
+
+def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name='default.png'):
+    try:
+        import matlab.engine
+    except Exception:
+        print("The matlab engine is not available")
+        return
+    import numpy as np
+    from scipy import signal
+
+    eng = matlab.engine.start_matlab()
+    fs = lfp1.get_sampling_rate()
+    t = lfp1.get_timestamp()
+    x = lfp1.get_samples()
+    y = lfp2.get_samples()
+    x_m = matlab.double(list(x))
+    y_m = matlab.double(list(y))
+
+    rw_ts = matlab.double(list(rw_ts))
+    o = 7.0
+    eng.wcoherence(x_m, y_m, fs, 'NumOctaves', o, nargout=0)
+    aspect_ratio = matlab.double([2, 1, 1])
+    eng.pbaspect(aspect_ratio, nargout=0)
+
+    title = ("{} vs {} Wavelet Coherence {}".format(
+        reg_sel[0], reg_sel[1], sch_n))
+    eng.title(title)
+    # eng.hold("on", nargout=0)
+
+    # for rw in rw_ts:
+    #     # vline demarcating reward point/end of trial
+    #     eng.xline(rw, "-r")
+    # eng.hold("off", nargout=0)
+    fig = eng.gcf()
+    print("Saving result to {}".format(name))
+    eng.saveas(fig, name, nargout=0)
+
+
+def test_wct(lfp1, lfp2, sig=True):  # python CWT
+    import pycwt as wavelet
+    dt = 1 / lfp1.get_sampling_rate()
+    WCT, aWCT, coi, freq, sig = wavelet.wct(
+        lfp1.get_samples(), lfp2.get_samples(), dt, sig=sig)
+    _, ax = plt.subplots()
+    t = lfp1.get_timestamp()
+    ax.contourf(t, freq, WCT, 6, extend='both', cmap="viridis")
+    extent = [t.min(), t.max(), 0, max(freq)]
+    N = lfp1.get_total_samples()
+    sig95 = np.ones([1, N]) * sig[:, None]
+    sig95 = WCT / sig95
+    ax.contour(t, freq, sig95, [-99, 1], colors='k', linewidths=2,
+               extent=extent)
+    ax.fill(np.concatenate([t, t[-1:] + dt, t[-1:] + dt,
+                            t[:1] - dt, t[:1] - dt]),
+            np.concatenate([coi, [1e-9], freq[-1:],
+                            freq[-1:], [1e-9]]),
+            'k', alpha=0.3, hatch='x')
+
+    ax.set_title('Wavelet Power Spectrum')
+    ax.set_ylabel('Freq (Hz)')
+    ax.set_xlabel('Time (s)')
+
+    plt.show()
+    exit(-1)

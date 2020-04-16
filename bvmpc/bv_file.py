@@ -3,6 +3,7 @@ import os
 
 from bvmpc.bv_session import Session
 from bvmpc.bv_session_extractor import SessionExtractor
+from bvmpc.lfp_odict import LfpODict
 
 import bvmpc.bv_utils
 
@@ -111,3 +112,30 @@ def session_from_mpc_file(filename, out_dir):
     s_extractor = SessionExtractor(filename, verbose=False)
 
     return s_extractor
+
+
+def load_bv_from_set(fname):
+    """ Loads session based from .inp """
+    if os.path.isfile(fname + ".inp"):
+        return Session(axona_file=fname + ".inp")
+    else:
+        print(".inp does not exist.")
+        return None
+
+
+def select_lfp(fname, ROI):  # Select lfp based on region
+    # Single Hemi Multisite Drive settings
+    lfp_list = []
+    chans = [i for i in range(1, 17)]
+    regions = ["CLA"] * 8 + ["ACC"] * 4 + ["RSC"] * 4
+    # Change filt values here. Default order 10.
+    filt_btm = 1.0
+    filt_top = 50
+
+    # Actual function
+    for r in ROI:
+        idx = [i for i, x in enumerate(regions) if x == ROI[r]]
+        lfp_odict = LfpODict(
+            fname, channels=chans[idx], filt_params=(True, filt_btm, filt_top))
+        lfp_list.append(lfp_odict)
+    return lfp_list

@@ -1,25 +1,29 @@
 import os
 import math
 import json
+from datetime import date, timedelta, datetime
+
 import numpy as np
-import pandas as pd
 import seaborn as sns
-from bvmpc.bv_session_extractor import SessionExtractor
-from bvmpc.bv_session import Session
-import bvmpc.bv_analyse as bv_an
-from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors, daterange, split_list, get_all_files_in_dir, log_exception, chunks, save_dict_to_csv, make_path_if_not_exists, read_cfg, parse_args, get_dist
-import bvmpc.bv_plot as bv_plot
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from scipy import interpolate, signal
-from datetime import date, timedelta, datetime
 
-from bvmpc.lfp_odict import LfpODict
 import neurochat.nc_plot as nc_plot
-from bvmpc.compare_lfp import compare_lfp
-
-from bvmpc.lfp_plot import plot_lfp, plot_coherence, lfp_csv
+import bvmpc.bv_plot as bv_plot
 import bvmpc.bv_analyse as bv_an
+from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors
+from bvmpc.bv_utils import daterange, split_list, get_all_files_in_dir
+from bvmpc.bv_utils import log_exception, chunks, save_dict_to_csv
+from bvmpc.bv_utils import make_path_if_not_exists, read_cfg, parse_args
+from bvmpc.bv_utils import get_dist
+from bvmpc.bv_session_extractor import SessionExtractor
+from bvmpc.bv_session import Session
+from bvmpc.lfp_odict import LfpODict
+from bvmpc.compare_lfp import compare_lfp
+from bvmpc.lfp_plot import plot_lfp, plot_coherence, lfp_csv
+from bvmpc.bv_file import load_bv_from_set, select_lfp
 
 
 def main(fname, out_main_dir, config):
@@ -572,7 +576,7 @@ def main(fname, out_main_dir, config):
 
                     if matlab:
                         rw_ts = s.get_rw_ts()
-                        test_matlab_wcoherence(
+                        bv_an.test_matlab_wcoherence(
                             lfp1, lfp2, rw_ts, sch_n, reg_sel, out_name)
                     from bvmpc.lfp_coherence import plot_wave_coherence
                     fig, ax = plt.subplots(figsize=(24, 10))
@@ -952,98 +956,6 @@ def main(fname, out_main_dir, config):
                                  fontsize=30, y=1.01)
 
                     bv_plot.savefig(fig, o_name)
-
-
-def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name='default.png'):
-    try:
-        import matlab.engine
-    except Exception:
-        print("The matlab engine is not available")
-        return
-    import numpy as np
-    from scipy import signal
-
-    eng = matlab.engine.start_matlab()
-    fs = lfp1.get_sampling_rate()
-    t = lfp1.get_timestamp()
-    x = lfp1.get_samples()
-    y = lfp2.get_samples()
-    x_m = matlab.double(list(x))
-    y_m = matlab.double(list(y))
-
-    rw_ts = matlab.double(list(rw_ts))
-    o = 7.0
-    eng.wcoherence(x_m, y_m, fs, 'NumOctaves', o, nargout=0)
-    aspect_ratio = matlab.double([2, 1, 1])
-    eng.pbaspect(aspect_ratio, nargout=0)
-
-    title = ("{} vs {} Wavelet Coherence {}".format(
-        reg_sel[0], reg_sel[1], sch_n))
-    eng.title(title)
-    # eng.hold("on", nargout=0)
-
-    # for rw in rw_ts:
-    #     # vline demarcating reward point/end of trial
-    #     eng.xline(rw, "-r")
-    # eng.hold("off", nargout=0)
-    fig = eng.gcf()
-    print("Saving result to {}".format(name))
-    eng.saveas(fig, name, nargout=0)
-
-
-def test_wct(lfp1, lfp2, sig=True):  # python CWT
-    import pycwt as wavelet
-    dt = 1 / lfp1.get_sampling_rate()
-    WCT, aWCT, coi, freq, sig = wavelet.wct(
-        lfp1.get_samples(), lfp2.get_samples(), dt, sig=sig)
-    _, ax = plt.subplots()
-    t = lfp1.get_timestamp()
-    ax.contourf(t, freq, WCT, 6, extend='both', cmap="viridis")
-    extent = [t.min(), t.max(), 0, max(freq)]
-    N = lfp1.get_total_samples()
-    sig95 = np.ones([1, N]) * sig[:, None]
-    sig95 = WCT / sig95
-    ax.contour(t, freq, sig95, [-99, 1], colors='k', linewidths=2,
-               extent=extent)
-    ax.fill(np.concatenate([t, t[-1:] + dt, t[-1:] + dt,
-                            t[:1] - dt, t[:1] - dt]),
-            np.concatenate([coi, [1e-9], freq[-1:],
-                            freq[-1:], [1e-9]]),
-            'k', alpha=0.3, hatch='x')
-
-    ax.set_title('Wavelet Power Spectrum')
-    ax.set_ylabel('Freq (Hz)')
-    ax.set_xlabel('Time (s)')
-
-    plt.show()
-    exit(-1)
-
-
-def select_lfp(fname, ROI):  # Select lfp based on region
-    # Single Hemi Multisite Drive settings
-    lfp_list = []
-    chans = [i for i in range(1, 17)]
-    regions = ["CLA"] * 8 + ["ACC"] * 4 + ["RSC"] * 4
-    # Change filt values here. Default order 10.
-    filt_btm = 1.0
-    filt_top = 50
-
-    # Actual function
-    for r in ROI:
-        idx = [i for i, x in enumerate(regions) if x == ROI[r]]
-        lfp_odict = LfpODict(
-            fname, channels=chans[idx], filt_params=(True, filt_btm, filt_top))
-        lfp_list.append(lfp_odict)
-    return lfp_list
-
-
-def load_bv_from_set(fname):
-    """ Loads session based from .inp """
-    if os.path.isfile(fname + ".inp"):
-        return Session(axona_file=fname + ".inp")
-    else:
-        print(".inp does not exist.")
-        return None
 
 
 def main_entry(config_name):
