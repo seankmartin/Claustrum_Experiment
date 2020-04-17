@@ -243,9 +243,10 @@ class Session:
         return (
             norm_reward_ts, norm_lever_ts, norm_err_ts, norm_double_r_ts, incl)
 
-    def extract_features(self, should_scale=True):
+    def old_extract_features(self, should_scale=True):
         """
         Extract per trial features
+        This is the previous version of this function.
 
         Parameters
         ------
@@ -325,6 +326,95 @@ class Session:
             # features[index, 2] = d_pell_feature
             # err_hist = np.histogram(
             # row.Err_ts, bins=5, density=False)[0]
+
+        feat_df = pd.DataFrame(features, columns=feat_names)
+
+        # Drop features/columns with all zeros
+        feat_df = feat_df.loc[:, (feat_df != 0).any(axis=0)]
+
+        if should_scale:  # Normalize features
+            scaler = StandardScaler()
+            data_scaled = scaler.fit_transform(feat_df)
+            feat_df = pd.DataFrame(data_scaled, columns=feat_df.columns)
+
+        return feat_df
+
+    def extract_features(self, should_scale=True):
+        """
+        Extract per trial features
+
+        Parameters
+        ------
+        should_scale : bool, True
+            Optional. Whether to scale the data to unit variance
+
+        Returns
+        -------
+        feat_df : pd.df
+            pandas dataframe with
+        """
+        df = self.get_trial_df_norm()
+        feat_names = ["Trial_Len", "Resp_n",
+                      "Avg_Press_Rate", "Avg_Press_Gradient",
+                      "Max_in_10s"]
+
+        # Number of features before lever histogram
+        n_feat_bh = len(feat_names)
+
+        # Set hist bin size for lever responses here
+        # h_bin_final = 3
+        # bins = np.arange(0, 60 + 0.00001, 60 / h_bin_final)
+
+        # for i in np.arange(h_bin_final):
+        #     feat_names.append("L_Hist-{}".format(i))
+
+        features = np.zeros(
+            shape=(len(df.index), len(feat_names)))
+
+        for row in df.itertuples():
+            index = row.Index
+
+            # Trial duration
+            features[index, 0] = row.Reward_ts
+
+            x = row.Levers_ts
+            press_times = x[~np.isnan(x)]
+
+            # Number of lever responses
+            features[index, 1] = np.count_nonzero(
+                ~np.isnan(row.Levers_ts))
+
+            # Average length between lever presses
+            if len(press_times) > 1:
+                features[index, 2] = np.mean(np.diff(press_times))
+            else:
+                features[index, 2] = row.Reward_ts
+
+            # Average rate of change of the rate of change.
+            if len(press_times) > 2:
+                features[index, 3] = np.mean(
+                    np.gradient(np.gradient(press_times, 1), 1))
+            else:
+                features[index, 3] = 0
+
+            # Find the max number of response 10 seconds apart
+            time_len = 10
+            dt = time_len / 2
+            max_val = 0
+            for value in press_times:
+                in_range = np.logical_and(
+                    press_times >= value - dt,
+                    press_times <= value + dt)
+                num_in_range = np.count_nonzero(in_range)
+                if num_in_range > max_val:
+                    max_val = num_in_range
+
+            features[index, 4] = max_val
+
+            # Histogram values of lever responses
+            # lever_hist = np.histogram(
+            #     x[~np.isnan(x)], bins=bins, density=True)[0]
+            # features[index, n_feat_bh:(n_feat_bh + h_bin_final)] = lever_hist
 
         feat_df = pd.DataFrame(features, columns=feat_names)
 
