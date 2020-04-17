@@ -799,6 +799,64 @@ def plot_cross_wavelet(
     return (fig, [W12, coi, freq, sig])
 
 
+def plot_single_freq_wcohere(target_freq, WCT, t, freq, aWCT, trials, t_win, trial_df, align_txt, s, reg_sel, sort=True):
+    """ Plots wcohere for target freq as heatmap across trials. Produces 2 plots -  FR and FI respectively """
+    # TODO add arrows into plot
+
+    import seaborn as sns
+    import pandas as pd
+    freq_idx = np.where(np.round(freq, decimals=1) == target_freq)
+    t_freq_WCT = np.empty((len(trials), np.diff(t_win)[0]*250))
+    print('min phase: ', np.nanmin(np.abs(aWCT)))
+    print('max phase: ', np.nanmax(np.abs(aWCT)))
+
+    fig, ax = plt.subplots(2, 1, figsize=(14, 10))
+    for i, (a, b) in enumerate(trials):
+        t_freq_WCT[i, :] = WCT[freq_idx,
+                               np.searchsorted(t, a)[0]:np.searchsorted(t, b)[0]]
+        # t_freq_aWCT[i, :] = aWCT[freq_idx,
+        #                            np.searchsorted(t, a)[0]:np.searchsorted(t, b)[0]]
+    t_WCT_df = pd.DataFrame(
+        t_freq_WCT, columns=np.round((np.arange(t_win[0], t_win[1], 0.004)), decimals=3), index=trial_df.index)
+
+    FR_df = t_WCT_df.loc[trial_df['Schedule']
+                         == 'FR', t_win[0]:t_win[1]]
+    FI_df = t_WCT_df.loc[trial_df['Schedule']
+                         == 'FI', t_win[0]:t_win[1]]
+
+    # t_aWCT_df = pd.DataFrame(
+    #     t_freq_WCT, columns=np.round((np.arange(t_win[0], t_win[1], 0.004)), decimals=3), index=trial_df.index)
+
+    if sort:
+        FR_df = FR_df.sort_values([0])
+        FI_df = FI_df.sort_values([0])
+
+    # t_freq_df['Schedule'] = trial_df['Schedule']
+    sns.heatmap(FR_df, ax=ax[0], xticklabels=int(250))
+    ax[0].set_title(
+        '{} vs {} Trial Based wCohere ({}Hz) - FR'.format(reg_sel[0], reg_sel[1], target_freq))
+    sns.heatmap(FI_df, ax=ax[1], xticklabels=int(250))
+    ax[1].set_title(
+        '{} vs {} Trial Based wCohere ({}Hz) - FI'.format(reg_sel[0], reg_sel[1], target_freq))
+    ax[0].axvline((0-t_win[0])*250, linestyle='-.', color='w',
+                  linewidth=1, label=align_txt)
+    ax[1].axvline((0-t_win[0])*250, linestyle='-.', color='w',
+                  linewidth=1, label=align_txt)
+
+    ax[0].set_ylabel('FR Trials', fontsize=14)
+    ax[1].set_ylabel('FI Trials', fontsize=14)
+    plt.xlabel('Time (s)', fontsize=14)
+    plt.legend()
+    ax[0].text(0.5, 1.1, s.get_title(), ha='center',
+               va='center', fontsize=15, transform=ax[0].transAxes)
+    # sns.lineplot(x="columns", y="index", data=t_freq_df, ax=ax,
+    #              hue=trial_df['Schedule'])
+    plt.show()
+    exit(-1)
+
+    return fig
+
+
 def test_wave_coherence():
     # Compare this to Matlab
     fs = 1000.0

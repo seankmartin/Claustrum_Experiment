@@ -752,7 +752,7 @@ def main(fname, out_main_dir, config):
             if alignment[0]:
                 align_df = trial_df['Reward_ts']
                 align_txt = "Reward"
-                t_win = [-10, 10]  # Set time window for plotting from reward
+                t_win = [-5, 5]  # Set time window for plotting from reward
                 quiv_x = 0.2
             elif alignment[1]:
                 align_df = trial_df['Pellet_ts']
@@ -815,15 +815,6 @@ def main(fname, out_main_dir, config):
             # get_dist(t_duration, plot=True)
             # trials = [[0, 60], [60, 120]]
 
-            fig, ax = plt.subplots(figsize=(24, 10))
-
-            # from bvmpc.lfp_coherence import plot_wave_coherence
-            # _, result = plot_wave_coherence(
-            #     lfp1.get_samples(
-            #     ), lfp2.get_samples(), lfp1.get_timestamp(),
-            #     plot_arrows=True, plot_coi=False, resolution=12,
-            #     plot_period=False, all_arrows=False, ax=ax, quiv_x=quiv_x)
-
             from bvmpc.lfp_coherence import calc_wave_coherence, plot_wcohere, plot_arrows
             import pickle
 
@@ -844,29 +835,25 @@ def main(fname, out_main_dir, config):
                 pickle.dump(wcohere_results, open(pickle_name, "wb"))
                 print('Saving pickle wcohere_results to', pickle_name)
 
+            target_freq = int(config.get("Wavelet", "target_freq"))
+            if target_freq != 0:
+                # Single frequency extraction of wcohere
+                from bvmpc.lfp_coherence import plot_single_freq_wcohere
+                fig = plot_single_freq_wcohere(
+                    target_freq, *wcohere_results[:3], wcohere_results[-1], trials, t_win, trial_df, align_txt, s, reg_sel)
+                fig.close()
+
+            # Initialize full Wavelet Coherence figure
+            fig, ax = plt.subplots(figsize=(24, 10))
+
+            # from bvmpc.lfp_coherence import plot_wave_coherence
+            # _, result = plot_wave_coherence(
+            #     lfp1.get_samples(
+            #     ), lfp2.get_samples(), lfp1.get_timestamp(),
+            #     plot_arrows=True, plot_coi=False, resolution=12,
+            #     plot_period=False, all_arrows=False, ax=ax, quiv_x=quiv_x)
+
             _, wcohere_pvals = plot_wcohere(*wcohere_results[:3], ax=ax)
-
-            # TODO Finish single frequency extraction
-            # # Extract wcohere of target frequency
-            # target_freq = 8
-            # WCT, t, freq, coi, sig, aWCT = wcohere_results
-            # freq_idx = np.where(np.round(freq, decimals=1) == target_freq)
-            # t_freq_wcohere = np.empty((len(trials), np.diff(t_win)[0]*250))
-            # print('min phase: ', np.nanmin(np.abs(aWCT)))
-            # print('max phase: ', np.nanmax(np.abs(aWCT)))
-
-            # fig, ax = plt.subplots()
-            # print(trial_df)
-            # for i, (a, b) in enumerate(trials):
-            #     print(i,  int(a*250), int(b*250))
-            #     t_freq_wcohere[i, :] = WCT[freq_idx, int(a*250):int(b*250)]
-            # t_freq_df = pd.DataFrame(
-            #     t_freq_wcohere, columns=np.arange(*t_win, 1/250))
-            # t_freq_df['Schedule'] = trial_df['Schedule']
-            # sns.lineplot(x="columns", y="index", data=t_freq_df, ax=ax,
-            #              hue=trial_df['Schedule'])
-            # plt.show()
-            # exit(-1)
 
             # Plot customization params
             plt.tick_params(labelsize=20)
