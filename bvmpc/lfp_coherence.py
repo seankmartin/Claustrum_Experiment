@@ -810,7 +810,17 @@ def plot_single_freq_wcohere(target_freq, WCT, t, freq, aWCT, trials, t_win, tri
     print('min phase: ', np.nanmin(np.abs(aWCT)))
     print('max phase: ', np.nanmax(np.abs(aWCT)))
 
-    fig, ax = plt.subplots(2, 1, figsize=(14, 10))
+    from matplotlib.gridspec import GridSpec
+    fig = plt.figure(figsize=(14, 10))
+    fig.suptitle(
+        '{} vs {} Trial Based wCohere ({}Hz) - FR vs FI'.format(reg_sel[0], reg_sel[1], target_freq), y=0.925, ha='center',
+        va='center', fontsize=15)
+    gs = GridSpec(3, 2, width_ratios=[100, 1], wspace=0.1)
+    ax1 = fig.add_subplot(gs[0])
+    ax2 = fig.add_subplot(gs[2])
+    ax3 = fig.add_subplot(gs[4])
+    axlab = fig.add_subplot(gs[:-1, -1])
+
     for i, (a, b) in enumerate(trials):
         t_freq_WCT[i, :] = WCT[freq_idx,
                                np.searchsorted(t, a)[0]:np.searchsorted(t, b)[0]]
@@ -831,26 +841,38 @@ def plot_single_freq_wcohere(target_freq, WCT, t, freq, aWCT, trials, t_win, tri
         FR_df = FR_df.sort_values([0])
         FI_df = FI_df.sort_values([0])
 
-    # t_freq_df['Schedule'] = trial_df['Schedule']
-    sns.heatmap(FR_df, ax=ax[0], xticklabels=int(250))
-    ax[0].set_title(
-        '{} vs {} Trial Based wCohere ({}Hz) - FR'.format(reg_sel[0], reg_sel[1], target_freq))
-    sns.heatmap(FI_df, ax=ax[1], xticklabels=int(250))
-    ax[1].set_title(
-        '{} vs {} Trial Based wCohere ({}Hz) - FI'.format(reg_sel[0], reg_sel[1], target_freq))
-    ax[0].axvline((0-t_win[0])*250, linestyle='-.', color='w',
-                  linewidth=1, label=align_txt)
-    ax[1].axvline((0-t_win[0])*250, linestyle='-.', color='w',
-                  linewidth=1, label=align_txt)
+    # Heatmap
+    sns.heatmap(FR_df, ax=ax1, xticklabels=int(250), cbar_ax=axlab)
+    ax1.set_title(s.get_title())
+    sns.heatmap(FI_df, ax=ax2, xticklabels=int(250), cbar=False)
+    # ax2.set_title(
+    #     '{} vs {} Trial Based wCohere ({}Hz) - FI'.format(reg_sel[0], reg_sel[1], target_freq))
 
-    ax[0].set_ylabel('FR Trials', fontsize=14)
-    ax[1].set_ylabel('FI Trials', fontsize=14)
-    plt.xlabel('Time (s)', fontsize=14)
-    plt.legend()
-    ax[0].text(0.5, 1.1, s.get_title(), ha='center',
-               va='center', fontsize=15, transform=ax[0].transAxes)
-    # sns.lineplot(x="columns", y="index", data=t_freq_df, ax=ax,
-    #              hue=trial_df['Schedule'])
+    # Plot alignment line
+    ax1.axvline((0-t_win[0])*250, linestyle='-.', color='w',
+                linewidth=1, label=align_txt)
+    ax2.axvline((0-t_win[0])*250, linestyle='-.', color='w',
+                linewidth=1, label=align_txt)
+    ax3.axvline(0, linestyle='-.', color='k',
+                linewidth=1, label=align_txt)
+
+    ax1.set_ylabel('FR Trials', fontsize=14)
+    ax1.legend()
+    ax2.set_ylabel('FI Trials', fontsize=14)
+    ax2.legend()
+    # ax2.set_xlabel('Time (s)', fontsize=14)
+
+    # Average lineplot
+    t_WCT_df['Schedule'] = trial_df['Schedule']
+    plot_data = pd.melt(t_WCT_df, id_vars=[
+                        'Schedule'], var_name='Time (s)', value_name='Coherence')
+    sns.lineplot(x='Time (s)', y='Coherence',
+                 data=plot_data, hue='Schedule', ax=ax3)
+    ax3.set_xlim([*t_win])
+    ax3.set_ylabel('Coherence', fontsize=14)
+    ax3.set_xlabel('Time (s)', fontsize=14)
+    ax3.legend()
+
     plt.show()
     exit(-1)
 
