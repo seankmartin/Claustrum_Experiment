@@ -769,7 +769,7 @@ def main(fname, out_main_dir, config):
             elif alignment[3]:
                 align_df = trial_df['First_response']
                 align_txt = "FResp"
-                t_win = [-10, 5]  # Set time window for plotting from pell
+                t_win = [-5, 5]  # Set time window for plotting from FResp
                 quiv_x = 0.2
             elif alignment[4]:
                 align_df = trial_df['D_Pellet_ts']

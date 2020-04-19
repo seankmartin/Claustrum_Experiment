@@ -1156,7 +1156,7 @@ class Session:
         trials_max_l = len(max(trial_lever_ts, key=len))
         lever_arr = np.empty((len(trial_starts), trials_max_l,))
         lever_arr.fill(np.nan)
-        first_response_arr = np.full((len(trial_starts)), np.nan)
+        first_response_arr = []
         trials_max_err = len(max(trial_err_ts, key=len)
                              )  # Max err press per trial
         err_arr = np.empty((len(trial_starts), trials_max_err,))
@@ -1168,7 +1168,7 @@ class Session:
             lever_arr[i, :l_end] = l[:]
             err_end = len(err)
             err_arr[i, :err_end] = err[:]
-            first_response_arr[i] = l[0]
+            first_response_arr.append(np.array([l[0]]))
 
         # Splits lever ts in each trial into seperate np.arrs for handling in pandas
         # lever_arr = np.vsplit(lever_arr, i+1)

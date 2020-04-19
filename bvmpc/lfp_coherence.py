@@ -143,7 +143,7 @@ def plot_wave_coherence(
         and result is a tuple consisting of WCT, aWCT, coi, freq, sig
         WCT - 2D numpy array with coherence values
         aWCT - 2D numpy array with same shape as aWCT indicating phase angles
-        coi - 1D numpy array with a frequency value for each time 
+        coi - 1D numpy array with a frequency value for each time
         freq - 1D numpy array with the frequencies wavelets were calculated at
         sig - 2D numpy array indicating where data is significant by monte carlo
 
@@ -323,7 +323,7 @@ def calc_wave_coherence(wave1, wave2, sample_times, min_freq=1, max_freq=128, si
         WCT - 2D numpy array with coherence values
         t - 2D numpy array with sample_times
         freq - 1D numpy array with the frequencies wavelets were calculated at
-        coi - 1D numpy array with a frequency value for each time 
+        coi - 1D numpy array with a frequency value for each time
         sig - 2D numpy array indicating where data is significant by monte carlo
         aWCT - 2D numpy array with same shape as aWCT indicating phase angles
     """
@@ -676,7 +676,7 @@ def plot_cross_wavelet(
         and result is a tuple consisting of WCT, aWCT, coi, freq, sig
         WCT - 2D numpy array with coherence values
         aWCT - 2D numpy array with same shape as aWCT indicating phase angles
-        coi - 1D numpy array with a frequency value for each time 
+        coi - 1D numpy array with a frequency value for each time
         freq - 1D numpy array with the frequencies wavelets were calculated at
         sig - 2D numpy array indicating where data is significant by monte carlo
 
