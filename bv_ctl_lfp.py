@@ -735,86 +735,6 @@ def main(fname, out_main_dir, config):
             lfp1 = lfp_odict.get_clean_signal(0)
             lfp2 = lfp_odict.get_clean_signal(1)
 
-            # Description of alignment
-            # 0 - Align to reward
-            # 1 - Align to pellet drop
-            # 2 - Align to FI
-            # 3 - Align to First Response
-            # 4 - Align to Double Reward
-            # 5 - Align to Tone
-            # if all 0, plots from start of trial
-
-            # alignment = [0, 0, 0, 0, 0, 0]
-
-            trial_df = s.get_valid_tdf()
-            # trial_df = s.get_trial_df()
-
-            if alignment[0]:
-                align_df = trial_df['Reward_ts']
-                align_txt = "Reward"
-                t_win = [-5, 5]  # Set time window for plotting from reward
-                quiv_x = 0.2
-            elif alignment[1]:
-                align_df = trial_df['Pellet_ts']
-                align_txt = "Pell"
-                t_win = [-10, 5]  # Set time window for plotting from pell
-                quiv_x = 0.2
-            elif alignment[2]:
-                align_df = trial_df['Reward_ts']
-                # Exclude first and last trial
-                align_df = align_df[1:-1].add(30)
-                t_win = [-30, 5]  # Set time window for plotting from interval
-                align_txt = "Interval"
-                quiv_x = 0.5
-            elif alignment[3]:
-                align_df = trial_df['First_response']
-                align_txt = "FResp"
-                t_win = [-5, 5]  # Set time window for plotting from FResp
-                quiv_x = 0.2
-            elif alignment[4]:
-                align_df = trial_df['D_Pellet_ts']
-                align_txt = "DPell"
-                t_win = [-30, 5]  # Set time window for plotting from dpell
-                quiv_x = 0.5
-            elif alignment[5]:
-                align_df = s.get_tone_starts() + 5
-                align_txt = "Tone"
-                t_win = [-10, 25]  # Set time window for plotting from tone
-                quiv_x = 0.5
-            else:  # Start aligned
-                align_df = trial_df['Trial_s']
-                align_txt = "Start"
-                t_win = None
-                quiv_x = 0.5
-            t_sch = trial_df['Schedule']
-            trials = []
-            t_duration = []
-
-            for t, ts in enumerate(align_df):
-                if t_win:
-                    if not ts:  # To skip empty ts (eg. double pellet only)
-                        continue
-                    else:
-                        trials.append([ts + t_win[0], ts + t_win[1]])
-                elif align_txt == "Start":
-                    # Time window for start based plotting set here
-                    t_win = [0, 40]
-                    if t == 0:
-                        trials.append([0, t_win[1]])
-                    else:
-                        trials.append([ts[t - 1], ts + t_win[1]])
-                else:  # Obtains start and end trial times in a list
-                    if t == 0:  # From start of trial
-                        trials.append([0, ts])
-                        t_duration.append(ts)
-                    else:
-                        # Appends [start end] of each trial
-                        trials.append([align_df[t - 1], ts])
-                        t_duration.append(ts - align_df[t - 1])
-
-            # get_dist(t_duration, plot=True)
-            # trials = [[0, 60], [60, 120]]
-
             from bvmpc.lfp_coherence import calc_wave_coherence, plot_wcohere, plot_arrows
             import pickle
 
@@ -834,6 +754,65 @@ def main(fname, out_main_dir, config):
                 ), lfp2.get_samples(), lfp1.get_timestamp())
                 pickle.dump(wcohere_results, open(pickle_name, "wb"))
                 print('Saving pickle wcohere_results to', pickle_name)
+
+            # Description of alignment
+            # 0 - Align to reward
+            # 1 - Align to pellet drop
+            # 2 - Align to FI
+            # 3 - Align to First Response
+            # 4 - Align to Double Reward
+            # 5 - Align to Tone
+            # if all 0, plots from start of trial
+
+            # alignment = [0, 0, 0, 0, 0, 0]
+
+            trial_df = s.get_valid_tdf()
+            # trial_df = s.get_trial_df()
+
+            if alignment[0]:
+                align_df = trial_df['Reward_ts']
+                align_txt = "Reward"
+                t_win = [-5, 5]  # Set time window for plotting from reward
+            elif alignment[1]:
+                align_df = trial_df['Pellet_ts']
+                align_txt = "Pell"
+                t_win = [-10, 5]  # Set time window for plotting from pell
+            elif alignment[2]:
+                align_df = trial_df['Reward_ts']
+                # Exclude first and last trial
+                align_df = align_df[1:-1].add(30)
+                t_win = [-30, 5]  # Set time window for plotting from interval
+                align_txt = "Interval"
+            elif alignment[3]:
+                align_df = trial_df['First_response']
+                align_txt = "FResp"
+                t_win = [-5, 5]  # Set time window for plotting from FResp
+            elif alignment[4]:
+                align_df = trial_df['D_Pellet_ts']
+                align_txt = "DPell"
+                t_win = [-30, 5]  # Set time window for plotting from dpell
+            elif alignment[5]:
+                align_df = s.get_tone_starts() + 5
+                align_txt = "Tone"
+                t_win = [-10, 25]  # Set time window for plotting from tone
+            else:  # Start aligned
+                align_df = trial_df['Trial_s']
+                align_txt = "Start"
+                t_win = [-5, 5]
+            quiv_x = 0.5
+            t_sch = trial_df['Schedule']
+            trials = []
+
+            for t, ts in enumerate(align_df):
+                if not ts:  # To skip empty ts (eg. double pellet only)
+                    continue
+                elif (ts+t_win[0]) < 0:
+                    trials.append([ts, t_win[1]])
+                    print('t_win less than trial {} start'.format(t))
+                else:
+                    trials.append([ts + t_win[0], ts + t_win[1]])
+
+            # trials = [[0, 60], [60, 120]]
 
             target_freq = int(config.get("Wavelet", "target_freq"))
             if target_freq != 0:
@@ -900,9 +879,13 @@ def main(fname, out_main_dir, config):
                             wcohere_results[-1], quiv_x=0.5)
                 tr_out_name = os.path.join(
                     wo_dir, "Trials", os.path.basename(out_name))
-                for t, ((b_start, b_end), sch) in enumerate(zip(trials, t_sch)):
+                plot_df = s.get_trial_df()
+                print(plot_df)
+                for t, (t_start, t_end, sch) in enumerate(zip(plot_df['Trial_s'], plot_df['Pellet_ts'], plot_df['Schedule'])):
                     fig1, a1 = fig, ax
-                    a1.set_xlim(b_start, b_end)
+                    # Standardize window of trial displayed with reference to pell_ts
+                    win = [-20, 10]
+                    a1.set_xlim([t_end+win[0], t_end+win[1]])
                     name = '{}_Tr{}.png'.format(
                         tr_out_name[:-4], t + 1)
                     make_path_if_not_exists(name)
@@ -911,7 +894,7 @@ def main(fname, out_main_dir, config):
                     print("Saving result to {}".format(name))
                     fig1.savefig(name, dpi=150)
                     # bv_plot.savefig(fig1, name)
-                    plt.close(fig1)
+                plt.close(fig1)
 
             p_wcohere_mean = bool(int(config.get("Wavelet", "p_wcohere_mean")))
             split_sch = bool(int(config.get("Wavelet", "split_sch")))
