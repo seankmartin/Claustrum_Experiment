@@ -1199,6 +1199,9 @@ class Session:
             norm_trial_s[i] -= trial_norm[i]
             norm_first_response[i] -= trial_norm[i]
 
+        # Convert trial_starts into list of np.arr of list
+        trial_starts = [np.array([x]) for x in trial_starts]
+
         # Timestamps kept as original starting from session start
         session_dict = {
             'Reward_ts': trial_rw_ts,

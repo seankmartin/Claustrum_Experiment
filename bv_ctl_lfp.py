@@ -807,20 +807,12 @@ def main(fname, out_main_dir, config):
                 if not ts:  # To skip empty ts (eg. double pellet only)
                     continue
                 elif (ts+t_win[0]) < 0:
-                    trials.append([ts, t_win[1]])
+                    trials.append([ts[0], t_win[1]])
                     print('t_win less than trial {} start'.format(t))
                 else:
-                    trials.append([ts + t_win[0], ts + t_win[1]])
+                    trials.append([ts[0] + t_win[0], ts[0] + t_win[1]])
 
             # trials = [[0, 60], [60, 120]]
-
-            target_freq = int(config.get("Wavelet", "target_freq"))
-            if target_freq != 0:
-                # Single frequency extraction of wcohere
-                from bvmpc.lfp_coherence import plot_single_freq_wcohere
-                fig = plot_single_freq_wcohere(
-                    target_freq, *wcohere_results[:3], wcohere_results[-1], trials, t_win, trial_df, align_txt, s, reg_sel)
-                fig.close()
 
             # Initialize full Wavelet Coherence figure
             fig, ax = plt.subplots(figsize=(24, 10))
@@ -944,6 +936,18 @@ def main(fname, out_main_dir, config):
                                  fontsize=30, y=1.01)
 
                     bv_plot.savefig(fig, o_name)
+
+            target_freq = int(config.get("Wavelet", "target_freq"))
+            if target_freq != 0:
+                plot = True
+                # Single frequency extraction of wcohere
+                from bvmpc.lfp_coherence import plot_single_freq_wcohere
+                t_WCT_df, tf_fig = plot_single_freq_wcohere(
+                    target_freq, *wcohere_results[:3], wcohere_results[-1], trials, t_win, trial_df, align_txt, s, reg_sel, plot=plot)
+                if tf_fig is not None:
+                    o_name = out_name + \
+                        "{}Hz_{}.png".format(target_freq, align_txt)
+                    bv_plot.savefig(tf_fig, o_name)
 
 
 def main_entry(config_name):
