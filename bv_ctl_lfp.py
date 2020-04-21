@@ -735,7 +735,7 @@ def main(fname, out_main_dir, config):
             lfp1 = lfp_odict.get_clean_signal(0)
             lfp2 = lfp_odict.get_clean_signal(1)
 
-            from bvmpc.lfp_coherence import calc_wave_coherence, plot_wcohere, plot_arrows
+            from bvmpc.lfp_coherence import calc_wave_coherence, plot_wcohere, plot_arrows, zero_lag_wcohere
             import pickle
 
             # Pickle wcohere_results for faster performance
@@ -754,6 +754,14 @@ def main(fname, out_main_dir, config):
                 ), lfp2.get_samples(), lfp1.get_timestamp())
                 pickle.dump(wcohere_results, open(pickle_name, "wb"))
                 print('Saving pickle wcohere_results to', pickle_name)
+
+            # Apply mask to WCT based on phase lag threshold in ms
+            zlag = False
+            if zlag:
+                WCT, t, freq, coi, sig, aWCT = wcohere_results
+                zlag_mask = zero_lag_wcohere(aWCT, freq)
+            else:
+                zlag_mask = None
 
             # Description of alignment
             # 0 - Align to reward
@@ -824,7 +832,8 @@ def main(fname, out_main_dir, config):
             #     plot_arrows=True, plot_coi=False, resolution=12,
             #     plot_period=False, all_arrows=False, ax=ax, quiv_x=quiv_x)
 
-            _, wcohere_pvals = plot_wcohere(*wcohere_results[:3], ax=ax)
+            _, wcohere_pvals = plot_wcohere(
+                *wcohere_results[:3], ax=ax, mask=zlag_mask)
 
             # Plot customization params
             plt.tick_params(labelsize=20)
@@ -872,7 +881,6 @@ def main(fname, out_main_dir, config):
                 tr_out_name = os.path.join(
                     wo_dir, "Trials", os.path.basename(out_name))
                 plot_df = s.get_trial_df()
-                print(plot_df)
                 for t, (t_start, t_end, sch) in enumerate(zip(plot_df['Trial_s'], plot_df['Pellet_ts'], plot_df['Schedule'])):
                     fig1, a1 = fig, ax
                     # Standardize window of trial displayed with reference to pell_ts
@@ -942,11 +950,15 @@ def main(fname, out_main_dir, config):
                 plot = True
                 # Single frequency extraction of wcohere
                 from bvmpc.lfp_coherence import plot_single_freq_wcohere
-                t_WCT_df, tf_fig = plot_single_freq_wcohere(
+                t_WCT_df, tf_fig, tf_fig2 = plot_single_freq_wcohere(
                     target_freq, *wcohere_results[:3], wcohere_results[-1], trials, t_win, trial_df, align_txt, s, reg_sel, plot=plot, sort=False)
                 if tf_fig is not None:
                     o_name = out_name + \
                         "{}Hz_{}.png".format(target_freq, align_txt)
+                    bv_plot.savefig(tf_fig, o_name)
+                if tf_fig2 is not None:
+                    o_name = out_name + \
+                        "{}Hz_{}_dist.png".format(target_freq, align_txt)
                     bv_plot.savefig(tf_fig, o_name)
 
 
