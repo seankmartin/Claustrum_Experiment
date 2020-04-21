@@ -799,7 +799,7 @@ def plot_cross_wavelet(
     return (fig, [W12, coi, freq, sig])
 
 
-def plot_single_freq_wcohere(target_freq, WCT, t, freq, aWCT, trials, t_win, trial_df, align_txt, s, reg_sel, sort=True, plot=False):
+def plot_single_freq_wcohere(target_freq, WCT, t, freq, aWCT, trials, t_win, trial_df, align_txt, s, reg_sel, sort=True, plot=False, split_b=False):
     """ Plots wcohere for target freq as heatmap across trials. Produces 2 plots -  FR and FI respectively 
 
     Parameters
@@ -822,8 +822,8 @@ def plot_single_freq_wcohere(target_freq, WCT, t, freq, aWCT, trials, t_win, tri
     freq_idx = np.where(np.round(freq, decimals=1) == target_freq)
     n_points = np.diff(t_win)[0]*250
     t_freq_WCT = np.empty((len(trials), n_points))
-    print('min phase: ', np.nanmin(np.abs(aWCT)))
-    print('max phase: ', np.nanmax(np.abs(aWCT)))
+    # print('min phase: ', np.nanmin(np.abs(aWCT)))
+    # print('max phase: ', np.nanmax(np.abs(aWCT)))
 
     for i, (a, b) in enumerate(trials):
         a_idx, b_idx = np.searchsorted(t, a), np.searchsorted(t, b)
@@ -880,7 +880,17 @@ def plot_single_freq_wcohere(target_freq, WCT, t, freq, aWCT, trials, t_win, tri
         # ax2.set_xlabel('Time (s)', fontsize=14)
 
         # Average lineplot
-        t_WCT_df['Schedule'] = trial_df['Schedule']
+        if split_b:
+            t_WCT_df['Schedule'] = trial_df['Sch_block']
+            import bvmpc.bv_plot as bv_plot
+            gm = bv_plot.GroupManager(s.get_arrays('Trial Type').tolist())
+            colors = []
+            for b in trial_df['Sch_block'].unique():
+                colors.append(gm.get_next_color())
+            sns.set_palette(sns.color_palette(colors))
+        else:
+            t_WCT_df['Schedule'] = trial_df['Schedule']
+
         plot_data = pd.melt(t_WCT_df, id_vars=[
                             'Schedule'], var_name='Time (s)', value_name='Coherence')
         sns.lineplot(x='Time (s)', y='Coherence',
@@ -888,7 +898,7 @@ def plot_single_freq_wcohere(target_freq, WCT, t, freq, aWCT, trials, t_win, tri
         ax3.set_xlim([*t_win])
         ax3.set_ylabel('Coherence', fontsize=14)
         ax3.set_xlabel('Time (s)', fontsize=14)
-        ax3.legend()
+        ax3.legend(bbox_to_anchor=(1.01, 1))
     else:
         fig = None
 

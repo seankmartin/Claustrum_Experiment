@@ -1075,7 +1075,7 @@ class Session:
         trial_starts = self.get_arrays("Trial_Start")
 
         # Assign schedule type to trials
-        schedule_type = []
+        schedule_type, sch_block = [], []
         mod = []
         mod_rw = self.get_insert()  # reward times artificially inserted
 
@@ -1097,6 +1097,7 @@ class Session:
                     b_type = 'FI'
                 for rw in block:
                     schedule_type.append(b_type)
+                    sch_block.append(b_type + '-{}'.format(i))
         else:
             if stage == '4':
                 b_type = 'CR'
@@ -1108,6 +1109,7 @@ class Session:
                 b_type = 'NA'
             for _ in trial_starts:
                 schedule_type.append(b_type)
+                sch_block.append(None)
 
         # Rearrange timestamps based on trial per row
         lever_ts = self.get_lever_ts(True)
@@ -1213,6 +1215,7 @@ class Session:
             'Tone_s': trial_tone_start,
             'Trial_s': trial_starts,
             'First_response': first_response_arr,
+            'Sch_block': sch_block,
             'Mod': mod
         }
         # for key, x in session_dict.items():
@@ -1229,6 +1232,7 @@ class Session:
             'Tone_s': norm_tone,
             'Trial_s': norm_trial_s,
             'First_response': norm_first_response,
+            'Sch_block': sch_block,
             'Mod': mod
         }
 

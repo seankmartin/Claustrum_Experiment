@@ -943,7 +943,7 @@ def main(fname, out_main_dir, config):
                 # Single frequency extraction of wcohere
                 from bvmpc.lfp_coherence import plot_single_freq_wcohere
                 t_WCT_df, tf_fig = plot_single_freq_wcohere(
-                    target_freq, *wcohere_results[:3], wcohere_results[-1], trials, t_win, trial_df, align_txt, s, reg_sel, plot=plot)
+                    target_freq, *wcohere_results[:3], wcohere_results[-1], trials, t_win, trial_df, align_txt, s, reg_sel, plot=plot, sort=False)
                 if tf_fig is not None:
                     o_name = out_name + \
                         "{}Hz_{}.png".format(target_freq, align_txt)
