@@ -129,7 +129,7 @@ class GroupManager:
             self.set_color_list(color_list)
         else:
             self.color_list = [
-                "Blues", "Oranges", "Greens", "Purples", "PuRd", "Greys"]
+                "Blues_r", "Oranges_r", "Greens_r", "Purples_r", "PuRd_r", "Greys_r"]
         set_vals = sorted(set(group_list), key=group_list.index)
         # print(set_vals)
         import numpy as np
