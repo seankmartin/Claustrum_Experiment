@@ -714,12 +714,24 @@ def plot_single_freq_wcohere(target_freq, WCT, t, freq, aWCT, trials, t_win, tri
 
     if dist:
         # Plot distribution of phase shift angles
-        fig2, ax = plt.subplots()
-        for g in grp_dict.keys():
-            sns.distplot(grp_dict[g]['aWCT'], ax=ax, label=g)
-        ax.set_xlabel('Phase Angle (rads)')
-        ax.set_title('{} vs {} wCohere Phase Distribution ({}Hz) - FR vs FI'.format(reg_sel[0], reg_sel[1], target_freq), y=0.92, ha='center',
-                     va='center', fontsize=15)
+        start, stop = [-2, 2]  # sets range for distribution
+        step = 1  # step in seconds
+        dist_range = np.arange(start, stop, step)
+        fig2, ax = plt.subplots(
+            len(dist_range), 1, figsize=(5, len(dist_range)*2), sharex=True)
+        for i, a in enumerate(dist_range):
+            for g, val in grp_dict.items():
+                start_m = (val['aWCT'].columns >= a)
+                end_m = (val['aWCT'].columns <= a+step)
+                sns.distplot(val['aWCT'].loc[:, (start_m & end_m)],
+                             ax=ax[i], label=g)
+            ax[i].text(0.5, 1.05, '{} to {} s from {}'.format(
+                a, a+step, align_txt), fontsize=8, va='center', ha='center', transform=ax[i].transAxes)
+            ax[i].set_ylim(0, 1.25)
+            ax[i].legend(fontsize=8)
+        ax[-1].set_xlabel('Phase Angle (rads)')
+        fig2.suptitle('{} vs {} wCohere Phase Distribution ({}Hz) - FR vs FI'.format(reg_sel[0], reg_sel[1], target_freq), y=0.91, ha='center',
+                      va='center', fontsize=10, transform=fig2.transFigure)
     else:
         fig2 = None
 
