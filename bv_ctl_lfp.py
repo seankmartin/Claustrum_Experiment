@@ -227,6 +227,7 @@ def main(fname, out_main_dir, config):
     r_SI = bool(int(config.get("Setup", "r_SI")))
     r_plot = bool(int(config.get("Setup", "r_plot")))
     r_csv = bool(int(config.get("Setup", "r_csv")))
+    rt_plot = True  # Plot raw LFP in terms of trials
 
     # Differential Recording mode (lfp1 - lfp2 in same shuttle)
     DR = bool(int(config.get("Setup", "DR")))
@@ -242,6 +243,17 @@ def main(fname, out_main_dir, config):
                 splits = None
             plot_lfp(ro_dir, lfp_odict, splits=splits,
                      sd=sd_thres, filt=filt, artf=artf, session=s)
+        if rt_plot:
+            rto_dir = os.path.join(o_dir, "Raw", 'Trials')
+            make_dir_if_not_exists(rto_dir)
+            if s is not None:
+                splits = np.concatenate(
+                    s.get_trial_df()['Trial_s'].tolist())
+                plot_lfp(rto_dir, lfp_odict, splits=splits,
+                         sd=sd_thres, filt=filt, artf=artf, session=s)
+            else:
+                pass
+
         if r_csv:
             shut_s, shut_end = p * 16, 16 + p * 16
             lfp_csv(fname, o_dir, lfp_odict, sd_thres,
@@ -403,7 +415,10 @@ def main(fname, out_main_dir, config):
         ax.xaxis.label.set_size(25)
         ax.yaxis.label.set_size(25)
         plt.ylim(0, max_p + max_p * 0.1)
-        plt.xlim(0, filt_top)
+        plt.xlim(0, 40)
+        # plt.ylim(0, 0.0001)
+        # plt.xlim(30, 120)
+        # plt.xlim(0, filt_top)
         plt.legend(legend, fontsize=15)
 
         if DR:  # Hard fix for naming if Differential recording is used
@@ -958,10 +973,11 @@ def main(fname, out_main_dir, config):
             target_freq = int(config.get("Wavelet", "target_freq"))
             if target_freq != 0:
                 plot = True
+                dist = True
                 # Single frequency extraction of wcohere
                 from bvmpc.lfp_coherence import plot_single_freq_wcohere
                 t_WCT_df, tf_fig, tf_fig2 = plot_single_freq_wcohere(
-                    target_freq, *wcohere_results[:3], wcohere_results[-1], trials, t_win, trial_df, align_txt, s, reg_sel, plot=plot, sort=False)
+                    target_freq, *wcohere_results[:3], wcohere_results[-1], trials, t_win, trial_df, align_txt, s, reg_sel, plot=plot, sort=False, dist=dist)
                 if tf_fig is not None:
                     o_name = out_name + \
                         "{}Hz_{}.png".format(target_freq, align_txt)
@@ -969,7 +985,7 @@ def main(fname, out_main_dir, config):
                 if tf_fig2 is not None:
                     o_name = out_name + \
                         "{}Hz_{}_dist.png".format(target_freq, align_txt)
-                    bv_plot.savefig(tf_fig, o_name)
+                    bv_plot.savefig(tf_fig2, o_name)
 
 
 def main_entry(config_name):
@@ -1001,5 +1017,11 @@ def main_entry(config_name):
 if __name__ == "__main__":
     # config_name = "Eoin.cfg"
     # config_name = "CAR-SA2.cfg"
-    config_name = "Batch_3.cfg"
+    # config_name = "Batch_3.cfg"
+    i = 5
+    config_name = "CAR-SA{}.cfg".format(i)
     main_entry(config_name)
+
+    # for i in np.arange(3, 7):
+    #     config_name = "CAR-SA{}.cfg".format(i)
+    #     main_entry(config_name)
