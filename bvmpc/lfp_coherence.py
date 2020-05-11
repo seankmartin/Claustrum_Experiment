@@ -360,7 +360,7 @@ def calc_wave_coherence(wave1, wave2, sample_times, min_freq=1, max_freq=128, si
     return WCT, t, freq, coi, sig, aWCT
 
 
-def plot_wcohere(WCT, t, freq, coi=None, sig=None, plot_period=False, ax=None, title="Wavelet Coherence", block=None, mask=None):
+def plot_wcohere(WCT, t, freq, coi=None, sig=None, plot_period=False, ax=None, title="Wavelet Coherence", block=None, mask=None, cax=None):
     """
     Plot wavelet coherence using results from calc_wave_coherence.
 
@@ -442,11 +442,6 @@ def plot_wcohere(WCT, t, freq, coi=None, sig=None, plot_period=False, ax=None, t
     else:
         ax.set_xlim(t.min(), t.max())
 
-    if fig is not None:
-        fig.colorbar(im)
-    else:
-        plt.colorbar(im, ax=ax, use_gridspec=True)
-
     if plot_period:
         y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
         # TODO improve ticks
@@ -461,9 +456,18 @@ def plot_wcohere(WCT, t, freq, coi=None, sig=None, plot_period=False, ax=None, t
         y_ticks = [np.log2(x) for x in [64, 32, 16, 8, 4, 2, 1]]
         y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
         ax.set_ylabel("Frequency (Hz)")
-    plt.yticks(y_ticks, y_labels)
+    ax.set_yticks(y_ticks)
+    ax.set_yticklabels(y_labels)
     ax.set_title(title)
     ax.set_xlabel("Time (s)")
+
+    if cax is not None:
+        plt.colorbar(im, cax=cax, use_gridspec=False)
+    else:
+        if fig is not None:
+            fig.colorbar(im)
+        else:
+            plt.colorbar(im, ax=ax, use_gridspec=True)
 
     return fig, [WCT, t, y_vals]
 
@@ -537,20 +541,34 @@ def plot_arrows(ax, wcohere_pvals, aWCT=None, u=None, v=None, magnitute=None, qu
     return ax
 
 
-def zero_lag_wcohere(aWCT, freq):
+def zero_lag_wcohere(aWCT, freq, thres=5):
+    """
+    Generate mask for WCT based on phase lag threshold in ms
 
+    Parameters
+    ----------
+    aWCT : 2D numpy array with phase angle for WCT
+        *Can be obtained from last value in calc_wave_coherence
+    freq : list of freq computed in WCT
+    thres : float, 5
+        Threshold in ms to generate mask
+
+    Returns
+    -------
+    zlag_mask : 2D bool array like aWCT for masking
+
+    """
     angle = aWCT * (180/np.pi)  # Converts angle to degrees
     # print('min phase: ', np.nanmin(np.abs(aWCT)))
     # print('max phase: ', np.nanmax(np.abs(aWCT)))
     # print('min angle: ', np.nanmin((angle)))
     # print('max angle: ', np.nanmax((angle)))
     # exit(-1)
-    threshold = 5  # in ms
     zlag_mask = np.empty_like(aWCT)
     print(aWCT.shape)
     for i, (row, f) in enumerate(zip(np.abs(angle), freq)):
         # where phase diff is less then threshold (ms)
-        ok = ((row/360)*(1000/f)) < threshold
+        ok = ((row/360)*(1000/f)) < thres
         zlag_mask[i] = ~ok
         # (phase_angle/360)*(1000/freq) < threshold(in ms)
 
@@ -714,11 +732,12 @@ def plot_single_freq_wcohere(target_freq, WCT, t, freq, aWCT, trials, t_win, tri
 
     if dist:
         # Plot distribution of phase shift angles
-        start, stop = [-2, 2]  # sets range for distribution
+        start, stop = [-2.5, 2.5]  # sets range for distribution
         step = 1  # step in seconds
         dist_range = np.arange(start, stop, step)
-        fig2, ax = plt.subplots(
-            len(dist_range), 1, figsize=(5, len(dist_range)*2), sharex=True)
+        fig2, ax = plt.subplots(1,
+                                len(dist_range), figsize=(len(dist_range)*5, 2), sharey=True)
+        fig2.subplots_adjust(wspace=0)
         for i, a in enumerate(dist_range):
             for g, val in grp_dict.items():
                 start_m = (val['aWCT'].columns >= a)
@@ -729,9 +748,11 @@ def plot_single_freq_wcohere(target_freq, WCT, t, freq, aWCT, trials, t_win, tri
                 a, a+step, align_txt), fontsize=8, va='center', ha='center', transform=ax[i].transAxes)
             ax[i].set_ylim(0, 1.25)
             ax[i].legend(fontsize=8)
-        ax[-1].set_xlabel('Phase Angle (rads)')
-        fig2.suptitle('{} vs {} wCohere Phase Distribution ({}Hz) - FR vs FI'.format(reg_sel[0], reg_sel[1], target_freq), y=0.91, ha='center',
+            ax[i].set_xlabel('Phase Angle (rads)')
+        fig2.suptitle('{} vs {} wCohere Phase Distribution ({}Hz) - FR vs FI'.format(reg_sel[0], reg_sel[1], target_freq), y=1.08, ha='center',
                       va='center', fontsize=10, transform=fig2.transFigure)
+        fig2.text(0.5, 1, s.get_title(), fontsize=9, va='center',
+                  ha='center', transform=fig2.transFigure)
     else:
         fig2 = None
 
@@ -822,7 +843,8 @@ def plot_single_freq_wcohere(target_freq, WCT, t, freq, aWCT, trials, t_win, tri
         plot_data = pd.melt(t_WCT_df, id_vars=[
             'Groups'], var_name='Time (s)', value_name='Coherence')
         sns.lineplot(x='Time (s)', y='Coherence',
-                     data=plot_data, hue='Groups', ax=ax[-1])
+                     data=plot_data, hue='Groups', ax=ax[-1], n_boot=250)
+        # ax[-1].set_ylim(0, 1)
         ax[-1].set_xlim([*t_win])
         ax[-1].set_ylabel('Coherence', fontsize=14)
         ax[-1].set_xlabel('Time (s)', fontsize=14)
@@ -894,10 +916,10 @@ def plot_cross_wavelet(
     dt = np.mean(np.diff(t))
     # Set up the scales to match min max input frequencies
     dj = resolution
-    s0 = min_freq * dt
-    if s0 < 2 * dt:
+    s0 = 1 / max_freq
+    if s0 < (2 * dt):
         s0 = 2 * dt
-    max_J = max_freq * dt
+    max_J = 1 / min_freq
     J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
 
     # Do the actual calculation

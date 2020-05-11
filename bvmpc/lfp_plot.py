@@ -54,7 +54,7 @@ def plot_long_lfp(
     plt.close(fig)
 
 
-def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4, filt=False, artf=False, session=None, splits=None, x_pad=60):
+def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4, filt=False, artf=False, dr_mode=False, session=None, splits=None, x_pad=60):
     """
     Create a number of figures to display lfp signal on multiple channels.
 
@@ -86,10 +86,15 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
     if session:
         rw_ts = session.get_rw_ts()
         # FRes = session.get_trial_df()['First_response'].tolist()
-    if filt:
-        lfp_dict_s = lfp_odict.get_filt_signal()
+    if dr_mode:
+        lfp_dict_s = lfp_odict.get_dr_signals()
+        get_info = lfp_odict.get_dr_info
     else:
-        lfp_dict_s = lfp_odict.get_signal()
+        if filt:
+            lfp_dict_s = lfp_odict.get_filt_signal()
+        else:
+            lfp_dict_s = lfp_odict.get_signal()
+        get_info = lfp_odict.get_info
 
     if in_range is None:
         in_range = (0, max([lfp.get_duration()
@@ -121,6 +126,9 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
         if list(lfp_dict_s.keys())[0] == '17':
             out_name = os.path.join(
                 out_dir, "1_{}_{:.2f}s_to_{:.2f}s.png".format(j, a, b))
+        elif dr_mode:
+            out_name = os.path.join(
+                out_dir, "dr_{}_{:.2f}s_to_{:.2f}s.png".format(j, a, b))
         else:
             out_name = os.path.join(
                 out_dir, "0_{}_{:.2f}s_to_{:.2f}s.png".format(j, a, b))
@@ -134,13 +142,13 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
             if artf:
                 from bvmpc.bv_utils import find_ranges
                 shading = list(find_ranges(
-                    lfp_odict.get_info(key, "thr_locs")))
+                    get_info(key, "thr_locs")))
 
                 for x, y in shading:    # Shading of artf portions
                     times = lfp.get_timestamp()
                     axes[i].axvspan(times[x], times[y], color='red', alpha=0.5)
-                mean = lfp_odict.get_info(key, "mean")
-                std = lfp_odict.get_info(key, "std")
+                mean = get_info(key, "mean")
+                std = get_info(key, "std")
                 # Label thresholds
                 axes[i].axhline(mean - sd * std, linestyle='-',
                                 color='red', linewidth='1.5')

@@ -37,6 +37,9 @@ class LfpODict:
         self._init_lfp(filename, channels)
         self.lfp_filt_odict = OrderedDict()
         self.info = None
+        self.lfp_dr_odict = None
+        self.dr_info = None
+        self.artf_params = artf_params
         if filt_params[0]:
             self.lfp_filt_odict = self.filter(*filt_params[1:])
         else:
@@ -81,6 +84,28 @@ class LfpODict:
                 print("Warning {} is not in LFP Dict".format(key))
             out_list.append(to_add)
         return out_list
+
+    def get_dr_signals(self):
+        """
+        Convert signals stored lfp dict to differential recording mode. Assumes pairs of consecuvitve signals are recorded from the same region.
+        Returns n/2 signals in a dict, with each being the signal difference between pairs of consecutive signals.
+
+        """
+        if self.lfp_dr_odict is None:
+            # t2, step = 1, 2  # DR btwn tetrodes from the same shuttle
+            t2, step = 3, 4  # DR btwn tetrodes from the same region but different shuttle
+            self.lfp_dr_odict = OrderedDict()
+            for (key1, lfp1), (key2, lfp2) in zip(list(self.lfp_odict.items())[::step], list(self.lfp_odict.items())[t2::step]):
+                dr_key = "{}_{}".format(key1, key2)
+                dr_lfp = deepcopy(lfp1)
+                dr_lfp.set_channel_id(channel_id=dr_key)
+                dr_lfp._set_samples(lfp1.get_samples() - lfp2.get_samples())
+                self.lfp_dr_odict[dr_key] = dr_lfp
+            if self.artf_params[0]:
+                self.lfp_clean_odict = self.deartf(
+                    *self.artf_params[1:], dr_mode=True)
+
+        return self.lfp_dr_odict
 
     def filter(self, lower, upper):
         """
@@ -160,27 +185,55 @@ class LfpODict:
                     return True
         return False
 
-    def find_artf(self, sd, min_artf_freq, filt=False):
-        if self.does_info_exist("mean"):
-            print("Already calculated artefacts for this lfp_o_dict")
-            return
-        if filt:
-            lfp_dict_s = self.get_filt_signal()
+    def add_dr_info(self, key, info, name):
+        if self.dr_info is None:
+            self.dr_info = OrderedDict()
+        if not key in self.dr_info.keys():
+            self.dr_info[key] = {}
+        self.dr_info[key][name] = info
+
+    def get_dr_info(self, key, name):
+        if self.dr_info is None:
+            raise ValueError("info has not been initialised in LFPODict")
+        return self.dr_info[key][name]
+
+    def does_dr_info_exist(self, name):
+        if self.dr_info is not None:
+            for item in self.dr_info.values():
+                if name in item.keys():
+                    return True
+        return False
+
+    def find_artf(self, sd, min_artf_freq, filt=False, dr_mode=False):
+        if dr_mode:
+            lfp_dict_s = self.get_dr_signals()
+            if self.does_dr_info_exist("mean"):
+                print("Already calculated artefacts for this lfp_o_dict")
+                return
+            add_info = self.add_dr_info
         else:
-            lfp_dict_s = self.get_signal()
+            if self.does_info_exist("mean"):
+                print("Already calculated artefacts for this lfp_o_dict")
+                return
+            if filt:
+                lfp_dict_s = self.get_filt_signal()
+            else:
+                lfp_dict_s = self.get_signal()
+
+            add_info = self.add_info
 
         for key, lfp in lfp_dict_s.items():
             # info is mean, sd, thr_locs, thr_vals, thr_time
             mean, std, thr_locs, thr_vals, thr_time, per_removed = lfp.find_artf(
                 sd, min_artf_freq)
-            self.add_info(key, mean, "mean")
-            self.add_info(key, std, "std")
-            self.add_info(key, thr_locs, "thr_locs")
-            self.add_info(key, thr_vals, "thr_vals")
-            self.add_info(key, thr_time, "thr_time")
-            self.add_info(key, per_removed, "artf_removed")
+            add_info(key, mean, "mean")
+            add_info(key, std, "std")
+            add_info(key, thr_locs, "thr_locs")
+            add_info(key, thr_vals, "thr_vals")
+            add_info(key, thr_time, "thr_time")
+            add_info(key, per_removed, "artf_removed")
 
-    def deartf(self, sd, min_artf_freq, rep_freq=None, filt=False):
+    def deartf(self, sd, min_artf_freq, rep_freq=None, filt=False, dr_mode=False):
         """
         remove artifacts based on SD thresholding.
 
@@ -196,13 +249,22 @@ class LfpODict:
             OrderedDict of signals with artefacts replaced.
 
         """
-        self.find_artf(sd, min_artf_freq, filt)
+        self.find_artf(sd, min_artf_freq, filt, dr_mode)
 
         lfp_clean_odict = OrderedDict()
 
-        for key, lfp in self.lfp_filt_odict.items():
+        if dr_mode:
+            print('Removing artf from DR')
+            signal_used = self.get_dr_signals()
+        else:
+            signal_used = self.lfp_filt_odict
+
+        for key, lfp in signal_used.items():
             clean_lfp = deepcopy(lfp)
-            thr_locs = self.get_info(key, "thr_locs")
+            if dr_mode:
+                thr_locs = self.get_dr_info(key, "thr_locs")
+            else:
+                thr_locs = self.get_info(key, "thr_locs")
 
             if rep_freq is None:
                 clean_lfp._samples[thr_locs] = np.mean(
