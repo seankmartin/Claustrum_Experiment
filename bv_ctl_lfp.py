@@ -89,6 +89,7 @@ def main(fname, out_main_dir, config):
             for key, lfp in lfp_odict.get_filt_signal().items():
                 ori_lfp_list.append(lfp.get_samples())
                 ori_keys.append(key)
+            lfp_ts = lfp_odict.get_filt_signal(key=1).get_timestamp()
             X = np.column_stack(ori_lfp_list)
 
             # Compute ICA
@@ -99,23 +100,25 @@ def main(fname, out_main_dir, config):
 
             # Reconstruct excluding speficied ICs
             from copy import deepcopy
-            remove_IC_list = [1, 2, 3, 4, 5]
+            remove_IC_list = [1, 2, 5, 6, 7, 8, 10, 11]
             rS_ = deepcopy(S_)
             if len(remove_IC_list) > 0:
                 rS_[:, [x-1 for x in remove_IC_list]] = 0
             N_ = ica.inverse_transform(rS_, copy=True)
 
             # Plotting parameters
-            win_s, win_e = 0, int(5*250)
+            win_s, win_e = 0, int(30*250)
             lw = 0.5
             for i, (key, ori, decom, recon) in enumerate(zip(ori_keys, X.T, S_.T, N_.T), 1):
                 plt.subplot(n_chans, 2, i*2-1)
-                plt.plot(ori[win_s:win_e], lw=lw, label="T{}".format(key))
-                plt.plot(recon[win_s:win_e], lw=lw,
-                         label='rT{}'.format(i), c='g')
+                plt.plot(lfp_ts[win_s:win_e], ori[win_s:win_e], lw=lw,
+                         label="T{}".format(key), c='b')
+                plt.plot(lfp_ts[win_s:win_e], recon[win_s:win_e], lw=lw,
+                         label='rT{}'.format(i), c='hotpink')
                 if i == 1:
-                    plt.title('Original Trace')
+                    plt.title('Original/Reconstructed Trace')
                 plt.legend(fontsize=8, loc='upper left')
+                plt.xlabel('Time (s)')
 
                 # highlight removed IC in red
                 if i in remove_IC_list:
@@ -123,7 +126,7 @@ def main(fname, out_main_dir, config):
                 else:
                     c = 'k'
                 plt.subplot(n_chans, 2, i*2)
-                plt.plot(decom[win_s:win_e], lw=lw,
+                plt.plot(lfp_ts[win_s:win_e], decom[win_s:win_e], lw=lw,
                          label='IC{}'.format(i), c=c)
                 plt.legend(fontsize=8, loc='upper left')
                 if i == 1:
@@ -134,6 +137,7 @@ def main(fname, out_main_dir, config):
                 # plt.legend(fontsize=8, loc='upper left')
                 # if i == 1:
                 #     plt.title('Reconstructed Trace')
+                plt.xlabel('Time (s)')
             plt.show()
 
     if "Pre" in fname:
