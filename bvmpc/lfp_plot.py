@@ -85,7 +85,8 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
     """
     if session:
         rw_ts = session.get_rw_ts()
-        # FRes = session.get_trial_df()['First_response'].tolist()
+        FRes = session.get_trial_df()['First_response'].tolist()
+        lev_ts = session.get_lever_ts()
     if dr_mode:
         lfp_dict_s = lfp_odict.get_dr_signals()
         get_info = lfp_odict.get_dr_info
@@ -159,9 +160,12 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
                 for rw in rw_ts:
                     axes[i].axvline(rw, linestyle='-',
                                     color='green', linewidth='1.5')    # vline demarcating reward point/end of trial
-                # for res in FRes:
-                #     axes[i].axvline(res, linestyle='-',
-                #                     color='orange', linewidth='1.5')    # vline demarcating First Resonse
+                for lev in lev_ts:
+                    axes[i].axvline(lev, linestyle='-',
+                                    color='blue', linewidth='1.5')    # vline demarcating First Resonse
+                for res in FRes:
+                    axes[i].axvline(res, linestyle='-',
+                                    color='orange', linewidth='1.5')    # vline demarcating First Resonse
 
             axes[i].text(
                 0.03, 1.02, "Channel " + key,

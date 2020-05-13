@@ -80,6 +80,62 @@ def main(fname, out_main_dir, config):
             artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
         lfp_list.append(lfp_odict)
 
+    # Compute ICA
+    ICA = True
+    if ICA:
+        from sklearn.decomposition import FastICA
+        for lfp_odict in lfp_list:
+            ori_keys, ori_lfp_list = [], []
+            for key, lfp in lfp_odict.get_filt_signal().items():
+                ori_lfp_list.append(lfp.get_samples())
+                ori_keys.append(key)
+            X = np.column_stack(ori_lfp_list)
+
+            # Compute ICA
+            ica = FastICA(random_state=1)
+            S_ = ica.fit_transform(X)  # Reconstruct signals
+            A_ = ica.mixing_  # Get estimated mixing matrix
+            n_chans = S_.shape[1]
+
+            # Reconstruct excluding speficied ICs
+            from copy import deepcopy
+            remove_IC_list = [1, 2, 3, 4, 5]
+            rS_ = deepcopy(S_)
+            if len(remove_IC_list) > 0:
+                rS_[:, [x-1 for x in remove_IC_list]] = 0
+            N_ = ica.inverse_transform(rS_, copy=True)
+
+            # Plotting parameters
+            win_s, win_e = 0, int(5*250)
+            lw = 0.5
+            for i, (key, ori, decom, recon) in enumerate(zip(ori_keys, X.T, S_.T, N_.T), 1):
+                plt.subplot(n_chans, 2, i*2-1)
+                plt.plot(ori[win_s:win_e], lw=lw, label="T{}".format(key))
+                plt.plot(recon[win_s:win_e], lw=lw,
+                         label='rT{}'.format(i), c='g')
+                if i == 1:
+                    plt.title('Original Trace')
+                plt.legend(fontsize=8, loc='upper left')
+
+                # highlight removed IC in red
+                if i in remove_IC_list:
+                    c = 'r'
+                else:
+                    c = 'k'
+                plt.subplot(n_chans, 2, i*2)
+                plt.plot(decom[win_s:win_e], lw=lw,
+                         label='IC{}'.format(i), c=c)
+                plt.legend(fontsize=8, loc='upper left')
+                if i == 1:
+                    plt.title('Independent Components')
+
+                # plt.subplot(n_chans, 3, i*3)
+                # plt.plot(recon[win_s:win_e], lw=lw, label='rT{}'.format(i))
+                # plt.legend(fontsize=8, loc='upper left')
+                # if i == 1:
+                #     plt.title('Reconstructed Trace')
+            plt.show()
+
     if "Pre" in fname:
         behav = False
         Pre = True
@@ -232,9 +288,9 @@ def main(fname, out_main_dir, config):
     # Differential Recording mode (lfp1 - lfp2 in same shuttle)
     dr_mode = bool(int(config.get("Setup", "dr_mode")))
 
-    # Assign specific colrs to regions
+    # Assign specific colors to regions
     if dr_mode:
-        regions = regions[::4]
+        regions = regions[::2]
         print(regions)
     gm = bv_plot.GroupManager(regions)
 
@@ -433,6 +489,8 @@ def main(fname, out_main_dir, config):
         ax.yaxis.label.set_size(35)
         plt.ylim(0, max_p + max_p * 0.1)
         plt.xlim(0, 40)
+        # ax.set_yscale('log')
+        # plt.xlim(0, 120)
         # plt.ylim(0, 0.0001)
         # plt.xlim(30, 120)
         # plt.xlim(0, filt_top)

@@ -92,10 +92,11 @@ class LfpODict:
 
         """
         if self.lfp_dr_odict is None:
-            # t2, step = 1, 2  # DR btwn tetrodes from the same shuttle
-            t2, step = 3, 4  # DR btwn tetrodes from the same region but different shuttle
+            t1, t2, step = 0, 1, 2  # DR btwn tetrodes from the same shuttle
+            # t1, t2, step = 0, 3, 4  # DR btwn tetrodes from the same region but different shuttle
+            # t1, t2, step = 0, 4, 2  # DR btwn tetrodes from the same region but different shuttle
             self.lfp_dr_odict = OrderedDict()
-            for (key1, lfp1), (key2, lfp2) in zip(list(self.lfp_odict.items())[::step], list(self.lfp_odict.items())[t2::step]):
+            for (key1, lfp1), (key2, lfp2) in zip(list(self.lfp_odict.items())[t1::step], list(self.lfp_odict.items())[t2::step]):
                 dr_key = "{}_{}".format(key1, key2)
                 dr_lfp = deepcopy(lfp1)
                 dr_lfp.set_channel_id(channel_id=dr_key)
