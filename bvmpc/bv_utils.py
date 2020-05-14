@@ -7,6 +7,7 @@ import sys
 import argparse
 from datetime import timedelta
 from collections.abc import Iterable
+import shutil
 
 import h5py
 import numpy as np
@@ -158,8 +159,15 @@ def get_all_files_in_dir(
     def match_filter(f):
         if re_filter is None:
             return True
-        search_res = re.search(re_filter, f)
-        return search_res is not None
+        if not isinstance(re_filter, list):
+            search_res = re.search(re_filter, f)
+            return search_res is not None
+        else:
+            for re_filt in re_filter:
+                search_res = re.search(re_filt, f)
+                if search_res is None:
+                    return False
+                return True
 
     def ok_file(root_dir, f):
         return (
@@ -263,9 +271,9 @@ def setup_logging(in_dir):
 
 
 def print_config(config, msg=""):
+    """Prints the contents of a config file"""
     if msg != "":
         print(msg)
-    """Prints the contents of a config file"""
     config_dict = [{x: tuple(config.items(x))} for x in config.sections()]
     pprint(config_dict, width=120)
 
@@ -279,9 +287,7 @@ def read_cfg(location, verbose=True):
     return config
 
 
-def parse_args(verbose=True):
-    parser = argparse.ArgumentParser(
-        description='Process modifiable parameters from command line')
+def parse_args(parser, verbose=True):
     args, unparsed = parser.parse_known_args()
 
     if len(unparsed) != 0:
@@ -293,6 +299,108 @@ def parse_args(verbose=True):
         if len(sys.argv) > 1:
             print("Command line arguments", args)
     return args
+
+
+def get_dirs_matching_regex(start_dir, re_filters=None, return_absolute=True):
+    """
+    Recursively get all directories from start_dir that match regex.
+    Parameters
+    ----------
+    start_dir : str
+        The path to the directory to start at.
+    re_filter : str, optional. Defaults to None.
+        The regular expression to match.
+        Returns all directories is passed as None.
+    Returns
+    -------
+    list
+        A list of directories matching the regex.
+    """
+    if not os.path.isdir(start_dir):
+        raise ValueError("Non existant directory " + str(start_dir))
+
+    def match_filter(f):
+        if re_filters is None:
+            return True
+        for re_filter in re_filters:
+            search_res = re.search(re_filter, f)
+            if search_res is None:
+                return False
+        return True
+
+    dirs = []
+    for root, _, _ in os.walk(start_dir):
+        start_root = root[:len(start_dir)]
+
+        if len(root) == len(start_root):
+            end_root = ""
+        else:
+            end_root = root[len(start_dir + os.sep):]
+
+        if match_filter(end_root):
+            to_add = root if return_absolute else end_root
+            dirs.append(to_add)
+    return dirs
+
+
+def interactive_refilt(start_dir, ext=None, write=False, write_loc=None):
+    re_filt = ""
+
+    # Do the interactive setup
+    files = get_all_files_in_dir(
+        start_dir, re_filter=None, return_absolute=False,
+        ext=ext, recursive=True)
+    print("Without any regex, the result from {} is:".format(start_dir))
+    for f in files:
+        print(f)
+    while True:
+        this_re_filt = input(
+            "Please enter the regexes seperated by SIM_SEP to test or quit / qt to move on:\n")
+        done = (
+            (this_re_filt.lower() == "quit") or
+            (this_re_filt.lower() == "qt"))
+        if done:
+            break
+        if this_re_filt == "":
+            re_filt = None
+        else:
+            re_filt = this_re_filt.split(" SIM_SEP ")
+        files = get_all_files_in_dir(
+            start_dir, re_filter=re_filt, return_absolute=False,
+            ext=ext, recursive=True)
+        print("With {} the result is:".format(re_filt))
+        for f in files:
+            print(f)
+    if re_filt == "":
+        re_filt = None
+    print("The final regex was: {}".format(re_filt))
+
+    # Save the result
+    if write:
+        if write_loc is None:
+            raise ValueError("Pass a location to write to when writing.")
+        regex_filts = re_filt
+        neuro_file = open(write_loc, "r")
+        temp_file = open("temp.txt", "w")
+        for line in neuro_file:
+
+            if line.startswith("    regex_filter ="):
+                line = "    regex_filter = " + str(regex_filts) + "\n"
+                print("Set the regex filter to: " + line)
+                temp_file.write(line)
+            elif line.startswith("interactive ="):
+                line = "interactive = False\n"
+                temp_file.write(line)
+            else:
+                temp_file.write(line)
+
+        neuro_file.close()
+        temp_file.close()
+
+        os.remove(write_loc)
+        shutil.move("temp.txt", write_loc)
+
+    return re_filt
 
 
 def find_ranges(iterable):
