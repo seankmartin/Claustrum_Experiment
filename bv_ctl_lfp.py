@@ -61,6 +61,7 @@ def main(fname, out_main_dir, config):
     filt = bool(int(config.get("Setup", "filt")))
     filt_btm = float(config.get("Setup", "filt_btm"))
     filt_top = float(config.get("Setup", "filt_top"))
+    filt_params = (filt, filt_btm, filt_top)
 
     artf = bool(int(config.get("Artefact Params", "artf")))
     sd_thres = float(config.get("Artefact Params", "sd_thres"))
@@ -70,6 +71,7 @@ def main(fname, out_main_dir, config):
         rep_freq = None
     else:
         rep_freq = float(config.get("Artefact Params", "rep_freq"))
+    artf_params = (artf, sd_thres, min_artf_freq, rep_freq, filt)
 
     # Split the LFP signals into chunked sets of size 16
     lfp_list = []
@@ -140,6 +142,48 @@ def main(fname, out_main_dir, config):
                 #     plt.title('Reconstructed Trace')
                 plt.xlabel('Time (s)')
             plt.show()
+
+    # TODO temporary location to test MNE
+    do_mne = True
+    if do_mne:
+        import mne
+
+        def mne_example(lfp_odict, ch_names=None, out_name=""):
+
+            # Extract LFPs from the odict
+            ori_keys, ori_lfp_list = [], []
+            for key, lfp in lfp_odict.get_filt_signal().items():
+                ori_lfp_list.append(lfp.get_samples())
+                ori_keys.append(key)
+            example_lfp = lfp_odict.get_filt_signal(key=1)
+            lfp_ts = example_lfp.get_timestamp()
+
+            # Convert that data into mne format
+            if ch_names is None:
+                ch_names = [lfp_odict.lfp_odict.keys()]
+            ch_names = regions
+            sfreq = example_lfp.get_sampling_rate()
+            info = mne.create_info(
+                ch_names=ch_names, sfreq=sfreq, ch_types="eeg")
+            raw = mne.io.RawArray
+
+            cont = input("Show raw mne info? (y|n) \n")
+            if cont.strip().lower() == "y":
+                print(raw.info)
+
+            # Do the actual plot
+            raw.plot(
+                n_channels=len(lfp_odict), block=True,
+                show=True, clipping="clamp",
+                title="LFP Data from {}".format(out_name),
+                remove_dc=False)
+
+        lfp_odict = LfpODict(
+            fname, channels=chan_amount,
+            filt_params=filt_params, artf_params=artf_params)
+        ch_names = regions
+        out_name = os.path.basename(fname)
+        mne_example(lfp_odict, ch_names=ch_names, out_name=out_name)
 
     if "Pre" in fname:
         behav = False
