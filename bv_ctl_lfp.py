@@ -2,6 +2,7 @@ import os
 import math
 import json
 from datetime import date, timedelta, datetime
+import argparse
 
 import numpy as np
 import seaborn as sns
@@ -17,7 +18,7 @@ from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors
 from bvmpc.bv_utils import daterange, split_list, get_all_files_in_dir
 from bvmpc.bv_utils import log_exception, chunks, save_dict_to_csv
 from bvmpc.bv_utils import make_path_if_not_exists, read_cfg, parse_args
-from bvmpc.bv_utils import get_dist
+from bvmpc.bv_utils import get_dist, interactive_refilt
 from bvmpc.bv_session_extractor import SessionExtractor
 from bvmpc.bv_session import Session
 from bvmpc.lfp_odict import LfpODict
@@ -919,7 +920,7 @@ def main(fname, out_main_dir, config):
                 for t, ts in enumerate(align_df):
                     if not ts:  # To skip empty ts (eg. double pellet only)
                         continue
-                    elif (ts+t_win[0]) < 0:
+                    elif (ts + t_win[0]) < 0:
                         trials.append([ts[0], t_win[1]])
                         print('t_win less than trial {} start'.format(t))
                     else:
@@ -1111,8 +1112,8 @@ def main(fname, out_main_dir, config):
                     fig1, a1, a2 = fig, ax, r_ax
                     # Standardize window of trial displayed with reference to pell_ts
                     win = [-20, 10]
-                    a1.set_xlim([t_end+win[0], t_end+win[1]])
-                    a2.set_xlim([t_end+win[0], t_end+win[1]])
+                    a1.set_xlim([t_end + win[0], t_end + win[1]])
+                    a2.set_xlim([t_end + win[0], t_end + win[1]])
                     name = '{}_Tr{}.png'.format(
                         tr_out_name[:-4], t + 1)
                     make_path_if_not_exists(name)
@@ -1138,8 +1139,8 @@ def main(fname, out_main_dir, config):
                     # Standardize window of trial displayed with reference to pell_ts
                     win = [-5, 5]
                     # win = [-20, 10]
-                    a1.set_xlim([t_end+win[0], t_end+win[1]])
-                    a2.set_xlim([t_end+win[0], t_end+win[1]])
+                    a1.set_xlim([t_end + win[0], t_end + win[1]])
+                    a2.set_xlim([t_end + win[0], t_end + win[1]])
                     name = '{}_Tr{}.png'.format(
                         tr_out_name[:-4], t + 1)
                     make_path_if_not_exists(name)
@@ -1225,9 +1226,13 @@ def main(fname, out_main_dir, config):
                     bv_plot.savefig(tf_fig2, o_name)
 
 
-def main_entry(config_name):
+def main_entry(config_name, base_dir=None, dummy=False, interactive=False):
+    """Batch files to use based on the config file passed."""
     here = os.path.dirname(os.path.realpath(__file__))
-    config_path = os.path.join(here, "Configs", "LFP", config_name)
+    if not os.path.isfile(config_name):
+        config_path = os.path.join(here, "Configs", "LFP", config_name)
+    else:
+        config_path = config_name
     config = read_cfg(config_path)
 
     in_dir = config.get("Setup", "in_dir")
@@ -1236,8 +1241,20 @@ def main_entry(config_name):
     out_main_dir = config.get("Setup", "out_dir")
     if out_main_dir == "":
         out_main_dir = in_dir
-    regex_filter = config.get("Setup", "regex_filter")
-    regex_filter = None if regex_filter == "None" else regex_filter
+    if base_dir is not None:
+        in_dir = base_dir + in_dir[len(base_dir):]
+        out_main_dir = base_dir + out_main_dir[len(out_main_dir):]
+
+    if interactive:
+        print("Starting interactive regex console:")
+        regex_filter = interactive_refilt(
+            in_dir, ext=".eeg", write=True, write_loc=config_path)
+    else:
+        regex_filter = config.get("Setup", "regex_filter")
+        regex_filter = None if regex_filter == "None" else regex_filter
+
+    print("Automatically obtaining {} files from {} matching {}".format(
+        ".eeg", in_dir, regex_filter))
     filenames = get_all_files_in_dir(
         in_dir, ext=".eeg", recursive=True,
         verbose=True, re_filter=regex_filter)
@@ -1248,18 +1265,47 @@ def main_entry(config_name):
         exit(-1)
 
     for fname in filenames:
-        out_main_dir = os.path.dirname(fname)
-        main(fname, out_main_dir, config)
+        if dummy:
+            print("Would run on {}".format(fname))
+        else:
+            print("Running on {}".format(fname))
+            out_main_dir = os.path.dirname(fname)
+            main(fname, out_main_dir, config)
 
 
 if __name__ == "__main__":
+    """Setup which config file(s) to use and run."""
+    # Use this to do batching ATM
+    # for i in np.arange(3, 7):
+    #     config_name = "CAR-SA{}.cfg".format(i)
+    #     main_entry(config_name)
+
+    # Use this for single runs without providing cmd line arg
     # config_name = "Eoin.cfg"
     # config_name = "CAR-SA2.cfg"
     # config_name = "Batch_3.cfg"
     i = 5
     config_name = "CAR-SA{}.cfg".format(i)
-    main_entry(config_name)
 
-    # for i in np.arange(3, 7):
-    #     config_name = "CAR-SA{}.cfg".format(i)
-    #     main_entry(config_name)
+    # Can parse command line args
+    parser = argparse.ArgumentParser(
+        description="Arguments passable via command line:")
+    parser.add_argument(
+        "-c", "--config", type=str, default=config_name, required=False,
+        help="The name of the config file in configs/LFP OR path to cfg.")
+    parser.add_argument(
+        "-d", "--dummy", action="store_true", required=False,
+        help="If this flag is present, only prints the files that would be run."
+    )
+    parser.add_argument(
+        "-b", "--basedir", type=str, default=None, required=False,
+        help="Replace the base directory in config file with this.")
+    parser.add_argument(
+        "-i", "--interactive", action="store_true", required=False,
+        help="Run an interactive console to select a regex filter set.")
+    parsed = parse_args(parser, verbose=True)
+
+    # Actually run here
+    main_entry(
+        parsed.config, base_dir=parsed.basedir, dummy=parsed.dummy,
+        interactive=parsed.interactive)
