@@ -76,15 +76,15 @@ def main(fname, out_main_dir, config):
 
     # Split the LFP signals into chunked sets of size 16
     lfp_list = []
-    for chans in chunks(chans, 16):
+    for chan_set in chunks(chans, 16):
         lfp_odict = LfpODict(
-            fname, channels=chans,
+            fname, channels=chan_set,
             filt_params=(filt, filt_btm, filt_top),
             artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
         lfp_list.append(lfp_odict)
 
     # Compute ICA
-    ICA = True
+    ICA = False
     if ICA:
         from sklearn.decomposition import FastICA
         for lfp_odict in lfp_list:
@@ -156,6 +156,7 @@ def main(fname, out_main_dir, config):
             for key, lfp in lfp_odict.get_filt_signal().items():
                 ori_lfp_list.append(lfp.get_samples())
                 ori_keys.append(key)
+            data = np.array(ori_lfp_list, float)
             example_lfp = lfp_odict.get_filt_signal(key=1)
             lfp_ts = example_lfp.get_timestamp()
 
@@ -166,7 +167,7 @@ def main(fname, out_main_dir, config):
             sfreq = example_lfp.get_sampling_rate()
             info = mne.create_info(
                 ch_names=ch_names, sfreq=sfreq, ch_types="eeg")
-            raw = mne.io.RawArray
+            raw = mne.io.RawArray(data, info)
 
             cont = input("Show raw mne info? (y|n) \n")
             if cont.strip().lower() == "y":
@@ -177,10 +178,10 @@ def main(fname, out_main_dir, config):
                 n_channels=len(lfp_odict), block=True,
                 show=True, clipping="clamp",
                 title="LFP Data from {}".format(out_name),
-                remove_dc=False)
+                remove_dc=False, scalings="auto")
 
         lfp_odict = LfpODict(
-            fname, channels=chan_amount,
+            fname, channels=chans,
             filt_params=filt_params, artf_params=artf_params)
         ch_names = regions
         out_name = os.path.basename(fname)
