@@ -103,14 +103,15 @@ def main(fname, out_main_dir, config):
             remove_IC_list = [1, 2, 5, 6, 7, 8, 10, 11]
             rS_ = deepcopy(S_)
             if len(remove_IC_list) > 0:
-                rS_[:, [x-1 for x in remove_IC_list]] = 0
+                rS_[:, [x - 1 for x in remove_IC_list]] = 0
             N_ = ica.inverse_transform(rS_, copy=True)
 
             # Plotting parameters
-            win_s, win_e = 0, int(30*250)
+            win_s, win_e = 0, int(30 * 250)
             lw = 0.5
-            for i, (key, ori, decom, recon) in enumerate(zip(ori_keys, X.T, S_.T, N_.T), 1):
-                plt.subplot(n_chans, 2, i*2-1)
+            for i, (key, ori, decom, recon) in enumerate(
+                    zip(ori_keys, X.T, S_.T, N_.T), 1):
+                plt.subplot(n_chans, 2, i * 2 - 1)
                 plt.plot(lfp_ts[win_s:win_e], ori[win_s:win_e], lw=lw,
                          label="T{}".format(key), c='b')
                 plt.plot(lfp_ts[win_s:win_e], recon[win_s:win_e], lw=lw,
@@ -125,7 +126,7 @@ def main(fname, out_main_dir, config):
                     c = 'r'
                 else:
                     c = 'k'
-                plt.subplot(n_chans, 2, i*2)
+                plt.subplot(n_chans, 2, i * 2)
                 plt.plot(lfp_ts[win_s:win_e], decom[win_s:win_e], lw=lw,
                          label='IC{}'.format(i), c=c)
                 plt.legend(fontsize=8, loc='upper left')
