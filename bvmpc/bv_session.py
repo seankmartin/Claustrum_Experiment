@@ -1165,7 +1165,7 @@ class Session:
         trial_starts = self.get_arrays("Trial_Start")
 
         # Assign schedule type to trials
-        schedule_type = []
+        schedule_type, sch_block = [], []
         mod = []
         mod_rw = self.get_insert()  # reward times artificially inserted
 
@@ -1187,6 +1187,7 @@ class Session:
                     b_type = 'FI'
                 for rw in block:
                     schedule_type.append(b_type)
+                    sch_block.append(b_type + '-{}'.format(i))
         else:
             if stage == '4':
                 b_type = 'CR'
@@ -1198,6 +1199,7 @@ class Session:
                 b_type = 'NA'
             for _ in trial_starts:
                 schedule_type.append(b_type)
+                sch_block.append(None)
 
         # Rearrange timestamps based on trial per row
         lever_ts = self.get_lever_ts(True)
@@ -1246,7 +1248,7 @@ class Session:
         trials_max_l = len(max(trial_lever_ts, key=len))
         lever_arr = np.empty((len(trial_starts), trials_max_l,))
         lever_arr.fill(np.nan)
-        first_response_arr = np.full((len(trial_starts)), np.nan)
+        first_response_arr = []
         trials_max_err = len(max(trial_err_ts, key=len)
                              )  # Max err press per trial
         err_arr = np.empty((len(trial_starts), trials_max_err,))
@@ -1258,7 +1260,7 @@ class Session:
             lever_arr[i, :l_end] = l[:]
             err_end = len(err)
             err_arr[i, :err_end] = err[:]
-            first_response_arr[i] = l[0]
+            first_response_arr.append(np.array([l[0]]))
 
         # Splits lever ts in each trial into seperate np.arrs for handling in pandas
         # lever_arr = np.vsplit(lever_arr, i+1)
@@ -1289,6 +1291,9 @@ class Session:
             norm_trial_s[i] -= trial_norm[i]
             norm_first_response[i] -= trial_norm[i]
 
+        # Convert trial_starts into list of np.arr of list
+        trial_starts = [np.array([x]) for x in trial_starts]
+
         # Timestamps kept as original starting from session start
         session_dict = {
             'Reward_ts': trial_rw_ts,
@@ -1300,6 +1305,7 @@ class Session:
             'Tone_s': trial_tone_start,
             'Trial_s': trial_starts,
             'First_response': first_response_arr,
+            'Sch_block': sch_block,
             'Mod': mod
         }
         # for key, x in session_dict.items():
@@ -1316,6 +1322,7 @@ class Session:
             'Tone_s': norm_tone,
             'Trial_s': norm_trial_s,
             'First_response': norm_first_response,
+            'Sch_block': sch_block,
             'Mod': mod
         }
 

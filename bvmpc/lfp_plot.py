@@ -23,7 +23,7 @@ def plot_long_lfp(
         lfp (NLfp): The lfp signal to plot.
         out_name (str): The name of the output, including directory.
         nsamples (int, optional): Defaults to all samples.
-            The number of samples to plot. 
+            The number of samples to plot.
         offset (int, optional): Defaults to 0.
             The number of samples into the lfp to start plotting at.
         nsplits (int, optional): The number of rows in the resulting figure.
@@ -54,11 +54,11 @@ def plot_long_lfp(
     plt.close(fig)
 
 
-def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4, filt=False, artf=False, session=None, splits=None):
+def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4, filt=False, artf=False, dr_mode=False, session=None, splits=None, x_pad=60):
     """
     Create a number of figures to display lfp signal on multiple channels.
 
-    There will be one figure for each split of thetotal length 
+    There will be one figure for each split of thetotal length
     into segment_length, and a row for each value in lfp_odict.
 
     It is assumed that the input lfps are prefiltered if filtering is required.
@@ -77,6 +77,7 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
             This should contain a number of elements = num_plots + 1
             e.g. to split a 300 sec lfp into 0 - 100 and 100 - 300
             pass splits = [0, 100, 300]
+        x_pad (float) : Optional. Pad x_axis for easy comparison. Sets xlim to be larger of x_pad or actual split len
 
     Returns:
         None
@@ -84,10 +85,17 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
     """
     if session:
         rw_ts = session.get_rw_ts()
-    if filt:
-        lfp_dict_s = lfp_odict.get_filt_signal()
+        FRes = session.get_trial_df()['First_response'].tolist()
+        lev_ts = session.get_lever_ts()
+    if dr_mode:
+        lfp_dict_s = lfp_odict.get_dr_signals()
+        get_info = lfp_odict.get_dr_info
     else:
-        lfp_dict_s = lfp_odict.get_signal()
+        if filt:
+            lfp_dict_s = lfp_odict.get_filt_signal()
+        else:
+            lfp_dict_s = lfp_odict.get_signal()
+        get_info = lfp_odict.get_info
 
     if in_range is None:
         in_range = (0, max([lfp.get_duration()
@@ -102,6 +110,14 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
             seg_splits = np.concatenate([seg_splits, [in_range[1]]])
     else:
         seg_splits = splits
+
+    # print(seg_splits[:5])
+    # exit(-1)
+    max_split_len = max(np.diff(seg_splits))
+    print('Longest segment is {:.2f}s'.format(max_split_len))
+    if max_split_len < x_pad:
+        x_pad = max_split_len
+
     for j, split in enumerate(seg_splits[:-1]):
         fig, axes = plt.subplots(
             nrows=len(lfp_dict_s),
@@ -110,10 +126,13 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
         b = np.round(min(seg_splits[j + 1], in_range[1]), 2)
         if list(lfp_dict_s.keys())[0] == '17':
             out_name = os.path.join(
-                out_dir, "1_{}s_to_{}s.png".format(a, b))
+                out_dir, "1_{}_{:.2f}s_to_{:.2f}s.png".format(j, a, b))
+        elif dr_mode:
+            out_name = os.path.join(
+                out_dir, "dr_{}_{:.2f}s_to_{:.2f}s.png".format(j, a, b))
         else:
             out_name = os.path.join(
-                out_dir, "0_{}s_to_{}s.png".format(a, b))
+                out_dir, "0_{}_{:.2f}s_to_{:.2f}s.png".format(j, a, b))
         for i, (key, lfp) in enumerate(lfp_dict_s.items()):
             convert = lfp.get_sampling_rate()
             c_start, c_end = math.floor(a * convert), math.floor(b * convert)
@@ -124,13 +143,13 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
             if artf:
                 from bvmpc.bv_utils import find_ranges
                 shading = list(find_ranges(
-                    lfp_odict.get_info(key, "thr_locs")))
+                    get_info(key, "thr_locs")))
 
                 for x, y in shading:    # Shading of artf portions
                     times = lfp.get_timestamp()
                     axes[i].axvspan(times[x], times[y], color='red', alpha=0.5)
-                mean = lfp_odict.get_info(key, "mean")
-                std = lfp_odict.get_info(key, "std")
+                mean = get_info(key, "mean")
+                std = get_info(key, "std")
                 # Label thresholds
                 axes[i].axhline(mean - sd * std, linestyle='-',
                                 color='red', linewidth='1.5')
@@ -141,13 +160,23 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
                 for rw in rw_ts:
                     axes[i].axvline(rw, linestyle='-',
                                     color='green', linewidth='1.5')    # vline demarcating reward point/end of trial
+                for lev in lev_ts:
+                    axes[i].axvline(lev, linestyle='-',
+                                    color='blue', linewidth='1.5')    # vline demarcating First Resonse
+                for res in FRes:
+                    axes[i].axvline(res, linestyle='-',
+                                    color='orange', linewidth='1.5')    # vline demarcating First Resonse
 
             axes[i].text(
                 0.03, 1.02, "Channel " + key,
                 transform=axes[i].transAxes, color="k", fontsize=15)
             axes[i].set_ylim(y_axis_min, y_axis_max)
             axes[i].tick_params(labelsize=12)
-            axes[i].set_xlim(a, b)
+            # axes[i].set_xlim(a, b)
+            seg_len = np.diff([a, b])
+            if seg_len > x_pad:
+                x_pad = seg_len
+            axes[i].set_xlim(a, a+x_pad)
 
         bv_plot.savefig(fig, out_name)
         plt.close("all")

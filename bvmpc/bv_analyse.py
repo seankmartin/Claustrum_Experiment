@@ -772,8 +772,8 @@ def plot_raster_trials(
     elif align_FRes:
         plot_type = 'First_Resp-Aligned'
         norm_arr = norm_FRes
-        xmax = -10
-        xmin = 40
+        xmax = 40
+        xmin = -10
 
     else:
         plot_type = 'Start-Aligned'

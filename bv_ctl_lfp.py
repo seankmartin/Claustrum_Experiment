@@ -2,6 +2,7 @@ import os
 import math
 import json
 from datetime import date, timedelta, datetime
+import argparse
 
 import numpy as np
 import seaborn as sns
@@ -17,7 +18,7 @@ from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors
 from bvmpc.bv_utils import daterange, split_list, get_all_files_in_dir
 from bvmpc.bv_utils import log_exception, chunks, save_dict_to_csv
 from bvmpc.bv_utils import make_path_if_not_exists, read_cfg, parse_args
-from bvmpc.bv_utils import get_dist
+from bvmpc.bv_utils import get_dist, interactive_refilt
 from bvmpc.bv_session_extractor import SessionExtractor
 from bvmpc.bv_session import Session
 from bvmpc.lfp_odict import LfpODict
@@ -61,6 +62,7 @@ def main(fname, out_main_dir, config):
     filt = bool(int(config.get("Setup", "filt")))
     filt_btm = float(config.get("Setup", "filt_btm"))
     filt_top = float(config.get("Setup", "filt_top"))
+    filt_params = (filt, filt_btm, filt_top)
 
     artf = bool(int(config.get("Artefact Params", "artf")))
     sd_thres = float(config.get("Artefact Params", "sd_thres"))
@@ -70,8 +72,7 @@ def main(fname, out_main_dir, config):
         rep_freq = None
     else:
         rep_freq = float(config.get("Artefact Params", "rep_freq"))
-
-    gm = bv_plot.GroupManager(regions)
+    artf_params = (artf, sd_thres, min_artf_freq, rep_freq, filt)
 
     # Split the LFP signals into chunked sets of size 16
     lfp_list = []
@@ -82,9 +83,113 @@ def main(fname, out_main_dir, config):
             artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
         lfp_list.append(lfp_odict)
 
+    # Compute ICA
+    ICA = True
+    if ICA:
+        from sklearn.decomposition import FastICA
+        for lfp_odict in lfp_list:
+            ori_keys, ori_lfp_list = [], []
+            for key, lfp in lfp_odict.get_filt_signal().items():
+                ori_lfp_list.append(lfp.get_samples())
+                ori_keys.append(key)
+            lfp_ts = lfp_odict.get_filt_signal(key=1).get_timestamp()
+            X = np.column_stack(ori_lfp_list)
+
+            # Compute ICA
+            ica = FastICA(random_state=1)
+            S_ = ica.fit_transform(X)  # Reconstruct signals
+            A_ = ica.mixing_  # Get estimated mixing matrix
+            n_chans = S_.shape[1]
+
+            # Reconstruct excluding speficied ICs
+            from copy import deepcopy
+            remove_IC_list = [1, 2, 5, 6, 7, 8, 10, 11]
+            rS_ = deepcopy(S_)
+            if len(remove_IC_list) > 0:
+                rS_[:, [x - 1 for x in remove_IC_list]] = 0
+            N_ = ica.inverse_transform(rS_, copy=True)
+
+            # Plotting parameters
+            win_s, win_e = 0, int(30 * 250)
+            lw = 0.5
+            for i, (key, ori, decom, recon) in enumerate(
+                    zip(ori_keys, X.T, S_.T, N_.T), 1):
+                plt.subplot(n_chans, 2, i * 2 - 1)
+                plt.plot(lfp_ts[win_s:win_e], ori[win_s:win_e], lw=lw,
+                         label="T{}".format(key), c='b')
+                plt.plot(lfp_ts[win_s:win_e], recon[win_s:win_e], lw=lw,
+                         label='rT{}'.format(i), c='hotpink')
+                if i == 1:
+                    plt.title('Original/Reconstructed Trace')
+                plt.legend(fontsize=8, loc='upper left')
+                plt.xlabel('Time (s)')
+
+                # highlight removed IC in red
+                if i in remove_IC_list:
+                    c = 'r'
+                else:
+                    c = 'k'
+                plt.subplot(n_chans, 2, i * 2)
+                plt.plot(lfp_ts[win_s:win_e], decom[win_s:win_e], lw=lw,
+                         label='IC{}'.format(i), c=c)
+                plt.legend(fontsize=8, loc='upper left')
+                if i == 1:
+                    plt.title('Independent Components')
+
+                # plt.subplot(n_chans, 3, i*3)
+                # plt.plot(recon[win_s:win_e], lw=lw, label='rT{}'.format(i))
+                # plt.legend(fontsize=8, loc='upper left')
+                # if i == 1:
+                #     plt.title('Reconstructed Trace')
+                plt.xlabel('Time (s)')
+            plt.show()
+
+    # TODO temporary location to test MNE
+    do_mne = True
+    if do_mne:
+        import mne
+
+        def mne_example(lfp_odict, ch_names=None, out_name=""):
+
+            # Extract LFPs from the odict
+            ori_keys, ori_lfp_list = [], []
+            for key, lfp in lfp_odict.get_filt_signal().items():
+                ori_lfp_list.append(lfp.get_samples())
+                ori_keys.append(key)
+            example_lfp = lfp_odict.get_filt_signal(key=1)
+            lfp_ts = example_lfp.get_timestamp()
+
+            # Convert that data into mne format
+            if ch_names is None:
+                ch_names = [lfp_odict.lfp_odict.keys()]
+            ch_names = regions
+            sfreq = example_lfp.get_sampling_rate()
+            info = mne.create_info(
+                ch_names=ch_names, sfreq=sfreq, ch_types="eeg")
+            raw = mne.io.RawArray
+
+            cont = input("Show raw mne info? (y|n) \n")
+            if cont.strip().lower() == "y":
+                print(raw.info)
+
+            # Do the actual plot
+            raw.plot(
+                n_channels=len(lfp_odict), block=True,
+                show=True, clipping="clamp",
+                title="LFP Data from {}".format(out_name),
+                remove_dc=False)
+
+        lfp_odict = LfpODict(
+            fname, channels=chan_amount,
+            filt_params=filt_params, artf_params=artf_params)
+        ch_names = regions
+        out_name = os.path.basename(fname)
+        mne_example(lfp_odict, ch_names=ch_names, out_name=out_name)
+
     if "Pre" in fname:
         behav = False
         Pre = True
+        s = None
 
     else:
         Pre = False
@@ -225,22 +330,43 @@ def main(fname, out_main_dir, config):
     # Plots raw LFP for all tetrodes or output csv with artf_removal results
     r_SI = bool(int(config.get("Setup", "r_SI")))
     r_plot = bool(int(config.get("Setup", "r_plot")))
+    # Plot raw LFP in terms of trials
+    rt_plot = bool(int(config.get("Setup", "rt_plot")))
     r_csv = bool(int(config.get("Setup", "r_csv")))
+    badchans = [x for x in config.get("Setup", "bad_chans").split(", ")]
 
     # Differential Recording mode (lfp1 - lfp2 in same shuttle)
-    DR = bool(int(config.get("Setup", "DR")))
+    dr_mode = bool(int(config.get("Setup", "dr_mode")))
+
+    # Assign specific colors to regions
+    if dr_mode:
+        regions = regions[::2]
+        print(regions)
+    gm = bv_plot.GroupManager(regions)
 
     for p, lfp_odict in enumerate(lfp_list):
         if r_plot:
             ro_dir = os.path.join(o_dir, "Raw")
             make_dir_if_not_exists(ro_dir)
             # Plot raw LFP for all tetrodes in segments
-            if s:
+            if s is not None:
                 splits = np.concatenate([[0], s.get_block_ends()])
+                # splits = np.concatenate([[0], [s.get_block_ends()[-1]]])
             else:
                 splits = None
             plot_lfp(ro_dir, lfp_odict, splits=splits,
-                     sd=sd_thres, filt=filt, artf=artf, session=s)
+                     sd=sd_thres, filt=filt, artf=artf, dr_mode=dr_mode, session=s)
+        if rt_plot:
+            rto_dir = os.path.join(o_dir, "Raw", 'Trials')
+            make_dir_if_not_exists(rto_dir)
+            if s is not None:
+                splits = np.concatenate(
+                    s.get_trial_df()['Trial_s'].tolist())
+                plot_lfp(rto_dir, lfp_odict, splits=splits,
+                         sd=sd_thres, filt=filt, artf=artf, dr_mode=dr_mode, session=s)
+            else:
+                pass
+
         if r_csv:
             shut_s, shut_end = p * 16, 16 + p * 16
             lfp_csv(fname, o_dir, lfp_odict, sd_thres,
@@ -364,69 +490,85 @@ def main(fname, out_main_dir, config):
         legend = []
         max_p = 0
         for p, lfp_odict in enumerate(lfp_list):
-            if artf:
-                signal_used = lfp_odict.get_clean_signal()
+            if dr_mode:
+                signal_used = lfp_odict.get_dr_signals()
+                if artf:
+                    signal_used = lfp_odict.get_clean_signal()
             else:
-                signal_used = lfp_odict.get_filt_signal()
+                if artf:
+                    signal_used = lfp_odict.get_clean_signal()
+                else:
+                    signal_used = lfp_odict.get_filt_signal()
 
             for i, (key, lfp) in enumerate(signal_used.items()):
+                print(i, key)
                 color = gm.get_next_color()
-                if DR:  # Hardfix for DR mode
-                    if i % 2 == 1:
-                        lfp._set_samples(
-                            lfp.get_samples() - signal_used[str(i)].get_samples())
-                        graph_data = lfp.spectrum(
-                            ptype='psd', prefilt=False,
-                            db=False, tr=False)
-                        nc_plot.lfp_spectrum(
-                            graph_data, ax, color, style="Dashed")
-                        legend.append(regions[i + p * 16] + " T" + key)
-                        cur_max_p = max(graph_data['Pxx'])
-                        if cur_max_p > max_p:
-                            max_p = cur_max_p
-                        else:
-                            continue
-                else:
-                    graph_data = lfp.spectrum(
-                        ptype='psd', prefilt=False,
-                        db=False, tr=False)
-                    nc_plot.lfp_spectrum(
-                        graph_data, ax, color, style="Dashed")
-                    legend.append(regions[i + p * 16] + " T" + key)
+                if key in badchans:
+                    print("T{} skipped.".format(key))
+                    continue
+                graph_data = lfp.spectrum(
+                    ptype='psd', prefilt=False,
+                    db=False, tr=False)
+                nc_plot.lfp_spectrum(
+                    graph_data, ax, color, style="Dashed")
+                label = regions[i + p * 16] + " T" + key
+                legend.append(label)
+
+                # Plot Peaks in lfp
+                peaks = True
+                if peaks:
+                    verbose = False
+                    from scipy.signal import find_peaks, peak_prominences
+                    peaks, _ = find_peaks(
+                        graph_data['Pxx'], distance=4, prominence=1e-6)
+                    if verbose:
+                        print("{} : {}".format(label, [round(x, 2)
+                                                       for x in graph_data['f'][peaks]]))
+                        print("Max : ", graph_data['f'][np.nonzero(
+                            graph_data['Pxx'] == max(graph_data['Pxx'][peaks]))])
+                    ax.scatter(graph_data['f'][peaks], graph_data['Pxx']
+                               [peaks], s=250, marker='X', c=np.repeat([color], len(peaks), axis=0), edgecolor='k')
+
                     cur_max_p = max(graph_data['Pxx'])
                     if cur_max_p > max_p:
                         max_p = cur_max_p
                     else:
                         continue
-        plt.tick_params(labelsize=20)
-        ax.xaxis.label.set_size(25)
-        ax.yaxis.label.set_size(25)
+        plt.tick_params(labelsize=25)
+        ax.xaxis.label.set_size(35)
+        ax.yaxis.label.set_size(35)
         plt.ylim(0, max_p + max_p * 0.1)
-        plt.xlim(0, filt_top)
-        plt.legend(legend, fontsize=15)
+        plt.xlim(0, 40)
+        # ax.set_yscale('log')
+        # plt.xlim(0, 120)
+        # plt.ylim(0, 0.0001)
+        # plt.xlim(30, 120)
+        # plt.xlim(0, filt_top)
+        plt.legend(legend, fontsize=25)
 
-        if DR:  # Hard fix for naming if Differential recording is used
+        ro_dir = os.path.join(o_dir, "Raw")
+        if dr_mode:  # Hard fix for naming if Differential recording is used
             if artf:
                 plt.title(fname.split("\\")[-1][4:] +
                           " Compiled Periodogram - Clean_dr", fontsize=40, y=1.02)
                 out_name = os.path.join(
-                    o_dir, fname.split("\\")[-1] + "_p_Clear_dr.png")
+                    ro_dir, fname.split("\\")[-1] + "_p_Clean_dr.png")
             else:
                 plt.title(fname.split("\\")[-1][4:] +
                           " Compiled Periodogram_dr", fontsize=40, y=1.02)
                 out_name = os.path.join(
-                    o_dir, fname.split("\\")[-1] + "_p_dr.png")
+                    ro_dir, fname.split("\\")[-1] + "_p_dr.png")
         else:
             if artf:
                 plt.title(fname.split("\\")[-1][4:] +
                           " Compiled Periodogram - Clean", fontsize=40, y=1.02)
                 out_name = os.path.join(
-                    o_dir, fname.split("\\")[-1] + "_p_Clear.png")
+                    ro_dir, fname.split("\\")[-1] + "_p_Clean.png")
             else:
                 plt.title(fname.split("\\")[-1][4:] +
                           " Compiled Periodogram", fontsize=40, y=1.02)
                 out_name = os.path.join(
-                    o_dir, fname.split("\\")[-1] + "_p.png")
+                    ro_dir, fname.split("\\")[-1] + "_p.png")
         make_path_if_not_exists(out_name)
         bv_plot.savefig(fig, out_name)
         plt.close()
@@ -703,7 +845,11 @@ def main(fname, out_main_dir, config):
                 filt, filt_btm, filt_top), artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
             legend = []
             lfp_list1, lfp_list2 = [], []
-            if not Pre:
+            if Pre:
+                lfp_list1 = lfp_odict.get_clean_signal(0)
+                lfp_list2 = lfp_odict.get_clean_signal(1)
+                sch_name = ["Pre"]
+            else:
                 blocks_re = []
                 sch_name = []
                 gm_sch = bv_plot.GroupManager(list(sch_type))
@@ -720,10 +866,65 @@ def main(fname, out_main_dir, config):
                         legend.append("{}-FI".format(k))
                     # lfp_list1.append(new_lfp1)
                     # lfp_list2.append(new_lfp2)
-            else:
-                lfp_list1 = lfp_odict.get_clean_signal(0)
-                lfp_list2 = lfp_odict.get_clean_signal(1)
-                sch_name = ["Pre"]
+
+                # Description of alignment
+                # 0 - Align to reward
+                # 1 - Align to pellet drop
+                # 2 - Align to FI
+                # 3 - Align to First Response
+                # 4 - Align to Double Reward
+                # 5 - Align to Tone
+                # if all 0, plots from start of trial
+
+                # alignment = [0, 0, 0, 0, 0, 0]
+
+                trial_df = s.get_valid_tdf()
+                # trial_df = s.get_trial_df()
+
+                if alignment[0]:
+                    align_df = trial_df['Reward_ts']
+                    align_txt = "Reward"
+                    t_win = [-5, 5]  # Set time window for plotting from reward
+                elif alignment[1]:
+                    align_df = trial_df['Pellet_ts']
+                    align_txt = "Pell"
+                    t_win = [-10, 5]  # Set time window for plotting from pell
+                elif alignment[2]:
+                    align_df = trial_df['Reward_ts']
+                    # Exclude first and last trial
+                    align_df = align_df[1:-1].add(30)
+                    # Set time window for plotting from interval
+                    t_win = [-30, 5]
+                    align_txt = "Interval"
+                elif alignment[3]:
+                    align_df = trial_df['First_response']
+                    align_txt = "FResp"
+                    t_win = [-5, 5]  # Set time window for plotting from FResp
+                elif alignment[4]:
+                    align_df = trial_df['D_Pellet_ts']
+                    align_txt = "DPell"
+                    t_win = [-30, 5]  # Set time window for plotting from dpell
+                elif alignment[5]:
+                    align_df = s.get_tone_starts() + 5
+                    align_txt = "Tone"
+                    t_win = [-10, 25]  # Set time window for plotting from tone
+                else:  # Start aligned
+                    align_df = trial_df['Trial_s']
+                    align_txt = "Start"
+                    t_win = [-5, 5]
+                quiv_x = 0.5
+                t_sch = trial_df['Schedule']
+                trials = []
+
+                # Generate n by 2 list of timestamps corresponding to window selected
+                for t, ts in enumerate(align_df):
+                    if not ts:  # To skip empty ts (eg. double pellet only)
+                        continue
+                    elif (ts + t_win[0]) < 0:
+                        trials.append([ts[0], t_win[1]])
+                        print('t_win less than trial {} start'.format(t))
+                    else:
+                        trials.append([ts[0] + t_win[0], ts[0] + t_win[1]])
 
             # Test full wcohere using axis lims to plot
             an_name = 'wcohere'
@@ -735,96 +936,7 @@ def main(fname, out_main_dir, config):
             lfp1 = lfp_odict.get_clean_signal(0)
             lfp2 = lfp_odict.get_clean_signal(1)
 
-            # Description of alignment
-            # 0 - Align to reward
-            # 1 - Align to pellet drop
-            # 2 - Align to FI
-            # 3 - Align to First Response
-            # 4 - Align to Double Reward
-            # 5 - Align to Tone
-            # if all 0, plots from start of trial
-
-            # alignment = [0, 0, 0, 0, 0, 0]
-
-            trial_df = s.get_valid_tdf()
-            # trial_df = s.get_trial_df()
-
-            if alignment[0]:
-                align_df = trial_df['Reward_ts']
-                align_txt = "Reward"
-                t_win = [-10, 10]  # Set time window for plotting from reward
-                quiv_x = 0.2
-            elif alignment[1]:
-                align_df = trial_df['Pellet_ts']
-                align_txt = "Pell"
-                t_win = [-10, 5]  # Set time window for plotting from pell
-                quiv_x = 0.2
-            elif alignment[2]:
-                align_df = trial_df['Reward_ts']
-                # Exclude first and last trial
-                align_df = align_df[1:-1].add(30)
-                t_win = [-30, 5]  # Set time window for plotting from interval
-                align_txt = "Interval"
-                quiv_x = 0.5
-            elif alignment[3]:
-                align_df = trial_df['First_response']
-                align_txt = "FResp"
-                t_win = [-10, 5]  # Set time window for plotting from pell
-                quiv_x = 0.2
-            elif alignment[4]:
-                align_df = trial_df['D_Pellet_ts']
-                align_txt = "DPell"
-                t_win = [-30, 5]  # Set time window for plotting from dpell
-                quiv_x = 0.5
-            elif alignment[5]:
-                align_df = s.get_tone_starts() + 5
-                align_txt = "Tone"
-                t_win = [-10, 25]  # Set time window for plotting from tone
-                quiv_x = 0.5
-            else:  # Start aligned
-                align_df = trial_df['Trial_s']
-                align_txt = "Start"
-                t_win = None
-                quiv_x = 0.5
-            t_sch = trial_df['Schedule']
-            trials = []
-            t_duration = []
-
-            for t, ts in enumerate(align_df):
-                if t_win:
-                    if not ts:  # To skip empty ts (eg. double pellet only)
-                        continue
-                    else:
-                        trials.append([ts + t_win[0], ts + t_win[1]])
-                elif align_txt == "Start":
-                    # Time window for start based plotting set here
-                    t_win = [0, 40]
-                    if t == 0:
-                        trials.append([0, t_win[1]])
-                    else:
-                        trials.append([ts[t - 1], ts + t_win[1]])
-                else:  # Obtains start and end trial times in a list
-                    if t == 0:  # From start of trial
-                        trials.append([0, ts])
-                        t_duration.append(ts)
-                    else:
-                        # Appends [start end] of each trial
-                        trials.append([align_df[t - 1], ts])
-                        t_duration.append(ts - align_df[t - 1])
-
-            # get_dist(t_duration, plot=True)
-            # trials = [[0, 60], [60, 120]]
-
-            fig, ax = plt.subplots(figsize=(24, 10))
-
-            # from bvmpc.lfp_coherence import plot_wave_coherence
-            # _, result = plot_wave_coherence(
-            #     lfp1.get_samples(
-            #     ), lfp2.get_samples(), lfp1.get_timestamp(),
-            #     plot_arrows=True, plot_coi=False, resolution=12,
-            #     plot_period=False, all_arrows=False, ax=ax, quiv_x=quiv_x)
-
-            from bvmpc.lfp_coherence import calc_wave_coherence, plot_wcohere, plot_arrows
+            from bvmpc.lfp_coherence import calc_wave_coherence, plot_wcohere, plot_arrows, zero_lag_wcohere
             import pickle
 
             # Pickle wcohere_results for faster performance
@@ -844,34 +956,42 @@ def main(fname, out_main_dir, config):
                 pickle.dump(wcohere_results, open(pickle_name, "wb"))
                 print('Saving pickle wcohere_results to', pickle_name)
 
-            _, wcohere_pvals = plot_wcohere(*wcohere_results[:3], ax=ax)
+            # Apply mask to WCT based on phase lag threshold in ms
+            zlag = True
+            if zlag:
+                _, t, freq, _, _, aWCT = wcohere_results
+                zlag_mask = zero_lag_wcohere(aWCT, freq, thres=2)
+            else:
+                zlag_mask = None
 
-            # TODO Finish single frequency extraction
-            # # Extract wcohere of target frequency
-            # target_freq = 8
-            # WCT, t, freq, coi, sig, aWCT = wcohere_results
-            # freq_idx = np.where(np.round(freq, decimals=1) == target_freq)
-            # t_freq_wcohere = np.empty((len(trials), np.diff(t_win)[0]*250))
-            # print('min phase: ', np.nanmin(np.abs(aWCT)))
-            # print('max phase: ', np.nanmax(np.abs(aWCT)))
+            # Initialize full Wavelet Coherence figure
+            fig = plt.figure(figsize=(24, 15))
+            from matplotlib.gridspec import GridSpec
+            gs = GridSpec(2, 2, width_ratios=[100, 1], wspace=0.1)
+            r_ax = fig.add_subplot(gs[0, :-1])
+            ax = fig.add_subplot(gs[1, :-1])
+            cax = fig.add_subplot(gs[1, -1])
 
-            # fig, ax = plt.subplots()
-            # print(trial_df)
-            # for i, (a, b) in enumerate(trials):
-            #     print(i,  int(a*250), int(b*250))
-            #     t_freq_wcohere[i, :] = WCT[freq_idx, int(a*250):int(b*250)]
-            # t_freq_df = pd.DataFrame(
-            #     t_freq_wcohere, columns=np.arange(*t_win, 1/250))
-            # t_freq_df['Schedule'] = trial_df['Schedule']
-            # sns.lineplot(x="columns", y="index", data=t_freq_df, ax=ax,
-            #              hue=trial_df['Schedule'])
-            # plt.show()
-            # exit(-1)
+            # from bvmpc.lfp_coherence import plot_wave_coherence
+            # _, result = plot_wave_coherence(
+            #     lfp1.get_samples(
+            #     ), lfp2.get_samples(), lfp1.get_timestamp(),
+            #     plot_arrows=True, plot_coi=False, resolution=12,
+            #     plot_period=False, all_arrows=False, ax=ax, quiv_x=quiv_x)
+
+            _, wcohere_pvals = plot_wcohere(
+                *wcohere_results[:3], ax=ax, mask=zlag_mask, cax=cax)
+
+            # Plot raw signal
+            sns.lineplot(lfp1.get_timestamp(),
+                         lfp1.get_samples(), ci=None, ax=r_ax, label=reg_sel[0], linewidth=1)
+            sns.lineplot(lfp2.get_timestamp(),
+                         lfp2.get_samples(), ci=None, ax=r_ax, label=reg_sel[1], linewidth=1)
 
             # Plot customization params
-            plt.tick_params(labelsize=20)
-            ax.xaxis.label.set_size(25)
-            ax.yaxis.label.set_size(25)
+            plt.tick_params(labelsize=15)
+            ax.xaxis.label.set_size(15)
+            ax.yaxis.label.set_size(15)
 
             if behav:
                 # Plot behav timepoints
@@ -889,7 +1009,14 @@ def main(fname, out_main_dir, config):
             title = ("{} vs {} Wavelet Coherence ".format(
                 reg_sel[0], reg_sel[1]))
 
+            # Save fig for whole wcohere
+            if Pre:
+                plot_arrows(ax, wcohere_pvals, wcohere_results[-1], quiv_x=2.5)
+                whol_name = out_name + ".png"
+                bv_plot.savefig(fig, whol_name)
+
             p_blocks = bool(int(config.get("Wavelet", "p_blocks")))
+            # Save wcohere plot in blocks
             if p_blocks:
                 plot_arrows(ax, wcohere_pvals, wcohere_results[-1], quiv_x=5)
                 b_out_name = os.path.join(
@@ -907,28 +1034,129 @@ def main(fname, out_main_dir, config):
                     # bv_plot.savefig(fig1, o_name)
                 plt.close(fig1)
 
+            # plot mean of coherence & phase across freqs comparing schedules
+            p_blocks_dist = False
+            if p_blocks_dist:
+                WCT, t, freq, _, _, aWCT = wcohere_results
+                FR_WCT, FR_aWCT, FI_WCT, FI_aWCT = [], [], [], []
+
+                plt.close(fig)
+                for b, ((b_start, b_end), sch) in enumerate(zip(blocks_re, sch_name)):
+                    start_idx = np.searchsorted(t, b_start)
+                    end_idx = np.searchsorted(t, b_end)
+                    curr_WCT = WCT[:, start_idx:end_idx]
+                    curr_aWCT = aWCT[:, start_idx:end_idx]
+                    if sch == 'FR':
+                        FR_WCT.append(curr_WCT)
+                        FR_aWCT.append(curr_aWCT)
+                    elif sch == 'FI':
+                        FI_WCT.append(curr_WCT)
+                        FI_aWCT.append(curr_aWCT)
+                dist_dict = {'FR_WCT': FR_WCT, 'FR_aWCT': FR_aWCT,
+                             'FI_WCT': FI_WCT, 'FI_aWCT': FI_aWCT}
+                for (key, val) in dist_dict.items():
+                    dist_dict[key] = np.hstack((val))
+
+                dist_fig, dist_ax = plt.subplots(
+                    2, 1, figsize=(8, 8), sharex=True)
+                WCT_ls, aWCT_ls = [], []
+                for key, val in dist_dict.items():
+                    print(key[3:])
+                    # mean = np.mean(val, axis=1)
+                    data = pd.DataFrame(val)
+                    data['Sch'] = key[:2]
+                    data['Frequency'] = freq
+                    if key[3:] == 'WCT':
+                        WCT_ls.append(data)
+                    elif key[3:] == 'aWCT':
+                        aWCT_ls.append(data)
+
+                WCT_df = pd.melt(pd.concat(
+                    WCT_ls), id_vars=['Sch', 'Frequency'])
+                sns.lineplot(
+                    x='Frequency', y='value', data=WCT_df, hue='Sch', ax=dist_ax[0], ci='sd')
+                aWCT_df = pd.melt(pd.concat(
+                    aWCT_ls), id_vars=['Sch', 'Frequency'])
+                sns.lineplot(
+                    x='Frequency', y='value', data=aWCT_df, hue='Sch', ax=dist_ax[1], ci='sd')
+                dist_ax[0].set_title(
+                    '{}vs{} Mean Coherence'.format(reg_sel[0], reg_sel[1]))
+                dist_ax[1].set_title(
+                    '{}vs{} Mean Phase'.format(reg_sel[0], reg_sel[1]))
+
+                from matplotlib.ticker import ScalarFormatter
+                for ax_curr in dist_ax:
+                    ax_curr.set_xscale('log', basex=2)
+                    ax_curr.xaxis.set_major_formatter(ScalarFormatter())
+                    ax_curr.set_xticks([64, 32, 16, 8, 4, 2, 1])
+
+                dist_ax[0].set_ylim([0, 1])
+                dist_ax[0].set_ylabel('Coherence')
+                dist_ax[1].set_ylim([-np.pi, np.pi])
+                dist_ax[1].set_ylabel('Phase Angle (rads)')
+                o_name = out_name + "_dist.png"
+                make_path_if_not_exists(o_name)
+
+                print("Saving result to {}".format(o_name))
+                dist_fig.savefig(o_name, dpi=150)
+
             p_trials = bool(int(config.get("Wavelet", "p_trials")))
+            # Save wcohere plot in trials
             if p_trials:
                 plot_arrows(ax, wcohere_pvals,
-                            wcohere_results[-1], quiv_x=0.5)
+                            wcohere_results[-1], quiv_x=0.3)
                 tr_out_name = os.path.join(
                     wo_dir, "Trials", os.path.basename(out_name))
-                for t, ((b_start, b_end), sch) in enumerate(zip(trials, t_sch)):
-                    fig1, a1 = fig, ax
-                    a1.set_xlim(b_start, b_end)
+                plot_df = s.get_trial_df()
+                for t, (t_start, t_end, sch) in enumerate(zip(plot_df['Trial_s'], plot_df['Pellet_ts'], plot_df['Schedule'])):
+                    fig1, a1, a2 = fig, ax, r_ax
+                    # Standardize window of trial displayed with reference to pell_ts
+                    win = [-20, 10]
+                    a1.set_xlim([t_end + win[0], t_end + win[1]])
+                    a2.set_xlim([t_end + win[0], t_end + win[1]])
+                    name = '{}_Tr{}.png'.format(
+                        tr_out_name[:-4], t + 1)
+                    make_path_if_not_exists(name)
+                    a1.set_title("{}Tr{} {}".format(title, str(t), sch),
+                                 fontsize=20, y=1.01)
+                    a2.set_title("Raw Trace Tr{} {}".format(str(t), sch),
+                                 fontsize=20, y=1.01)
+                    print("Saving result to {}".format(name))
+                    fig1.savefig(name, dpi=150)
+                    # bv_plot.savefig(fig1, name)
+                plt.close(fig1)
+
+            # Trial based wcohere zoomed to +- 5s from pellet
+            p_trials_pell = False
+            if p_trials_pell:
+                plot_arrows(ax, wcohere_pvals,
+                            wcohere_results[-1], quiv_x=0.1)
+                tr_out_name = os.path.join(
+                    wo_dir, "Trials_Pell", os.path.basename(out_name))
+                plot_df = s.get_trial_df()
+                for t, (t_start, t_end, sch) in enumerate(zip(plot_df['Trial_s'], plot_df['Pellet_ts'], plot_df['Schedule'])):
+                    fig1, a1, a2 = fig, ax, r_ax
+                    # Standardize window of trial displayed with reference to pell_ts
+                    win = [-5, 5]
+                    # win = [-20, 10]
+                    a1.set_xlim([t_end + win[0], t_end + win[1]])
+                    a2.set_xlim([t_end + win[0], t_end + win[1]])
                     name = '{}_Tr{}.png'.format(
                         tr_out_name[:-4], t + 1)
                     make_path_if_not_exists(name)
                     a1.set_title("{}Tr{} {}".format(title, str(t), sch),
                                  fontsize=30, y=1.01)
+                    a2.set_title("Raw Trace",
+                                 fontsize=30, y=1.01)
                     print("Saving result to {}".format(name))
                     fig1.savefig(name, dpi=150)
                     # bv_plot.savefig(fig1, name)
-                    plt.close(fig1)
+                plt.close(fig1)
 
             p_wcohere_mean = bool(int(config.get("Wavelet", "p_wcohere_mean")))
             split_sch = bool(int(config.get("Wavelet", "split_sch")))
-            if p_wcohere_mean:  # Plot average coherence across t_blocks
+            # Plot average coherence across t_blocks
+            if p_wcohere_mean:
                 t_block_list, t_block_sch, fr_blocks, fi_blocks = [], [], [], []
                 if split_sch:
                     for i, (sch, block) in enumerate(zip(t_sch, trials)):
@@ -975,10 +1203,36 @@ def main(fname, out_main_dir, config):
 
                     bv_plot.savefig(fig, o_name)
 
+            target_freq = int(config.get("Wavelet", "target_freq"))
+            if target_freq != 0:
+                plot = True
+                dist = True
+                # Single frequency extraction of wcohere
+                from bvmpc.lfp_coherence import plot_single_freq_wcohere
+                t_WCT_df, tf_fig, tf_fig2 = plot_single_freq_wcohere(
+                    target_freq, *wcohere_results[:3], wcohere_results[-1], trials, t_win, trial_df, align_txt, s, reg_sel, plot=plot, sort=False, dist=dist)
+                tfreq_out_name = os.path.join(
+                    wo_dir, "{}Hz".format(target_freq), os.path.basename(out_name))
 
-def main_entry(config_name):
+                if tf_fig is not None:
+                    o_name = tfreq_out_name + \
+                        "{}Hz_{}.png".format(target_freq, align_txt)
+                    make_path_if_not_exists(o_name)
+                    bv_plot.savefig(tf_fig, o_name)
+                if tf_fig2 is not None:
+                    o_name = tfreq_out_name + \
+                        "{}Hz_{}_dist.png".format(target_freq, align_txt)
+                    make_path_if_not_exists(o_name)
+                    bv_plot.savefig(tf_fig2, o_name)
+
+
+def main_entry(config_name, base_dir=None, dummy=False, interactive=False):
+    """Batch files to use based on the config file passed."""
     here = os.path.dirname(os.path.realpath(__file__))
-    config_path = os.path.join(here, "Configs", "LFP", config_name)
+    if not os.path.isfile(config_name):
+        config_path = os.path.join(here, "Configs", "LFP", config_name)
+    else:
+        config_path = config_name
     config = read_cfg(config_path)
 
     in_dir = config.get("Setup", "in_dir")
@@ -987,8 +1241,20 @@ def main_entry(config_name):
     out_main_dir = config.get("Setup", "out_dir")
     if out_main_dir == "":
         out_main_dir = in_dir
-    regex_filter = config.get("Setup", "regex_filter")
-    regex_filter = None if regex_filter == "None" else regex_filter
+    if base_dir is not None:
+        in_dir = base_dir + in_dir[len(base_dir):]
+        out_main_dir = base_dir + out_main_dir[len(out_main_dir):]
+
+    if interactive:
+        print("Starting interactive regex console:")
+        regex_filter = interactive_refilt(
+            in_dir, ext=".eeg", write=True, write_loc=config_path)
+    else:
+        regex_filter = config.get("Setup", "regex_filter")
+        regex_filter = None if regex_filter == "None" else regex_filter
+
+    print("Automatically obtaining {} files from {} matching {}".format(
+        ".eeg", in_dir, regex_filter))
     filenames = get_all_files_in_dir(
         in_dir, ext=".eeg", recursive=True,
         verbose=True, re_filter=regex_filter)
@@ -999,11 +1265,47 @@ def main_entry(config_name):
         exit(-1)
 
     for fname in filenames:
-        main(fname, out_main_dir, config)
+        if dummy:
+            print("Would run on {}".format(fname))
+        else:
+            print("Running on {}".format(fname))
+            out_main_dir = os.path.dirname(fname)
+            main(fname, out_main_dir, config)
 
 
 if __name__ == "__main__":
+    """Setup which config file(s) to use and run."""
+    # Use this to do batching ATM
+    # for i in np.arange(3, 7):
+    #     config_name = "CAR-SA{}.cfg".format(i)
+    #     main_entry(config_name)
+
+    # Use this for single runs without providing cmd line arg
     # config_name = "Eoin.cfg"
     # config_name = "CAR-SA2.cfg"
-    config_name = "Batch_3.cfg"
-    main_entry(config_name)
+    # config_name = "Batch_3.cfg"
+    i = 5
+    config_name = "CAR-SA{}.cfg".format(i)
+
+    # Can parse command line args
+    parser = argparse.ArgumentParser(
+        description="Arguments passable via command line:")
+    parser.add_argument(
+        "-c", "--config", type=str, default=config_name, required=False,
+        help="The name of the config file in configs/LFP OR path to cfg.")
+    parser.add_argument(
+        "-d", "--dummy", action="store_true", required=False,
+        help="If this flag is present, only prints the files that would be run."
+    )
+    parser.add_argument(
+        "-b", "--basedir", type=str, default=None, required=False,
+        help="Replace the base directory in config file with this.")
+    parser.add_argument(
+        "-i", "--interactive", action="store_true", required=False,
+        help="Run an interactive console to select a regex filter set.")
+    parsed = parse_args(parser, verbose=True)
+
+    # Actually run here
+    main_entry(
+        parsed.config, base_dir=parsed.basedir, dummy=parsed.dummy,
+        interactive=parsed.interactive)
