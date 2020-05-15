@@ -6,13 +6,13 @@ def read(fname):
 
 
 DESCRIPTION = "bvmpc: Behavioural Med-PC analysis"
-LONG_DESCRIPTION = """bvmpc is a set of Med-PC behavioural analysis code written by Sean Martin and Gao Xiang Ham.
-"""
+LONG_DESCRIPTION = read("README.md")
 
 DISTNAME = 'bvmpc'
 MAINTAINER = 'Sean Martin and Gao Xiang Ham'
 MAINTAINER_EMAIL = 'martins7@tcd.ie'
 URL = 'https://github.com/seankmartin/neuro-tools'
+# TODO change to a release
 DOWNLOAD_URL = 'https://github.com/seankmartin/neuro-tools'
 VERSION = '0.1.0'
 
@@ -38,8 +38,8 @@ CLASSIFIERS = [
     'Topic :: Scientific/Engineering :: Mathematics',
     'Operating System :: POSIX',
     'Operating System :: Unix',
-    'Operating System :: MacOS',
-    'Operating System :: Windows'
+    'Operating System :: Microsoft :: Windows',
+    'License :: OSI Approved :: GNU General Public License v3 (GPLv3)'
 ]
 
 try:
@@ -57,7 +57,7 @@ if __name__ == "__main__":
           maintainer_email=MAINTAINER_EMAIL,
           description=DESCRIPTION,
           long_description=LONG_DESCRIPTION,
-          license=read('LICENSE'),
+          long_description_content_type="text/markdown",
           url=URL,
           version=VERSION,
           download_url=DOWNLOAD_URL,
