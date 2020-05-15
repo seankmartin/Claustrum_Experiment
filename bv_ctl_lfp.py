@@ -166,15 +166,18 @@ def main(fname, out_main_dir, config):
             if ch_names is None:
                 ch_names = [lfp_odict.lfp_odict.keys()]
             ch_names = regions
-            print(ch_names)
             sfreq = example_lfp.get_sampling_rate()
             info = mne.create_info(
                 ch_names=ch_names, sfreq=sfreq, ch_types="eeg")
+
+            # MNE expects LFP data to be in Volts.
+            # Neurochat stores LFP in mV
+            data = data / 1000
             raw = mne.io.RawArray(data, info)
 
-            cont = input("Show raw mne info? (y|n) \n")
-            if cont.strip().lower() == "y":
-                print(raw.info)
+            # cont = input("Show raw mne info? (y|n) \n")
+            # if cont.strip().lower() == "y":
+            #     print(raw.info)
 
             # Plot raw signal
             raw.plot(
