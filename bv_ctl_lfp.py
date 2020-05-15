@@ -84,8 +84,8 @@ def main(fname, out_main_dir, config):
         lfp_list.append(lfp_odict)
 
     # Compute ICA
-    ICA = False
-    if ICA:
+    do_ICA = False
+    if do_ICA:
         from sklearn.decomposition import FastICA
         for lfp_odict in lfp_list:
             ori_keys, ori_lfp_list = [], []
@@ -166,6 +166,7 @@ def main(fname, out_main_dir, config):
             if ch_names is None:
                 ch_names = [lfp_odict.lfp_odict.keys()]
             ch_names = regions
+            print(ch_names)
             sfreq = example_lfp.get_sampling_rate()
             info = mne.create_info(
                 ch_names=ch_names, sfreq=sfreq, ch_types="eeg")
@@ -175,12 +176,51 @@ def main(fname, out_main_dir, config):
             if cont.strip().lower() == "y":
                 print(raw.info)
 
-            # Do the actual plot
+            # Plot raw signal
             raw.plot(
                 n_channels=len(lfp_odict), block=True,
                 show=True, clipping="clamp",
                 title="LFP Data from {}".format(out_name),
                 remove_dc=False, scalings="auto")
+
+            # Perform ICA using mne
+            from mne.preprocessing import ICA
+            filt_raw = raw.copy()
+            filt_raw.load_data().filter(l_freq=1., h_freq=None)
+            ica = ICA(random_state=97)
+            ica.fit(filt_raw)
+
+            raw.load_data()
+            # Plot raw ICAs
+            print('Select channels to exclude using this plot...')
+            ica.plot_sources(
+                raw, block=True, title='ICA from {}'.format(out_name))
+
+            # ICAs to exclude
+            # ica.exclude = [4, 6, 12]
+
+            # Overlay ICA cleaned signal over raw. Seperate plot for each region.
+            # TODO Add scroll bar or include window selection option.
+            reg_grps = []
+            for reg in set(regions):
+                temp_grp = []
+                for ch in raw.info.ch_names:
+                    if reg in ch:
+                        temp_grp.append(ch)
+                reg_grps.append(temp_grp)
+            for grps in reg_grps:
+                ica.plot_overlay(raw, title='{}'.format(
+                    grps[0][:-2]), picks=grps)
+
+            # Apply ICA exclusion
+            reconst_raw = raw.copy()
+            ica.apply(reconst_raw)
+
+            # Plot reconstructed signals w/o excluded ICAs
+            reconst_raw.plot(block=True, show=True, clipping="clamp",
+                             title="Reconstructed LFP Data from {}".format(
+                                 out_name),
+                             remove_dc=False, scalings="auto")
 
         lfp_odict = LfpODict(
             fname, channels=chans,
