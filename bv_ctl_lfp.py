@@ -109,35 +109,38 @@ def main(fname, out_main_dir, config):
             # Plotting parameters
             win_s, win_e = 0, int(30*250)
             lw = 0.5
+            rows, cols = n_chans, 1
+            OR_gf = bv_plot.GridFig(rows, cols)  # Origi/Recon Figure
+            IC_gf = bv_plot.GridFig(rows, cols)  # ICA Figure
             for i, (key, ori, decom, recon) in enumerate(zip(ori_keys, X.T, S_.T, N_.T), 1):
-                plt.subplot(n_chans, 2, i*2-1)
-                plt.plot(lfp_ts[win_s:win_e], ori[win_s:win_e], lw=lw,
-                         label="T{}".format(key), c='b')
-                plt.plot(lfp_ts[win_s:win_e], recon[win_s:win_e], lw=lw,
-                         label='rT{}'.format(i), c='hotpink')
+                OR_ax = OR_gf.get_next()
+                OR_ax.plot(lfp_ts[win_s:win_e], ori[win_s:win_e], lw=lw,
+                           label="T{}".format(key), c='b')
+                OR_ax.plot(lfp_ts[win_s:win_e], recon[win_s:win_e], lw=lw,
+                           label='rT{}'.format(i), c='hotpink')
                 if i == 1:
-                    plt.title('Original/Reconstructed Trace')
-                plt.legend(fontsize=8, loc='upper left')
-                plt.xlabel('Time (s)')
+                    OR_gf.fig.suptitle('Original/Reconstructed Trace')
+                OR_ax.legend(fontsize=8, loc='upper left')
+                OR_ax.set_xlabel('Time (s)')
 
                 # highlight removed IC in red
                 if i in remove_IC_list:
                     c = 'r'
                 else:
                     c = 'k'
-                plt.subplot(n_chans, 2, i*2)
-                plt.plot(lfp_ts[win_s:win_e], decom[win_s:win_e], lw=lw,
-                         label='IC{}'.format(i), c=c)
-                plt.legend(fontsize=8, loc='upper left')
+                IC_ax = IC_gf.get_next()
+                IC_ax.plot(lfp_ts[win_s:win_e], decom[win_s:win_e], lw=lw,
+                           label='IC{}'.format(i), c=c)
+                IC_ax.legend(fontsize=8, loc='upper left')
                 if i == 1:
-                    plt.title('Independent Components')
+                    IC_gf.fig.suptitle('Independent Components')
 
                 # plt.subplot(n_chans, 3, i*3)
                 # plt.plot(recon[win_s:win_e], lw=lw, label='rT{}'.format(i))
                 # plt.legend(fontsize=8, loc='upper left')
                 # if i == 1:
                 #     plt.title('Reconstructed Trace')
-                plt.xlabel('Time (s)')
+                IC_ax.set_xlabel('Time (s)')
             plt.show()
 
     if "Pre" in fname:
