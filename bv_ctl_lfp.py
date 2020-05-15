@@ -2,6 +2,7 @@ import os
 import math
 import json
 from datetime import date, timedelta, datetime
+import argparse
 
 import numpy as np
 import seaborn as sns
@@ -17,7 +18,7 @@ from bvmpc.bv_utils import make_dir_if_not_exists, print_h5, mycolors
 from bvmpc.bv_utils import daterange, split_list, get_all_files_in_dir
 from bvmpc.bv_utils import log_exception, chunks, save_dict_to_csv
 from bvmpc.bv_utils import make_path_if_not_exists, read_cfg, parse_args
-from bvmpc.bv_utils import get_dist
+from bvmpc.bv_utils import get_dist, interactive_refilt
 from bvmpc.bv_session_extractor import SessionExtractor
 from bvmpc.bv_session import Session
 from bvmpc.lfp_odict import LfpODict
@@ -61,6 +62,7 @@ def main(fname, out_main_dir, config):
     filt = bool(int(config.get("Setup", "filt")))
     filt_btm = float(config.get("Setup", "filt_btm"))
     filt_top = float(config.get("Setup", "filt_top"))
+    filt_params = (filt, filt_btm, filt_top)
 
     artf = bool(int(config.get("Artefact Params", "artf")))
     sd_thres = float(config.get("Artefact Params", "sd_thres"))
@@ -70,18 +72,19 @@ def main(fname, out_main_dir, config):
         rep_freq = None
     else:
         rep_freq = float(config.get("Artefact Params", "rep_freq"))
+    artf_params = (artf, sd_thres, min_artf_freq, rep_freq, filt)
 
     # Split the LFP signals into chunked sets of size 16
     lfp_list = []
-    for chans in chunks(chans, 16):
+    for chan_set in chunks(chans, 16):
         lfp_odict = LfpODict(
-            fname, channels=chans,
+            fname, channels=chan_set,
             filt_params=(filt, filt_btm, filt_top),
             artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
         lfp_list.append(lfp_odict)
 
     # Compute ICA
-    ICA = True
+    ICA = False
     if ICA:
         from sklearn.decomposition import FastICA
         for lfp_odict in lfp_list:
@@ -103,11 +106,11 @@ def main(fname, out_main_dir, config):
             remove_IC_list = [1, 2, 5, 6, 7, 8, 10, 11]
             rS_ = deepcopy(S_)
             if len(remove_IC_list) > 0:
-                rS_[:, [x-1 for x in remove_IC_list]] = 0
+                rS_[:, [x - 1 for x in remove_IC_list]] = 0
             N_ = ica.inverse_transform(rS_, copy=True)
 
             # Plotting parameters
-            win_s, win_e = 0, int(30*250)
+            win_s, win_e = 0, int(30 * 250)
             lw = 0.5
             rows, cols = n_chans, 1
             OR_gf = bv_plot.GridFig(rows, cols)  # Origi/Recon Figure
@@ -142,6 +145,49 @@ def main(fname, out_main_dir, config):
                 #     plt.title('Reconstructed Trace')
                 IC_ax.set_xlabel('Time (s)')
             plt.show()
+
+    # TODO temporary location to test MNE
+    do_mne = True
+    if do_mne:
+        import mne
+
+        def mne_example(lfp_odict, ch_names=None, out_name=""):
+
+            # Extract LFPs from the odict
+            ori_keys, ori_lfp_list = [], []
+            for key, lfp in lfp_odict.get_filt_signal().items():
+                ori_lfp_list.append(lfp.get_samples())
+                ori_keys.append(key)
+            data = np.array(ori_lfp_list, float)
+            example_lfp = lfp_odict.get_filt_signal(key=1)
+            lfp_ts = example_lfp.get_timestamp()
+
+            # Convert that data into mne format
+            if ch_names is None:
+                ch_names = [lfp_odict.lfp_odict.keys()]
+            ch_names = regions
+            sfreq = example_lfp.get_sampling_rate()
+            info = mne.create_info(
+                ch_names=ch_names, sfreq=sfreq, ch_types="eeg")
+            raw = mne.io.RawArray(data, info)
+
+            cont = input("Show raw mne info? (y|n) \n")
+            if cont.strip().lower() == "y":
+                print(raw.info)
+
+            # Do the actual plot
+            raw.plot(
+                n_channels=len(lfp_odict), block=True,
+                show=True, clipping="clamp",
+                title="LFP Data from {}".format(out_name),
+                remove_dc=False, scalings="auto")
+
+        lfp_odict = LfpODict(
+            fname, channels=chans,
+            filt_params=filt_params, artf_params=artf_params)
+        ch_names = regions
+        out_name = os.path.basename(fname)
+        mne_example(lfp_odict, ch_names=ch_names, out_name=out_name)
 
     if "Pre" in fname:
         behav = False
@@ -877,7 +923,7 @@ def main(fname, out_main_dir, config):
                 for t, ts in enumerate(align_df):
                     if not ts:  # To skip empty ts (eg. double pellet only)
                         continue
-                    elif (ts+t_win[0]) < 0:
+                    elif (ts + t_win[0]) < 0:
                         trials.append([ts[0], t_win[1]])
                         print('t_win less than trial {} start'.format(t))
                     else:
@@ -1069,8 +1115,8 @@ def main(fname, out_main_dir, config):
                     fig1, a1, a2 = fig, ax, r_ax
                     # Standardize window of trial displayed with reference to pell_ts
                     win = [-20, 10]
-                    a1.set_xlim([t_end+win[0], t_end+win[1]])
-                    a2.set_xlim([t_end+win[0], t_end+win[1]])
+                    a1.set_xlim([t_end + win[0], t_end + win[1]])
+                    a2.set_xlim([t_end + win[0], t_end + win[1]])
                     name = '{}_Tr{}.png'.format(
                         tr_out_name[:-4], t + 1)
                     make_path_if_not_exists(name)
@@ -1096,8 +1142,8 @@ def main(fname, out_main_dir, config):
                     # Standardize window of trial displayed with reference to pell_ts
                     win = [-5, 5]
                     # win = [-20, 10]
-                    a1.set_xlim([t_end+win[0], t_end+win[1]])
-                    a2.set_xlim([t_end+win[0], t_end+win[1]])
+                    a1.set_xlim([t_end + win[0], t_end + win[1]])
+                    a2.set_xlim([t_end + win[0], t_end + win[1]])
                     name = '{}_Tr{}.png'.format(
                         tr_out_name[:-4], t + 1)
                     make_path_if_not_exists(name)
@@ -1183,9 +1229,13 @@ def main(fname, out_main_dir, config):
                     bv_plot.savefig(tf_fig2, o_name)
 
 
-def main_entry(config_name):
+def main_entry(config_name, base_dir=None, dummy=False, interactive=False):
+    """Batch files to use based on the config file passed."""
     here = os.path.dirname(os.path.realpath(__file__))
-    config_path = os.path.join(here, "Configs", "LFP", config_name)
+    if not os.path.isfile(config_name):
+        config_path = os.path.join(here, "Configs", "LFP", config_name)
+    else:
+        config_path = config_name
     config = read_cfg(config_path)
 
     in_dir = config.get("Setup", "in_dir")
@@ -1194,8 +1244,20 @@ def main_entry(config_name):
     out_main_dir = config.get("Setup", "out_dir")
     if out_main_dir == "":
         out_main_dir = in_dir
-    regex_filter = config.get("Setup", "regex_filter")
-    regex_filter = None if regex_filter == "None" else regex_filter
+    if base_dir is not None:
+        in_dir = base_dir + in_dir[len(base_dir):]
+        out_main_dir = base_dir + out_main_dir[len(out_main_dir):]
+
+    if interactive:
+        print("Starting interactive regex console:")
+        regex_filter = interactive_refilt(
+            in_dir, ext=".eeg", write=True, write_loc=config_path)
+    else:
+        regex_filter = config.get("Setup", "regex_filter")
+        regex_filter = None if regex_filter == "None" else regex_filter
+
+    print("Automatically obtaining {} files from {} matching {}".format(
+        ".eeg", in_dir, regex_filter))
     filenames = get_all_files_in_dir(
         in_dir, ext=".eeg", recursive=True,
         verbose=True, re_filter=regex_filter)
@@ -1206,18 +1268,47 @@ def main_entry(config_name):
         exit(-1)
 
     for fname in filenames:
-        out_main_dir = os.path.dirname(fname)
-        main(fname, out_main_dir, config)
+        if dummy:
+            print("Would run on {}".format(fname))
+        else:
+            print("Running on {}".format(fname))
+            out_main_dir = os.path.dirname(fname)
+            main(fname, out_main_dir, config)
 
 
 if __name__ == "__main__":
+    """Setup which config file(s) to use and run."""
+    # Use this to do batching ATM
+    # for i in np.arange(3, 7):
+    #     config_name = "CAR-SA{}.cfg".format(i)
+    #     main_entry(config_name)
+
+    # Use this for single runs without providing cmd line arg
     # config_name = "Eoin.cfg"
     # config_name = "CAR-SA2.cfg"
     # config_name = "Batch_3.cfg"
     i = 5
     config_name = "CAR-SA{}.cfg".format(i)
-    main_entry(config_name)
 
-    # for i in np.arange(3, 7):
-    #     config_name = "CAR-SA{}.cfg".format(i)
-    #     main_entry(config_name)
+    # Can parse command line args
+    parser = argparse.ArgumentParser(
+        description="Arguments passable via command line:")
+    parser.add_argument(
+        "-c", "--config", type=str, default=config_name, required=False,
+        help="The name of the config file in configs/LFP OR path to cfg.")
+    parser.add_argument(
+        "-d", "--dummy", action="store_true", required=False,
+        help="If this flag is present, only prints the files that would be run."
+    )
+    parser.add_argument(
+        "-b", "--basedir", type=str, default=None, required=False,
+        help="Replace the base directory in config file with this.")
+    parser.add_argument(
+        "-i", "--interactive", action="store_true", required=False,
+        help="Run an interactive console to select a regex filter set.")
+    parsed = parse_args(parser, verbose=True)
+
+    # Actually run here
+    main_entry(
+        parsed.config, base_dir=parsed.basedir, dummy=parsed.dummy,
+        interactive=parsed.interactive)

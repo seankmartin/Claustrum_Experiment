@@ -278,3 +278,6 @@ class LfpODict:
             lfp_clean_odict[key] = clean_lfp
 
         return lfp_clean_odict
+
+    def __len__(self):
+        return len(self.lfp_odict)
