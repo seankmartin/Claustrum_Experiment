@@ -173,11 +173,41 @@ def main(fname, out_main_dir, config):
             # MNE expects LFP data to be in Volts.
             # Neurochat stores LFP in mV
             data = data / 1000
+
+            # Remove data past 1830 seconds
+            num_epochs = 6
+            epoch_len = 305
+            samples_per_epoch = int(epoch_len * sfreq)
+            total_expected_samples = int(num_epochs * samples_per_epoch)
+            data = data[:, :total_expected_samples]
+
+            # This can be used to directly make one big mne array
             raw = mne.io.RawArray(data, info)
 
-            # cont = input("Show raw mne info? (y|n) \n")
-            # if cont.strip().lower() == "y":
-            #     print(raw.info)
+            # This can be used to break the mne up into 6 epochs
+            # Doing equally sized epochs to simplify calcs
+            # Alternatively could set on_missing to something
+            # And work with longest epoch
+            # TODO include lever press times etc as events
+
+            epoch_data = np.empty(
+                shape=(num_epochs, len(lfp_odict), samples_per_epoch),
+                dtype=float)
+            for i in range(num_epochs):
+                start_sample = i * samples_per_epoch
+                end_sample = (i + 1) * samples_per_epoch
+                epoch_data[i] = data[:, start_sample:end_sample]
+
+            # TODO change this to be per lever press trial
+            # With the same logic as Ham that trials are not longer
+            # than 60seconds
+            epochs = mne.EpochsArray(epoch_data, info, events=None)
+            # Not plotting for now because epochs are too long
+            # But this works.
+            # epochs.plot(
+            #     scalings="auto", block=True, n_channels=2,
+            #     title="LFP Epoched Data from {}".format(out_name),
+            #     show=True)
 
             # Plot raw signal
             raw.plot(
@@ -189,6 +219,7 @@ def main(fname, out_main_dir, config):
             # Perform ICA using mne
             from mne.preprocessing import ICA
             filt_raw = raw.copy()
+            # TODO check if you need load here
             filt_raw.load_data().filter(l_freq=1., h_freq=None)
             ica = ICA(random_state=97)
             ica.fit(filt_raw)
