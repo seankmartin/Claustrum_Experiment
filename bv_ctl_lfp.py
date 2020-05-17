@@ -151,8 +151,16 @@ def main(fname, out_main_dir, config):
     if do_mne:
         import mne
 
-        def mne_example(lfp_odict, ch_names=None, out_name=""):
+        def mne_example(lfp_odict, ch_names=None, fname="", o_dir=""):
+            """
+            Parameters
+            ----------
+            lfp_odict :
+            fname : full path of session file
+            o_dir : dir to save mne variables or figures
 
+            """
+            base_name = os.path.basename(fname)
             # Extract LFPs from the odict
             ori_keys, ori_lfp_list = [], []
             for key, lfp in lfp_odict.get_filt_signal().items():
@@ -179,12 +187,28 @@ def main(fname, out_main_dir, config):
             # if cont.strip().lower() == "y":
             #     print(raw.info)
 
+            # Loading annotations
+            annote_loc = os.path.join(o_dir, base_name, 'mne-annotations.csv')
+            try:
+                annot_from_file = mne.read_annotations(annote_loc)
+                print('Loading mne_annotations from', annote_loc)
+                raw.set_annotations(annot_from_file)
+            except:
+                print('No mne annotations found at', o_dir)
+
             # Plot raw signal
             raw.plot(
                 n_channels=len(lfp_odict), block=True,
                 show=True, clipping="clamp",
-                title="LFP Data from {}".format(out_name),
+                title="Raw LFP Data from {}".format(base_name),
                 remove_dc=False, scalings="auto")
+
+            # Saving annotations
+            if len(raw.annotations) > 0:
+                print(raw.annotations)
+                cont = input("Save mne annotations? (y|n) \n")
+                if cont.strip().lower() == "y":
+                    raw.annotations.save(annote_loc)
 
             # Perform ICA using mne
             from mne.preprocessing import ICA
@@ -197,7 +221,7 @@ def main(fname, out_main_dir, config):
             # Plot raw ICAs
             print('Select channels to exclude using this plot...')
             ica.plot_sources(
-                raw, block=True, title='ICA from {}'.format(out_name))
+                raw, block=True, title='ICA from {}'.format(base_name))
 
             # ICAs to exclude
             # ica.exclude = [4, 6, 12]
@@ -222,15 +246,15 @@ def main(fname, out_main_dir, config):
             # Plot reconstructed signals w/o excluded ICAs
             reconst_raw.plot(block=True, show=True, clipping="clamp",
                              title="Reconstructed LFP Data from {}".format(
-                                 out_name),
+                                 base_name),
                              remove_dc=False, scalings="auto")
 
         lfp_odict = LfpODict(
             fname, channels=chans,
             filt_params=filt_params, artf_params=artf_params)
         ch_names = regions
-        out_name = os.path.basename(fname)
-        mne_example(lfp_odict, ch_names=ch_names, out_name=out_name)
+
+        mne_example(lfp_odict, ch_names=ch_names, fname=fname, o_dir=o_dir)
 
     if "Pre" in fname:
         behav = False
