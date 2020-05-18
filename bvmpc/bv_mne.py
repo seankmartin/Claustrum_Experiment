@@ -129,12 +129,14 @@ def create_mne_array(
 def set_annotations(mne_array, annotation_fname):
     """Read annots from annotation_fname and store them on mne_array."""
     try:
-        annot_from_file = mne.read_annotations(annotation_fname)
         print('Loading mne_annotations from', annotation_fname)
+        annot_from_file = mne.read_annotations(annotation_fname)
         mne_array.set_annotations(annot_from_file)
-    except Exception:
-        raise FileNotFoundError(
-            'No mne annotations found at', annotation_fname)
+    except FileNotFoundError:
+        print("WARNING: No annotations found at {}".format(annotation_fname))
+    else:
+        raise ValueError(
+            "An error occured while reading {}".format(annotation_fname))
 
 
 def save_annotations(mne_array, annotation_fname):
@@ -144,6 +146,11 @@ def save_annotations(mne_array, annotation_fname):
         cont = input("Save mne annotations? (y|n) \n")
         if cont.strip().lower() == "y":
             mne_array.annotations.save(annotation_fname)
+
+
+def nc_to_mne_events(nc_events):
+    mne_events = nc_events
+    return mne_events
 
 
 def mne_example(mne_array, regions, chans_to_plot=20, base_name=""):
