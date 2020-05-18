@@ -115,9 +115,11 @@ def session_from_mpc_file(filename, out_dir):
 
 
 def load_bv_from_set(fname):
-    """ Loads session based from .inp """
+    """Loads session based from .inp"""
     if os.path.isfile(fname + ".inp"):
         return Session(axona_file=fname + ".inp")
+    elif os.path.isfile(fname[:-3] + "inp"):
+        return Session(axona_file=fname[:-3] + "inp")
     else:
         print(".inp does not exist.")
         return None
