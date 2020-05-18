@@ -31,6 +31,7 @@ def main(fname, out_main_dir, config):
     Saves plots in a !LFP folder inside out_main_dir
 
     '''
+    # Setup output directory
     o_dir = os.path.join(out_main_dir, "!LFP")
     make_dir_if_not_exists(o_dir)
 
@@ -77,7 +78,13 @@ def main(fname, out_main_dir, config):
             artf_params=(artf, sd_thres, min_artf_freq, rep_freq, filt))
         lfp_list.append(lfp_odict)
 
-    # Compute ICA
+    # Add events (lever press times etc.) to the mne object
+    if "Pre" not in fname:
+        session = load_bv_from_set(fname)
+
+    # At this point all of the config parsing and file setup is done
+
+    # TODO move to correct location - Compute ICA
     do_ICA = False
     if do_ICA:
         from sklearn.decomposition import FastICA
@@ -145,6 +152,9 @@ def main(fname, out_main_dir, config):
     do_mne = True
     if do_mne:
         import bvmpc.bv_mne
+        from bvmpc.bv_nc import events_from_session
+
+        # Setup the mne object with our data
         lfp_odict = LfpODict(
             fname, channels=chans,
             filt_params=filt_params, artf_params=artf_params)
@@ -152,10 +162,19 @@ def main(fname, out_main_dir, config):
         mne_array = bvmpc.bv_mne.create_mne_array(
             lfp_odict, fname=fname, ch_names=ch_names,
             regions=regions, o_dir=o_dir)
+
+        # Add annotations to the created mne object
         annote_loc = os.path.join(
             o_dir, os.path.basename(fname) + '_mne-annotations.txt')
         bvmpc.bv_mne.set_annotations(mne_array, annote_loc)
         bvmpc.bv_mne.save_annotations(mne_array, annote_loc)
+
+        #
+        events = events_from_session(session)
+        mne_events = bvmpc.bv_mne.nc_to_mne_events(events)
+        exit(-1)
+
+        # Do plotting analysis etc on the mne object
         bvmpc.bv_mne.mne_example(
             mne_array, regions, chans_to_plot=len(lfp_odict),
             base_name=os.path.basename(fname))
@@ -171,7 +190,7 @@ def main(fname, out_main_dir, config):
         behav_plot = json.loads(config.get("Behav Params", "behav_plot"))
 
         # Load behaviour-related data
-        s = load_bv_from_set(fname)
+        s = session
         sch_type = s.get_arrays('Trial Type')  # FR = 1, FI = 0
         valid = True
 
@@ -1251,7 +1270,7 @@ def main_entry(config_name, base_dir=None, dummy=False, interactive=False):
 
 
 if __name__ == "__main__":
-    """Setup which config file(s) to use and run."""
+    """Setup which config file(s) to use and run - see main_entry."""
     # Use this to do batching ATM
     # for i in np.arange(3, 7):
     #     config_name = "CAR-SA{}.cfg".format(i)
