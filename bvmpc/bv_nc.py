@@ -4,15 +4,56 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from neurochat.nc_spike import NSpike
-from neurochat.nc_utils import make_dir_if_not_exists
-import spikeinterface.extractors as se
+from neurochat.nc_event import NEvent
 # import spikeinterface.spiketoolkit as st
 
+
+def events_from_session(session):
+    right_presses = session.get_one_lever_ts("R", True)
+    left_presses = session.get_one_lever_ts("L", True)
+    reward_times = session.get_rw_ts()
+    collection_times = session.get_arrays("Nosepoke")
+    names = ["Right", "Left", "Reward", "Collection"]
+    all_info = [right_presses, left_presses, reward_times, collection_times]
+
+    nc_events = NEvent()
+    event_train = []
+    event_names = []
+    event_tags = []
+
+    # This could be sped up by directly using np arrays
+    # But it is still fast since the arrays are small.
+    for tag, (info, name) in enumerate(zip(all_info, names)):
+        for val in info:
+            event_names.append(name)
+            event_tags.append(tag)
+            event_train.append(val)
+    event_train = np.array(event_train)
+    event_names = np.array(event_names)
+    event_tags = np.array(event_tags)
+
+    # Order the events based on time
+    ordering = event_train.argsort()
+    ordered_train = event_train[ordering]
+    ordered_names = event_names[ordering]
+    ordered_tags = event_tags[ordering]
+
+    # Plug these values into neurochat
+    nc_events._event_train = ordered_tags
+    nc_events._event_names = ordered_names
+    nc_events._timestamp = ordered_train
+
+    print(nc_events)
+    return nc_events
+
+
 def load_phy(folder_name):
+    import spikeinterface.extractors as se
     to_exclude = ["mua", "noise"]
     return se.PhySortingExtractor(
         folder_name, exclude_cluster_groups=to_exclude, load_waveforms=True,
         verbose=True)
+
 
 def plot_all_forms(sorting, out_loc, channels_per_group=4):
     unit_ids = sorting.get_unit_ids()
@@ -45,6 +86,7 @@ def plot_all_forms(sorting, out_loc, channels_per_group=4):
         fig.savefig(o_loc, dpi=200)
         plt.close("all")
 
+
 def extract_sorting_info(sorting):
     sample_rate = sorting.params['sample_rate']
     all_unit_trains = sorting.get_units_spike_train()
@@ -55,7 +97,7 @@ def extract_sorting_info(sorting):
         end = start + all_unit_trains[u_i].size
         unit_tags[start:end] = u
         start = end
-    
+
     # out_loc = os.path.join(
     #     os.path.dirname(sorting.params['dat_path']), "nc_results")
     # os.makedirs(out_loc, exist_ok=True)
@@ -67,6 +109,7 @@ def extract_sorting_info(sorting):
         waveforms[str(u)] = sorting.get_unit_spike_features(u, "waveforms")
 
     return timestamps, unit_tags, waveforms
+
 
 def load_spike_phy(self, folder_name):
     print("loading Phy sorting information from {}".format(folder_name))
@@ -80,6 +123,7 @@ def load_spike_phy(self, folder_name):
     # TODO note that waveforms do not follow NC convention
     # It is just a way to store them for the moment.
     self._set_waveform(waveforms)
+
 
 NSpike.load_spike_phy = load_spike_phy
 
