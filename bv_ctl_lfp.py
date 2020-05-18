@@ -151,28 +151,56 @@ def main(fname, out_main_dir, config):
     if do_mne:
         import mne
 
-        def get_eloc(ch_names, o_dir, base_name):
-            "Read or generate csv with 3D tetrode coordinates. Generate via user input"
+        def get_next_i(rows, cols, idx):
+            row_idx = (idx // cols)
+            col_idx = (idx % cols)
+            return row_idx, col_idx
+
+        def get_eloc(ch_names, o_dir, base_name, dummy=False):
+            """Read or generate csv with 3D tetrode coordinates. Generate via user input. 
+
+            Parameters
+            ----------
+            dummy : bool, default False - Create dummy tetrode locations for better visualisation.
+
+            """
             eloc_path = os.path.join(o_dir, base_name+"_eloc.csv")
-            try:
-                df = pd.read_csv(eloc_path, index_col=0)
-                d = df.to_dict("split")
-                eloc = dict(zip(d["index"], d["data"]))
-            except:
+            if dummy:
                 eloc = {}
-                for s, ch in enumerate(ch_names, 1):
-                    # Duplicate pos for every second tetrode
-                    if (s+2) % 2 == 0:
-                        eloc[ch] = eloc[ch_names[s-2]]
-                        eloc[ch][0] += 0.01
+                n_acc, n_rsc, n_cla = 0, 0, 0
+                for i, ch in enumerate(ch_names):
+                    if "ACC" in ch:
+                        x, y = get_next_i(2, 2, n_acc)
+                        eloc[ch] = np.array([x, 2-y, 0])
+                        n_acc += 1
+                    elif "RSC" in ch:
+                        x, y = get_next_i(2, 2, n_rsc)
+                        eloc[ch] = np.array([x, y-10, 0])
+                        n_rsc += 1
                     else:
-                        eloc[ch] = np.empty(3)
-                        for i, axis in enumerate(["x", "y", "z"]):
-                            eloc[ch][i] = float(input(
-                                "Enter {} coordinate for S{}-{}: ".format(axis, s//2, ch)))
-                df = pd.DataFrame.from_dict(eloc, orient="index")
-                df.to_csv(eloc_path)
-            print(eloc)
+                        x, y = get_next_i(4, 4, n_cla)
+                        eloc[ch] = np.array([x+5, 2-y, -5])
+                        n_cla += 1
+            else:
+                try:
+                    df = pd.read_csv(eloc_path, index_col=0)
+                    d = df.to_dict("split")
+                    eloc = dict(zip(d["index"], d["data"]))
+                except:
+                    eloc = {}
+                    for s, ch in enumerate(ch_names, 1):
+                        # Duplicate pos for every second tetrode
+                        if (s+2) % 2 == 0:
+                            eloc[ch] = eloc[ch_names[s-2]]
+                            eloc[ch][0] += 0.01
+                        else:
+                            eloc[ch] = np.empty(3)
+                            for i, axis in enumerate(["x", "y", "z"]):
+                                eloc[ch][i] = float(input(
+                                    "Enter {} coordinate for S{}-{}: ".format(axis, s//2, ch)))
+                    df = pd.DataFrame.from_dict(eloc, orient="index")
+                    df.to_csv(eloc_path)
+                print(eloc)
             return eloc
 
         def mne_example(lfp_odict, ch_names=None, fname="", o_dir=""):
@@ -199,10 +227,10 @@ def main(fname, out_main_dir, config):
                             y in zip(regions, lfp_odict.lfp_odict.keys())]
 
             # Read or create tetrode locations
-            eloc = get_eloc(ch_names, o_dir, base_name)
+            eloc = get_eloc(ch_names, o_dir, base_name, dummy=True)
             montage = mne.channels.make_dig_montage(ch_pos=eloc)
 
-            # Convert that data into mne format
+            # Convert LFP data into mne format
             sfreq = example_lfp.get_sampling_rate()
             info = mne.create_info(
                 ch_names=ch_names, sfreq=sfreq, ch_types="eeg")
@@ -213,12 +241,12 @@ def main(fname, out_main_dir, config):
             data = data / 1000
             raw = mne.io.RawArray(data, info)
 
-            # # Test montage
-            # fig = plt.figure()
-            # ax = fig.add_subplot(projection='3d')
-            # sphere = [0, 0, 0, 10]
-            # raw.plot_sensors(kind='3d', ch_type='eeg', show_names=False,
-            #                  axes=ax, block=True, to_sphere=True)
+            # Test montage
+            fig = plt.figure()
+            ax = fig.add_subplot(projection='3d')
+            sphere = [0, 0, 0, 10]
+            raw.plot_sensors(kind='3d', ch_type='eeg', show_names=False,
+                             axes=ax, block=True, to_sphere=True)
             # exit(-1)
 
             # cont = input("Show raw mne info? (y|n) \n")
@@ -317,7 +345,7 @@ def main(fname, out_main_dir, config):
                             temp_grp.append(ch)
                     reg_grps.append(temp_grp)
                 for grps in reg_grps:
-                    ica.plot_overlay(raw, title='{}'.format(
+                    ica.plot_overlay(raw, stop=int(30*250), title='{}'.format(
                         grps[0][:3]), picks=grps)
 
             # Apply ICA exclusion
