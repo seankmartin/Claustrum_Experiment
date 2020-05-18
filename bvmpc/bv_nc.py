@@ -9,12 +9,14 @@ from neurochat.nc_event import NEvent
 
 
 def events_from_session(session):
+    # Note maybe should use get_valid_tdf
     right_presses = session.get_one_lever_ts("R", True)
     left_presses = session.get_one_lever_ts("L", True)
-    reward_times = session.get_rw_ts()
+    pell_ts_exdouble, dpell = session.split_pell_ts()
     collection_times = session.get_arrays("Nosepoke")
     names = ["Right", "Left", "Reward", "Collection"]
-    all_info = [right_presses, left_presses, reward_times, collection_times]
+    all_info = [
+        right_presses, left_presses, pell_ts_exdouble, collection_times]
 
     nc_events = NEvent()
     event_train = []
