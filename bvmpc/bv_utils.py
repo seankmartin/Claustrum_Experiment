@@ -9,12 +9,10 @@ from datetime import timedelta
 from collections.abc import Iterable
 import shutil
 
-import h5py
 import numpy as np
 import logging
 import configparser
 from pprint import pprint
-import argparse
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -276,6 +274,7 @@ def print_config(config, msg=""):
         print(msg)
     config_dict = [{x: tuple(config.items(x))} for x in config.sections()]
     pprint(config_dict, width=120)
+    print()
 
 
 def read_cfg(location, verbose=True):

@@ -450,10 +450,12 @@ class Session:
 
         after_pca = pca.fit_transform(data)
         after_pca = pd.DataFrame(
-            after_pca, columns=['PC{}'.format(x) for x in np.arange(after_pca.shape[1]) + 1])
+            after_pca, columns=['PC{}'.format(x) for x in np.arange(
+                after_pca.shape[1]) + 1])
 
         print(
-            "\nPCA fraction of explained variance", pca.explained_variance_ratio_)
+            "\nPCA fraction of explained variance",
+            pca.explained_variance_ratio_)
         print(
             "Total explained variance: ", sum(pca.explained_variance_ratio_))
         return data, after_pca, pca
@@ -514,7 +516,9 @@ class Session:
 
         return data
 
-    def draw_umap(self, data, c, n_neighbors=15, min_dist=0.1, n_components=2, metric='euclidean', title=''):
+    def draw_umap(
+            self, data, c, n_neighbors=15, min_dist=0.1, n_components=2,
+            metric='euclidean', title=''):
         """ For testing out UMAP parameters """
         import umap
         fit = umap.UMAP(
@@ -588,7 +592,7 @@ class Session:
         return self.cluster_results
 
     def get_cluster_results(self, should_pca=True, cutoff=None):
-        """ 
+        """
         Returns cluster results from hier_cluster
 
         Returns
@@ -751,6 +755,21 @@ class Session:
             levers.append(self.get_arrays("Un_L"))
         return np.sort(np.concatenate(levers, axis=None))
 
+    def get_one_lever_ts(self, lever_type, include_un=True):
+        """
+        Get the timestamps of an individual lever press side.
+        Lever type is expected to be "L" or "R".
+
+        """
+        if (lever_type != "L") and (lever_type != "R"):
+            raise ValueError(
+                "lever_type is expected to be L or R, entered {}".format(
+                    lever_type))
+        levers = [self.get_arrays(lever_type)]
+        if include_un:
+            levers.append(self.get_arrays("Un_" + lever_type))
+        return np.sort(np.concatenate(levers, axis=None))
+
     def get_err_lever_ts(self, include_un=True):
         """
         Get the timestamps of the error/opposite lever presses.
@@ -848,6 +867,40 @@ class Session:
             repeated_trial_len = (trial_len) * 6
             block_starts = np.arange(0, repeated_trial_len, trial_len)
         return block_starts
+
+    def get_valid_tdf(self, excl_dr=False, norm=False):
+        """
+        Returns trial_df of excluding:
+            First trial in FI blocks
+            Trials with post-hoc modification of reward timestamp
+            Trials more than 60s
+
+        Parameters
+        ----------
+        excl_dr : bool, False
+            Optional. Excludes double reward trials
+        norm : bool, False
+            Optional. Return trial_df_norm with masks applied
+
+        """
+        if norm:
+            df = self.get_trial_df_norm()
+        else:
+            df = self.get_trial_df()
+
+        # Masks used for filtering trials
+        mod_mask = df.Mod.notnull()  # trials with post-hoc rw correction
+        FI_s_mask = (df.Tone_s.str.len() != 0) & (
+            df.Schedule == 'FI')  # 1st trial of each FI blocks
+        tlen_mask = (df.Reward_ts - df.Trial_s) > 60  # trials longer then 60s
+
+        df = df[(~mod_mask) & (~FI_s_mask) & (~tlen_mask)]
+
+        if excl_dr:
+            dr_mask = df.D_Pellet_ts.str.len() != 0
+            df = df[(~dr_mask)]
+
+        return df
 
     def _save_neo_info(self, remove_existing):
         """Private function to save info to neo file."""
@@ -949,7 +1002,8 @@ class Session:
         for k, v in self.session_info.get_axona_metadata_map().items():
             self.metadata[k] = self.axona_set.get_val(v)
 
-        # Numerical metadata extract from log file **No log file in some cases. Static method for now**
+        # Numerical metadata extract from log file
+        # **No log file in some cases. Static method for now**
         self.metadata["fixed_ratio"] = 6
         self.metadata["double_reward_window (secs)"] = 10
         self.metadata["fixed_interval (secs)"] = 30
@@ -957,9 +1011,6 @@ class Session:
         self.metadata["trial_length (mins)"] = 5
         self.metadata['subject'] = os.path.basename(
             self.axona_file).split("_")[0]
-
-        # AND "trial_length (mins)", "fixed_ratio"
-        # "num_trials" should be added too
 
         # Extract the timestamp arrays from the axona data .inp file
         self.axona_info = AxonaInput(self.axona_file)
@@ -1025,7 +1076,8 @@ class Session:
                     nosepokes, last_nosepoke_idx + 1, to_insert)
                 good_nosepokes, un_nosepokes = split_array_with_another(
                     nosepokes, pell_ts_exdouble)
-                # if i < 5: # ignores first nosepoke in next block in split arrays
+                # if i < 5:
+                # ignores first nosepoke in next block in split arrays
                 split_nosepokes = split_into_blocks(
                     good_nosepokes, blocks=block_ends)
                 split_all_nosepokes = split_into_blocks(
@@ -1110,9 +1162,11 @@ class Session:
 
         t_start = []
         for i, (x, tone_end) in enumerate(zip(t_start_blocks, block_ends)):
-            if len(x) == 0:  # replace trial start w next block start if empty
+            # replace trial start w next block start if empty
+            if len(x) == 0:
                 x = np.array([tone_end])
-            elif x[-1] < tone_end:  # replace last start in block w next block start
+            # replace last start in block w next block start
+            elif x[-1] < tone_end:
                 x[-1] = tone_end
             t_start.append(np.array(x))
         t_start = np.concatenate(t_start).ravel()
@@ -1167,10 +1221,12 @@ class Session:
         # Assign schedule type to trials
         schedule_type, sch_block = [], []
         mod = []
-        mod_rw = self.get_insert()  # reward times artificially inserted
+        # Reward times artificially inserted
+        mod_rw = self.get_insert()
 
         if stage == '7' or stage == '6':
-            block_s = self.get_tone_starts() + 5  # End of tone
+            # End of tone
+            block_s = self.get_tone_starts() + 5
 
             # from matplotlib import pyplot as plt
             # plt.eventplot(blocks, colors='r', label='s')
@@ -1206,17 +1262,20 @@ class Session:
         err_ts = self.get_err_lever_ts(True)
 
         trial_rw_ts = np.split(
-            reward_times, (np.searchsorted(reward_times, trial_starts, side='right')[1:]))
+            reward_times,
+            (np.searchsorted(reward_times, trial_starts, side='right')[1:]))
         trial_pell_ts = np.split(
-            pell_ts_exdouble, (np.searchsorted(pell_ts_exdouble, trial_starts)[1:]))
+            pell_ts_exdouble,
+            (np.searchsorted(pell_ts_exdouble, trial_starts)[1:]))
         trial_lever_ts = np.split(
             lever_ts, (np.searchsorted(lever_ts, trial_starts)[1:]))
         trial_err_ts = np.split(
             err_ts, (np.searchsorted(err_ts, trial_starts)[1:]))
         trial_dr_ts = np.split(
             dpell, (np.searchsorted(dpell, trial_starts)[1:]))
+        # Tone end ts
         trial_tone_end = np.split(
-            block_s, (np.searchsorted(block_s, trial_starts)[1:]))  # Tone end ts
+            block_s, (np.searchsorted(block_s, trial_starts)[1:]))
 
         # # Testing - print values
         # x = trial_rw_ts
@@ -1262,7 +1321,7 @@ class Session:
             err_arr[i, :err_end] = err[:]
             first_response_arr.append(np.array([l[0]]))
 
-        # Splits lever ts in each trial into seperate np.arrs for handling in pandas
+        # Splits lever ts in each trial into np.arrs for handling in pandas
         # lever_arr = np.vsplit(lever_arr, i+1)
         # err_arr = np.vsplit(err_arr, i+1)
         lever_arr = list(lever_arr)
@@ -1328,7 +1387,7 @@ class Session:
 
         for key, val in trial_dict.items():
             print(
-                "Initialised trial dataframe with {} trials and keys {}".format(
+                "Initialised trial df with {} trials and keys {}".format(
                     len(val), list(trial_dict.keys())))
             break
         self.trial_df = pd.DataFrame(session_dict)
@@ -1337,40 +1396,6 @@ class Session:
         # from bvmpc.bv_utils import check_fn
         # self.trial_df = pd.DataFrame(session_dict).applymap(check_fn)
         # self.trial_df_norm = pd.DataFrame(trial_dict).applymap(check_fn)
-
-    def get_valid_tdf(self, excl_dr=False, norm=False):
-        """ 
-        Returns trial_df of excluding:
-            First trial in FI blocks
-            Trials with post-hoc modification of reward timestamp
-            Trials more than 60s
-
-        Parameters
-        ----------
-        excl_dr : bool, False
-            Optional. Excludes double reward trials
-        norm : bool, False
-            Optional. Return trial_df_norm with masks applied
-
-        """
-        if norm:
-            df = self.get_trial_df_norm()
-        else:
-            df = self.get_trial_df()
-
-        # Masks used for filtering trials
-        mod_mask = df.Mod.notnull()  # trials with post-hoc rw correction
-        FI_s_mask = (df.Tone_s.str.len() != 0) & (
-            df.Schedule == 'FI')  # 1st trial of each FI blocks
-        tlen_mask = (df.Reward_ts - df.Trial_s) > 60  # trials longer then 60s
-
-        df = df[(~mod_mask) & (~FI_s_mask) & (~tlen_mask)]
-
-        if excl_dr:
-            dr_mask = df.D_Pellet_ts.str.len() != 0
-            df = df[(~dr_mask)]
-
-        return df
 
     @staticmethod
     def _extract_array(lines, start_char, end_char):
