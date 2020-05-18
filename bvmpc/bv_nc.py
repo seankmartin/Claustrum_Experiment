@@ -45,7 +45,7 @@ def events_from_session(session):
     nc_events._event_names = ordered_names
     nc_events._timestamp = ordered_train
 
-    print(nc_events)
+    # print(nc_events)
     return nc_events
 
 

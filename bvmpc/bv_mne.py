@@ -69,11 +69,12 @@ def get_eloc(ch_names, o_dir, base_name, dummy=False):
 def lfp_odict_to_np(lfp_odict):
     """Convert an lfp_odict into an mne compatible numpy array."""
     # Extract LFPs from the odict
-    ori_keys, ori_lfp_list = [], []
+    ori_lfp_list = []
     # TODO based on MNE pipeline should this be the filtered or non filtered
     for key, lfp in lfp_odict.get_filt_signal().items():
         ori_lfp_list.append(lfp.get_samples())
-        ori_keys.append(key)
+    ori_lfp_list.append([0] * len(ori_lfp_list[0]))
+
     data = np.array(ori_lfp_list, float)
     # MNE expects LFP data to be in Volts. But Neurochat stores LFP in mV.
     data = data / 1000
@@ -117,8 +118,10 @@ def create_mne_array(
     # Convert LFP data into mne format
     example_lfp = lfp_odict.get_filt_signal(key=1)
     sfreq = example_lfp.get_sampling_rate()
+    ch_types = (["eeg"] * len(lfp_odict)) + ["stim", ]
+    ch_names = ch_names + ["Events", ]
     info = mne.create_info(
-        ch_names=ch_names, sfreq=sfreq, ch_types="eeg")
+        ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
     info.set_montage(montage)
 
     raw = mne.io.RawArray(raw_data, info)
@@ -148,9 +151,21 @@ def save_annotations(mne_array, annotation_fname):
             mne_array.annotations.save(annotation_fname)
 
 
-def nc_to_mne_events(nc_events):
-    mne_events = nc_events
-    return mne_events
+def add_nc_event_to_mne(mne_array, nc_events, sample_rate=250):
+    print("Adding {} events to mne".format(len(nc_events._timestamp)))
+    event_data = np.zeros(
+        shape=(len(nc_events._timestamp), 3))
+    for i, (a, b) in enumerate(
+            zip(nc_events._timestamp, nc_events._event_train)):
+        sample_number = int(a * sample_rate)
+        event_data[i] = np.array([sample_number, 0, b + 1])
+    mne_array.add_events(event_data, stim_channel="Events")
+
+    event_name_dict = {}
+    for i, (b, a) in enumerate(
+            zip(nc_events._event_names, nc_events._event_train)):
+        event_name_dict[b] = a + 1
+    return event_name_dict
 
 
 def mne_example(mne_array, regions, chans_to_plot=20, base_name=""):

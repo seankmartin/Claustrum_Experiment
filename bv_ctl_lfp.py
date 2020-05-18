@@ -151,6 +151,7 @@ def main(fname, out_main_dir, config):
     # TODO temporary location to test MNE
     do_mne = True
     if do_mne:
+        import mne
         import bvmpc.bv_mne
         from bvmpc.bv_nc import events_from_session
 
@@ -170,8 +171,19 @@ def main(fname, out_main_dir, config):
         bvmpc.bv_mne.save_annotations(mne_array, annote_loc)
 
         #
-        events = events_from_session(session)
-        mne_events = bvmpc.bv_mne.nc_to_mne_events(events)
+        nc_events = events_from_session(session)
+        name_dict = bvmpc.bv_mne.add_nc_event_to_mne(mne_array, nc_events)
+        print(name_dict)
+
+        mne_events = mne.find_events(
+            mne_array, stim_channel='Events',
+            shortest_event=1, min_duration=(0.1 / mne_array.info['sfreq']),
+            consecutive=True, initial_event=True)
+        fig = mne.viz.plot_events(
+            mne_events, sfreq=mne_array.info['sfreq'],
+            first_samp=mne_array.first_samp, event_id=name_dict)
+
+        print("Exit for now just testing events!")
         exit(-1)
 
         # Do plotting analysis etc on the mne object
