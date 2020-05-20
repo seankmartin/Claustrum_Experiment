@@ -234,7 +234,50 @@ def get_layout(o_dir, layout_name):
     return lt
 
 
-def mne_example(mne_array, regions, chans_to_plot=20, base_name=""):
+def generate_events(mne_array, session, plot=False):
+    """Generate events based on session object.
+    Parameters
+    ----------
+    mne_array : mne.raw object
+    session : bvmpc.session object
+    plot : bool, default False
+        Plot events figure. Mainly for checking.
+
+    Returns
+    -------
+    mne_events : mne.events object
+    annot_from events : mne.events converted to mne.annotations
+
+    """
+    from bvmpc.bv_nc import events_from_session
+    # Generate events
+    nc_events = events_from_session(session)
+    name_dict = add_nc_event_to_mne(mne_array, nc_events)
+
+    mne_events = mne.find_events(
+        mne_array, stim_channel='Events',
+        shortest_event=1, min_duration=(0.1 / mne_array.info['sfreq']),
+        consecutive=True, initial_event=True)
+
+    if plot:
+        fig = mne.viz.plot_events(
+            mne_events, sfreq=mne_array.info['sfreq'],
+            first_samp=mne_array.first_samp, event_id=name_dict, show=True)
+
+    # Set annotations from events
+    # Swap key and values
+    events_map = {value: key[:3] for key, value in name_dict.items()}
+    onsets = mne_events[:, 0] / mne_array.info['sfreq']
+    durations = np.zeros_like(onsets)  # assumes instantaneous events
+    descriptions = [events_map[event_id]
+                    for event_id in mne_events[:, 2]]
+    annot_from_events = mne.Annotations(onset=onsets, duration=durations,
+                                        description=descriptions,
+                                        orig_time=None)
+    return mne_events, annot_from_events
+
+
+def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name=""):
     """
     This is example code using mne.
 
@@ -257,12 +300,12 @@ def mne_example(mne_array, regions, chans_to_plot=20, base_name=""):
     # if cont.strip().lower() == "y":
     #     print(raw.info)
 
-    # Plot raw signal
-    raw.plot(
-        n_channels=chans_to_plot, block=True, duration=50,
-        show=True, clipping="clamp",
-        title="Raw LFP Data from {}".format(base_name),
-        remove_dc=False, scalings="auto")
+    # # Plot raw signal
+    # raw.plot(
+    #     n_channels=chans_to_plot, block=True, duration=50,
+    #     show=True, clipping="clamp",
+    #     title="Raw LFP Data from {}".format(base_name),
+    #     remove_dc=False, scalings="auto")
 
     # Perform ICA using mne
     from mne.preprocessing import ICA
@@ -306,3 +349,4 @@ def mne_example(mne_array, regions, chans_to_plot=20, base_name=""):
                      title="Reconstructed LFP Data from {}".format(
                          base_name),
                      remove_dc=False, scalings="auto")
+    return reconst_raw

@@ -153,7 +153,6 @@ def main(fname, out_main_dir, config):
     if do_mne:
         import mne
         import bvmpc.bv_mne
-        from bvmpc.bv_nc import events_from_session
 
         # Setup the mne object with our data
         lfp_odict = LfpODict(
@@ -175,40 +174,22 @@ def main(fname, out_main_dir, config):
                        remove_dc=False, scalings="auto")
         bvmpc.bv_mne.save_annotations(mne_array, annote_loc)
 
-        # Generate events
-        nc_events = events_from_session(session)
-        name_dict = bvmpc.bv_mne.add_nc_event_to_mne(mne_array, nc_events)
+        mne_events, annot_from_events = bvmpc.bv_mne.generate_events(
+            mne_array, session)
 
-        mne_events = mne.find_events(
-            mne_array, stim_channel='Events',
-            shortest_event=1, min_duration=(0.1 / mne_array.info['sfreq']),
-            consecutive=True, initial_event=True)
-        # fig = mne.viz.plot_events(
-        #     mne_events, sfreq=mne_array.info['sfreq'],
-        #     first_samp=mne_array.first_samp, event_id=events_map, show=True)
-
-        # Set annotations from events
-        # Swap key and values
-        events_map = {value: key[:3] for key, value in name_dict.items()}
-        onsets = mne_events[:, 0] / mne_array.info['sfreq']
-        durations = np.zeros_like(onsets)  # assumes instantaneous events
-        descriptions = [events_map[event_id] for event_id in mne_events[:, 2]]
-        annot_from_events = mne.Annotations(onset=onsets, duration=durations,
-                                            description=descriptions,
-                                            orig_time=None)
+        # Add events to annotations
         mne_array.set_annotations(
             mne_array.annotations + annot_from_events)
+
+        # Plot raw LFP w events
         mne_array.plot(n_channels=20, block=True, duration=50,
                        show=True, clipping="clamp",
                        title="Raw LFP Data w Events from {}".format(base_name),
                        remove_dc=False, scalings="auto")
-        print("Exit for now just testing events!")
-        exit(-1)
 
         # Do plotting analysis etc on the mne object
-        bvmpc.bv_mne.mne_example(
-            mne_array, regions, chans_to_plot=len(lfp_odict),
-            base_name=os.path.basename(fname))
+        recon_raw = bvmpc.bv_mne.ICA_pipeline(mne_array, regions, chans_to_plot=len(lfp_odict),
+                                              base_name=os.path.basename(fname))
 
     if "Pre" in fname:
         behav = False
