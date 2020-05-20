@@ -36,19 +36,22 @@ def get_eloc(ch_names, o_dir, base_name, dummy=False):
     if dummy:
         eloc = {}
         n_acc, n_rsc, n_cla = 0, 0, 0
+        scale = 10
         for i, ch in enumerate(ch_names):
             if "ACC" in ch:
                 x, y = get_next_i(2, 2, n_acc)
-                eloc[ch] = np.array([x, 2 - y, 0])
+                coord_ls = [x, 2 - y, 0]
                 n_acc += 1
             elif "RSC" in ch:
                 x, y = get_next_i(2, 2, n_rsc)
-                eloc[ch] = np.array([x, y - 10, 0])
+                coord_ls = [x, y - 10, 0]
                 n_rsc += 1
             else:
                 x, y = get_next_i(4, 4, n_cla)
-                eloc[ch] = np.array([x + 5, 2 - y, -5])
+                coord_ls = [x + 5, 2 - y, -5]
                 n_cla += 1
+            eloc[ch] = np.array([x/scale for x in coord_ls])
+
     else:
         try:
             df = pd.read_csv(eloc_path, index_col=0)
@@ -90,7 +93,7 @@ def lfp_odict_to_np(lfp_odict):
 
 
 def create_mne_array(
-        lfp_odict, fname, ch_names=None, regions=None, o_dir=""):
+        lfp_odict, fname, ch_names=None, regions=None, o_dir="", plot_mon=True):
     """
     Populate a full mne raw array object with information.
 
@@ -106,7 +109,8 @@ def create_mne_array(
         If ch_names and regions are both None, names are chan_idx.
     o_dir : str, Default ""
         Optional. Path to directory to store the output files in.
-
+    plot_mon : bool, Default True
+        Plot montage of electrode positions used.
     """
     raw_data = lfp_odict_to_np(lfp_odict)
 
@@ -132,6 +136,18 @@ def create_mne_array(
     info.set_montage(montage)
 
     raw = mne.io.RawArray(raw_data, info)
+
+    # cont = input("Show raw mne info? (y|n) \n")
+    #     if cont.strip().lower() == "y":
+    #         print(raw.info)
+
+    # Plot montage of electrode positions
+    if plot_mon:
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        # sphere = [0, 0, 0, 10]
+        raw.plot_sensors(kind='3d', ch_type='eeg', show_names=False,
+                         axes=ax, block=True, to_sphere=True)
 
     return raw
 
@@ -245,6 +261,7 @@ def generate_events(mne_array, session, plot=False):
 
     Returns
     -------
+    events_dict : dict of (event: index). Eg. {'Right': 1, 'Left': 2}
     mne_events : mne.events object
     annot_from events : mne.events converted to mne.annotations
 
@@ -252,7 +269,7 @@ def generate_events(mne_array, session, plot=False):
     from bvmpc.bv_nc import events_from_session
     # Generate events
     nc_events = events_from_session(session)
-    name_dict = add_nc_event_to_mne(mne_array, nc_events)
+    events_dict = add_nc_event_to_mne(mne_array, nc_events)
 
     mne_events = mne.find_events(
         mne_array, stim_channel='Events',
@@ -262,11 +279,11 @@ def generate_events(mne_array, session, plot=False):
     if plot:
         fig = mne.viz.plot_events(
             mne_events, sfreq=mne_array.info['sfreq'],
-            first_samp=mne_array.first_samp, event_id=name_dict, show=True)
+            first_samp=mne_array.first_samp, event_id=events_dict, show=True)
 
     # Set annotations from events
     # Swap key and values
-    events_map = {value: key[:3] for key, value in name_dict.items()}
+    events_map = {value: key[:3] for key, value in events_dict.items()}
     onsets = mne_events[:, 0] / mne_array.info['sfreq']
     durations = np.zeros_like(onsets)  # assumes instantaneous events
     descriptions = [events_map[event_id]
@@ -274,10 +291,69 @@ def generate_events(mne_array, session, plot=False):
     annot_from_events = mne.Annotations(onset=onsets, duration=durations,
                                         description=descriptions,
                                         orig_time=None)
-    return mne_events, annot_from_events
+    return events_dict, mne_events, annot_from_events
 
 
-def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name=""):
+def pick_chans(raw, sel=None):
+    """
+    Pick channels based on sel input. Identifies channels with str in sel.
+    Example:
+        Input
+            raw.chan_names = ['ACC-1','ACC-2','RSC-3']
+            sel = ['ACC']
+        Returns
+            picks = ['ACC-1','ACC-2']
+
+    Parameters
+    ----------
+    raw : mne.raw object
+    sel : list of str, Default None
+        Input str to include in picks. Sel must be in chan_name(eg. ACC-13)
+
+    Returns
+    -------
+    picks : list of str
+        list of channel names selected.
+
+    """
+    if sel == None:
+        picks = None
+    else:
+        picks = []
+        for s in sel:
+            for ch in raw.ch_names:
+                if s in ch:
+                    picks.append(ch)
+        print('Picked chans:', picks)
+    return picks
+
+
+def get_reg_chans(raw, regions):
+    """ Get dict with {regions: list of channels}
+
+    Parameters
+    ----------
+    raw : mne.raw object
+    region_dict : list of str,
+        list of regions to be grouped. set(regions) used to determine dict keys.
+
+    Returns
+    -------
+    grps : dict(region: list of channels)
+
+    """
+    grps = {}
+    for reg in set(regions):
+        reg_ls = []
+        for i, ch in enumerate(raw.ch_names):
+            if reg in ch:
+                reg_ls.append(i)
+        grps[reg] = reg_ls
+    print(grps)
+    return grps
+
+
+def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name="", exclude=None):
     """
     This is example code using mne.
 
@@ -287,18 +363,6 @@ def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name=""):
 
     """
     raw = mne_array
-
-    # Test montage
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
-    # sphere = [0, 0, 0, 10]
-    raw.plot_sensors(kind='3d', ch_type='eeg', show_names=False,
-                     axes=ax, block=True, to_sphere=True)
-    # exit(-1)
-
-    # cont = input("Show raw mne info? (y|n) \n")
-    # if cont.strip().lower() == "y":
-    #     print(raw.info)
 
     # # Plot raw signal
     # raw.plot(
@@ -314,39 +378,42 @@ def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name=""):
     ica = ICA(random_state=97)
     ica.fit(filt_raw)
 
-    raw.load_data()
-    # Plot raw ICAs
-    print('Select channels to exclude using this plot...')
-    ica.plot_sources(
-        raw, block=True, stop=50, title='ICA from {}'.format(base_name))
-
-    print('Click topo to get more ICA properties')
-    ica.plot_components(inst=raw)
-    # ICAs to exclude
     # ica.exclude = [4, 6, 12]
+    raw.load_data()
+    if exclude is None:
+        # Plot raw ICAs
+        print('Select channels to exclude using this plot...')
+        ica.plot_sources(
+            raw, block=True, stop=50, title='ICA from {}'.format(base_name))
 
-    # Overlay ICA cleaned signal over raw. Seperate plot for each region.
-    # TODO Add scroll bar or include window selection option.
-    cont = input("Plot region overlay? (y|n) \n")
-    if cont.strip().lower() == "y":
-        reg_grps = []
-        for reg in set(regions):
-            temp_grp = []
-            for ch in raw.info.ch_names:
-                if reg in ch:
-                    temp_grp.append(ch)
-            reg_grps.append(temp_grp)
-        for grps in reg_grps:
-            ica.plot_overlay(raw, stop=int(30 * 250), title='{}'.format(
-                grps[0][:3]), picks=grps)
+        print('Click topo to get more ICA properties')
+        ica.plot_components(inst=raw)
 
+        # Overlay ICA cleaned signal over raw. Seperate plot for each region.
+        # TODO Add scroll bar or include window selection option.
+        cont = input("Plot region overlay? (y|n) \n")
+        if cont.strip().lower() == "y":
+            reg_grps = []
+            for reg in set(regions):
+                temp_grp = []
+                for ch in raw.info.ch_names:
+                    if reg in ch:
+                        temp_grp.append(ch)
+                reg_grps.append(temp_grp)
+            for grps in reg_grps:
+                ica.plot_overlay(raw, stop=int(30 * 250), title='{}'.format(
+                    grps[0][:3]), picks=grps)
+    else:
+        # ICAs to exclude
+        ica.exclude = exclude
     # Apply ICA exclusion
     reconst_raw = raw.copy()
     ica.apply(reconst_raw)
 
-    # Plot reconstructed signals w/o excluded ICAs
-    reconst_raw.plot(block=True, show=True, clipping="clamp", duration=50,
-                     title="Reconstructed LFP Data from {}".format(
-                         base_name),
-                     remove_dc=False, scalings="auto")
+    # # Plot reconstructed signals w/o excluded ICAs
+    # reconst_raw.plot(block=True, show=True, clipping="clamp", duration=50,
+    #                  title="Reconstructed LFP Data from {}".format(
+    #                      base_name),
+    #                  remove_dc=False, scalings="auto")
+
     return reconst_raw

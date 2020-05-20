@@ -161,35 +161,78 @@ def main(fname, out_main_dir, config):
         ch_names = None
         mne_array = bvmpc.bv_mne.create_mne_array(
             lfp_odict, fname=fname, ch_names=ch_names,
-            regions=regions, o_dir=o_dir)
+            regions=regions, o_dir=o_dir, plot_mon=False)
         base_name = os.path.basename(fname)
 
         # Add annotations to the created mne object
         annote_loc = os.path.join(
             o_dir, os.path.basename(fname) + '_mne-annotations.txt')
         bvmpc.bv_mne.set_annotations(mne_array, annote_loc)
-        mne_array.plot(n_channels=20, block=True, duration=50,
-                       show=True, clipping="clamp",
-                       title="Raw LFP Data from {}".format(base_name),
-                       remove_dc=False, scalings="auto")
-        bvmpc.bv_mne.save_annotations(mne_array, annote_loc)
+        # mne_array.plot(n_channels=20, block=True, duration=50,
+        #                show=True, clipping="clamp",
+        #                title="Raw LFP Data from {}".format(base_name),
+        #                remove_dc=False, scalings="auto")
+        # bvmpc.bv_mne.save_annotations(mne_array, annote_loc)
 
-        mne_events, annot_from_events = bvmpc.bv_mne.generate_events(
+        events_dict, mne_events, annot_from_events = bvmpc.bv_mne.generate_events(
             mne_array, session)
 
         # Add events to annotations
         mne_array.set_annotations(
             mne_array.annotations + annot_from_events)
 
-        # Plot raw LFP w events
-        mne_array.plot(n_channels=20, block=True, duration=50,
-                       show=True, clipping="clamp",
-                       title="Raw LFP Data w Events from {}".format(base_name),
-                       remove_dc=False, scalings="auto")
+        # # Plot raw LFP w events
+        # mne_array.plot(n_channels=20, block=True, duration=50,
+        #                show=True, clipping="clamp",
+        #                title="Raw LFP Data w Events from {}".format(base_name),
+        #                remove_dc=False, scalings="auto")
 
-        # Do plotting analysis etc on the mne object
+        # Do ICA artefact removal on the mne object
         recon_raw = bvmpc.bv_mne.ICA_pipeline(mne_array, regions, chans_to_plot=len(lfp_odict),
-                                              base_name=os.path.basename(fname))
+                                              base_name=base_name, exclude=[4, 6, 12])
+        # recon_raw = mne_array
+
+        # Epoch events
+        reject_criteria = dict(eeg=600e-6)  # 600 uV
+
+        # Pick chans based on regions/tetrode number
+        # sel = ['ACC'] # Use None to select all channels
+        sel = None
+        picks = bvmpc.bv_mne.pick_chans(recon_raw, sel=sel)
+
+        epochs = mne.Epochs(recon_raw, mne_events, picks=picks, event_id=events_dict, tmin=-0.5, tmax=0.5,
+                            reject=reject_criteria, preload=True)
+        comp_conds = ['Right', 'Left']
+        epochs.equalize_event_counts(comp_conds)
+        epoch_list = []
+        for conds in comp_conds:
+            epoch_list.append(epochs[conds])
+        del recon_raw, epochs  # Free up memory
+
+        for epoch in epoch_list:
+            picks = ['RSC-14', 'ACC-9', 'CLA-7', 'AI-5']
+            epoch.plot_image(picks=picks)
+
+        # # Test plot_image in groups
+        # # Get channels for each region in dict format. For use with plot_image
+        # grps = bvmpc.bv_mne.get_reg_chans(mne_array, regions)
+        # for epoch in epoch_list:
+        #     epoch.plot_image(picks=None, group_by=grps)
+
+        # # Test plot PSD for epoch
+        # for i, epoch in enumerate(epoch_list):
+        #     fig, ax = plt.subplots()
+        #     fig.suptitle('{} - {}'.format(comp_conds[i], sel))
+        #     epoch.plot_psd(fmin=1., fmax=40., ax=ax, show=True)
+        #     # epoch.plot_psd_topomap(ch_type='eeg', normalize=True)
+        # exit(-1)
+
+        # # Test plot power spectrum
+        # frequencies = np.arange(2, 30, 3)
+        # power = mne.time_frequency.tfr_morlet(epoch, n_cycles=2, return_itc=False,
+        #                                       freqs=frequencies, decim=3)
+        # for chan in chan_picks:
+        #     power.plot([chan])
 
     if "Pre" in fname:
         behav = False
