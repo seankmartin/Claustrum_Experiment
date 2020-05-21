@@ -161,8 +161,9 @@ def main(fname, out_main_dir, config):
         ch_names = None
         mne_array = bvmpc.bv_mne.create_mne_array(
             lfp_odict, fname=fname, ch_names=ch_names,
-            regions=regions, o_dir=o_dir, plot_mon=False)
+            regions=regions, o_dir=o_dir, plot_mon=True)
         base_name = os.path.basename(fname)
+        # exit(-1)
 
         # Add annotations to the created mne object
         annote_loc = os.path.join(

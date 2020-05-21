@@ -36,19 +36,21 @@ def get_eloc(ch_names, o_dir, base_name, dummy=False):
     if dummy:
         eloc = {}
         n_acc, n_rsc, n_cla = 0, 0, 0
-        scale = 10
+        scale = 1
         for i, ch in enumerate(ch_names):
             if "ACC" in ch:
                 x, y = get_next_i(2, 2, n_acc)
-                coord_ls = [x, 2 - y, 0]
+                coord_ls = [x/2, 2 - y/2, 0+y]
                 n_acc += 1
             elif "RSC" in ch:
                 x, y = get_next_i(2, 2, n_rsc)
-                coord_ls = [x, y - 10, 0]
+                # coord_ls = [x, y - 10, 0]
+                coord_ls = [x/2, y/2 - 2, 0 + y]
                 n_rsc += 1
             else:
                 x, y = get_next_i(4, 4, n_cla)
-                coord_ls = [x + 5, 2 - y, -5]
+                # coord_ls = [x + 5, 2 - y, -5]
+                coord_ls = [x + 3, 2 - y, 1-x/2]
                 n_cla += 1
             eloc[ch] = np.array([x/scale for x in coord_ls])
 
@@ -374,7 +376,8 @@ def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name="", exclude=Non
     from mne.preprocessing import ICA
     filt_raw = raw.copy()
     filt_raw.load_data().filter(l_freq=1., h_freq=None)
-    ica = ICA(method='picard', random_state=97)
+    ica = ICA(method='fastica', random_state=97)
+    # ica = ICA(method='picard', random_state=97)
     ica.fit(filt_raw)
 
     # ica.exclude = [4, 6, 12]
