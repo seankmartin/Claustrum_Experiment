@@ -367,15 +367,14 @@ def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name="", exclude=Non
     # # Plot raw signal
     # raw.plot(
     #     n_channels=chans_to_plot, block=True, duration=50,
-    #     show=True, clipping="clamp",
-    #     title="Raw LFP Data from {}".format(base_name),
+    #     show=True, clipping="transparentdict(eeg=650e-6) #     title="Raw LFP Data from {}".format(base_name),
     #     remove_dc=False, scalings="auto")
 
     # Perform ICA using mne
     from mne.preprocessing import ICA
     filt_raw = raw.copy()
     filt_raw.load_data().filter(l_freq=1., h_freq=None)
-    ica = ICA(random_state=97)
+    ica = ICA(method='picard', random_state=97)
     ica.fit(filt_raw)
 
     # ica.exclude = [4, 6, 12]
@@ -410,10 +409,10 @@ def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name="", exclude=Non
     reconst_raw = raw.copy()
     ica.apply(reconst_raw)
 
-    # # Plot reconstructed signals w/o excluded ICAs
-    # reconst_raw.plot(block=True, show=True, clipping="clamp", duration=50,
-    #                  title="Reconstructed LFP Data from {}".format(
-    #                      base_name),
-    #                  remove_dc=False, scalings="auto")
+    # Plot reconstructed signals w/o excluded ICAs
+    reconst_raw.plot(block=True, show=True, clipping="transparent", duration=50,
+                     title="Reconstructed LFP Data from {}".format(
+                         base_name),
+                     remove_dc=False, scalings=dict(eeg=400e-6))
 
     return reconst_raw

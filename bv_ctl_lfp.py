@@ -169,7 +169,7 @@ def main(fname, out_main_dir, config):
             o_dir, os.path.basename(fname) + '_mne-annotations.txt')
         bvmpc.bv_mne.set_annotations(mne_array, annote_loc)
         # mne_array.plot(n_channels=20, block=True, duration=50,
-        #                show=True, clipping="clamp",
+        #                show=True, clipping="transparent",
         #                title="Raw LFP Data from {}".format(base_name),
         #                remove_dc=False, scalings="auto")
         # bvmpc.bv_mne.save_annotations(mne_array, annote_loc)
@@ -181,15 +181,15 @@ def main(fname, out_main_dir, config):
         mne_array.set_annotations(
             mne_array.annotations + annot_from_events)
 
-        # # Plot raw LFP w events
-        # mne_array.plot(n_channels=20, block=True, duration=50,
-        #                show=True, clipping="clamp",
-        #                title="Raw LFP Data w Events from {}".format(base_name),
-        #                remove_dc=False, scalings="auto")
+        # Plot raw LFP w events
+        mne_array.plot(n_channels=20, block=True, duration=50,
+                       show=True, clipping="transparent",
+                       title="Raw LFP Data w Events from {}".format(base_name),
+                       remove_dc=False, scalings=dict(eeg=400e-6))
 
         # Do ICA artefact removal on the mne object
         recon_raw = bvmpc.bv_mne.ICA_pipeline(mne_array, regions, chans_to_plot=len(lfp_odict),
-                                              base_name=base_name, exclude=[4, 6, 12])
+                                              base_name=base_name, exclude=None)
         # recon_raw = mne_array
 
         # Epoch events
@@ -202,6 +202,9 @@ def main(fname, out_main_dir, config):
 
         epochs = mne.Epochs(recon_raw, mne_events, picks=picks, event_id=events_dict, tmin=-0.5, tmax=0.5,
                             reject=reject_criteria, preload=True)
+        epochs.plot_drop_log()
+        # exit(-1)
+
         comp_conds = ['Right', 'Left']
         epochs.equalize_event_counts(comp_conds)
         epoch_list = []
