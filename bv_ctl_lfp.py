@@ -161,8 +161,9 @@ def main(fname, out_main_dir, config):
         ch_names = None
         mne_array = bvmpc.bv_mne.create_mne_array(
             lfp_odict, fname=fname, ch_names=ch_names,
-            regions=regions, o_dir=o_dir, plot_mon=True)
-        base_name = os.path.basename(fname)
+            regions=regions, o_dir=o_dir, plot_mon=False)
+        base_name = os.path.basename(fname)[4:]
+        # print(base_name)
         # exit(-1)
 
         # Add annotations to the created mne object
@@ -182,16 +183,19 @@ def main(fname, out_main_dir, config):
         mne_array.set_annotations(
             mne_array.annotations + annot_from_events)
 
-        # Plot raw LFP w events
-        mne_array.plot(n_channels=20, block=True, duration=50,
-                       show=True, clipping="transparent",
-                       title="Raw LFP Data w Events from {}".format(base_name),
-                       remove_dc=False, scalings=dict(eeg=400e-6))
+        # # Plot raw LFP w events
+        # mne_array.plot(n_channels=20, block=True, duration=50,
+        #                show=True, clipping="transparent",
+        #                title="Raw LFP Data w Events from {}".format(base_name),
+        #                remove_dc=False, scalings=dict(eeg=400e-6))
 
-        # Do ICA artefact removal on the mne object
-        recon_raw = bvmpc.bv_mne.ICA_pipeline(mne_array, regions, chans_to_plot=len(lfp_odict),
-                                              base_name=base_name, exclude=None)
-        # recon_raw = mne_array
+        do_mne_ICA = 0  # Temporary condition to bypass ICA
+        if do_mne_ICA:
+            # Do ICA artefact removal on the mne object
+            recon_raw = bvmpc.bv_mne.ICA_pipeline(mne_array, regions, chans_to_plot=len(lfp_odict),
+                                                  base_name=base_name, exclude=None)
+        else:
+            recon_raw = mne_array
 
         # Epoch events
         reject_criteria = dict(eeg=600e-6)  # 600 uV
@@ -201,21 +205,30 @@ def main(fname, out_main_dir, config):
         sel = None
         picks = bvmpc.bv_mne.pick_chans(recon_raw, sel=sel)
 
-        epochs = mne.Epochs(recon_raw, mne_events, picks=picks, event_id=events_dict, tmin=-0.5, tmax=0.5,
-                            reject=reject_criteria, preload=True)
-        epochs.plot_drop_log()
+        epochs = mne.Epochs(recon_raw, mne_events, picks=picks, event_id=events_dict,
+                            tmin=-0.5, tmax=0.5, reject=reject_criteria, preload=True)
+        # epochs.plot_drop_log()
         # exit(-1)
 
         comp_conds = ['Right', 'Left']
-        epochs.equalize_event_counts(comp_conds)
+        ls, ind = epochs.equalize_event_counts(comp_conds, method='truncate')
+
         epoch_list = []
         for conds in comp_conds:
             epoch_list.append(epochs[conds])
         del recon_raw, epochs  # Free up memory
 
-        for epoch in epoch_list:
+        epoch_dir = os.path.join(o_dir, 'MNE')
+        make_dir_if_not_exists(epoch_dir)
+        for i, epoch in enumerate(epoch_list):
             picks = ['RSC-14', 'ACC-9', 'CLA-7', 'AI-5']
-            epoch.plot_image(picks=picks)
+            for pick in picks:
+                epoch_fig = epoch.plot_image(picks=pick, show=False)
+                fig_name = os.path.join(
+                    epoch_dir, '{}_Raw_{}-{}'.format(base_name, comp_conds[i], pick) + '.png')
+                print('Saving raw-epoch to ' + fig_name)
+                epoch_fig[0].savefig(fig_name)
+        exit(-1)
 
         # # Test plot_image in groups
         # # Get channels for each region in dict format. For use with plot_image
