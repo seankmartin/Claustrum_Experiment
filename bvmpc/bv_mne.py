@@ -298,7 +298,7 @@ def generate_events(mne_array, session, plot=False):
 
 def pick_chans(raw, sel=None):
     """
-    Pick channels based on sel input. Identifies channels with str in sel.
+    Pick channels based on sel input. Identifies channels with str or int in sel.
     Example:
         Input
             raw.chan_names = ['ACC-1','ACC-2','RSC-3']
@@ -309,8 +309,8 @@ def pick_chans(raw, sel=None):
     Parameters
     ----------
     raw : mne.raw object
-    sel : list of str, Default None
-        Input str to include in picks. Sel must be in chan_name(eg. ACC-13)
+    sel : list of str OR list of int, Default None
+        str/int to include in picks. Sel must be in chan_name(eg. ACC-13)
 
     Returns
     -------
@@ -320,6 +320,16 @@ def pick_chans(raw, sel=None):
     """
     if sel == None:
         picks = None
+    elif type(sel[0]) == int:
+        picks = []
+        for s in sel:
+            for ch in raw.ch_names[:-1]:
+                try:
+                    if ch.split('-')[1] == str(s):
+                        picks.append(ch)
+                except:
+                    pass
+        print('Picked chans:', picks)
     else:
         picks = []
         for s in sel:
@@ -416,6 +426,6 @@ def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name="", exclude=Non
     reconst_raw.plot(block=True, show=True, clipping="transparent", duration=50,
                      title="Reconstructed LFP Data from {}".format(
                          base_name),
-                     remove_dc=False, scalings=dict(eeg=400e-6))
+                     remove_dc=False, scalings=dict(eeg=350e-6))
 
     return reconst_raw
