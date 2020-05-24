@@ -179,7 +179,8 @@ def main(fname, out_main_dir, config):
         # bvmpc.bv_mne.save_annotations(mne_array, annote_loc)
 
         events_dict, mne_events, annot_from_events = bvmpc.bv_mne.generate_events(
-            mne_array, session)
+            mne_array, session, plot=True)
+        exit(-1)
 
         # Add events to annotations
         mne_array.set_annotations(

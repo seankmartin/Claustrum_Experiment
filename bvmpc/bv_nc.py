@@ -10,13 +10,53 @@ from neurochat.nc_event import NEvent
 
 def events_from_session(session):
     # Note maybe should use get_valid_tdf
+    # print(session.info_arrays.keys())
+    # exit(-1)
     right_presses = session.get_one_lever_ts("R", True)
     left_presses = session.get_one_lever_ts("L", True)
     pell_ts_exdouble, dpell = session.split_pell_ts()
     collection_times = session.get_arrays("Nosepoke")
-    names = ["Right", "Left", "Reward", "Collection"]
-    all_info = [
-        right_presses, left_presses, pell_ts_exdouble, collection_times]
+    tone_starts = session.get_tone_starts()
+    r_light = session.get_arrays("right_light")
+    l_light = session.get_arrays("left_light")
+    sch_type = session.get_arrays('Trial Type')
+    # Split pells into blocks
+    pell_blocks = np.split(pell_ts_exdouble, np.searchsorted(
+        pell_ts_exdouble, tone_starts[1:]))
+    col_blocks = np.split(collection_times, np.searchsorted(
+        collection_times, tone_starts[1:]))
+
+    # Split pell and collection into schedules
+    FR_pell, FR_coll, FI_pell, FI_coll, sch_block = [], [], [], [], []
+    for i, (sch, pell, coll) in enumerate(zip(sch_type, pell_blocks, col_blocks)):
+        if sch == 1:
+            b_type = 'FR'
+            FR_pell = np.concatenate((FR_pell, pell))
+            FR_coll = np.concatenate((FR_coll, coll))
+        elif sch == 0:
+            b_type = 'FI'
+            FI_pell = np.concatenate((FI_pell, pell))
+            FI_coll = np.concatenate((FI_coll, coll))
+        sch_block.append(b_type + '-{}'.format(i))
+
+    # event_dict['FR/Pellet'] = FR_pell
+    # event_dict['FI/Pellet'] = FI_pell
+    # event_dict['FR/Collection'] = FR_coll
+    # event_dict['FI/Collection'] = FI_coll
+
+    event_dict = {
+        "Tone": tone_starts,
+        "R-Light": r_light,
+        "L-Light": l_light,
+        "Right": right_presses,
+        "Left": left_presses,
+        # "Pellet": pell_ts_exdouble,
+        'FR/Pellet': FR_pell,
+        'FI/Pellet': FI_pell,
+        # "Collection": collection_times,
+        'FR/Collection': FR_coll,
+        'FI/Collection': FI_coll
+    }
 
     nc_events = NEvent()
     event_train = []
@@ -25,7 +65,7 @@ def events_from_session(session):
 
     # This could be sped up by directly using np arrays
     # But it is still fast since the arrays are small.
-    for tag, (info, name) in enumerate(zip(all_info, names)):
+    for tag, (name, info) in enumerate(event_dict.items()):
         for val in info:
             event_names.append(name)
             event_tags.append(tag)
