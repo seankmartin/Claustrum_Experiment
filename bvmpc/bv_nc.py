@@ -51,11 +51,11 @@ def events_from_session(session):
         "Right": right_presses,
         "Left": left_presses,
         # "Pellet": pell_ts_exdouble,
-        'FR/Pellet': FR_pell,
-        'FI/Pellet': FI_pell,
+        'Pellet/FR': FR_pell,
+        'Pellet/FI': FI_pell,
         # "Collection": collection_times,
-        'FR/Collection': FR_coll,
-        'FI/Collection': FI_coll
+        'Collection/FR': FR_coll,
+        'Collection/FI': FI_coll
     }
 
     nc_events = NEvent()

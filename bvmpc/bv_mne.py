@@ -311,6 +311,7 @@ def pick_chans(raw, sel=None):
     raw : mne.raw object
     sel : list of str OR list of int, Default None
         str/int to include in picks. Sel must be in chan_name(eg. ACC-13)
+        if list of int, channel number will be used to select channels.
 
     Returns
     -------
