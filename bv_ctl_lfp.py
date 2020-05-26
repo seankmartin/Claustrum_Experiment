@@ -154,6 +154,11 @@ def main(fname, out_main_dir, config):
         import mne
         import bvmpc.bv_mne
 
+        # Temp func to plot dist of responses
+
+        sel_col = 'Avg_Press_Rate (s)'
+        bv_an.plot_feat_dist(session, sel_col)
+
         # Setup the mne object with our data
         lfp_odict = LfpODict(
             fname, channels=chans,
@@ -187,21 +192,22 @@ def main(fname, out_main_dir, config):
             mne_array.annotations + annot_from_events)
 
         # Exclude bad channels from future anaysis
-        badchans = [int(x) for x in config.get(
-            "Setup", "bad_chans").split(", ")]
+        # badchans = [int(x) for x in config.get(
+        #     "Setup", "bad_chans").split(", ")]
+        badchans = ['ACC', 'AI', 'CLA']
+        # badchans = ['RSC']
         bad_ch_names = bvmpc.bv_mne.pick_chans(mne_array, sel=badchans)
-        exit(-1)
         mne_array.info['bads'] = bad_ch_names
 
         # Plot raw LFP w events
         mne_array.plot(n_channels=20, block=True, duration=50,
                        show=True, clipping="transparent",
                        title="Raw LFP Data w Events from {}".format(base_name),
-                       remove_dc=False, scalings=dict(eeg=700e-6))
+                       remove_dc=False, scalings=dict(eeg=350e-6))
 
         do_mne_ICA = 1  # Temporary condition to bypass ICA
         # exclude = [4, 6, 12]
-        # exclude = [4, 6, 12]
+        # exclude = [3, 4, 5, 10]
         exclude = None
         if do_mne_ICA:
             ica_txt = 'ICA'  # Used for file naming
@@ -233,8 +239,8 @@ def main(fname, out_main_dir, config):
 
         # exit(-1)
 
-        comp_conds = ['Collection/FR', 'Collection/FI']
-        # comp_conds = ['Right', 'Left']
+        # comp_conds = ['Collection/FR', 'Collection/FI']
+        comp_conds = ['Right', 'Left']
         epochs.equalize_event_counts(comp_conds, method='truncate')
 
         epoch_list = []
@@ -245,10 +251,12 @@ def main(fname, out_main_dir, config):
         del recon_raw, epochs  # Free up memory
 
         # # Plot epoch.plot_image for selected tetrodes seperately
-        # for epoch, cond in zip(epoch_list, comp_conds):
-        #     picks = ['RSC-14', 'ACC-9', 'CLA-7', 'AI-5']
-        #     for pick in picks:
-        #         epoch_fig = epoch.plot_image(picks=pick, show=False)
+        picks = ['RSC-13', 'RSC-14', 'RSC-15', 'RSC-16']
+        # picks = ['RSC-14', 'ACC-9', 'CLA-7', 'AI-5']
+        for epoch, cond in zip(epoch_list, comp_conds):
+            epoch_fig = epoch.plot_image(picks=picks, show=True)
+            # for pick in picks:
+            #     epoch_fig = epoch.plot_image(picks=pick, show=True)
         #         fig_name = os.path.join(
         #             mne_dir, '{}'.format(cond.replace('/', '-')), '{}_{}_{}-{}'.format(base_name, ica_txt, cond.replace('/', '-'), pick) + '.png')
         #         make_path_if_not_exists(fig_name)
@@ -260,14 +268,18 @@ def main(fname, out_main_dir, config):
         epoch_ave = {}  # dict for comparing across conds
         for epoch, cond in zip(epoch_list, comp_conds):
             epoch_ave[cond] = epoch.average()
-        for cond, epoch in epoch_ave.items():
-            pj_fig = epoch.plot_joint(
-                picks='eeg', show=False, times=[-0.25, -0.025, 0, 0.025, 0.25])
-            pj_fname = os.path.join(
-                mne_dir, '{}'.format(cond.replace('/', '-')), '{}_{}_joint_{}-{}'.format(base_name, ica_txt, cond.replace('/', '-'), pick) + '.png')
-            pj_fig.suptitle(pj_fname)
-            plt.show()
-        exit(-1)
+        # for cond, epoch in epoch_ave.items():
+        #     pj_fig = epoch.plot_joint(
+        #         picks='eeg', show=True, times=[-0.25, -0.1, -0.025, 0, 0.025, 0.1, 0.25])
+        #     # Joint plot title
+        #     pj_title = '"{}"_{}_{}'.format(
+        #         cond.replace('/', '-'), ica_txt, base_name)
+        #     pj_fig.suptitle(pj_title)
+        #     pj_fname = os.path.join(
+        #         mne_dir, '{}'.format(cond.replace('/', '-')), '{}_{}_joint_{}'.format(base_name, ica_txt, cond.replace('/', '-')) + '.png')
+        #     print('Saving joint_plot to ' + fig_name)
+        #     pj_fig.savefig(pj_fname)
+        # exit(-1)
 
         # Compare average across session types
         for pick in picks:

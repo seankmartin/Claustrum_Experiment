@@ -355,7 +355,7 @@ class Session:
         """
         df = self.get_trial_df_norm()
         feat_names = ["Trial_Len", "Resp_n",
-                      "Avg_Press_Rate", "Avg_Press_Gradient",
+                      "Avg_Press_Rate (s)", "Avg_Press_Gradient",
                       "Max_in_10s"]
 
         # Number of features before lever histogram
