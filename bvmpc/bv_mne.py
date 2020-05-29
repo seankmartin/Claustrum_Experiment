@@ -28,8 +28,8 @@ def get_eloc(ch_names, o_dir, base_name, dummy=False):
     """
     def get_next_i(rows, cols, idx):
         """Local helper function."""
-        row_idx = (idx // cols)
-        col_idx = (idx % cols)
+        row_idx = (idx % cols)
+        col_idx = (idx // cols)
         return row_idx, col_idx
 
     eloc_path = os.path.join(o_dir, base_name + "_eloc.csv")
@@ -40,15 +40,15 @@ def get_eloc(ch_names, o_dir, base_name, dummy=False):
         for i, ch in enumerate(ch_names):
             if "ACC" in ch:
                 x, y = get_next_i(2, 2, n_acc)
-                coord_ls = [x/2, 2 - y/2, 0+y]
+                coord_ls = [x/2, 2 - y/2, 0+y/2]
                 n_acc += 1
             elif "RSC" in ch:
                 x, y = get_next_i(2, 2, n_rsc)
                 # coord_ls = [x, y - 10, 0]
-                coord_ls = [x/2, y/2 - 2, 0 + y]
+                coord_ls = [x/2, y/2 - 2, 0 + y/2]
                 n_rsc += 1
             else:
-                x, y = get_next_i(4, 4, n_cla)
+                x, y = get_next_i(4, 2, n_cla)
                 # coord_ls = [x + 5, 2 - y, -5]
                 coord_ls = [x + 3, 2 - y, 1-x/2]
                 n_cla += 1
@@ -146,9 +146,14 @@ def create_mne_array(
     # Plot montage of electrode positions
     if plot_mon:
         fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
         # sphere = [0, 0, 0, 10]
-        raw.plot_sensors(kind='3d', ch_type='eeg', show_names=False,
+
+        ax = fig.add_subplot(1, 1, 1)
+        raw.plot_sensors(kind='topomap', ch_type='eeg', show_names=True,
+                         axes=ax, block=False)
+
+        ax = fig.add_subplot(1, 2, 1, projection='3d')
+        raw.plot_sensors(kind='3d', ch_type='eeg', show_names=True,
                          axes=ax, block=True, to_sphere=True)
 
     return raw

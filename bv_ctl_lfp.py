@@ -154,10 +154,12 @@ def main(fname, out_main_dir, config):
         import mne
         import bvmpc.bv_mne
 
-        # Temp func to plot dist of responses
+        # # Temp func to plot dist of responses. Helps determine if epoch used is appropriate
 
-        sel_col = 'Avg_Press_Rate (s)'
-        bv_an.plot_feat_dist(session, sel_col)
+        # sel_col = 'Avg_Press_Rate (s)'
+        # feat_df = session.extract_features(should_scale=False)
+        # # feat_df = session.extract_old_features(should_scale=False)
+        # bv_an.plot_feat_dist(session, feat_df, sel_col)
 
         # Setup the mne object with our data
         lfp_odict = LfpODict(
@@ -170,6 +172,7 @@ def main(fname, out_main_dir, config):
         base_name = os.path.basename(fname)[4:]
         # print(base_name)
         # exit(-1)
+
         mne_dir = os.path.join(o_dir, 'MNE')
         make_dir_if_not_exists(mne_dir)
 
@@ -192,10 +195,10 @@ def main(fname, out_main_dir, config):
             mne_array.annotations + annot_from_events)
 
         # Exclude bad channels from future anaysis
-        # badchans = [int(x) for x in config.get(
-        #     "Setup", "bad_chans").split(", ")]
-        badchans = ['ACC', 'AI', 'CLA']
-        # badchans = ['RSC']
+        badchans = [int(x) for x in config.get(
+            "Setup", "bad_chans").split(", ")]
+        # badchans = ['ACC', 'AI', 'CLA']
+        # badchans = ['RSC', 'AI', 'CLA']
         bad_ch_names = bvmpc.bv_mne.pick_chans(mne_array, sel=badchans)
         mne_array.info['bads'] = bad_ch_names
 
@@ -219,7 +222,8 @@ def main(fname, out_main_dir, config):
             recon_raw = mne_array
 
         # Epoch events
-        reject_criteria = dict(eeg=700e-6)  # 600 uV
+        # reject_criteria = dict(eeg=700e-6)  # 600 uV
+        reject_criteria = None
 
         # Pick chans based on regions/tetrode number
         # sel = ['ACC'] # Use None to select all channels
@@ -239,52 +243,65 @@ def main(fname, out_main_dir, config):
 
         # exit(-1)
 
+        # comp_conds = ['Pellet/FR', 'Pellet/FI']
         # comp_conds = ['Collection/FR', 'Collection/FI']
-        comp_conds = ['Right', 'Left']
-        epochs.equalize_event_counts(comp_conds, method='truncate')
+        comp_conds = ['Collection']
+
+        # Temp overall control for plotting functions
+        plot_image, topo_seq = 1, 1
+
+        if len(comp_conds) > 1:
+            epochs.equalize_event_counts(comp_conds, method='truncate')
 
         epoch_list = []
         for conds in comp_conds:
             epoch_list.append(epochs[conds])
 
-        picks = bvmpc.bv_mne.pick_chans(recon_raw, sel=sel)
+        # sel = ['ACC']
+        # sel = ['ACC']
+        # picks = bvmpc.bv_mne.pick_chans(recon_raw, sel=sel)
         del recon_raw, epochs  # Free up memory
 
-        # # Plot epoch.plot_image for selected tetrodes seperately
-        picks = ['RSC-13', 'RSC-14', 'RSC-15', 'RSC-16']
-        # picks = ['RSC-14', 'ACC-9', 'CLA-7', 'AI-5']
-        for epoch, cond in zip(epoch_list, comp_conds):
-            epoch_fig = epoch.plot_image(picks=picks, show=True)
-            # for pick in picks:
-            #     epoch_fig = epoch.plot_image(picks=pick, show=True)
-        #         fig_name = os.path.join(
-        #             mne_dir, '{}'.format(cond.replace('/', '-')), '{}_{}_{}-{}'.format(base_name, ica_txt, cond.replace('/', '-'), pick) + '.png')
-        #         make_path_if_not_exists(fig_name)
-        #         print('Saving raw-epoch to ' + fig_name)
-        #         epoch_fig[0].savefig(fig_name)
+        # Plot epoch.plot_image for selected tetrodes seperately
+        if plot_image:
+            picks = ['RSC-14', 'ACC-9', 'CLA-7', 'AI-5']
+
+            for epoch, cond in zip(epoch_list, comp_conds):
+                # epoch_fig = epoch.plot_image(picks=picks, show=True)
+                for pick in picks:
+                    epoch_fig = epoch.plot_image(picks=pick, show=True)
+                    fig_name = os.path.join(
+                        mne_dir, '{}'.format(cond.replace('/', '-')), '{}_{}_{}-{}'.format(base_name, ica_txt, cond.replace('/', '-'), pick) + '.png')
+                    make_path_if_not_exists(fig_name)
+                    print('Saving raw-epoch to ' + fig_name)
+                    epoch_fig[0].savefig(fig_name)
         # exit(-1)
 
-        # Plot all tetrode averages for epoch (includes topo map)
-        epoch_ave = {}  # dict for comparing across conds
+        # Generate dict[conds] for comparing epoch average across conds
+        epoch_ave = {}
         for epoch, cond in zip(epoch_list, comp_conds):
             epoch_ave[cond] = epoch.average()
-        # for cond, epoch in epoch_ave.items():
-        #     pj_fig = epoch.plot_joint(
-        #         picks='eeg', show=True, times=[-0.25, -0.1, -0.025, 0, 0.025, 0.1, 0.25])
-        #     # Joint plot title
-        #     pj_title = '"{}"_{}_{}'.format(
-        #         cond.replace('/', '-'), ica_txt, base_name)
-        #     pj_fig.suptitle(pj_title)
-        #     pj_fname = os.path.join(
-        #         mne_dir, '{}'.format(cond.replace('/', '-')), '{}_{}_joint_{}'.format(base_name, ica_txt, cond.replace('/', '-')) + '.png')
-        #     print('Saving joint_plot to ' + fig_name)
-        #     pj_fig.savefig(pj_fname)
-        # exit(-1)
+
+        # Plot all tetrode averages for epoch (includes topo map)
+        if topo_seq:
+            for cond, epoch in epoch_ave.items():
+                pj_fig = epoch.plot_joint(
+                    picks='eeg', show=True, times=[-0.25, -0.1, -0.025, 0, 0.025, 0.1, 0.25])
+                # Joint plot title
+                pj_title = '"{}"_{}_{}'.format(
+                    cond.replace('/', '-'), ica_txt, base_name)
+                pj_fig.suptitle(pj_title)
+                pj_fname = os.path.join(
+                    mne_dir, '{}'.format(cond.replace('/', '-')), '{}_{}_joint_{}'.format(base_name, ica_txt, cond.replace('/', '-')) + '.png')
+                print('Saving joint_plot to ' + fig_name)
+                pj_fig.savefig(pj_fname)
+            # exit(-1)
 
         # Compare average across session types
-        for pick in picks:
-            mne.viz.plot_compare_evokeds(
-                epoch_ave, picks=pick, legend='upper left', show_sensors='upper right')
+        if len(comp_conds) > 1:
+            for pick in picks:
+                mne.viz.plot_compare_evokeds(
+                    epoch_ave, picks=pick, legend='upper left', show_sensors='upper right')
 
         exit(-1)
 

@@ -1119,19 +1119,19 @@ def trial_clust_hier(s, ax=None, should_pca=True, cutoff=None):
     return fig
 
 
-def plot_feat_dist(session, sel_col=None):
+def plot_feat_dist(session, feat_df, sel_col=None):
     """ Plot distribution comparing FR vs FI for selected feature using sns
 
     Parameters
     ----------
     session : session object
+    feat_df : pd.df
+        dataframe with column in which distribution is to be plot from.
     sel_col : str or int, default None
 
     """
     df = session.get_trial_df_norm()
 
-    feat_df = session.extract_features(should_scale=False)
-    # feat_df = session.extract_old_features(should_scale=False)
     if sel_col is None:
         print('Features available: ', feat_df.columns)
         sel_col = input("Select feature index to plot: \n")
@@ -1140,6 +1140,7 @@ def plot_feat_dist(session, sel_col=None):
         except:
             pass
 
+    print('Plotting dist for "{}"'.format(sel_col))
     feat_df['markers'] = df["Schedule"].astype('category')
     for i, (key, data) in enumerate(feat_df.groupby('markers')[sel_col]):
         ax = sns.distplot(data, label=key)
@@ -1153,7 +1154,7 @@ def plot_feat_dist(session, sel_col=None):
         # print(round(x[maxid], 2))
         plt.annotate(round(x[maxid], 2), xy=(x[maxid], y[maxid]), xytext=(20, 15),
                      textcoords='offset points', arrowprops={'arrowstyle': '-'})
-        print("{} Median: {}s".format(key, data.median()))
+        print("{} Median: {:.2f}s".format(key, data.median()))
         print("{} Min / Max: {:.2f}s / {:.2f}s".format(key, data.min(), data.max()))
     plt.legend()
     plt.show()
