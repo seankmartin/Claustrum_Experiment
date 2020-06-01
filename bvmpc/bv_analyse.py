@@ -155,6 +155,21 @@ def cumplot_axona(s, ax=None, p_errors=False, p_all=False):
             str(err_FR) + r" \ " + str(err_FI)
     else:
         err_print = ""
+
+    # Plot hline for each block
+    cum_l = 0
+    for i, l in enumerate(norm_l_ts):
+        cum_l += l.size
+        if sch_type[i] == 1:
+            ax[0].axhline(cum_l, c=ratio_c(i * 45), lw=0.75, zorder=-1)
+            ax[0].text(ax[0].set_xlim()[1]-10, cum_l+1,
+                       "n = {}".format(l.size), ha='right', fontsize=8)
+        elif sch_type[i] == 0:
+            ax[0].axhline(cum_l, c=interval_c(i * 45), lw=0.75, zorder=-1)
+            ax[0].text(ax[0].set_xlim()[1]-10, cum_l+1,
+                       "n = {}".format(l.size), ha='right', fontsize=8)
+        print(i, l.size, cum_l)
+
     text = ('Total # of Lever Press: ' + '{}\nTotal # of Rewards: {}{}{}{}'.format(
             len(lever_ts), len(reward_times) + len(reward_double),
             dr_print, rw_print, err_print))

@@ -154,8 +154,15 @@ def main(fname, out_main_dir, config):
         import mne
         import bvmpc.bv_mne
 
-        # # Temp func to plot dist of responses. Helps determine if epoch used is appropriate
+        # # Temp func to plot cummulative lever response. Helps determine when pattern should appear in lever plot_image.
+        # fig = bv_an.cumplot_axona(session)
+        # cum_fname = os.path.join(
+        #     o_dir, os.path.basename(fname)+'_bv_cum' + '.png')
+        # print('Saving cummulative plot to {}'.format(cum_fname))
+        # fig.savefig(cum_fname)
+        # exit(-1)
 
+        # # Temp func to plot dist of responses. Helps determine if epoch used is appropriate
         # sel_col = 'Avg_Press_Rate (s)'
         # feat_df = session.extract_features(should_scale=False)
         # # feat_df = session.extract_old_features(should_scale=False)
@@ -207,7 +214,7 @@ def main(fname, out_main_dir, config):
 
         mne_array.info['bads'] = bad_ch_names
 
-        # Plot raw LFP w events
+        # # Plot raw LFP w events
         # mne_array.plot(n_channels=20, block=True, duration=50,
         #                show=True, clipping="transparent",
         #                title="Raw LFP Data w Events from {}".format(base_name),
@@ -216,8 +223,9 @@ def main(fname, out_main_dir, config):
         # # Save annotations after events and bad channels
         # bvmpc.bv_mne.save_annotations(mne_array, annote_loc)
 
-        do_mne_ICA = 1  # Temporary condition to bypass ICA
-        exclude = [4, 6, 8]
+        do_mne_ICA = 0  # Temporary condition to bypass ICA
+        exclude = [4, 6]
+        # exclude = [4, 6, 8]
         # exclude = [3, 4, 5, 10]
         # exclude = None
         if do_mne_ICA:
@@ -230,8 +238,15 @@ def main(fname, out_main_dir, config):
             recon_raw = mne_array
 
         # Epoch events
-        # reject_criteria = dict(eeg=700e-6)  # 600 uV
-        reject_criteria = None
+        reject_criteria = dict(eeg=700e-6)  # 600 uV
+        # reject_criteria = None
+
+        # baseline = (-0.4, -0.2)
+        baseline = None
+        if baseline is None:
+            bline_txt = ''
+        else:
+            bline_txt = '_Bline[{}s]_[{}s]'.format(baseline[0], baseline[1])
 
         # Pick chans based on regions/tetrode number
         # sel = ['ACC'] # Use None to select all channels
@@ -240,10 +255,18 @@ def main(fname, out_main_dir, config):
         picks = bvmpc.bv_mne.pick_chans(recon_raw, sel=sel)
 
         epochs = mne.Epochs(recon_raw, mne_events, picks=picks, event_id=events_dict,
-                            tmin=-0.5, tmax=0.5, reject=reject_criteria, preload=True)
+                            tmin=-1.0, tmax=1.0, reject=reject_criteria, preload=True, baseline=baseline)
 
-        # # Plot drop log based on reject_criteria
-        # dlog_fig = epochs.plot_drop_log(show=False)
+        # Test autoreject. Reccomended by MNE authors. Doesnt work for now.
+        # from autoreject import AutoReject, get_rejection_threshold
+        # ar = AutoReject()
+        # epochs = ar.fit_transform(epochs)
+        # reject = get_rejection_threshold(epochs)
+        # print(reject)
+        # exit(-1)
+
+        # Plot drop log based on reject_criteria
+        # dlog_fig = epochs.plot_drop_log(show=True)
         # dlog_name = os.path.join(
         #     mne_dir, '{}_droplog_{}.png'.format(base_name, ica_txt))
         # print('Saving dlog to ' + dlog_name)
@@ -252,9 +275,10 @@ def main(fname, out_main_dir, config):
         # exit(-1)
 
         # comp_conds = ['Pellet/FR', 'Pellet/FI']
+        # comp_conds = ['R/Lever', 'L/Lever']
         # comp_conds = ['Collection/FR', 'Collection/FI']
-        # comp_conds = ['Lever']
-        comp_conds = ['Pellet']
+        comp_conds = ['Lever']
+        # comp_conds = ['Pellet']
 
         # # Manually curate events to exclude
         # catch_trials_and_buttonpresses = mne.pick_events(
@@ -269,12 +293,24 @@ def main(fname, out_main_dir, config):
         plot_image, topo_seq = 1, 1
 
         if len(comp_conds) > 1:
+            # epochs.equalize_event_counts(comp_conds, method='truncate')
             epochs.equalize_event_counts(comp_conds, method='truncate')
 
         epoch_list = []
         for conds in comp_conds:
             epoch_list.append(epochs[conds])
 
+        plot_reg = 0
+        # Sets picks as list of each region. Aids plotting of magnitute.
+        if plot_reg:
+            picks = []
+            for sel in sorted(set(regions)):
+                picks.append(bvmpc.bv_mne.pick_chans(recon_raw, sel=[sel]))
+            combine = 'gfp'
+        else:
+            picks = ['ACC-12', 'CLA-7', 'AI-4']
+            # picks = ['RSC-14', 'ACC-9', 'CLA-7', 'AI-4']
+            combine = None
         # sel = ['ACC']
         # sel = ['ACC']
         # picks = bvmpc.bv_mne.pick_chans(recon_raw, sel=sel)
@@ -282,17 +318,16 @@ def main(fname, out_main_dir, config):
 
         # Plot epoch.plot_image for selected tetrodes seperately
         if plot_image:
-            picks = ['RSC-14', 'ACC-9', 'CLA-7', 'AI-6']
-
             for epoch, cond in zip(epoch_list, comp_conds):
                 # epoch_fig = epoch.plot_image(picks=picks, show=True)
                 for pick in picks:
-                    epoch_fig = epoch.plot_image(picks=pick, show=False)
+                    epoch_fig = epoch.plot_image(
+                        picks=pick, show=False, combine=combine)
                     ax = epoch_fig[0].axes[0]
                     ax.set_title("{}\n'{}' {}".format(base_name, cond, pick),
                                  x=0.5, y=1.01, fontsize=10)
                     fig_name = os.path.join(
-                        mne_dir, '{}'.format(cond.replace('/', '-')), '{}_{}_{}-{}'.format(base_name, ica_txt, cond.replace('/', '-'), pick) + '.png')
+                        mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_{}-{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), pick, bline_txt) + '.png')
                     make_path_if_not_exists(fig_name)
                     print('Saving raw-epoch to ' + fig_name)
                     epoch_fig[0].savefig(fig_name)
@@ -303,7 +338,7 @@ def main(fname, out_main_dir, config):
                 ax.set_title("{}\n'{}' PSD".format(base_name, cond),
                              x=0.5, y=1.01, fontsize=10)
                 psd_fname = os.path.join(
-                    mne_dir, '{}'.format(cond.replace('/', '-')), '{}_{}_psd'.format(base_name, ica_txt, cond.replace('/', '-')) + '.png')
+                    mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_psd_{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), bline_txt) + '.png')
                 make_path_if_not_exists(psd_fname)
                 print('Saving raw-epoch to ' + psd_fname)
                 psd_fig.savefig(psd_fname)
@@ -318,22 +353,24 @@ def main(fname, out_main_dir, config):
         if topo_seq:
             for cond, epoch in epoch_ave.items():
                 pj_fig = epoch.plot_joint(
-                    picks='eeg', show=True, times=[-0.25, -0.1, -0.025, 0, 0.025, 0.1, 0.25])
+                    picks='eeg', show=False, times=[-0.25, -0.1, -0.025, 0, 0.025, 0.1, 0.25])
                 # Joint plot title
                 pj_title = '"{}"_{}_{}'.format(
                     cond.replace('/', '-'), ica_txt, base_name)
                 pj_fig.suptitle(pj_title)
                 pj_fname = os.path.join(
-                    mne_dir, '{}'.format(cond.replace('/', '-')), '{}_{}_joint_{}'.format(base_name, ica_txt, cond.replace('/', '-')) + '.png')
-                print('Saving joint_plot to ' + fig_name)
+                    mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_joint_{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), bline_txt) + '.png')
+                print('Saving joint_plot to ' + pj_fname)
                 pj_fig.savefig(pj_fname)
             # exit(-1)
+        # plt.show()
+        exit(-1)
 
         # Compare average across session types
         if len(comp_conds) > 1:
             for pick in picks:
                 mne.viz.plot_compare_evokeds(
-                    epoch_ave, picks=pick, legend='upper left', show_sensors='upper right')
+                    epoch_ave, picks=pick, legend='upper left', show_sensors='upper right', show=False)
 
         exit(-1)
 
