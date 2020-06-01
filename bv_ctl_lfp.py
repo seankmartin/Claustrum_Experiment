@@ -195,23 +195,31 @@ def main(fname, out_main_dir, config):
             mne_array.annotations + annot_from_events)
 
         # Exclude bad channels from future anaysis
-        badchans = [int(x) for x in config.get(
-            "Setup", "bad_chans").split(", ")]
-        # badchans = ['ACC', 'AI', 'CLA']
-        # badchans = ['RSC', 'AI', 'CLA']
-        bad_ch_names = bvmpc.bv_mne.pick_chans(mne_array, sel=badchans)
+        try:
+            badchans = [int(x) for x in config.get(
+                "Setup", "bad_chans").split(", ")]
+            # badchans = ['ACC', 'AI', 'CLA']
+            # badchans = ['RSC', 'AI', 'CLA']
+            bad_ch_names = bvmpc.bv_mne.pick_chans(mne_array, sel=badchans)
+        except:
+            print('No bad channels indicated')
+            bad_ch_names = []
+
         mne_array.info['bads'] = bad_ch_names
 
         # Plot raw LFP w events
-        mne_array.plot(n_channels=20, block=True, duration=50,
-                       show=True, clipping="transparent",
-                       title="Raw LFP Data w Events from {}".format(base_name),
-                       remove_dc=False, scalings=dict(eeg=350e-6))
+        # mne_array.plot(n_channels=20, block=True, duration=50,
+        #                show=True, clipping="transparent",
+        #                title="Raw LFP Data w Events from {}".format(base_name),
+        #                remove_dc=False, scalings=dict(eeg=350e-6))
+
+        # # Save annotations after events and bad channels
+        # bvmpc.bv_mne.save_annotations(mne_array, annote_loc)
 
         do_mne_ICA = 1  # Temporary condition to bypass ICA
-        # exclude = [4, 6, 12]
+        exclude = [4, 6, 8]
         # exclude = [3, 4, 5, 10]
-        exclude = None
+        # exclude = None
         if do_mne_ICA:
             ica_txt = 'ICA'  # Used for file naming
             # Do ICA artefact removal on the mne object
@@ -245,7 +253,17 @@ def main(fname, out_main_dir, config):
 
         # comp_conds = ['Pellet/FR', 'Pellet/FI']
         # comp_conds = ['Collection/FR', 'Collection/FI']
-        comp_conds = ['Collection']
+        # comp_conds = ['Lever']
+        comp_conds = ['Pellet']
+
+        # # Manually curate events to exclude
+        # catch_trials_and_buttonpresses = mne.pick_events(
+        #     mne_events)
+        # # Purges selected events from event_ids
+        # for conds in comp_conds:
+        #     epochs[conds].plot(events=catch_trials_and_buttonpresses, event_id=events_dict,
+        #                        event_colors=dict(buttonpress='red', face='blue'))
+        # exit(-1)
 
         # Temp overall control for plotting functions
         plot_image, topo_seq = 1, 1
@@ -264,17 +282,31 @@ def main(fname, out_main_dir, config):
 
         # Plot epoch.plot_image for selected tetrodes seperately
         if plot_image:
-            picks = ['RSC-14', 'ACC-9', 'CLA-7', 'AI-5']
+            picks = ['RSC-14', 'ACC-9', 'CLA-7', 'AI-6']
 
             for epoch, cond in zip(epoch_list, comp_conds):
                 # epoch_fig = epoch.plot_image(picks=picks, show=True)
                 for pick in picks:
-                    epoch_fig = epoch.plot_image(picks=pick, show=True)
+                    epoch_fig = epoch.plot_image(picks=pick, show=False)
+                    ax = epoch_fig[0].axes[0]
+                    ax.set_title("{}\n'{}' {}".format(base_name, cond, pick),
+                                 x=0.5, y=1.01, fontsize=10)
                     fig_name = os.path.join(
                         mne_dir, '{}'.format(cond.replace('/', '-')), '{}_{}_{}-{}'.format(base_name, ica_txt, cond.replace('/', '-'), pick) + '.png')
                     make_path_if_not_exists(fig_name)
                     print('Saving raw-epoch to ' + fig_name)
                     epoch_fig[0].savefig(fig_name)
+
+                # Plot power spectrum density of epoch
+                psd_fig = epoch.plot_psd(show=False)
+                ax = psd_fig.axes[0]
+                ax.set_title("{}\n'{}' PSD".format(base_name, cond),
+                             x=0.5, y=1.01, fontsize=10)
+                psd_fname = os.path.join(
+                    mne_dir, '{}'.format(cond.replace('/', '-')), '{}_{}_psd'.format(base_name, ica_txt, cond.replace('/', '-')) + '.png')
+                make_path_if_not_exists(psd_fname)
+                print('Saving raw-epoch to ' + psd_fname)
+                psd_fig.savefig(psd_fname)
         # exit(-1)
 
         # Generate dict[conds] for comparing epoch average across conds
