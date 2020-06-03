@@ -132,7 +132,6 @@ class Session:
         import datetime
         date = self.get_metadata('start_date')
         dd = datetime.datetime.strptime(date, '%m/%d/%y').date()
-        print(dd)
         return dd
 
     def get_insert(self):

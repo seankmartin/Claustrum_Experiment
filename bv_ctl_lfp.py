@@ -169,14 +169,21 @@ def main(fname, out_main_dir, config):
         # bv_an.plot_feat_dist(session, feat_df, sel_col)
 
         # Retrieves date specific mne parameters from .config
-        mne_config = json.loads(config.get("Setup", "mne"))
+        mne_config = json.loads(config.get("MNE", "mne"))
         s_date = session.get_date()
         import datetime
+        date_found = False
         for key, val in mne_config.items():
             config_date = datetime.datetime.strptime(key, '%Y-%m-%d').date()
             if config_date == s_date:
+                date_found = True
                 badchans = val['Bad Chs']
                 exclude = val['Bad ICs']
+                drop_epochs = val['Drop Epochs']
+        if date_found == False:
+            print('No session specific mne config found.')
+            badchans = None
+            exclude = None
 
         # Setup the mne object with our data
         lfp_odict = LfpODict(
@@ -231,17 +238,16 @@ def main(fname, out_main_dir, config):
         # # Save annotations after events and bad channels
         # bvmpc.bv_mne.save_annotations(mne_array, annote_loc)
 
-        do_mne_ICA = 1  # Temporary condition to bypass ICA
-        # exclude = [4, 6, 8]
-        exclude = [2, 4, 5, 6]
-        # exclude = [5, 6, 7, 8, 9]
         # exclude = None
+        # Temporary condition to bypass ICA
+        do_mne_ICA = bool(int(config.get("MNE", "do_mne_ICA")))
+        skip_plots = bool(int(config.get("MNE", "skip_plots")))
 
         if do_mne_ICA:
             ica_txt = 'ICA'  # Used for file naming
             # Do ICA artefact removal on the mne object
             recon_raw = bvmpc.bv_mne.ICA_pipeline(mne_array, regions, chans_to_plot=len(lfp_odict),
-                                                  base_name=base_name, exclude=exclude, skip_plots=True)
+                                                  base_name=base_name, exclude=exclude, skip_plots=skip_plots)
         else:
             ica_txt = 'Raw'  # Used for file naming
             recon_raw = mne_array
@@ -285,12 +291,8 @@ def main(fname, out_main_dir, config):
 
         # exit(-1)
 
-        comp_conds = ['Pellet/FR', 'Pellet/FI']
-        # comp_conds = ['R/Lever', 'L/Lever']
-        # comp_conds = ['Collection/FR', 'Collection/FI']
-        # comp_conds = ['Lever']
-        # comp_conds = ['Pellet']
-
+        comp_conds = json.loads(config.get("MNE", "comp_conds"))
+        print("Analysing epochs for :", comp_conds)
         # # Manually curate events to exclude
         # catch_trials_and_buttonpresses = mne.pick_events(
         #     mne_events)
@@ -300,18 +302,26 @@ def main(fname, out_main_dir, config):
         #                        event_colors=dict(buttonpress='red', face='blue'))
         # exit(-1)
 
+        mne_plot_params = json.loads(config.get("MNE", "mne_plot_params"))
         # Temp overall control for plotting functions
-        plot_image, topo_seq = 0, 0
+        plot_image = mne_plot_params["plot_image"]
+        topo_seq = mne_plot_params["topo_seq"]
 
         if len(comp_conds) > 1:
             # epochs.equalize_event_counts(comp_conds, method='truncate')
+            for cond in comp_conds:
+                try:
+                    epochs[cond].drop(drop_epochs[cond])
+                except:
+                    if not skip_plots:
+                        epochs[cond].plot(block=True, scalings="350e-6")
             epochs.equalize_event_counts(comp_conds, method='truncate')
 
         epoch_list = []
         for conds in comp_conds:
             epoch_list.append(epochs[conds])
 
-        plot_reg = 0
+        plot_reg = mne_plot_params["plot_reg"]
         # Sets picks as list of each region. Aids plotting of magnitute.
         if plot_reg:
             picks = []
