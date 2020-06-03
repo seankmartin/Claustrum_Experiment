@@ -168,6 +168,16 @@ def main(fname, out_main_dir, config):
         # # feat_df = session.extract_old_features(should_scale=False)
         # bv_an.plot_feat_dist(session, feat_df, sel_col)
 
+        # Retrieves date specific mne parameters from .config
+        mne_config = json.loads(config.get("Setup", "mne"))
+        s_date = session.get_date()
+        import datetime
+        for key, val in mne_config.items():
+            config_date = datetime.datetime.strptime(key, '%Y-%m-%d').date()
+            if config_date == s_date:
+                badchans = val['Bad Chs']
+                exclude = val['Bad ICs']
+
         # Setup the mne object with our data
         lfp_odict = LfpODict(
             fname, channels=chans,
@@ -186,7 +196,7 @@ def main(fname, out_main_dir, config):
         # Add annotations to the created mne object
         annote_loc = os.path.join(
             o_dir, os.path.basename(fname) + '_mne-annotations.txt')
-        bvmpc.bv_mne.set_annotations(mne_array, annote_loc)
+        # bvmpc.bv_mne.set_annotations(mne_array, annote_loc)
         # mne_array.plot(n_channels=20, block=True, duration=50,
         #                show=True, clipping="transparent",
         #                title="Raw LFP Data from {}".format(base_name),
@@ -203,8 +213,6 @@ def main(fname, out_main_dir, config):
 
         # Exclude bad channels from future anaysis
         try:
-            badchans = [int(x) for x in config.get(
-                "Setup", "bad_chans").split(", ")]
             # badchans = ['ACC', 'AI', 'CLA']
             # badchans = ['RSC', 'AI', 'CLA']
             bad_ch_names = bvmpc.bv_mne.pick_chans(mne_array, sel=badchans)
@@ -215,7 +223,7 @@ def main(fname, out_main_dir, config):
         mne_array.info['bads'] = bad_ch_names
 
         # # Plot raw LFP w events
-        # mne_array.plot(n_channels=20, block=True, duration=50,
+        # mne_array.plot(n_channels=20, block=True, duration=25,
         #                show=True, clipping="transparent",
         #                title="Raw LFP Data w Events from {}".format(base_name),
         #                remove_dc=False, scalings=dict(eeg=350e-6))
@@ -223,25 +231,28 @@ def main(fname, out_main_dir, config):
         # # Save annotations after events and bad channels
         # bvmpc.bv_mne.save_annotations(mne_array, annote_loc)
 
-        do_mne_ICA = 0  # Temporary condition to bypass ICA
-        exclude = [4, 6]
+        do_mne_ICA = 1  # Temporary condition to bypass ICA
         # exclude = [4, 6, 8]
-        # exclude = [3, 4, 5, 10]
+        exclude = [2, 4, 5, 6]
+        # exclude = [5, 6, 7, 8, 9]
         # exclude = None
+
         if do_mne_ICA:
             ica_txt = 'ICA'  # Used for file naming
             # Do ICA artefact removal on the mne object
             recon_raw = bvmpc.bv_mne.ICA_pipeline(mne_array, regions, chans_to_plot=len(lfp_odict),
-                                                  base_name=base_name, exclude=exclude)
+                                                  base_name=base_name, exclude=exclude, skip_plots=True)
         else:
             ica_txt = 'Raw'  # Used for file naming
             recon_raw = mne_array
+
+        # exit(-1)
 
         # Epoch events
         reject_criteria = dict(eeg=700e-6)  # 600 uV
         # reject_criteria = None
 
-        # baseline = (-0.4, -0.2)
+        # baseline = (-0.2, -0.1)
         baseline = None
         if baseline is None:
             bline_txt = ''
@@ -274,10 +285,10 @@ def main(fname, out_main_dir, config):
 
         # exit(-1)
 
-        # comp_conds = ['Pellet/FR', 'Pellet/FI']
+        comp_conds = ['Pellet/FR', 'Pellet/FI']
         # comp_conds = ['R/Lever', 'L/Lever']
         # comp_conds = ['Collection/FR', 'Collection/FI']
-        comp_conds = ['Lever']
+        # comp_conds = ['Lever']
         # comp_conds = ['Pellet']
 
         # # Manually curate events to exclude
@@ -290,7 +301,7 @@ def main(fname, out_main_dir, config):
         # exit(-1)
 
         # Temp overall control for plotting functions
-        plot_image, topo_seq = 1, 1
+        plot_image, topo_seq = 0, 0
 
         if len(comp_conds) > 1:
             # epochs.equalize_event_counts(comp_conds, method='truncate')
@@ -304,12 +315,12 @@ def main(fname, out_main_dir, config):
         # Sets picks as list of each region. Aids plotting of magnitute.
         if plot_reg:
             picks = []
-            for sel in sorted(set(regions)):
+            sort_reg = sorted(set(regions))
+            for sel in sort_reg:
                 picks.append(bvmpc.bv_mne.pick_chans(recon_raw, sel=[sel]))
             combine = 'gfp'
         else:
-            picks = ['ACC-12', 'CLA-7', 'AI-4']
-            # picks = ['RSC-14', 'ACC-9', 'CLA-7', 'AI-4']
+            picks = ['RSC-14', 'ACC-9', 'CLA-7', 'AI-4']
             combine = None
         # sel = ['ACC']
         # sel = ['ACC']
@@ -320,14 +331,18 @@ def main(fname, out_main_dir, config):
         if plot_image:
             for epoch, cond in zip(epoch_list, comp_conds):
                 # epoch_fig = epoch.plot_image(picks=picks, show=True)
-                for pick in picks:
+                for i, pick in enumerate(picks):
                     epoch_fig = epoch.plot_image(
                         picks=pick, show=False, combine=combine)
                     ax = epoch_fig[0].axes[0]
                     ax.set_title("{}\n'{}' {}".format(base_name, cond, pick),
                                  x=0.5, y=1.01, fontsize=10)
+                    if plot_reg:
+                        pick_txt = 'gfp_'+sort_reg[i]
+                    else:
+                        pick_txt = pick
                     fig_name = os.path.join(
-                        mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_{}-{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), pick, bline_txt) + '.png')
+                        mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_{}-{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), pick_txt, bline_txt) + '.png')
                     make_path_if_not_exists(fig_name)
                     print('Saving raw-epoch to ' + fig_name)
                     epoch_fig[0].savefig(fig_name)
@@ -360,17 +375,24 @@ def main(fname, out_main_dir, config):
                 pj_fig.suptitle(pj_title)
                 pj_fname = os.path.join(
                     mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_joint_{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), bline_txt) + '.png')
-                print('Saving joint_plot to ' + pj_fname)
                 pj_fig.savefig(pj_fname)
-            # exit(-1)
         # plt.show()
-        exit(-1)
+        # exit(-1)
 
         # Compare average across session types
         if len(comp_conds) > 1:
-            for pick in picks:
+            vs_fig, axes = plt.subplots(
+                len(picks), 1, figsize=(10, 14), sharex=True)
+            plt.rc('legend', **{'fontsize': 6})
+            plt.subplots_adjust(hspace=0.3)
+
+            for ax, pick in zip(axes, picks):
                 mne.viz.plot_compare_evokeds(
-                    epoch_ave, picks=pick, legend='upper left', show_sensors='upper right', show=False)
+                    epoch_ave, picks=pick, legend='upper left', show_sensors='upper right', ylim=dict(eeg=[-80, 80]), show=False, title='{} {}'.format(base_name, pick), axes=ax)
+            vs_fname = os.path.join(mne_dir, '{}_{}_joint_{}{}'.format(
+                base_name, ica_txt, cond.replace('/', '-'), bline_txt) + '.png')
+            print('Saving joint_plot to ' + vs_fname)
+            vs_fig.savefig(vs_fname)
 
         exit(-1)
 

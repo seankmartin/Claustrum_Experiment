@@ -127,6 +127,14 @@ class Session:
             self.title = '{} {} S{}'.format(sub, date, stage)
         return self.title
 
+    def get_date(self):
+        """Return date in datetime format"""
+        import datetime
+        date = self.get_metadata('start_date')
+        dd = datetime.datetime.strptime(date, '%m/%d/%y').date()
+        print(dd)
+        return dd
+
     def get_insert(self):
         """
         Return a list of inserted reward timestamps due to post-hoc correction.

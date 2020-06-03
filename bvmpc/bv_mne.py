@@ -371,7 +371,7 @@ def get_reg_chans(raw, regions):
     return grps
 
 
-def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name="", exclude=None):
+def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name="", exclude=None, skip_plots=False):
     """
     This is example code using mne.
 
@@ -382,11 +382,13 @@ def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name="", exclude=Non
     """
     raw = mne_array
 
-    # # Plot raw signal
-    # raw.plot(
-    #     n_channels=chans_to_plot, block=True, duration=50,
-    #     show=True, clipping="transparentdict(eeg=650e-6) #     title="Raw LFP Data from {}".format(base_name),
-    #     remove_dc=False, scalings="auto")
+    if not skip_plots:
+        # Plot raw signal
+        raw.plot(
+            n_channels=chans_to_plot, block=True, duration=25,
+            show=True, clipping="transparent",
+            title="Raw LFP Data from {}".format(base_name),
+            remove_dc=False, scalings=dict(eeg=350e-6))
 
     # Perform ICA using mne
     from mne.preprocessing import ICA
@@ -402,36 +404,55 @@ def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name="", exclude=Non
         # Plot raw ICAs
         print('Select channels to exclude using this plot...')
         ica.plot_sources(
-            raw, block=True, stop=50, title='ICA from {}'.format(base_name))
+            raw, block=False, stop=25, title='ICA from {}'.format(base_name))
 
         print('Click topo to get more ICA properties')
         ica.plot_components(inst=raw)
 
         # Overlay ICA cleaned signal over raw. Seperate plot for each region.
         # TODO Add scroll bar or include window selection option.
-        cont = input("Plot region overlay? (y|n) \n")
-        if cont.strip().lower() == "y":
-            reg_grps = []
-            for reg in set(regions):
-                temp_grp = []
-                for ch in raw.info.ch_names:
-                    if reg in ch:
-                        temp_grp.append(ch)
-                reg_grps.append(temp_grp)
-            for grps in reg_grps:
-                ica.plot_overlay(raw, stop=int(30 * 250), title='{}'.format(
-                    grps[0][:3]), picks=grps)
+        # cont = input("Plot region overlay? (y|n) \n")
+        # if cont.strip().lower() == "y":
+        #     reg_grps = []
+        #     for reg in set(regions):
+        #         temp_grp = []
+        #         for ch in raw.info.ch_names:
+        #             if reg in ch:
+        #                 temp_grp.append(ch)
+        #         reg_grps.append(temp_grp)
+        #     for grps in reg_grps:
+        #         ica.plot_overlay(raw, stop=int(30 * 250), title='{}'.format(
+        #             grps[0][:3]), picks=grps)
     else:
         # ICAs to exclude
         ica.exclude = exclude
+        if not skip_plots:
+            ica.plot_sources(
+                raw, block=False, stop=25, title='ICA from {}'.format(base_name))
+            ica.plot_components(inst=raw)
     # Apply ICA exclusion
     reconst_raw = raw.copy()
+    exclude_raw = raw.copy()
+    print("ICAs excluded: ", ica.exclude)
     ica.apply(reconst_raw)
 
-    # Plot reconstructed signals w/o excluded ICAs
-    reconst_raw.plot(block=True, show=True, clipping="transparent", duration=50,
-                     title="Reconstructed LFP Data from {}".format(
-                         base_name),
-                     remove_dc=False, scalings=dict(eeg=350e-6))
+    if not skip_plots:
+        # change exclude to all except chosen ICs
+        all_ICs = list(range(ica.n_components_))
+        for i in ica.exclude:
+            all_ICs.remove(i)
+        ica.exclude = all_ICs
+        ica.apply(exclude_raw)
 
+        # Plot excluded ICAs
+        exclude_raw.plot(block=True, show=True, clipping="transparent", duration=25,
+                         title="Excluded ICs from {}".format(
+                             base_name),
+                         remove_dc=False, scalings=dict(eeg=350e-6))
+
+        # Plot reconstructed signals w/o excluded ICAs
+        reconst_raw.plot(block=True, show=True, clipping="transparent", duration=25,
+                         title="Reconstructed LFP Data from {}".format(
+                             base_name),
+                         remove_dc=False, scalings=dict(eeg=350e-6))
     return reconst_raw
