@@ -258,8 +258,14 @@ def main(fname, out_main_dir, config):
         reject_criteria = dict(eeg=700e-6)  # 600 uV
         # reject_criteria = None
 
-        # baseline = (-0.2, -0.1)
-        baseline = None
+        try:
+            baseline = json.loads(config.get("MNE", "baseline"))
+            baseline = tuple(baseline)
+            print("Using {} for baseline.".format(baseline))
+        except:
+            baseline = None
+            print("No baseline specified.")
+
         if baseline is None:
             bline_txt = ''
         else:
