@@ -255,8 +255,8 @@ def main(fname, out_main_dir, config):
         # exit(-1)
 
         # Epoch events
-        reject_criteria = dict(eeg=700e-6)  # 600 uV
-        # reject_criteria = None
+        # reject_criteria = dict(eeg=700e-6)  # 600 uV
+        reject_criteria = None
 
         try:
             baseline = json.loads(config.get("MNE", "baseline"))
@@ -313,15 +313,16 @@ def main(fname, out_main_dir, config):
         plot_image = mne_plot_params["plot_image"]
         topo_seq = mne_plot_params["topo_seq"]
 
-        if len(comp_conds) > 1:
-            # epochs.equalize_event_counts(comp_conds, method='truncate')
-            for cond in comp_conds:
-                try:
-                    epochs[cond].drop(drop_epochs[cond])
-                except:
-                    if not skip_plots:
-                        epochs[cond].plot(block=True, scalings="350e-6")
-            epochs.equalize_event_counts(comp_conds, method='truncate')
+        for cond in comp_conds:
+            try:
+                epochs[cond].drop(drop_epochs[cond])
+            except:
+                # if not skip_plots:
+                epochs[cond].plot(block=True, scalings="350e-6")
+
+        # if len(comp_conds) > 1:
+        #     # epochs.equalize_event_counts(comp_conds, method='truncate')
+        #     epochs.equalize_event_counts(comp_conds, method='truncate')
 
         epoch_list = []
         for conds in comp_conds:
@@ -406,7 +407,7 @@ def main(fname, out_main_dir, config):
                 mne.viz.plot_compare_evokeds(
                     epoch_ave, picks=pick, legend='upper left', show_sensors='upper right', ylim=dict(eeg=[-80, 80]), show=False, title='{} {}'.format(base_name, pick), axes=ax)
             vs_fname = os.path.join(mne_dir, '{}_{}_joint_{}{}'.format(
-                base_name, ica_txt, cond.replace('/', '-'), bline_txt) + '.png')
+                base_name, ica_txt, cond.split('/')[0], bline_txt) + '.png')
             print('Saving joint_plot to ' + vs_fname)
             vs_fig.savefig(vs_fname)
 
