@@ -290,7 +290,7 @@ def generate_events(mne_array, session, plot=False):
 
     # Set annotations from events
     # Swap key and values
-    events_map = {value: key[:3] for key, value in events_dict.items()}
+    events_map = {value: key[:2]+key[-1] for key, value in events_dict.items()}
     onsets = mne_events[:, 0] / mne_array.info['sfreq']
     durations = np.zeros_like(onsets)  # assumes instantaneous events
     descriptions = [events_map[event_id]

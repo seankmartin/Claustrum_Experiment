@@ -46,10 +46,10 @@ def events_from_session(session):
 
     event_dict = {
         "Tone": tone_starts,
-        "R/Light": r_light,
-        "L/Light": l_light,
-        "R/Lever": right_presses,
-        "L/Lever": left_presses,
+        "Light/R": r_light,
+        "Light/L": l_light,
+        "Lever/R": right_presses,
+        "Lever/L": left_presses,
         # "Pellet": pell_ts_exdouble,
         'Pellet/FR': FR_pell,
         'Pellet/FI': FI_pell,
