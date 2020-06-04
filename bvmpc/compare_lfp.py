@@ -23,7 +23,7 @@ def get_normalised_diff(s1, s2):
 
 
 def compare_lfp(fname, out_base_dir=None, ch=16):
-    '''
+    """
     Parameters
     ----------
     fname : str
@@ -32,7 +32,7 @@ def compare_lfp(fname, out_base_dir=None, ch=16):
         Path for desired output location. Default - Saves output to folder named !LFP in base directory.
     ch: int
         Number of LFP channels in session
-    '''
+    """
     if out_base_dir == None:
         out_base_dir = os.path.join(os.path.dirname(fname), r"!LFP")
         make_dir_if_not_exists(out_base_dir)
@@ -42,7 +42,7 @@ def compare_lfp(fname, out_base_dir=None, ch=16):
 
     ndata1 = NData()
     ndata2 = NData()
-    grid = np.meshgrid(np.arange(ch), np.arange(ch), indexing='ij')
+    grid = np.meshgrid(np.arange(ch), np.arange(ch), indexing="ij")
     stacked = np.stack(grid, 2)
     pairs = stacked.reshape(-1, 2)
     result_a = np.zeros(shape=pairs.shape[0], dtype=np.float32)
@@ -50,8 +50,7 @@ def compare_lfp(fname, out_base_dir=None, ch=16):
     for i, pair in enumerate(pairs):
         load_lfp(load_loc, pair[0], ndata1)
         load_lfp(load_loc, pair[1], ndata2)
-        res = get_normalised_diff(
-            ndata1.lfp.get_samples(), ndata2.lfp.get_samples())
+        res = get_normalised_diff(ndata1.lfp.get_samples(), ndata2.lfp.get_samples())
         result_a[i] = res
 
     with open(out_loc, "w") as f:
@@ -70,18 +69,14 @@ def compare_lfp(fname, out_base_dir=None, ch=16):
 
     reshaped = np.reshape(result_a, newshape=[ch, ch])
     sns.heatmap(reshaped)
-    plt.xticks(np.arange(0.5, ch + 0.5),
-               labels=np.arange(1, ch + 1), fontsize=8)
-    plt.xlabel('LFP Channels')
-    plt.yticks(np.arange(0.5, ch + 0.5),
-               labels=np.arange(1, ch + 1), fontsize=8)
-    plt.ylabel('LFP Channels')
-    plt.title('Raw LFP Similarity Index')
-    fig_path = os.path.join(
-        out_base_dir, os.path.basename(fname) + "_LFP_SI.png")
+    plt.xticks(np.arange(0.5, ch + 0.5), labels=np.arange(1, ch + 1), fontsize=8)
+    plt.xlabel("LFP Channels")
+    plt.yticks(np.arange(0.5, ch + 0.5), labels=np.arange(1, ch + 1), fontsize=8)
+    plt.ylabel("LFP Channels")
+    plt.title("Raw LFP Similarity Index")
+    fig_path = os.path.join(out_base_dir, os.path.basename(fname) + "_LFP_SI.png")
     print("Saving figure to {}".format(fig_path))
-    plt.savefig(fig_path, dpi=200,
-                bbox_inches='tight', pad_inches=0.1)
+    plt.savefig(fig_path, dpi=200, bbox_inches="tight", pad_inches=0.1)
     return result_a
 
 

@@ -62,7 +62,8 @@ class AxonaInput:
                 header = "{},Ch{}".format(header, i + 1)
             file.write(header + "\n")
             for (i, (t, c, p)) in enumerate(
-                    zip(self.timestamps, self.channels, self.pins)):
+                zip(self.timestamps, self.channels, self.pins)
+            ):
                 if c in inp_types:
                     out_str = "{:2f},{}".format(t, c)
                     for bit in p:
@@ -90,9 +91,12 @@ class AxonaInput:
         """
         self.timestamps = t_arr
         self.channels = c_arr
-        self.pins = np.array([
-            np.unpackbits(p_arr[2 * i:2 * i + 2])[::-1]
-            for i in range(len(p_arr) // 2)])
+        self.pins = np.array(
+            [
+                np.unpackbits(p_arr[2 * i : 2 * i + 2])[::-1]
+                for i in range(len(p_arr) // 2)
+            ]
+        )
 
     def get_times(self, channel, pin, inverted=False):
         """
@@ -150,11 +154,10 @@ class AxonaInpReader:
 
         """
         counter = 0
-        with open(in_location, 'rb') as file:
+        with open(in_location, "rb") as file:
             header = cls._parse_header(file)
             if header["samples"] == 0:
-                raise ValueError("No input/output samples in {}".format(
-                    in_location))
+                raise ValueError("No input/output samples in {}".format(in_location))
 
             time_arr = np.zeros(header["samples"], np.float32)
             char_arr = np.zeros(header["samples"], str)
@@ -165,7 +168,7 @@ class AxonaInpReader:
                 info = cls._info_from_chunk(chunk, header["timebase"])
                 time_arr[counter] = info[0]
                 char_arr[counter] = info[1]
-                inp_arr[2 * counter:2 * counter + 2] = info[2]
+                inp_arr[2 * counter : 2 * counter + 2] = info[2]
                 counter = counter + 1
                 chunk = file.read(header["sample_bytes"])
 
@@ -175,10 +178,8 @@ class AxonaInpReader:
     def _info_from_chunk(chunk, timebase):
         """Extract the info from a 7 byte chunk."""
         time_val = (
-            16777216 * chunk[0] +
-            65536 * chunk[1] +
-            256 * chunk[2] +
-            chunk[3]) / timebase
+            16777216 * chunk[0] + 65536 * chunk[1] + 256 * chunk[2] + chunk[3]
+        ) / timebase
 
         input_type = chr(chunk[4])
 
@@ -241,20 +242,21 @@ class AxonaSet:
         """Calculate and store how long the Session took in mins."""
         dur = int(self.get_val("duration"))
         start_time = self.get_val("trial_time")
-        fmt = '%H:%M:%S'
+        fmt = "%H:%M:%S"
         start_fmt = datetime.datetime.strptime(start_time, fmt)
         final_time = start_fmt + datetime.timedelta(seconds=dur)
         out_str = "{}:{}:{}".format(
-            final_time.hour, final_time.minute, final_time.second)
+            final_time.hour, final_time.minute, final_time.second
+        )
         self.data["end_time"] = out_str
 
     def load(self, location):
         """Load and parse a .set file specified by location."""
-        with open(location, 'r', encoding='latin-1') as f_set:
+        with open(location, "r", encoding="latin-1") as f_set:
             lines = f_set.readlines()
             for line in lines:
                 split = line.index(" ")
-                key, val = line[:split], line[split + 1:].strip()
+                key, val = line[:split], line[split + 1 :].strip()
                 # if key in list(self.data.keys()):
                 #     print(("Duplicate Key found {}".format(key)))
                 if key in list(self.change_dict.keys()):
@@ -285,7 +287,7 @@ class AxonaSet:
     def change_date(date):
         """Convert an Axona date into a standard format."""
         change = {v: k for k, v in enumerate(calendar.month_abbr)}
-        rest = date[date.index(" ") + 1:]
+        rest = date[date.index(" ") + 1 :]
         day, month, year = rest.split(" ")
         month = change[month]
         month = "0" + str(month) if month < 10 else month
@@ -298,7 +300,9 @@ if __name__ == "__main__":
     in_location = r"C:\Users\smartin5\Recordings\CLA1_2019-09-28.inp"
     ai = AxonaInput(in_location)
     ai.save_to_file()
-    in_location = r"C:\Users\smartin5\Recordings\ER\29082019-nt2\29082019-nt2-LFP-2nd-Saline.set"
+    in_location = (
+        r"C:\Users\smartin5\Recordings\ER\29082019-nt2\29082019-nt2-LFP-2nd-Saline.set"
+    )
     set_info = AxonaSet(in_location)
     print(set_info.get_val("trial_date"))
     print(set_info.get_val("end_time"))

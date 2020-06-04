@@ -14,8 +14,14 @@ import pycwt as wavelet
 
 
 def plot_long_lfp(
-        lfp, out_name, nsamples=None, offset=0,
-        nsplits=3, figsize=(32, 4), ylim=(-0.4, 0.4)):
+    lfp,
+    out_name,
+    nsamples=None,
+    offset=0,
+    nsplits=3,
+    figsize=(32, 4),
+    ylim=(-0.4, 0.4),
+):
     """
     Create a figure to display a long LFP signal in nsplits rows.
 
@@ -46,15 +52,28 @@ def plot_long_lfp(
         else:
             ax = axes[i]
         ax.plot(
-            lfp.get_timestamp()[start:end],
-            lfp.get_samples()[start:end], color='k')
+            lfp.get_timestamp()[start:end], lfp.get_samples()[start:end], color="k",
+        )
         ax.set_ylim(ylim)
     plt.tight_layout()
     bv_plot.savefig(fig, out_name, dpi=400)
     plt.close(fig)
 
 
-def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4, filt=False, artf=False, dr_mode=False, session=None, splits=None, x_pad=60):
+def plot_lfp(
+    out_dir,
+    lfp_odict,
+    segment_length=150,
+    in_range=None,
+    dpi=50,
+    sd=4,
+    filt=False,
+    artf=False,
+    dr_mode=False,
+    session=None,
+    splits=None,
+    x_pad=60,
+):
     """
     Create a number of figures to display lfp signal on multiple channels.
 
@@ -85,7 +104,7 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
     """
     if session:
         rw_ts = session.get_rw_ts()
-        FRes = session.get_trial_df()['First_response'].tolist()
+        FRes = session.get_trial_df()["First_response"].tolist()
         lev_ts = session.get_lever_ts()
     if dr_mode:
         lfp_dict_s = lfp_odict.get_dr_signals()
@@ -98,12 +117,9 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
         get_info = lfp_odict.get_info
 
     if in_range is None:
-        in_range = (0, max([lfp.get_duration()
-                            for lfp in lfp_dict_s.values()]))
-    y_axis_max = max([max(lfp.get_samples())
-                      for lfp in lfp_dict_s.values()])
-    y_axis_min = min([min(lfp.get_samples())
-                      for lfp in lfp_dict_s.values()])
+        in_range = (0, max([lfp.get_duration() for lfp in lfp_dict_s.values()]))
+    y_axis_max = max([max(lfp.get_samples()) for lfp in lfp_dict_s.values()])
+    y_axis_min = min([min(lfp.get_samples()) for lfp in lfp_dict_s.values()])
     if splits is None:
         seg_splits = np.arange(in_range[0], in_range[1], segment_length)
         if np.abs(in_range[1] - seg_splits[-1]) > 0.0001:
@@ -114,25 +130,28 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
     # print(seg_splits[:5])
     # exit(-1)
     max_split_len = max(np.diff(seg_splits))
-    print('Longest segment is {:.2f}s'.format(max_split_len))
+    print("Longest segment is {:.2f}s".format(max_split_len))
     if max_split_len < x_pad:
         x_pad = max_split_len
 
     for j, split in enumerate(seg_splits[:-1]):
         fig, axes = plt.subplots(
-            nrows=len(lfp_dict_s),
-            figsize=(40, len(lfp_dict_s) * 2))
+            nrows=len(lfp_dict_s), figsize=(40, len(lfp_dict_s) * 2)
+        )
         a = np.round(split, 2)
         b = np.round(min(seg_splits[j + 1], in_range[1]), 2)
-        if list(lfp_dict_s.keys())[0] == '17':
+        if list(lfp_dict_s.keys())[0] == "17":
             out_name = os.path.join(
-                out_dir, "1_{}_{:.2f}s_to_{:.2f}s.png".format(j, a, b))
+                out_dir, "1_{}_{:.2f}s_to_{:.2f}s.png".format(j, a, b)
+            )
         elif dr_mode:
             out_name = os.path.join(
-                out_dir, "dr_{}_{:.2f}s_to_{:.2f}s.png".format(j, a, b))
+                out_dir, "dr_{}_{:.2f}s_to_{:.2f}s.png".format(j, a, b)
+            )
         else:
             out_name = os.path.join(
-                out_dir, "0_{}_{:.2f}s_to_{:.2f}s.png".format(j, a, b))
+                out_dir, "0_{}_{:.2f}s_to_{:.2f}s.png".format(j, a, b)
+            )
         for i, (key, lfp) in enumerate(lfp_dict_s.items()):
             convert = lfp.get_sampling_rate()
             c_start, c_end = math.floor(a * convert), math.floor(b * convert)
@@ -142,41 +161,51 @@ def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4
 
             if artf:
                 from bvmpc.bv_utils import find_ranges
-                shading = list(find_ranges(
-                    get_info(key, "thr_locs")))
 
-                for x, y in shading:    # Shading of artf portions
+                shading = list(find_ranges(get_info(key, "thr_locs")))
+
+                for x, y in shading:  # Shading of artf portions
                     times = lfp.get_timestamp()
-                    axes[i].axvspan(times[x], times[y], color='red', alpha=0.5)
+                    axes[i].axvspan(times[x], times[y], color="red", alpha=0.5)
                 mean = get_info(key, "mean")
                 std = get_info(key, "std")
                 # Label thresholds
-                axes[i].axhline(mean - sd * std, linestyle='-',
-                                color='red', linewidth='1.5')
-                axes[i].axhline(mean + sd * std, linestyle='-',
-                                color='red', linewidth='1.5')
+                axes[i].axhline(
+                    mean - sd * std, linestyle="-", color="red", linewidth="1.5"
+                )
+                axes[i].axhline(
+                    mean + sd * std, linestyle="-", color="red", linewidth="1.5"
+                )
 
             if session:
                 for rw in rw_ts:
-                    axes[i].axvline(rw, linestyle='-',
-                                    color='green', linewidth='1.5')    # vline demarcating reward point/end of trial
+                    axes[i].axvline(
+                        rw, linestyle="-", color="green", linewidth="1.5"
+                    )  # vline demarcating reward point/end of trial
                 for lev in lev_ts:
-                    axes[i].axvline(lev, linestyle='-',
-                                    color='blue', linewidth='1.5')    # vline demarcating First Resonse
+                    axes[i].axvline(
+                        lev, linestyle="-", color="blue", linewidth="1.5"
+                    )  # vline demarcating First Resonse
                 for res in FRes:
-                    axes[i].axvline(res, linestyle='-',
-                                    color='orange', linewidth='1.5')    # vline demarcating First Resonse
+                    axes[i].axvline(
+                        res, linestyle="-", color="orange", linewidth="1.5"
+                    )  # vline demarcating First Resonse
 
             axes[i].text(
-                0.03, 1.02, "Channel " + key,
-                transform=axes[i].transAxes, color="k", fontsize=15)
+                0.03,
+                1.02,
+                "Channel " + key,
+                transform=axes[i].transAxes,
+                color="k",
+                fontsize=15,
+            )
             axes[i].set_ylim(y_axis_min, y_axis_max)
             axes[i].tick_params(labelsize=12)
             # axes[i].set_xlim(a, b)
             seg_len = np.diff([a, b])
             if seg_len > x_pad:
                 x_pad = seg_len
-            axes[i].set_xlim(a, a+x_pad)
+            axes[i].set_xlim(a, a + x_pad)
 
         bv_plot.savefig(fig, out_name)
         plt.close("all")
@@ -191,11 +220,19 @@ def lfp_csv(fname, out_dir, lfp_odict, sd, min_artf_freq, shuttles, filt=False):
     else:
         lfp_dict_s = lfp_odict.get_signal()
 
-    tetrodes, threshold, ex_thres, choose, mean_list, std_list, removed = [
-    ], [], [], [], [], [], []
+    tetrodes, threshold, ex_thres, choose, mean_list, std_list, removed = (
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+    )
     for i, (key, lfp) in enumerate(lfp_dict_s.items()):
         mean, std, thr_locs, thr_vals, thr_time, per_removed = lfp.find_artf(
-            sd, min_artf_freq)
+            sd, min_artf_freq
+        )
         tetrodes.append("T" + str(key))
         threshold.append(sd * std)
         ex_thres.append(len(thr_locs))
@@ -204,6 +241,7 @@ def lfp_csv(fname, out_dir, lfp_odict, sd, min_artf_freq, shuttles, filt=False):
         removed.append(per_removed)
 
     import pandas as pd
+
     min_shut = []
     for a in set(shuttles):
         compare = []
@@ -227,44 +265,49 @@ def lfp_csv(fname, out_dir, lfp_odict, sd, min_artf_freq, shuttles, filt=False):
         "ex_Thres": ex_thres,
         "Mean": mean_list,
         "STD": std_list,
-        "% Removed": removed
+        "% Removed": removed,
     }
     df = pd.DataFrame(csv)
 
     csv_filename = os.path.join(out_dir, "Tetrode_Summary.csv")
     if tetrodes[0] == "T17":
-        check_name = fname.split('\\')[-1] + "_p2"
+        check_name = fname.split("\\")[-1] + "_p2"
     else:
-        check_name = fname.split('\\')[-1]
+        check_name = fname.split("\\")[-1]
     if os.path.exists(csv_filename):
         import csv
+
         exist = False
-        with open(csv_filename, 'rt', newline='') as f:
-            reader = csv.reader(f, delimiter=',')
+        with open(csv_filename, "rt", newline="") as f:
+            reader = csv.reader(f, delimiter=",")
             print("Processing {}...".format(fname))
             for row in reader:
                 if [check_name] == row:
                     exist = True
-                    print("{} info exists.".format(
-                        check_name))
+                    print("{} info exists.".format(check_name))
                     break
                 else:
                     continue
         if not exist:
-            with open(csv_filename, 'a', newline='') as f:
+            with open(csv_filename, "a", newline="") as f:
                 f.write("\n{}\n".format(check_name))
                 df.to_csv(f, index=False)
             print("Saved {} to {}".format(check_name, csv_filename))
     else:
-        with open(csv_filename, 'w', newline='') as f:
+        with open(csv_filename, "w", newline="") as f:
             f.write("{}\n".format(check_name))
-            df.to_csv(f, encoding='utf-8', index=False)
+            df.to_csv(f, encoding="utf-8", index=False)
         print("Saved {} to {}".format(check_name, csv_filename))
 
 
 def plot_sample_of_signal(
-        load_loc, out_dir=None, name=None, offseta=0, length=50,
-        filt_params=(False, None, None)):
+    load_loc,
+    out_dir=None,
+    name=None,
+    offseta=0,
+    length=50,
+    filt_params=(False, None, None),
+):
     """
     Plot a small filtered sample of the LFP signal in the given band.
 
@@ -289,21 +332,25 @@ def plot_sample_of_signal(
     if filt:
         lfp_to_plot = deepcopy(lfp)
         lfp_samples = lfp.get_samples()
-        lfp_samples = butter_filter(
-            lfp_samples, fs, 10, lower, upper, 'bandpass')
+        lfp_samples = butter_filter(lfp_samples, fs, 10, lower, upper, "bandpass")
         lfp_to_plot._set_samples(lfp_samples)
     plot_long_lfp(
-        lfp_to_plot, out_name, nsplits=1, ylim=(-0.325, 0.325), figsize=(20, 2),
+        lfp_to_plot,
+        out_name,
+        nsplits=1,
+        ylim=(-0.325, 0.325),
+        figsize=(20, 2),
         offset=lfp.get_sampling_rate() * offseta,
-        nsamples=lfp.get_sampling_rate() * length)
+        nsamples=lfp.get_sampling_rate() * length,
+    )
 
 
-def plot_coherence(f, Cxy, ax=None, color='k', legend=None, dpi=100, tick_freq=10):
+def plot_coherence(f, Cxy, ax=None, color="k", legend=None, dpi=100, tick_freq=10):
     ax, fig1 = _make_ax_if_none(ax)
     # ax.semilogy(f, Cxy)
-    ax.plot(f, Cxy, c=color, linestyle='dotted')
-    ax.set_xlabel('frequency [Hz]')
-    ax.set_ylabel('Coherence')
+    ax.plot(f, Cxy, c=color, linestyle="dotted")
+    ax.set_xlabel("frequency [Hz]")
+    ax.set_ylabel("Coherence")
     ax.set_xticks(np.arange(0, f.max(), tick_freq))
     ax.set_ylim(0, 1)
     plt.legend(legend)
@@ -323,6 +370,7 @@ def plot_polar_coupling(polar_vectors, mvl, name=None, dpi=100):
     norm = np.abs(res_vec) / mvl
 
     from neurochat.nc_circular import CircStat
+
     cs = CircStat()
     r = np.abs(polar_vectors)
     theta = np.rad2deg(np.angle(polar_vectors))
@@ -332,12 +380,13 @@ def plot_polar_coupling(polar_vectors, mvl, name=None, dpi=100):
     cs.set_theta(theta)
     count, ind, bins = cs.circ_histogram()
     from scipy.stats import binned_statistic
-    binned_amp = (r, )
+
+    binned_amp = (r,)
     bins = np.append(bins, bins[0])
     rate = np.append(count, count[0])
     print(bins, rate)
     # ax.plot(np.deg2rad(bins), rate, color="k")
-    res_line = (res_vec / norm)
+    res_line = res_vec / norm
     print(res_vec)
     ax.plot([np.angle(res_vec), np.angle(res_vec)], [0, norm * mvl], c="r")
     ax.text(np.pi / 8, 0.00001, "MVL {:.5f}".format(mvl))
@@ -371,7 +420,15 @@ def _make_ax_if_none(ax, **kwargs):
     return ax, fig
 
 
-def calc_wPowerSpectrum(dat, sample_times, min_freq=1, max_freq=256, detrend=True, c_sig=False, resolution=12):
+def calc_wPowerSpectrum(
+    dat,
+    sample_times,
+    min_freq=1,
+    max_freq=256,
+    detrend=True,
+    c_sig=False,
+    resolution=12,
+):
     """
     Calculate wavelet power spectrum using pycwt.
 
@@ -418,8 +475,7 @@ def calc_wPowerSpectrum(dat, sample_times, min_freq=1, max_freq=256, detrend=Tru
         dat_nomean = dat - np.mean(dat)
         dat_norm = dat_nomean / std  # Normalized dataset
 
-    wave, scales, freqs, coi, fft, fftfreqs = wavelet.cwt(
-        dat_norm, dt, dj, s0, J)
+    wave, scales, freqs, coi, fft, fftfreqs = wavelet.cwt(dat_norm, dt, dj, s0, J)
 
     power = (np.abs(wave)) ** 2
     fft_power = np.abs(fft) ** 2
@@ -427,15 +483,15 @@ def calc_wPowerSpectrum(dat, sample_times, min_freq=1, max_freq=256, detrend=Tru
 
     if c_sig:
         # calculate the normalized wavelet and Fourier power spectra, and the Fourier equivalent periods for each wavelet scale.
-        signif, fft_theor = wavelet.significance(1.0, dt, scales, 0, alpha,
-                                                 significance_level=0.95,
-                                                 wavelet=mother)
+        signif, fft_theor = wavelet.significance(
+            1.0, dt, scales, 0, alpha, significance_level=0.95, wavelet=mother
+        )
         sig95 = np.ones([1, N]) * signif[:, None]
         sig95 = power / sig95
 
         # Calculate the global wavelet spectrum and determine its significance level.
         glbl_power = power.mean(axis=1)
         dof = N - scales  # Correction for padding at edges
-        glbl_signif, tmp = wavelet.significance(var, dt, scales, 1, alpha,
-                                                significance_level=0.95, dof=dof,
-                                                wavelet=mother)
+        glbl_signif, tmp = wavelet.significance(
+            var, dt, scales, 1, alpha, significance_level=0.95, dof=dof, wavelet=mother,
+        )

@@ -45,13 +45,13 @@ class SessionExtractor:
         A List of sessions, one element for each session.
 
         """
-        with open(self.file_location, 'r') as f:
+        with open(self.file_location, "r") as f:
             lines = f.read().splitlines()  # reads lines into list
-            lines = np.array(
-                list(filter(None, lines)))  # removes empty space
+            lines = np.array(list(filter(None, lines)))  # removes empty space
 
             s_starts = np.flatnonzero(
-                np.core.defchararray.find(lines, "Start Date:") != -1)
+                np.core.defchararray.find(lines, "Start Date:") != -1
+            )
             s_ends = np.zeros_like(s_starts)
             s_ends[:-1] = s_starts[1:]
             s_ends[-1] = lines.size
@@ -60,8 +60,11 @@ class SessionExtractor:
                 s_data = np.array(lines[start:end])
                 self.sessions.append(
                     Session(
-                        lines=s_data, verbose=self.verbose,
-                        file_origin=self.file_location))
+                        lines=s_data,
+                        verbose=self.verbose,
+                        file_origin=self.file_location,
+                    )
+                )
             return self.sessions
 
     def __repr__(self):

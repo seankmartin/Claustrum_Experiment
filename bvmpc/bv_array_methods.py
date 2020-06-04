@@ -19,10 +19,12 @@ def split_into_blocks(array, blocks=None, block_max=None, num_blocks=None):
     if blocks is None:
         if (block_max is None) or (num_blocks is None):
             raise ValueError(
-                "block_max and num_blocks must be passed to" +
-                "split_into_blocks if param blocks is not passed")
+                "block_max and num_blocks must be passed to"
+                + "split_into_blocks if param blocks is not passed"
+            )
         blocks = np.arange(
-            block_max + 0.001, block_max * num_blocks + 0.001, block_max + 0.001)
+            block_max + 0.001, block_max * num_blocks + 0.001, block_max + 0.001
+        )
     return np.array(np.split(array, np.searchsorted(array, blocks)))
 
 
@@ -80,12 +82,11 @@ def split_array_in_between_two(array, left, right):
 
     """
     if len(left) != len(right):
-        raise(ValueError(
-            'left and right must have the same number of elements'))
+        raise (ValueError("left and right must have the same number of elements"))
     good_idxs = []
     for i, val in enumerate(array):
-        bigger = (left <= val)
-        smaller = (right >= val)
+        bigger = left <= val
+        smaller = right >= val
         between = np.logical_and(smaller, bigger)
         if between.any():
             good_idxs.append(i)
@@ -112,8 +113,11 @@ def check_error_during_tone(presses, block_s, l_type=" "):
     for i, (a, b) in enumerate(zip(block_s - 5, block_s)):
         tone_errors = np.where((presses > a) & (presses < b))
         if np.size(tone_errors) > 0:
-            print("Removed {} spurious{}errors during tone {}.".format(
-                len(tone_errors), l_type, i))
+            print(
+                "Removed {} spurious{}errors during tone {}.".format(
+                    len(tone_errors), l_type, i
+                )
+            )
             presses = np.delete(presses, tone_errors)
     return presses
 

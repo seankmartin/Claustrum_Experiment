@@ -17,9 +17,15 @@ class GridFig:
     """
 
     def __init__(
-            self, rows, cols=4,
-            size_multiplier_x=5, size_multiplier_y=5, wspace=0.3, hspace=0.3,
-            tight_layout=False):
+        self,
+        rows,
+        cols=4,
+        size_multiplier_x=5,
+        size_multiplier_y=5,
+        wspace=0.3,
+        hspace=0.3,
+        tight_layout=False,
+    ):
         """
         Set up the grid specifications.
 
@@ -27,9 +33,9 @@ class GridFig:
 
         """
         self.fig = plt.figure(
-            figsize=(cols * size_multiplier_x,
-                     rows * size_multiplier_y),
-            tight_layout=tight_layout)
+            figsize=(cols * size_multiplier_x, rows * size_multiplier_y),
+            tight_layout=tight_layout,
+        )
         self.gs = gridspec.GridSpec(rows, cols, wspace=wspace, hspace=hspace)
         self.idx = 0
         self.rows = rows
@@ -42,8 +48,7 @@ class GridFig:
 
     def get_multi_ax(self, row_start, row_end, col_start, col_end):
         """Add subplot with custom gs sizes -> returns ax."""
-        ax = self.fig.add_subplot(
-            self.gs[row_start:row_end, col_start:col_end])
+        ax = self.fig.add_subplot(self.gs[row_start:row_end, col_start:col_end])
         plt.subplots_adjust(top=0.85)
         return ax
 
@@ -55,14 +60,11 @@ class GridFig:
         date_p = sorted(set(df_date))
         sub_p = sorted(set(df_sub))
         stage_p = sorted(set(df_stage))
-        out_name = plot_type + \
-            str(date_p) + '_' + str(sub_p) + \
-            '_' + str(stage_p)
+        out_name = plot_type + str(date_p) + "_" + str(sub_p) + "_" + str(stage_p)
         if j is not None:
-            out_name += '_' + str(j)
+            out_name += "_" + str(j)
         out_name += ".png"
-        print("Saved figure to {}".format(
-            os.path.join(out_dir, out_name)))
+        print("Saved figure to {}".format(os.path.join(out_dir, out_name)))
         self.fig.savefig(os.path.join(out_dir, out_name), dpi=400)
         plt.close()
         return
@@ -87,12 +89,12 @@ class GridFig:
 
         """
         if along_rows:
-            row_idx = (self.idx // self.cols)
-            col_idx = (self.idx % self.cols)
+            row_idx = self.idx // self.cols
+            col_idx = self.idx % self.cols
 
         else:
-            row_idx = (self.idx % self.rows)
-            col_idx = (self.idx // self.rows)
+            row_idx = self.idx % self.rows
+            col_idx = self.idx // self.rows
 
         # print(row_idx, col_idx)
         ax = self.get_ax(row_idx, col_idx)
@@ -145,21 +147,29 @@ class GroupManager:
             self.set_color_list(color_list)
         else:
             self.color_list = [
-                "Blues_r", "Oranges_r", "Greens_r",
-                "Purples_r", "PuRd_r", "Greys_r"]
+                "Blues_r",
+                "Oranges_r",
+                "Greens_r",
+                "Purples_r",
+                "PuRd_r",
+                "Greys_r",
+            ]
         set_vals = sorted(set(group_list), key=group_list.index)
         # print(set_vals)
         import numpy as np
+
         if len(set_vals) > len(self.color_list):
             start_vals = np.arange(0.0, 2.5, 2.5 / (len(set_vals) - 0.99))
             for set_v, start_v in zip(set_vals, start_vals):
                 self.info_dict[set_v] = ColorManager(
-                    group_list.count(set_v), "sns_helix", start=start_v)
+                    group_list.count(set_v), "sns_helix", start=start_v
+                )
         else:
-            start_vals = self.color_list[:len(set_vals)]
+            start_vals = self.color_list[: len(set_vals)]
             for set_v, start_v in zip(set_vals, start_vals):
                 self.info_dict[set_v] = ColorManager(
-                    group_list.count(set_v), "sns", sns_style=start_v)
+                    group_list.count(set_v), "sns", sns_style=start_v
+                )
         # print(self.info_dict)
 
     def get_next_color(self):
@@ -177,13 +187,14 @@ class GroupManager:
         """An example of using this class."""
         from scipy.stats import norm
         import numpy as np
+
         fig, ax = plt.subplots()
         x_axis = np.arange(-15, 5, 0.001)
         std_devs = np.arange(0.8, 3, 2.20 / len(self.group_list))
         for sd in std_devs:
             ax.plot(
-                x_axis, norm.pdf(x_axis, -sd * 2, sd),
-                color=self.get_next_color())
+                x_axis, norm.pdf(x_axis, -sd * 2, sd), color=self.get_next_color(),
+            )
         sns.despine(top=True, bottom=True, right=True, left=True)
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
@@ -225,8 +236,7 @@ class ColorManager:
             start = kwargs.get("start", 0)
             self.create_sns_helix(start)
         else:
-            raise ValueError("{} not recognised method".format(
-                method))
+            raise ValueError("{} not recognised method".format(method))
         self.idx = 0
 
     def create_rgb(self):
@@ -258,13 +268,14 @@ class ColorManager:
         """An example function using this class."""
         from scipy.stats import norm
         import numpy as np
+
         fig, ax = plt.subplots()
         x_axis = np.arange(-15, 5, 0.001)
         std_devs = np.arange(0.8, 3, 2.20 / self.num_colors)
         for sd in std_devs:
             ax.plot(
-                x_axis, norm.pdf(x_axis, -sd * 2, sd),
-                color=self.get_next_color())
+                x_axis, norm.pdf(x_axis, -sd * 2, sd), color=self.get_next_color(),
+            )
         sns.despine(top=True, bottom=True, right=True, left=True)
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
@@ -312,39 +323,67 @@ def behav_vlines(ax, s, behav_plot, lw=1):
     pell_exd_ts, d_pell_ts = s.split_pell_ts()
     if behav_plot[0]:
         for lev in lev_ts:  # vline demarcating lev presses
-            ax.axvline(lev, linestyle='-',
-                       color='blue', linewidth=lw / 2)
-        label = lines.Line2D([], [], color='blue', marker='|', linestyle='None',
-                             markersize=10, markeredgewidth=lw, label='Lever Press')
+            ax.axvline(lev, linestyle="-", color="blue", linewidth=lw / 2)
+        label = lines.Line2D(
+            [],
+            [],
+            color="blue",
+            marker="|",
+            linestyle="None",
+            markersize=10,
+            markeredgewidth=lw,
+            label="Lever Press",
+        )
         legends.append(label)
     if behav_plot[1]:
-        for rw in rw_ts:    # vline demarcating reward point/end of trial
-            ax.axvline(rw, linestyle='-',
-                       color='orange', linewidth=lw)
-        label = lines.Line2D([], [], color='orange', marker='|', linestyle='None',
-                             markersize=10, markeredgewidth=lw, label='Reward')
+        for rw in rw_ts:  # vline demarcating reward point/end of trial
+            ax.axvline(rw, linestyle="-", color="orange", linewidth=lw)
+        label = lines.Line2D(
+            [],
+            [],
+            color="orange",
+            marker="|",
+            linestyle="None",
+            markersize=10,
+            markeredgewidth=lw,
+            label="Reward",
+        )
         legends.append(label)
     if behav_plot[2]:
         for pell in pell_exd_ts:  # vline demarcating pells
-            ax.axvline(pell, linestyle='-',
-                       color='w', linewidth=lw)
-        label = lines.Line2D([], [], color='w', marker='|', linestyle='None',
-                             markersize=10, markeredgewidth=lw, label='Pell')
+            ax.axvline(pell, linestyle="-", color="w", linewidth=lw)
+        label = lines.Line2D(
+            [],
+            [],
+            color="w",
+            marker="|",
+            linestyle="None",
+            markersize=10,
+            markeredgewidth=lw,
+            label="Pell",
+        )
         legends.append(label)
     if behav_plot[3]:
         for d in d_pell_ts:  # vline demarcating double pells
-            ax.axvline(d, linestyle='-',
-                       color='magenta', linewidth=lw)
-        label = lines.Line2D([], [], color='magenta', marker='|', linestyle='None',
-                             markersize=10, markeredgewidth=lw, label='Double Pell')
+            ax.axvline(d, linestyle="-", color="magenta", linewidth=lw)
+        label = lines.Line2D(
+            [],
+            [],
+            color="magenta",
+            marker="|",
+            linestyle="None",
+            markersize=10,
+            markeredgewidth=lw,
+            label="Double Pell",
+        )
         legends.append(label)
     return ax, legends
 
 
 def dend_leaf_colors(dend):
     """ Returns np.array of dend leaf colors in plot order """
-    leaf_colors = np.empty_like(dend['ivl'])
-    for c, pi in zip(dend['color_list'], dend['icoord']):
+    leaf_colors = np.empty_like(dend["ivl"])
+    for c, pi in zip(dend["color_list"], dend["icoord"]):
         for leg in pi[1:3]:
             i = (leg - 5.0) / 10.0
             if abs(i - int(i)) < 1e-5:
@@ -361,5 +400,5 @@ def savefig(fig, name):
     """
     print("Saving result to {}".format(name))
     # fig.savefig(name, dpi=150)
-    fig.savefig(name, dpi=150, bbox_inches='tight', pad_inches=0.5)
+    fig.savefig(name, dpi=150, bbox_inches="tight", pad_inches=0.5)
     plt.close()

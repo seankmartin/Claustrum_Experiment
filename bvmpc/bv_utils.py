@@ -50,13 +50,23 @@ def mycolors(subject, colors_dict=None):
         i = int(subject)
         if i > 10:
             i = i % 4
-        mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange',
-                    'tab:brown', 'deeppink', 'tab:olive', 'tab:pink',
-                    'steelblue', 'firebrick', 'mediumseagreen']
+        mycolors = [
+            "tab:red",
+            "tab:blue",
+            "tab:green",
+            "tab:orange",
+            "tab:brown",
+            "deeppink",
+            "tab:olive",
+            "tab:pink",
+            "steelblue",
+            "firebrick",
+            "mediumseagreen",
+        ]
         color = mycolors[i]
     except ValueError:
         if colors_dict == None:
-            print('Color input for required')
+            print("Color input for required")
             exit(-1)
         color = colors_dict[subject]
     return color
@@ -64,8 +74,7 @@ def mycolors(subject, colors_dict=None):
 
 def split_list(list, chunk_limit):
     """Split a list into small chunks based on chunk_limit."""
-    new_list = [list[i:i + chunk_limit]
-                for i in range(0, len(list), chunk_limit)]
+    new_list = [list[i : i + chunk_limit] for i in range(0, len(list), chunk_limit)]
     return new_list
 
 
@@ -85,9 +94,7 @@ def get_attrs(d, depth=0):
     for k, v in sorted(d.items(), key=lambda x: x[0]):
         spaces = ("  ") * depth
         if len(v.attrs) != 0:
-            print("{}{} has attrs {}".format(
-                spaces, k, list(v.attrs.items())
-            ))
+            print("{}{} has attrs {}".format(spaces, k, list(v.attrs.items())))
         if hasattr(v, "items"):
             get_attrs(v, depth=depth + 1)
 
@@ -95,7 +102,8 @@ def get_attrs(d, depth=0):
 def print_h5(file_location):
     """Print a summary of a h5 file."""
     import h5py
-    with h5py.File(file_location, 'r', libver='latest') as f:
+
+    with h5py.File(file_location, "r", libver="latest") as f:
         for key, val in f.attrs.items():
             print(key, val)
         print()
@@ -123,12 +131,17 @@ def has_ext(filename, ext):
         return True
     if ext[0] != ".":
         ext = "." + ext
-    return filename[-len(ext):].lower() == ext.lower()
+    return filename[-len(ext) :].lower() == ext.lower()
 
 
 def get_all_files_in_dir(
-        in_dir, ext=None, return_absolute=True,
-        recursive=False, verbose=False, re_filter=None):
+    in_dir,
+    ext=None,
+    return_absolute=True,
+    recursive=False,
+    verbose=False,
+    re_filter=None,
+):
     """
     Get all files in the directory with the given extension.
 
@@ -169,8 +182,10 @@ def get_all_files_in_dir(
 
     def ok_file(root_dir, f):
         return (
-            has_ext(f, ext) and match_filter(f) and
-            os.path.isfile(os.path.join(root_dir, f)))
+            has_ext(f, ext)
+            and match_filter(f)
+            and os.path.isfile(os.path.join(root_dir, f))
+        )
 
     def convert_to_path(root_dir, f):
         return os.path.join(root_dir, f) if return_absolute else f
@@ -181,12 +196,12 @@ def get_all_files_in_dir(
     if recursive:
         onlyfiles = []
         for root, _, filenames in os.walk(in_dir):
-            start_root = root[:len(in_dir)]
+            start_root = root[: len(in_dir)]
 
             if len(root) == len(start_root):
                 end_root = ""
             else:
-                end_root = root[len(in_dir + os.sep):]
+                end_root = root[len(in_dir + os.sep) :]
             for filename in filenames:
                 filename = os.path.join(end_root, filename)
                 if ok_file(start_root, filename):
@@ -197,7 +212,8 @@ def get_all_files_in_dir(
 
     else:
         onlyfiles = [
-            convert_to_path(in_dir, f) for f in sorted(os.listdir(in_dir))
+            convert_to_path(in_dir, f)
+            for f in sorted(os.listdir(in_dir))
             if ok_file(in_dir, f)
         ]
         if verbose:
@@ -233,7 +249,7 @@ def log_exception(ex, more_info=""):
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
-        yield l[i:i + n]
+        yield l[i : i + n]
 
 
 def save_dict_to_csv(filename, d):
@@ -259,11 +275,10 @@ def make_path_if_not_exists(fname):
 
 
 def setup_logging(in_dir):
-    fname = os.path.join(in_dir, 'nc_output.log')
+    fname = os.path.join(in_dir, "nc_output.log")
     if os.path.isfile(fname):
-        open(fname, 'w').close()
-    logging.basicConfig(
-        filename=fname, level=logging.DEBUG)
+        open(fname, "w").close()
+    logging.basicConfig(filename=fname, level=logging.DEBUG)
     mpl_logger = logging.getLogger("matplotlib")
     mpl_logger.setLevel(level=logging.WARNING)
 
@@ -329,12 +344,12 @@ def get_dirs_matching_regex(start_dir, re_filters=None, return_absolute=True):
 
     dirs = []
     for root, _, _ in os.walk(start_dir):
-        start_root = root[:len(start_dir)]
+        start_root = root[: len(start_dir)]
 
         if len(root) == len(start_root):
             end_root = ""
         else:
-            end_root = root[len(start_dir + os.sep):]
+            end_root = root[len(start_dir + os.sep) :]
 
         if match_filter(end_root):
             to_add = root if return_absolute else end_root
@@ -347,17 +362,16 @@ def interactive_refilt(start_dir, ext=None, write=False, write_loc=None):
 
     # Do the interactive setup
     files = get_all_files_in_dir(
-        start_dir, re_filter=None, return_absolute=False,
-        ext=ext, recursive=True)
+        start_dir, re_filter=None, return_absolute=False, ext=ext, recursive=True,
+    )
     print("Without any regex, the result from {} is:".format(start_dir))
     for f in files:
         print(f)
     while True:
         this_re_filt = input(
-            "Please enter the regexes seperated by SIM_SEP to test or quit / qt to move on:\n")
-        done = (
-            (this_re_filt.lower() == "quit") or
-            (this_re_filt.lower() == "qt"))
+            "Please enter the regexes seperated by SIM_SEP to test or quit / qt to move on:\n"
+        )
+        done = (this_re_filt.lower() == "quit") or (this_re_filt.lower() == "qt")
         if done:
             break
         if this_re_filt == "":
@@ -365,8 +379,12 @@ def interactive_refilt(start_dir, ext=None, write=False, write_loc=None):
         else:
             re_filt = this_re_filt.split(" SIM_SEP ")
         files = get_all_files_in_dir(
-            start_dir, re_filter=re_filt, return_absolute=False,
-            ext=ext, recursive=True)
+            start_dir,
+            re_filter=re_filt,
+            return_absolute=False,
+            ext=ext,
+            recursive=True,
+        )
         print("With {} the result is:".format(re_filt))
         for f in files:
             print(f)
@@ -405,6 +423,7 @@ def interactive_refilt(start_dir, ext=None, write=False, write_loc=None):
 def find_ranges(iterable):
     """Yield range of consecutive numbers."""
     import more_itertools as mit
+
     for group in mit.consecutive_groups(iterable):
         group = list(group)
         if len(group) == 1:
@@ -415,7 +434,10 @@ def find_ranges(iterable):
 
 def find_in(a, b):
     """Returns a boolean array of len(b) with True if any elements in a is found in b"""
-    def t_val(x): return x in a
+
+    def t_val(x):
+        return x in a
+
     truth = [t_val(x) for x in b]
     return truth
 
@@ -438,12 +460,21 @@ def get_dist(x, plot=False):
 
     """
     if type(x) is np.ndarray:
-        print("Min: ", np.min(x), "\nMax: ", np.max(x),
-              "\nMean: ", np.mean(x), "\nValues: ", x)
+        print(
+            "Min: ",
+            np.min(x),
+            "\nMax: ",
+            np.max(x),
+            "\nMean: ",
+            np.mean(x),
+            "\nValues: ",
+            x,
+        )
 
     elif type(x) is list:
-        print("Min: ", min(x), "\nMax: ", max(x),
-              "\nMean: ", mean(x), "\nValues: ", x)
+        print(
+            "Min: ", min(x), "\nMax: ", max(x), "\nMean: ", mean(x), "\nValues: ", x,
+        )
 
     if plot:
         sns.distplot(x)
@@ -458,10 +489,39 @@ def test_all_hier_clustering(data, verbose=False):
     from scipy.cluster.hierarchy import cophenet
     from scipy.spatial.distance import pdist
 
-    link_methods = ['single', 'complete',
-                    'average', 'weighted', 'centroid', 'median', 'ward']
-    link_metric = ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', 'euclidean', 'hamming', 'jaccard', 'jensenshannon',
-                   'kulsinski', 'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule']
+    link_methods = [
+        "single",
+        "complete",
+        "average",
+        "weighted",
+        "centroid",
+        "median",
+        "ward",
+    ]
+    link_metric = [
+        "braycurtis",
+        "canberra",
+        "chebyshev",
+        "cityblock",
+        "correlation",
+        "cosine",
+        "dice",
+        "euclidean",
+        "hamming",
+        "jaccard",
+        "jensenshannon",
+        "kulsinski",
+        "mahalanobis",
+        "matching",
+        "minkowski",
+        "rogerstanimoto",
+        "russellrao",
+        "seuclidean",
+        "sokalmichener",
+        "sokalsneath",
+        "sqeuclidean",
+        "yule",
+    ]
 
     coph = np.zeros((len(link_methods), len(link_metric)))
     for i, link in enumerate(link_methods):
@@ -475,19 +535,23 @@ def test_all_hier_clustering(data, verbose=False):
 
     max_coph = np.nanmax(coph)
     a, b = np.where(coph == max_coph)
-    coph_df = pd.DataFrame(coph, index=link_methods,
-                           columns=link_metric)
+    coph_df = pd.DataFrame(coph, index=link_methods, columns=link_metric)
     if verbose:
         print(coph_df)
-    print('\nMax Cophentic Correlation Coefficient: ',
-          coph_df.index.values[a], coph_df.columns.values[b], max_coph)
+    print(
+        "\nMax Cophentic Correlation Coefficient: ",
+        coph_df.index.values[a],
+        coph_df.columns.values[b],
+        max_coph,
+    )
     return coph_df
 
 
 if __name__ == "__main__":
     """Main entry point."""
     PARSER = argparse.ArgumentParser(
-        description='Process modifiable parameters from command line')
+        description="Process modifiable parameters from command line"
+    )
     PARSER.add_argument("--loc", type=str, help="h5 location")
     ARGS, UNPARSED = PARSER.parse_known_args()
     if ARGS.loc is None:
