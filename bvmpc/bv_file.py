@@ -11,7 +11,7 @@ import bvmpc.bv_utils
 def extract_sessions(
         in_dir, sub_list=None, s_list=None, d_list=None,
         load_backend="neo", neo_backend="nix"):
-    '''Extracts specified sessions from files '''
+    """Extracts specified sessions from files."""
 
     def should_use(val, vlist):
         if vlist is None:
@@ -93,6 +93,7 @@ def convert_axona_to_neo(
 
 
 def load_hdf5(filename, verbose=False):
+    """A wrapper around Session(h5_file=filename)."""
     if verbose:
         bvmpc.bv_utils.print_h5(filename)
     session = Session(h5_file=filename)
@@ -101,12 +102,17 @@ def load_hdf5(filename, verbose=False):
 
 
 def load_neo(filename, neo_backend="nix"):
+    """A wrapper around Session(neo_file=filename, neo_backend="nix")."""
     session = Session(neo_file=filename, neo_backend="nix")
     return session
 
 
 def session_from_mpc_file(filename, out_dir):
-    """Use this to work on MEDPC files without converting to HDF5."""
+    """
+    Directly create a session from a filename.
+
+    Use this to work on MEDPC files without converting to HDF5.
+    """
     bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
 
     s_extractor = SessionExtractor(filename, verbose=False)
@@ -115,7 +121,7 @@ def session_from_mpc_file(filename, out_dir):
 
 
 def load_bv_from_set(fname):
-    """Loads session based from .inp"""
+    """Loads session based from .inp inferred from .set filename."""
     if os.path.isfile(fname + ".inp"):
         return Session(axona_file=fname + ".inp")
     elif os.path.isfile(fname[:-3] + "inp"):
@@ -125,7 +131,8 @@ def load_bv_from_set(fname):
         return None
 
 
-def select_lfp(fname, ROI):  # Select lfp based on region
+def select_lfp(fname, ROI):
+    """Select lfp based on region."""
     # Single Hemi Multisite Drive settings
     lfp_list = []
     chans = [i for i in range(1, 17)]

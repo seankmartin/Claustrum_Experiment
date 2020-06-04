@@ -38,7 +38,7 @@ import bvmpc.bv_utils
 def extract_sessions(
         in_dir, sub_list=None, s_list=None, d_list=None,
         load_backend=&#34;neo&#34;, neo_backend=&#34;nix&#34;):
-    &#39;&#39;&#39;Extracts specified sessions from files &#39;&#39;&#39;
+    &#34;&#34;&#34;Extracts specified sessions from files.&#34;&#34;&#34;
 
     def should_use(val, vlist):
         if vlist is None:
@@ -120,6 +120,7 @@ def convert_axona_to_neo(
 
 
 def load_hdf5(filename, verbose=False):
+    &#34;&#34;&#34;A wrapper around Session(h5_file=filename).&#34;&#34;&#34;
     if verbose:
         bvmpc.bv_utils.print_h5(filename)
     session = Session(h5_file=filename)
@@ -128,12 +129,17 @@ def load_hdf5(filename, verbose=False):
 
 
 def load_neo(filename, neo_backend=&#34;nix&#34;):
+    &#34;&#34;&#34;A wrapper around Session(neo_file=filename, neo_backend=&#34;nix&#34;).&#34;&#34;&#34;
     session = Session(neo_file=filename, neo_backend=&#34;nix&#34;)
     return session
 
 
 def session_from_mpc_file(filename, out_dir):
-    &#34;&#34;&#34;Use this to work on MEDPC files without converting to HDF5.&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Directly create a session from a filename.
+
+    Use this to work on MEDPC files without converting to HDF5.
+    &#34;&#34;&#34;
     bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
 
     s_extractor = SessionExtractor(filename, verbose=False)
@@ -142,7 +148,7 @@ def session_from_mpc_file(filename, out_dir):
 
 
 def load_bv_from_set(fname):
-    &#34;&#34;&#34;Loads session based from .inp&#34;&#34;&#34;
+    &#34;&#34;&#34;Loads session based from .inp inferred from .set filename.&#34;&#34;&#34;
     if os.path.isfile(fname + &#34;.inp&#34;):
         return Session(axona_file=fname + &#34;.inp&#34;)
     elif os.path.isfile(fname[:-3] + &#34;inp&#34;):
@@ -152,7 +158,8 @@ def load_bv_from_set(fname):
         return None
 
 
-def select_lfp(fname, ROI):  # Select lfp based on region
+def select_lfp(fname, ROI):
+    &#34;&#34;&#34;Select lfp based on region.&#34;&#34;&#34;
     # Single Hemi Multisite Drive settings
     lfp_list = []
     chans = [i for i in range(1, 17)]
@@ -251,7 +258,7 @@ def select_lfp(fname, ROI):  # Select lfp based on region
 <span>def <span class="ident">extract_sessions</span></span>(<span>in_dir, sub_list=None, s_list=None, d_list=None, load_backend='neo', neo_backend='nix')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Extracts specified sessions from files</p></div>
+<div class="desc"><p>Extracts specified sessions from files.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -259,7 +266,7 @@ def select_lfp(fname, ROI):  # Select lfp based on region
 <pre><code class="python">def extract_sessions(
         in_dir, sub_list=None, s_list=None, d_list=None,
         load_backend=&#34;neo&#34;, neo_backend=&#34;nix&#34;):
-    &#39;&#39;&#39;Extracts specified sessions from files &#39;&#39;&#39;
+    &#34;&#34;&#34;Extracts specified sessions from files.&#34;&#34;&#34;
 
     def should_use(val, vlist):
         if vlist is None:
@@ -301,13 +308,13 @@ def select_lfp(fname, ROI):  # Select lfp based on region
 <span>def <span class="ident">load_bv_from_set</span></span>(<span>fname)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Loads session based from .inp</p></div>
+<div class="desc"><p>Loads session based from .inp inferred from .set filename.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def load_bv_from_set(fname):
-    &#34;&#34;&#34;Loads session based from .inp&#34;&#34;&#34;
+    &#34;&#34;&#34;Loads session based from .inp inferred from .set filename.&#34;&#34;&#34;
     if os.path.isfile(fname + &#34;.inp&#34;):
         return Session(axona_file=fname + &#34;.inp&#34;)
     elif os.path.isfile(fname[:-3] + &#34;inp&#34;):
@@ -321,12 +328,13 @@ def select_lfp(fname, ROI):  # Select lfp based on region
 <span>def <span class="ident">load_hdf5</span></span>(<span>filename, verbose=False)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>A wrapper around Session(h5_file=filename).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def load_hdf5(filename, verbose=False):
+    &#34;&#34;&#34;A wrapper around Session(h5_file=filename).&#34;&#34;&#34;
     if verbose:
         bvmpc.bv_utils.print_h5(filename)
     session = Session(h5_file=filename)
@@ -338,12 +346,13 @@ def select_lfp(fname, ROI):  # Select lfp based on region
 <span>def <span class="ident">load_neo</span></span>(<span>filename, neo_backend='nix')</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>A wrapper around Session(neo_file=filename, neo_backend="nix").</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def load_neo(filename, neo_backend=&#34;nix&#34;):
+    &#34;&#34;&#34;A wrapper around Session(neo_file=filename, neo_backend=&#34;nix&#34;).&#34;&#34;&#34;
     session = Session(neo_file=filename, neo_backend=&#34;nix&#34;)
     return session</code></pre>
 </details>
@@ -352,12 +361,13 @@ def select_lfp(fname, ROI):  # Select lfp based on region
 <span>def <span class="ident">select_lfp</span></span>(<span>fname, ROI)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Select lfp based on region.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_lfp(fname, ROI):  # Select lfp based on region
+<pre><code class="python">def select_lfp(fname, ROI):
+    &#34;&#34;&#34;Select lfp based on region.&#34;&#34;&#34;
     # Single Hemi Multisite Drive settings
     lfp_list = []
     chans = [i for i in range(1, 17)]
@@ -379,13 +389,18 @@ def select_lfp(fname, ROI):  # Select lfp based on region
 <span>def <span class="ident">session_from_mpc_file</span></span>(<span>filename, out_dir)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Use this to work on MEDPC files without converting to HDF5.</p></div>
+<div class="desc"><p>Directly create a session from a filename.</p>
+<p>Use this to work on MEDPC files without converting to HDF5.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def session_from_mpc_file(filename, out_dir):
-    &#34;&#34;&#34;Use this to work on MEDPC files without converting to HDF5.&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Directly create a session from a filename.
+
+    Use this to work on MEDPC files without converting to HDF5.
+    &#34;&#34;&#34;
     bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
 
     s_extractor = SessionExtractor(filename, verbose=False)

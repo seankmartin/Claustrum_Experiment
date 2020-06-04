@@ -42,10 +42,16 @@ import bvmpc.bv_utils
 
 
 def struc_timeline(sub_list, in_dir):
-    &#34;&#34;&#34; Structure sessions into a pandas dataframe based on trials
-    Returns 2 outputs: grp_timeline_df, time_df_sub
-        grp_timeline_df - array of pandas dataframe across time based on session
-        grp_timeline_df_sub     - list denoting subject corresponding to each df
+    &#34;&#34;&#34;
+    Structure sessions into a pandas dataframe based on trials.
+
+    Returns
+    -------
+    grp_timeline_df, time_df_sub
+        grp_timeline_df : array
+            pandas dataframes across time based on session
+        grp_timeline_df_sub : list
+            denotes the subject corresponding to each df
     &#34;&#34;&#34;
     # Initialize group variables
     grp_timeline_df = []
@@ -169,7 +175,32 @@ def struc_timeline(sub_list, in_dir):
     return grp_timeline_df, grp_timeline_df_sub
 
 
-def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags, sub_colors_dict):
+def plot_batch_sessions(
+        start_dir, sub_list, start_date, end_date, plt_flags, sub_colors_dict):
+    &#34;&#34;&#34;
+    Plot behavioural data across sessions.
+
+    Parameters
+    ----------
+    start_dir : str
+        The directory to save the plots to and obtain session data from.
+        Saves to Plots/Current and obtains from /hdf5.
+    sub_list : list
+        The list of subjects to consider.
+    start_date : str
+        The first date to consider.
+    end_date : str
+        The last date to consider.
+    plt_flags : dict
+        Flags to denote which kind of plot to do and control the plots.
+    sub_colors_dict : dict
+        Dictionary of colours to use for each subject.
+
+    Returns
+    -------
+    None
+
+    &#34;&#34;&#34;
     out_dir = os.path.join(start_dir, &#34;Plots&#34;, &#34;Current&#34;)
     bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
 
@@ -290,8 +321,14 @@ def plot_sessions(
         summary=False, single=False, timeline=False,
         details=False, det_err=False, det_corr=False,
         recent=False, show_date=False, int_only=False,
-        corr_only=False, scd=None):  # TODO Split timeline and plotting into seperate functions
-    &#39;&#39;&#39; Plots session summaries
+        corr_only=False, scd=None):
+    &#34;&#34;&#34;
+    Plots session summaries.
+
+    The parameters are not currently fully documented.
+
+    Parameters
+    ----------
     summary : bool, False
         Optional. Plots all sessions in a single plot, up to 6
     single : bool, False
@@ -303,7 +340,16 @@ def plot_sessions(
     scd : dict, None
         dict of Sub : color
         Used to assign color to plot title.
-    &#39;&#39;&#39;
+
+    TODO
+    ----
+    Split timeline and plotting into separate functions.
+
+    Returns
+    -------
+    None
+
+    &#34;&#34;&#34;
     s_list = [&#39;4&#39;, &#39;5a&#39;, &#39;5b&#39;, &#39;6&#39;, &#39;7&#39;]
 
     in_dir = os.path.join(start_dir, &#34;hdf5&#34;)
@@ -413,7 +459,11 @@ def plot_sessions(
 
 def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
              int_only=False, corr_only=False):
-    &#34;&#34;&#34; zoom:   if True, divides session into blocks and plots each block as individual lines.
+    &#34;&#34;&#34;
+    Perform summary plots of a day.
+
+    Note that if zoom is True, this function then
+    divides session into blocks and plots each block as individual lines.
 
     &#34;&#34;&#34;
     # Plots summary of day
@@ -512,14 +562,25 @@ def timeline_plot(
         det_err=False, det_corr=False, recent=False,
         show_date=True, details=False, sub_colors_dict=None):
     &#34;&#34;&#34;
+    Plots total rewards from beginning of first session
 
-    Plots total rewards from beginining of first session  
+    Not all parameters are currently described.
 
-    Arguments:
-    det_err - plots error lever presses
-    det_cor - plots correct lever presses
-    recent - plots recent (determined in code - static) datapoints only
-    show_date - plots date as x axis instead of session type
+    Parameters
+    ----------
+    det_err : bool
+        plots error lever presses
+    det_cor : bool
+        plots correct lever presses
+    recent : bool
+        plots recent (determined in code - static) datapoints only
+    show_date : bool
+        plots date as x axis instead of session type
+
+    Returns
+    -------
+    None
+
     &#34;&#34;&#34;
     # Plot size
     rows, cols = [len(sub_list), 4]
@@ -866,12 +927,58 @@ def timeline_plot(
 <span>def <span class="ident">plot_batch_sessions</span></span>(<span>start_dir, sub_list, start_date, end_date, plt_flags, sub_colors_dict)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Plot behavioural data across sessions.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>start_dir</code></strong> :&ensp;<code>str</code></dt>
+<dd>The directory to save the plots to and obtain session data from.
+Saves to Plots/Current and obtains from /hdf5.</dd>
+<dt><strong><code>sub_list</code></strong> :&ensp;<code>list</code></dt>
+<dd>The list of subjects to consider.</dd>
+<dt><strong><code>start_date</code></strong> :&ensp;<code>str</code></dt>
+<dd>The first date to consider.</dd>
+<dt><strong><code>end_date</code></strong> :&ensp;<code>str</code></dt>
+<dd>The last date to consider.</dd>
+<dt><strong><code>plt_flags</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Flags to denote which kind of plot to do and control the plots.</dd>
+<dt><strong><code>sub_colors_dict</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Dictionary of colours to use for each subject.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags, sub_colors_dict):
+<pre><code class="python">def plot_batch_sessions(
+        start_dir, sub_list, start_date, end_date, plt_flags, sub_colors_dict):
+    &#34;&#34;&#34;
+    Plot behavioural data across sessions.
+
+    Parameters
+    ----------
+    start_dir : str
+        The directory to save the plots to and obtain session data from.
+        Saves to Plots/Current and obtains from /hdf5.
+    sub_list : list
+        The list of subjects to consider.
+    start_date : str
+        The first date to consider.
+    end_date : str
+        The last date to consider.
+    plt_flags : dict
+        Flags to denote which kind of plot to do and control the plots.
+    sub_colors_dict : dict
+        Dictionary of colours to use for each subject.
+
+    Returns
+    -------
+    None
+
+    &#34;&#34;&#34;
     out_dir = os.path.join(start_dir, &#34;Plots&#34;, &#34;Current&#34;)
     bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
 
@@ -991,18 +1098,29 @@ def timeline_plot(
 <span>def <span class="ident">plot_sessions</span></span>(<span>start_dir, d_list, sub_list, summary=False, single=False, timeline=False, details=False, det_err=False, det_corr=False, recent=False, show_date=False, int_only=False, corr_only=False, scd=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Plots session summaries
-summary : bool, False
-Optional. Plots all sessions in a single plot, up to 6
-single : bool, False
-Optional. Plots single session summaries with breakdown of single blocks
-int_only : bool, False
-Optional. Plots only interval trials in zoomed schedule plot
-corr_only : bool, False
-Optional. Plots seperate summary plot with correct only trials
-scd : dict, None
-dict of Sub : color
-Used to assign color to plot title.</p></div>
+<div class="desc"><p>Plots session summaries.</p>
+<p>The parameters are not currently fully documented.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>summary</code></strong> :&ensp;<code>bool, False</code></dt>
+<dd>Optional. Plots all sessions in a single plot, up to 6</dd>
+<dt><strong><code>single</code></strong> :&ensp;<code>bool, False</code></dt>
+<dd>Optional. Plots single session summaries with breakdown of single blocks</dd>
+<dt><strong><code>int_only</code></strong> :&ensp;<code>bool, False</code></dt>
+<dd>Optional. Plots only interval trials in zoomed schedule plot</dd>
+<dt><strong><code>corr_only</code></strong> :&ensp;<code>bool, False</code></dt>
+<dd>Optional. Plots seperate summary plot with correct only trials</dd>
+<dt><strong><code>scd</code></strong> :&ensp;<code>dict, None</code></dt>
+<dd>dict of Sub : color
+Used to assign color to plot title.</dd>
+</dl>
+<h2 id="todo">Todo</h2>
+<p>Split timeline and plotting into separate functions.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1012,8 +1130,14 @@ Used to assign color to plot title.</p></div>
         summary=False, single=False, timeline=False,
         details=False, det_err=False, det_corr=False,
         recent=False, show_date=False, int_only=False,
-        corr_only=False, scd=None):  # TODO Split timeline and plotting into seperate functions
-    &#39;&#39;&#39; Plots session summaries
+        corr_only=False, scd=None):
+    &#34;&#34;&#34;
+    Plots session summaries.
+
+    The parameters are not currently fully documented.
+
+    Parameters
+    ----------
     summary : bool, False
         Optional. Plots all sessions in a single plot, up to 6
     single : bool, False
@@ -1025,7 +1149,16 @@ Used to assign color to plot title.</p></div>
     scd : dict, None
         dict of Sub : color
         Used to assign color to plot title.
-    &#39;&#39;&#39;
+
+    TODO
+    ----
+    Split timeline and plotting into separate functions.
+
+    Returns
+    -------
+    None
+
+    &#34;&#34;&#34;
     s_list = [&#39;4&#39;, &#39;5a&#39;, &#39;5b&#39;, &#39;6&#39;, &#39;7&#39;]
 
     in_dir = os.path.join(start_dir, &#34;hdf5&#34;)
@@ -1137,20 +1270,30 @@ Used to assign color to plot title.</p></div>
 <span>def <span class="ident">struc_timeline</span></span>(<span>sub_list, in_dir)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Structure sessions into a pandas dataframe based on trials
-Returns 2 outputs: grp_timeline_df, time_df_sub
-grp_timeline_df - array of pandas dataframe across time based on session
-grp_timeline_df_sub
-- list denoting subject corresponding to each df</p></div>
+<div class="desc"><p>Structure sessions into a pandas dataframe based on trials.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>grp_timeline_df, time_df_sub</code></dt>
+<dd>grp_timeline_df : array
+pandas dataframes across time based on session
+grp_timeline_df_sub : list
+denotes the subject corresponding to each df</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def struc_timeline(sub_list, in_dir):
-    &#34;&#34;&#34; Structure sessions into a pandas dataframe based on trials
-    Returns 2 outputs: grp_timeline_df, time_df_sub
-        grp_timeline_df - array of pandas dataframe across time based on session
-        grp_timeline_df_sub     - list denoting subject corresponding to each df
+    &#34;&#34;&#34;
+    Structure sessions into a pandas dataframe based on trials.
+
+    Returns
+    -------
+    grp_timeline_df, time_df_sub
+        grp_timeline_df : array
+            pandas dataframes across time based on session
+        grp_timeline_df_sub : list
+            denotes the subject corresponding to each df
     &#34;&#34;&#34;
     # Initialize group variables
     grp_timeline_df = []
@@ -1278,15 +1421,20 @@ grp_timeline_df_sub
 <span>def <span class="ident">sum_plot</span></span>(<span>s_grp, idx, out_dir, zoom=True, single=False, int_only=False, corr_only=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>zoom:
-if True, divides session into blocks and plots each block as individual lines.</p></div>
+<div class="desc"><p>Perform summary plots of a day.</p>
+<p>Note that if zoom is True, this function then
+divides session into blocks and plots each block as individual lines.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
              int_only=False, corr_only=False):
-    &#34;&#34;&#34; zoom:   if True, divides session into blocks and plots each block as individual lines.
+    &#34;&#34;&#34;
+    Perform summary plots of a day.
+
+    Note that if zoom is True, this function then
+    divides session into blocks and plots each block as individual lines.
 
     &#34;&#34;&#34;
     # Plots summary of day
@@ -1384,13 +1532,24 @@ if True, divides session into blocks and plots each block as individual lines.</
 <span>def <span class="ident">timeline_plot</span></span>(<span>sub_list, in_dir, out_dir, single_plot=False, det_err=False, det_corr=False, recent=False, show_date=True, details=False, sub_colors_dict=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Plots total rewards from beginining of first session
-</p>
-<p>Arguments:
-det_err - plots error lever presses
-det_cor - plots correct lever presses
-recent - plots recent (determined in code - static) datapoints only
-show_date - plots date as x axis instead of session type</p></div>
+<div class="desc"><p>Plots total rewards from beginning of first session</p>
+<p>Not all parameters are currently described.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>det_err</code></strong> :&ensp;<code>bool</code></dt>
+<dd>plots error lever presses</dd>
+<dt><strong><code>det_cor</code></strong> :&ensp;<code>bool</code></dt>
+<dd>plots correct lever presses</dd>
+<dt><strong><code>recent</code></strong> :&ensp;<code>bool</code></dt>
+<dd>plots recent (determined in code - static) datapoints only</dd>
+<dt><strong><code>show_date</code></strong> :&ensp;<code>bool</code></dt>
+<dd>plots date as x axis instead of session type</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1400,14 +1559,25 @@ show_date - plots date as x axis instead of session type</p></div>
         det_err=False, det_corr=False, recent=False,
         show_date=True, details=False, sub_colors_dict=None):
     &#34;&#34;&#34;
+    Plots total rewards from beginning of first session
 
-    Plots total rewards from beginining of first session  
+    Not all parameters are currently described.
 
-    Arguments:
-    det_err - plots error lever presses
-    det_cor - plots correct lever presses
-    recent - plots recent (determined in code - static) datapoints only
-    show_date - plots date as x axis instead of session type
+    Parameters
+    ----------
+    det_err : bool
+        plots error lever presses
+    det_cor : bool
+        plots correct lever presses
+    recent : bool
+        plots recent (determined in code - static) datapoints only
+    show_date : bool
+        plots date as x axis instead of session type
+
+    Returns
+    -------
+    None
+
     &#34;&#34;&#34;
     # Plot size
     rows, cols = [len(sub_list), 4]

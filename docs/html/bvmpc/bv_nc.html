@@ -35,6 +35,7 @@ from neurochat.nc_event import NEvent
 
 
 def events_from_session(session):
+    &#34;&#34;&#34;Pull out events from a session and store in NEvent.&#34;&#34;&#34;
     # Note maybe should use get_valid_tdf
     # print(session.info_arrays.keys())
     # exit(-1)
@@ -116,6 +117,7 @@ def events_from_session(session):
 
 
 def load_phy(folder_name):
+    &#34;&#34;&#34;Use spikeinterface to load a phy clustering.&#34;&#34;&#34;
     import spikeinterface.extractors as se
     to_exclude = [&#34;mua&#34;, &#34;noise&#34;]
     return se.PhySortingExtractor(
@@ -124,6 +126,7 @@ def load_phy(folder_name):
 
 
 def plot_all_forms(sorting, out_loc, channels_per_group=4):
+    &#34;&#34;&#34;Plot all waveforms from a spikeinterface sorting object.&#34;&#34;&#34;
     unit_ids = sorting.get_unit_ids()
     wf_by_group = [
         sorting.get_unit_spike_features(u, &#34;waveforms&#34;) for u in unit_ids]
@@ -156,6 +159,7 @@ def plot_all_forms(sorting, out_loc, channels_per_group=4):
 
 
 def extract_sorting_info(sorting):
+    &#34;&#34;&#34;Extract timestamps, tags, and waveforms from a sorting object.&#34;&#34;&#34;
     sample_rate = sorting.params[&#39;sample_rate&#39;]
     all_unit_trains = sorting.get_units_spike_train()
     timestamps = np.concatenate(all_unit_trains) / float(sample_rate)
@@ -180,6 +184,7 @@ def extract_sorting_info(sorting):
 
 
 def load_spike_phy(self, folder_name):
+    &#34;&#34;&#34;Appended to NSpike class, loads spikes from phy.&#34;&#34;&#34;
     print(&#34;loading Phy sorting information from {}&#34;.format(folder_name))
     sorting = load_phy(folder_name)
     timestamps, unit_tags, waveforms = extract_sorting_info(sorting)
@@ -214,12 +219,13 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">events_from_session</span></span>(<span>session)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Pull out events from a session and store in NEvent.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def events_from_session(session):
+    &#34;&#34;&#34;Pull out events from a session and store in NEvent.&#34;&#34;&#34;
     # Note maybe should use get_valid_tdf
     # print(session.info_arrays.keys())
     # exit(-1)
@@ -304,12 +310,13 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">extract_sorting_info</span></span>(<span>sorting)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Extract timestamps, tags, and waveforms from a sorting object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def extract_sorting_info(sorting):
+    &#34;&#34;&#34;Extract timestamps, tags, and waveforms from a sorting object.&#34;&#34;&#34;
     sample_rate = sorting.params[&#39;sample_rate&#39;]
     all_unit_trains = sorting.get_units_spike_train()
     timestamps = np.concatenate(all_unit_trains) / float(sample_rate)
@@ -337,12 +344,13 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">load_phy</span></span>(<span>folder_name)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Use spikeinterface to load a phy clustering.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def load_phy(folder_name):
+    &#34;&#34;&#34;Use spikeinterface to load a phy clustering.&#34;&#34;&#34;
     import spikeinterface.extractors as se
     to_exclude = [&#34;mua&#34;, &#34;noise&#34;]
     return se.PhySortingExtractor(
@@ -354,12 +362,13 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">load_spike_phy</span></span>(<span>self, folder_name)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Appended to NSpike class, loads spikes from phy.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def load_spike_phy(self, folder_name):
+    &#34;&#34;&#34;Appended to NSpike class, loads spikes from phy.&#34;&#34;&#34;
     print(&#34;loading Phy sorting information from {}&#34;.format(folder_name))
     sorting = load_phy(folder_name)
     timestamps, unit_tags, waveforms = extract_sorting_info(sorting)
@@ -377,12 +386,13 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">plot_all_forms</span></span>(<span>sorting, out_loc, channels_per_group=4)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Plot all waveforms from a spikeinterface sorting object.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def plot_all_forms(sorting, out_loc, channels_per_group=4):
+    &#34;&#34;&#34;Plot all waveforms from a spikeinterface sorting object.&#34;&#34;&#34;
     unit_ids = sorting.get_unit_ids()
     wf_by_group = [
         sorting.get_unit_spike_features(u, &#34;waveforms&#34;) for u in unit_ids]

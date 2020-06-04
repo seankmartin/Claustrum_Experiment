@@ -15,10 +15,16 @@ import bvmpc.bv_utils
 
 
 def struc_timeline(sub_list, in_dir):
-    """ Structure sessions into a pandas dataframe based on trials
-    Returns 2 outputs: grp_timeline_df, time_df_sub
-        grp_timeline_df - array of pandas dataframe across time based on session
-        grp_timeline_df_sub     - list denoting subject corresponding to each df
+    """
+    Structure sessions into a pandas dataframe based on trials.
+
+    Returns
+    -------
+    grp_timeline_df, time_df_sub
+        grp_timeline_df : array
+            pandas dataframes across time based on session
+        grp_timeline_df_sub : list
+            denotes the subject corresponding to each df
     """
     # Initialize group variables
     grp_timeline_df = []
@@ -142,7 +148,32 @@ def struc_timeline(sub_list, in_dir):
     return grp_timeline_df, grp_timeline_df_sub
 
 
-def plot_batch_sessions(start_dir, sub_list, start_date, end_date, plt_flags, sub_colors_dict):
+def plot_batch_sessions(
+        start_dir, sub_list, start_date, end_date, plt_flags, sub_colors_dict):
+    """
+    Plot behavioural data across sessions.
+
+    Parameters
+    ----------
+    start_dir : str
+        The directory to save the plots to and obtain session data from.
+        Saves to Plots/Current and obtains from /hdf5.
+    sub_list : list
+        The list of subjects to consider.
+    start_date : str
+        The first date to consider.
+    end_date : str
+        The last date to consider.
+    plt_flags : dict
+        Flags to denote which kind of plot to do and control the plots.
+    sub_colors_dict : dict
+        Dictionary of colours to use for each subject.
+
+    Returns
+    -------
+    None
+
+    """
     out_dir = os.path.join(start_dir, "Plots", "Current")
     bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
 
@@ -263,8 +294,14 @@ def plot_sessions(
         summary=False, single=False, timeline=False,
         details=False, det_err=False, det_corr=False,
         recent=False, show_date=False, int_only=False,
-        corr_only=False, scd=None):  # TODO Split timeline and plotting into seperate functions
-    ''' Plots session summaries
+        corr_only=False, scd=None):
+    """
+    Plots session summaries.
+
+    The parameters are not currently fully documented.
+
+    Parameters
+    ----------
     summary : bool, False
         Optional. Plots all sessions in a single plot, up to 6
     single : bool, False
@@ -276,7 +313,16 @@ def plot_sessions(
     scd : dict, None
         dict of Sub : color
         Used to assign color to plot title.
-    '''
+
+    TODO
+    ----
+    Split timeline and plotting into separate functions.
+
+    Returns
+    -------
+    None
+
+    """
     s_list = ['4', '5a', '5b', '6', '7']
 
     in_dir = os.path.join(start_dir, "hdf5")
@@ -386,7 +432,11 @@ def plot_sessions(
 
 def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
              int_only=False, corr_only=False):
-    """ zoom:   if True, divides session into blocks and plots each block as individual lines.
+    """
+    Perform summary plots of a day.
+
+    Note that if zoom is True, this function then
+    divides session into blocks and plots each block as individual lines.
 
     """
     # Plots summary of day
@@ -485,14 +535,25 @@ def timeline_plot(
         det_err=False, det_corr=False, recent=False,
         show_date=True, details=False, sub_colors_dict=None):
     """
+    Plots total rewards from beginning of first session
 
-    Plots total rewards from beginining of first session  
+    Not all parameters are currently described.
 
-    Arguments:
-    det_err - plots error lever presses
-    det_cor - plots correct lever presses
-    recent - plots recent (determined in code - static) datapoints only
-    show_date - plots date as x axis instead of session type
+    Parameters
+    ----------
+    det_err : bool
+        plots error lever presses
+    det_cor : bool
+        plots correct lever presses
+    recent : bool
+        plots recent (determined in code - static) datapoints only
+    show_date : bool
+        plots date as x axis instead of session type
+
+    Returns
+    -------
+    None
+
     """
     # Plot size
     rows, cols = [len(sub_list), 4]

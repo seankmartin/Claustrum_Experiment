@@ -9,6 +9,7 @@ from neurochat.nc_event import NEvent
 
 
 def events_from_session(session):
+    """Pull out events from a session and store in NEvent."""
     # Note maybe should use get_valid_tdf
     # print(session.info_arrays.keys())
     # exit(-1)
@@ -90,6 +91,7 @@ def events_from_session(session):
 
 
 def load_phy(folder_name):
+    """Use spikeinterface to load a phy clustering."""
     import spikeinterface.extractors as se
     to_exclude = ["mua", "noise"]
     return se.PhySortingExtractor(
@@ -98,6 +100,7 @@ def load_phy(folder_name):
 
 
 def plot_all_forms(sorting, out_loc, channels_per_group=4):
+    """Plot all waveforms from a spikeinterface sorting object."""
     unit_ids = sorting.get_unit_ids()
     wf_by_group = [
         sorting.get_unit_spike_features(u, "waveforms") for u in unit_ids]
@@ -130,6 +133,7 @@ def plot_all_forms(sorting, out_loc, channels_per_group=4):
 
 
 def extract_sorting_info(sorting):
+    """Extract timestamps, tags, and waveforms from a sorting object."""
     sample_rate = sorting.params['sample_rate']
     all_unit_trains = sorting.get_units_spike_train()
     timestamps = np.concatenate(all_unit_trains) / float(sample_rate)
@@ -154,6 +158,7 @@ def extract_sorting_info(sorting):
 
 
 def load_spike_phy(self, folder_name):
+    """Appended to NSpike class, loads spikes from phy."""
     print("loading Phy sorting information from {}".format(folder_name))
     sorting = load_phy(folder_name)
     timestamps, unit_tags, waveforms = extract_sorting_info(sorting)

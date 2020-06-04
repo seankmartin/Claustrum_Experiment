@@ -12,6 +12,7 @@ from bvmpc.bv_utils import make_dir_if_not_exists, make_path_if_not_exists
 def get_eloc(ch_names, o_dir, base_name, dummy=False):
     """
     Read or generate csv with 3D tetrode coordinates.
+
     Generate via user input.
 
     Parameters
@@ -22,9 +23,15 @@ def get_eloc(ch_names, o_dir, base_name, dummy=False):
     o_dir : dir
         location to save eloc output
     base_name : str
-        basename of file. Used in naming of eloc output: helps to track session, date, subject.
+        basename of file.
+        Used in naming of eloc output - helps to track session, date, subject.
     dummy : bool, default False
         Create dummy tetrode locations for better visualisation.
+
+    Returns
+    -------
+    dict
+        Dictionary of electrode locations.
 
     """
     def get_next_i(rows, cols, idx):
@@ -100,6 +107,8 @@ def create_mne_array(
     """
     Populate a full mne raw array object with information.
 
+    Parameters
+    ----------
     lfp_odict : bvmpc.lfp_odict.LfpODict
         The lfp_odict object to convert to numpy data.
     fname : str
@@ -114,6 +123,11 @@ def create_mne_array(
         Optional. Path to directory to store the output files in.
     plot_mon : bool, Default True
         Plot montage of electrode positions used.
+
+    Returns
+    -------
+    mne.io.RawArray
+
     """
     raw_data = lfp_odict_to_np(lfp_odict)
 
@@ -183,6 +197,12 @@ def save_annotations(mne_array, annotation_fname):
 
 
 def add_nc_event_to_mne(mne_array, nc_events, sample_rate=250):
+    """
+    Add nc_events to the mne array.
+
+    Sample rate is used for sample number conversion from time.
+
+    """
     print("Adding {} events to mne".format(len(nc_events._timestamp)))
     event_data = np.zeros(
         shape=(len(nc_events._timestamp), 3))
@@ -259,7 +279,9 @@ def get_layout(o_dir, layout_name):
 
 
 def generate_events(mne_array, session, plot=False):
-    """Generate events based on session object.
+    """
+    Generate events based on session object.
+
     Parameters
     ----------
     mne_array : mne.raw object
@@ -269,9 +291,12 @@ def generate_events(mne_array, session, plot=False):
 
     Returns
     -------
-    events_dict : dict of (event: index). Eg. {'Right': 1, 'Left': 2}
-    mne_events : mne.events object
-    annot_from events : mne.events converted to mne.annotations
+    (events_dict, mne_events, annot_from_events)
+    events_dict : dict
+        (event: index). Eg. {'Right': 1, 'Left': 2}
+    mne_events : mne.events
+    annot_from events : mne.annotations
+        Annotations converted from events.
 
     """
     from bvmpc.bv_nc import events_from_session
@@ -305,8 +330,12 @@ def generate_events(mne_array, session, plot=False):
 
 def pick_chans(raw, sel=None):
     """
-    Pick channels based on sel input. Identifies channels with str or int in sel.
-    Example:
+    Pick channels based on sel input.
+
+    Identifies channels with str or int in sel.
+
+    Example
+    -------
         Input
             raw.chan_names = ['ACC-1','ACC-2','RSC-3']
             sel = ['ACC']
@@ -349,13 +378,15 @@ def pick_chans(raw, sel=None):
 
 
 def get_reg_chans(raw, regions):
-    """ Get dict with {regions: list of channels}
+    """
+    Get dict with {regions: list of channels}.
 
     Parameters
     ----------
     raw : mne.raw object
-    region_dict : list of str,
-        list of regions to be grouped. set(regions) used to determine dict keys.
+    region_dict : list of str
+        list of regions to be grouped.
+        set(regions) used to determine dict keys.
 
     Returns
     -------
@@ -374,14 +405,7 @@ def get_reg_chans(raw, regions):
 
 
 def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name="", exclude=None, skip_plots=False):
-    """
-    This is example code using mne.
-
-    Parameters
-    ----------
-
-
-    """
+    """This is example code using mne."""
     raw = mne_array
 
     if not skip_plots:
@@ -460,17 +484,27 @@ def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name="", exclude=Non
     return reconst_raw
 
 
-def viz_raw_epochs(epoch_list, comp_conds, picks, sort_reg, plot_reg, topo_seq, plot_image, ppros_dict):
-    """ Pipeline for visualizing raw epochs
+def viz_raw_epochs(
+        epoch_list, comp_conds, picks, sort_reg,
+        plot_reg, topo_seq, plot_image, ppros_dict):
+    """
+    Pipeline for visualizing raw epochs.
 
-        Parameters
-        ----------
-        plot_reg: bool, collates LFP for each region. Results in average magnitute based plot_image.
-        plot_image: bool, plots LFP amplitude across trials in an image, with average below.
-        topo_seq: bool, plots average LFP for each channel, and a topo map for selected timepoints.
-        ppros_dict: dict, contains preprocessing steps performed in text form. Used to label image files.
+    Parameters
+    ----------
+    plot_reg: bool
+        collates LFP for each region.
+        Results in average magnitute based plot_image.
+    plot_image: bool
+        plots LFP amplitude across trials in an image, with average below.
+    topo_seq: bool
+        plots average LFP for each channel,
+        and a topo map for selected timepoints.
+    ppros_dict: dict,
+        contains preprocessing steps performed in text form.
+        Used to label image files.
 
-        """
+    """
 
     # Extract variables from ppros_dict
     base_name = ppros_dict['base_name']

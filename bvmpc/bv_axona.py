@@ -1,4 +1,4 @@
-"""Module to read Axona .inp files."""
+"""Module to read Axona .inp and .set files."""
 
 import os
 import argparse
@@ -211,6 +211,23 @@ class AxonaInpReader:
 
 
 class AxonaSet:
+    """
+    Class which reads Axona set files.
+
+    Attributes
+    ----------
+    data : OrderedDict
+        The parameters from the .set file as key value combos
+    change_dict : dict
+        key value combos to modify values in data.
+        This essentially works as follows. After loading the set file,
+        for k, v in change_dict.items():
+            data[k] = v(data[k])
+    location : str
+        Path to the .set file that is being loaded.
+
+    """
+
     def __init__(self, location=None):
         self.data = OrderedDict()
         self.change_dict = {}
@@ -221,7 +238,7 @@ class AxonaSet:
             self.load(location)
 
     def set_end_time(self):
-        """Calculate how long the Session took in mins."""
+        """Calculate and store how long the Session took in mins."""
         dur = int(self.get_val("duration"))
         start_time = self.get_val("trial_time")
         fmt = '%H:%M:%S'
@@ -232,6 +249,7 @@ class AxonaSet:
         self.data["end_time"] = out_str
 
     def load(self, location):
+        """Load and parse a .set file specified by location."""
         with open(location, 'r', encoding='latin-1') as f_set:
             lines = f_set.readlines()
             for line in lines:
@@ -245,12 +263,27 @@ class AxonaSet:
         self.set_end_time()
 
     def get_val(self, key=None):
+        """
+        Get a value from the parsed set file.
+
+        Parameters
+        ----------
+        key : str, optional
+            The data key to retrieve from the set file.
+            If None, returns the whole data from the set file.
+
+        Returns
+        -------
+        obj or dict
+
+        """
         if key is None:
             return self.data
         return self.data.get(key, None)
 
     @staticmethod
     def change_date(date):
+        """Convert an Axona date into a standard format."""
         change = {v: k for k, v in enumerate(calendar.month_abbr)}
         rest = date[date.index(" ") + 1:]
         day, month, year = rest.split(" ")
@@ -259,10 +292,6 @@ class AxonaSet:
         day = "0" + day if int(day) < 10 else day
         output = "{}/{}/{}".format(month, day, year[2:])
         return output
-
-    @staticmethod
-    def change_name(name):
-        return
 
 
 if __name__ == "__main__":

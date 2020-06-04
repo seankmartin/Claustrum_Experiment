@@ -10,7 +10,11 @@ import numpy as np
 
 
 class GridFig:
-    """Handles gridded figures."""
+    """
+    Handles gridded figures.
+
+    size_multiplier, wspace, and hspace are used for spacing in init.
+    """
 
     def __init__(
             self, rows, cols=4,
@@ -71,6 +75,8 @@ class GridFig:
         """
         Get next index along rows or columns.
 
+        Example
+        -------
         along rows:
         1   2   3   4   5   6
         7   8   9   10  11  12  ...
@@ -97,6 +103,8 @@ class GridFig:
         """
         Get the next index in a snake like pattern.
 
+        Example
+        -------
         1   2   5   6   9   10  ...
         3   4   7   8   11  12  ..
 
@@ -119,6 +127,14 @@ class GridFig:
 
 
 class GroupManager:
+    """
+    Handle groups of figures - mostly for auto coloring.
+
+    See Also
+    --------
+    bvmpc.bv_plot.ColorManager
+
+    """
 
     def __init__(self, group_list, color_list=None):
         self.group_list = group_list
@@ -129,7 +145,8 @@ class GroupManager:
             self.set_color_list(color_list)
         else:
             self.color_list = [
-                "Blues_r", "Oranges_r", "Greens_r", "Purples_r", "PuRd_r", "Greys_r"]
+                "Blues_r", "Oranges_r", "Greens_r",
+                "Purples_r", "PuRd_r", "Greys_r"]
         set_vals = sorted(set(group_list), key=group_list.index)
         # print(set_vals)
         import numpy as np
@@ -146,6 +163,7 @@ class GroupManager:
         # print(self.info_dict)
 
     def get_next_color(self):
+        """Get the next colour to use."""
         out = self.info_dict[self.group_list[self.index]].get_next_color()
         self._increment()
         return out
@@ -156,6 +174,7 @@ class GroupManager:
             self.index = 0
 
     def test_plot(self):
+        """An example of using this class."""
         from scipy.stats import norm
         import numpy as np
         fig, ax = plt.subplots()
@@ -176,7 +195,7 @@ class GroupManager:
 
         Parameters
         ----------
-        samples : list or ndarray
+        samples: list or ndarray
             colors
 
         Returns
@@ -188,6 +207,13 @@ class GroupManager:
 
 
 class ColorManager:
+    """
+    Automatically pick colours for a group of items.
+
+    Initialising is supported with "sns", "rgb" or "sns_helix".
+
+    """
+
     def __init__(self, num_colors, method="sns", **kwargs):
         self.num_colors = num_colors
         if method == "sns":
@@ -204,26 +230,32 @@ class ColorManager:
         self.idx = 0
 
     def create_rgb(self):
+        """Init colours using rgb spaced colours."""
         N = self.num_colors
         HSV_tuples = [(x * 1.0 / N, 0.5, 0.5) for x in range(N)]
         RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
         self.colors = list(RGB_tuples)
 
     def create_sns_palette(self, s_type=None):
+        """Init colours from seaborn palette."""
         self.colors = sns.color_palette(s_type, self.num_colors)
 
     def create_sns_helix(self, start):
+        """Init colours from seaborn helix palette."""
         self.colors = sns.cubehelix_palette(self.num_colors, start)
 
     def get_next_color(self):
+        """Get the next color."""
         result = self.colors[self.idx]
         self._increment()
         return result
 
     def get_color(self, index):
+        """Get an indexed color."""
         return self.colors[index]
 
     def test_plot(self):
+        """An example function using this class."""
         from scipy.stats import norm
         import numpy as np
         fig, ax = plt.subplots()
@@ -247,11 +279,11 @@ class ColorManager:
 
 def behav_vlines(ax, s, behav_plot, lw=1):
     """
-    Plots vlines based on desired behaviour related timestamps
+    Plots vlines based on desired behaviour related timestamps.
 
     Parameters
     ----------
-    ax : plt.axe, default None
+    ax: plt.axe, default None
         ax object to plot into.
     s: object
         Behavioural session object
@@ -266,7 +298,8 @@ def behav_vlines(ax, s, behav_plot, lw=1):
 
     Returns
     -------
-    ax : plt.axe, default None
+    (ax, legends)
+    ax: plt.axe, default None
     legends: list[handles]
         list of legend handles
 
@@ -280,7 +313,7 @@ def behav_vlines(ax, s, behav_plot, lw=1):
     if behav_plot[0]:
         for lev in lev_ts:  # vline demarcating lev presses
             ax.axvline(lev, linestyle='-',
-                       color='blue', linewidth=lw/2)
+                       color='blue', linewidth=lw / 2)
         label = lines.Line2D([], [], color='blue', marker='|', linestyle='None',
                              markersize=10, markeredgewidth=lw, label='Lever Press')
         legends.append(label)
@@ -322,9 +355,9 @@ def dend_leaf_colors(dend):
 def savefig(fig, name):
     """
     Saves figure using the custom settings:
-        dpi=400 
-        bbox_inches='tight'
-        pad_inches=0.5
+        dpi = 400
+        bbox_inches = 'tight'
+        pad_inches = 0.5
     """
     print("Saving result to {}".format(name))
     # fig.savefig(name, dpi=150)

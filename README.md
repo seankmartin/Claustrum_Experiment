@@ -4,6 +4,10 @@
 
 Originally created and currently maintained by Sean Martin and Gao Xiang Ham.
 
+## Documentation
+
+Full API documentation for bvmpc is available at https://seankmartin.github.io/Claustrum_Experiment/html/bvmpc/index.html which was created using pdoc3 from Python docstrings.
+
 ## Contents
 
 ### Top Level
@@ -34,4 +38,17 @@ bvmpc contains a number of modules, which are roughly described here:
 
 - bv_analyse.py - An assorted set of behavioural analyses.
 - bv_array_methods.py - Helper functions for performing simple routines on lists and NumPy arrays.
-- bv_axona.py -
+- bv_axona.py - Read Axona .inp files and Axona .set files.
+- bv_batch.py - Holds batch related functions. For example, plotting the performance of an animal across multiple days.
+- bv_file.py - File reading and conversion functions for behavioural data.
+- bv_mne.py - Interfacing with the MNE python library.
+- bv_nc.py - Interfacing with NeuroChaT and phy and spikeinterface.
+- bv_plot.py - Plotting utilities and also some behavioural plots.
+- bv_session.py - Holds all of the routines related to single behavioural sessions from MEDPC, Axona, HDF5, and neo.
+- bv_session_extractor.py - Holds all of the routines related to parsing multiple sessions out of a single MedPC file into a list.
+- bv_session_info.py - This is used to hold metadata and setup information about the MEDPC and Axona behavioural sessions. For example, it denotes which I/O pins are used in an experiment and what they represent.
+- bv_utils.py - An assorted set of utility functions for simple but widely used functionality.
+- compare_lfp.py - Compare lfp signals to check their similarity.
+- lfp_coherence.py - Coherence, Wavelet coherence, mean vector length, and other similar LFP calculations.
+- lfp_odict.py - Store Neurochat LFP signals in a dictionary to ease multi-channel analysis.
+- lfp_plot.py - Plot things such as coherence and power spectrum.

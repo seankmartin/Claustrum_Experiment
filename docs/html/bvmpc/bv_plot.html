@@ -37,7 +37,11 @@ import numpy as np
 
 
 class GridFig:
-    &#34;&#34;&#34;Handles gridded figures.&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Handles gridded figures.
+
+    size_multiplier, wspace, and hspace are used for spacing in init.
+    &#34;&#34;&#34;
 
     def __init__(
             self, rows, cols=4,
@@ -98,6 +102,8 @@ class GridFig:
         &#34;&#34;&#34;
         Get next index along rows or columns.
 
+        Example
+        -------
         along rows:
         1   2   3   4   5   6
         7   8   9   10  11  12  ...
@@ -124,6 +130,8 @@ class GridFig:
         &#34;&#34;&#34;
         Get the next index in a snake like pattern.
 
+        Example
+        -------
         1   2   5   6   9   10  ...
         3   4   7   8   11  12  ..
 
@@ -146,6 +154,14 @@ class GridFig:
 
 
 class GroupManager:
+    &#34;&#34;&#34;
+    Handle groups of figures - mostly for auto coloring.
+
+    See Also
+    --------
+    bvmpc.bv_plot.ColorManager
+
+    &#34;&#34;&#34;
 
     def __init__(self, group_list, color_list=None):
         self.group_list = group_list
@@ -156,7 +172,8 @@ class GroupManager:
             self.set_color_list(color_list)
         else:
             self.color_list = [
-                &#34;Blues_r&#34;, &#34;Oranges_r&#34;, &#34;Greens_r&#34;, &#34;Purples_r&#34;, &#34;PuRd_r&#34;, &#34;Greys_r&#34;]
+                &#34;Blues_r&#34;, &#34;Oranges_r&#34;, &#34;Greens_r&#34;,
+                &#34;Purples_r&#34;, &#34;PuRd_r&#34;, &#34;Greys_r&#34;]
         set_vals = sorted(set(group_list), key=group_list.index)
         # print(set_vals)
         import numpy as np
@@ -173,6 +190,7 @@ class GroupManager:
         # print(self.info_dict)
 
     def get_next_color(self):
+        &#34;&#34;&#34;Get the next colour to use.&#34;&#34;&#34;
         out = self.info_dict[self.group_list[self.index]].get_next_color()
         self._increment()
         return out
@@ -183,6 +201,7 @@ class GroupManager:
             self.index = 0
 
     def test_plot(self):
+        &#34;&#34;&#34;An example of using this class.&#34;&#34;&#34;
         from scipy.stats import norm
         import numpy as np
         fig, ax = plt.subplots()
@@ -203,7 +222,7 @@ class GroupManager:
 
         Parameters
         ----------
-        samples : list or ndarray
+        samples: list or ndarray
             colors
 
         Returns
@@ -215,6 +234,13 @@ class GroupManager:
 
 
 class ColorManager:
+    &#34;&#34;&#34;
+    Automatically pick colours for a group of items.
+
+    Initialising is supported with &#34;sns&#34;, &#34;rgb&#34; or &#34;sns_helix&#34;.
+
+    &#34;&#34;&#34;
+
     def __init__(self, num_colors, method=&#34;sns&#34;, **kwargs):
         self.num_colors = num_colors
         if method == &#34;sns&#34;:
@@ -231,26 +257,32 @@ class ColorManager:
         self.idx = 0
 
     def create_rgb(self):
+        &#34;&#34;&#34;Init colours using rgb spaced colours.&#34;&#34;&#34;
         N = self.num_colors
         HSV_tuples = [(x * 1.0 / N, 0.5, 0.5) for x in range(N)]
         RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
         self.colors = list(RGB_tuples)
 
     def create_sns_palette(self, s_type=None):
+        &#34;&#34;&#34;Init colours from seaborn palette.&#34;&#34;&#34;
         self.colors = sns.color_palette(s_type, self.num_colors)
 
     def create_sns_helix(self, start):
+        &#34;&#34;&#34;Init colours from seaborn helix palette.&#34;&#34;&#34;
         self.colors = sns.cubehelix_palette(self.num_colors, start)
 
     def get_next_color(self):
+        &#34;&#34;&#34;Get the next color.&#34;&#34;&#34;
         result = self.colors[self.idx]
         self._increment()
         return result
 
     def get_color(self, index):
+        &#34;&#34;&#34;Get an indexed color.&#34;&#34;&#34;
         return self.colors[index]
 
     def test_plot(self):
+        &#34;&#34;&#34;An example function using this class.&#34;&#34;&#34;
         from scipy.stats import norm
         import numpy as np
         fig, ax = plt.subplots()
@@ -274,11 +306,11 @@ class ColorManager:
 
 def behav_vlines(ax, s, behav_plot, lw=1):
     &#34;&#34;&#34;
-    Plots vlines based on desired behaviour related timestamps
+    Plots vlines based on desired behaviour related timestamps.
 
     Parameters
     ----------
-    ax : plt.axe, default None
+    ax: plt.axe, default None
         ax object to plot into.
     s: object
         Behavioural session object
@@ -293,7 +325,8 @@ def behav_vlines(ax, s, behav_plot, lw=1):
 
     Returns
     -------
-    ax : plt.axe, default None
+    (ax, legends)
+    ax: plt.axe, default None
     legends: list[handles]
         list of legend handles
 
@@ -307,7 +340,7 @@ def behav_vlines(ax, s, behav_plot, lw=1):
     if behav_plot[0]:
         for lev in lev_ts:  # vline demarcating lev presses
             ax.axvline(lev, linestyle=&#39;-&#39;,
-                       color=&#39;blue&#39;, linewidth=lw/2)
+                       color=&#39;blue&#39;, linewidth=lw / 2)
         label = lines.Line2D([], [], color=&#39;blue&#39;, marker=&#39;|&#39;, linestyle=&#39;None&#39;,
                              markersize=10, markeredgewidth=lw, label=&#39;Lever Press&#39;)
         legends.append(label)
@@ -349,9 +382,9 @@ def dend_leaf_colors(dend):
 def savefig(fig, name):
     &#34;&#34;&#34;
     Saves figure using the custom settings:
-        dpi=400 
-        bbox_inches=&#39;tight&#39;
-        pad_inches=0.5
+        dpi = 400
+        bbox_inches = &#39;tight&#39;
+        pad_inches = 0.5
     &#34;&#34;&#34;
     print(&#34;Saving result to {}&#34;.format(name))
     # fig.savefig(name, dpi=150)
@@ -370,7 +403,7 @@ def savefig(fig, name):
 <span>def <span class="ident">behav_vlines</span></span>(<span>ax, s, behav_plot, lw=1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Plots vlines based on desired behaviour related timestamps</p>
+<div class="desc"><p>Plots vlines based on desired behaviour related timestamps.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>ax</code></strong> :&ensp;<code>plt.axe</code>, default <code>None</code></dt>
@@ -388,6 +421,7 @@ def savefig(fig, name):
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
+<dt>(ax, legends)</dt>
 <dt><strong><code>ax</code></strong> :&ensp;<code>plt.axe</code>, default <code>None</code></dt>
 <dd>&nbsp;</dd>
 <dt><strong><code>legends</code></strong> :&ensp;<code>list[handles]</code></dt>
@@ -399,11 +433,11 @@ def savefig(fig, name):
 </summary>
 <pre><code class="python">def behav_vlines(ax, s, behav_plot, lw=1):
     &#34;&#34;&#34;
-    Plots vlines based on desired behaviour related timestamps
+    Plots vlines based on desired behaviour related timestamps.
 
     Parameters
     ----------
-    ax : plt.axe, default None
+    ax: plt.axe, default None
         ax object to plot into.
     s: object
         Behavioural session object
@@ -418,7 +452,8 @@ def savefig(fig, name):
 
     Returns
     -------
-    ax : plt.axe, default None
+    (ax, legends)
+    ax: plt.axe, default None
     legends: list[handles]
         list of legend handles
 
@@ -432,7 +467,7 @@ def savefig(fig, name):
     if behav_plot[0]:
         for lev in lev_ts:  # vline demarcating lev presses
             ax.axvline(lev, linestyle=&#39;-&#39;,
-                       color=&#39;blue&#39;, linewidth=lw/2)
+                       color=&#39;blue&#39;, linewidth=lw / 2)
         label = lines.Line2D([], [], color=&#39;blue&#39;, marker=&#39;|&#39;, linestyle=&#39;None&#39;,
                              markersize=10, markeredgewidth=lw, label=&#39;Lever Press&#39;)
         legends.append(label)
@@ -485,9 +520,9 @@ def savefig(fig, name):
 </code></dt>
 <dd>
 <div class="desc"><p>Saves figure using the custom settings:
-dpi=400
-bbox_inches='tight'
-pad_inches=0.5</p></div>
+dpi = 400
+bbox_inches = 'tight'
+pad_inches = 0.5</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -495,9 +530,9 @@ pad_inches=0.5</p></div>
 <pre><code class="python">def savefig(fig, name):
     &#34;&#34;&#34;
     Saves figure using the custom settings:
-        dpi=400 
-        bbox_inches=&#39;tight&#39;
-        pad_inches=0.5
+        dpi = 400
+        bbox_inches = &#39;tight&#39;
+        pad_inches = 0.5
     &#34;&#34;&#34;
     print(&#34;Saving result to {}&#34;.format(name))
     # fig.savefig(name, dpi=150)
@@ -515,12 +550,20 @@ pad_inches=0.5</p></div>
 <span>(</span><span>num_colors, method='sns', **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Automatically pick colours for a group of items.</p>
+<p>Initialising is supported with "sns", "rgb" or "sns_helix".</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ColorManager:
+    &#34;&#34;&#34;
+    Automatically pick colours for a group of items.
+
+    Initialising is supported with &#34;sns&#34;, &#34;rgb&#34; or &#34;sns_helix&#34;.
+
+    &#34;&#34;&#34;
+
     def __init__(self, num_colors, method=&#34;sns&#34;, **kwargs):
         self.num_colors = num_colors
         if method == &#34;sns&#34;:
@@ -537,26 +580,32 @@ pad_inches=0.5</p></div>
         self.idx = 0
 
     def create_rgb(self):
+        &#34;&#34;&#34;Init colours using rgb spaced colours.&#34;&#34;&#34;
         N = self.num_colors
         HSV_tuples = [(x * 1.0 / N, 0.5, 0.5) for x in range(N)]
         RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
         self.colors = list(RGB_tuples)
 
     def create_sns_palette(self, s_type=None):
+        &#34;&#34;&#34;Init colours from seaborn palette.&#34;&#34;&#34;
         self.colors = sns.color_palette(s_type, self.num_colors)
 
     def create_sns_helix(self, start):
+        &#34;&#34;&#34;Init colours from seaborn helix palette.&#34;&#34;&#34;
         self.colors = sns.cubehelix_palette(self.num_colors, start)
 
     def get_next_color(self):
+        &#34;&#34;&#34;Get the next color.&#34;&#34;&#34;
         result = self.colors[self.idx]
         self._increment()
         return result
 
     def get_color(self, index):
+        &#34;&#34;&#34;Get an indexed color.&#34;&#34;&#34;
         return self.colors[index]
 
     def test_plot(self):
+        &#34;&#34;&#34;An example function using this class.&#34;&#34;&#34;
         from scipy.stats import norm
         import numpy as np
         fig, ax = plt.subplots()
@@ -583,12 +632,13 @@ pad_inches=0.5</p></div>
 <span>def <span class="ident">create_rgb</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Init colours using rgb spaced colours.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_rgb(self):
+    &#34;&#34;&#34;Init colours using rgb spaced colours.&#34;&#34;&#34;
     N = self.num_colors
     HSV_tuples = [(x * 1.0 / N, 0.5, 0.5) for x in range(N)]
     RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
@@ -599,12 +649,13 @@ pad_inches=0.5</p></div>
 <span>def <span class="ident">create_sns_helix</span></span>(<span>self, start)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Init colours from seaborn helix palette.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_sns_helix(self, start):
+    &#34;&#34;&#34;Init colours from seaborn helix palette.&#34;&#34;&#34;
     self.colors = sns.cubehelix_palette(self.num_colors, start)</code></pre>
 </details>
 </dd>
@@ -612,12 +663,13 @@ pad_inches=0.5</p></div>
 <span>def <span class="ident">create_sns_palette</span></span>(<span>self, s_type=None)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Init colours from seaborn palette.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_sns_palette(self, s_type=None):
+    &#34;&#34;&#34;Init colours from seaborn palette.&#34;&#34;&#34;
     self.colors = sns.color_palette(s_type, self.num_colors)</code></pre>
 </details>
 </dd>
@@ -625,12 +677,13 @@ pad_inches=0.5</p></div>
 <span>def <span class="ident">get_color</span></span>(<span>self, index)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Get an indexed color.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_color(self, index):
+    &#34;&#34;&#34;Get an indexed color.&#34;&#34;&#34;
     return self.colors[index]</code></pre>
 </details>
 </dd>
@@ -638,12 +691,13 @@ pad_inches=0.5</p></div>
 <span>def <span class="ident">get_next_color</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Get the next color.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_next_color(self):
+    &#34;&#34;&#34;Get the next color.&#34;&#34;&#34;
     result = self.colors[self.idx]
     self._increment()
     return result</code></pre>
@@ -653,12 +707,13 @@ pad_inches=0.5</p></div>
 <span>def <span class="ident">test_plot</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>An example function using this class.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def test_plot(self):
+    &#34;&#34;&#34;An example function using this class.&#34;&#34;&#34;
     from scipy.stats import norm
     import numpy as np
     fig, ax = plt.subplots()
@@ -682,6 +737,7 @@ pad_inches=0.5</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Handles gridded figures.</p>
+<p>size_multiplier, wspace, and hspace are used for spacing in init.</p>
 <p>Set up the grid specifications.</p>
 <p>size_multiplier, wspace, and hspace are used for spacing</p></div>
 <details class="source">
@@ -689,7 +745,11 @@ pad_inches=0.5</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class GridFig:
-    &#34;&#34;&#34;Handles gridded figures.&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Handles gridded figures.
+
+    size_multiplier, wspace, and hspace are used for spacing in init.
+    &#34;&#34;&#34;
 
     def __init__(
             self, rows, cols=4,
@@ -750,6 +810,8 @@ pad_inches=0.5</p></div>
         &#34;&#34;&#34;
         Get next index along rows or columns.
 
+        Example
+        -------
         along rows:
         1   2   3   4   5   6
         7   8   9   10  11  12  ...
@@ -776,6 +838,8 @@ pad_inches=0.5</p></div>
         &#34;&#34;&#34;
         Get the next index in a snake like pattern.
 
+        Example
+        -------
         1   2   5   6   9   10  ...
         3   4   7   8   11  12  ..
 
@@ -849,6 +913,7 @@ pad_inches=0.5</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Get next index along rows or columns.</p>
+<h2 id="example">Example</h2>
 <p>along rows:
 1
 2
@@ -885,6 +950,8 @@ pad_inches=0.5</p></div>
     &#34;&#34;&#34;
     Get next index along rows or columns.
 
+    Example
+    -------
     along rows:
     1   2   3   4   5   6
     7   8   9   10  11  12  ...
@@ -913,6 +980,7 @@ pad_inches=0.5</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the next index in a snake like pattern.</p>
+<h2 id="example">Example</h2>
 <p>1
 2
 5
@@ -935,6 +1003,8 @@ pad_inches=0.5</p></div>
     &#34;&#34;&#34;
     Get the next index in a snake like pattern.
 
+    Example
+    -------
     1   2   5   6   9   10  ...
     3   4   7   8   11  12  ..
 
@@ -986,12 +1056,22 @@ pad_inches=0.5</p></div>
 <span>(</span><span>group_list, color_list=None)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Handle groups of figures - mostly for auto coloring.</p>
+<h2 id="see-also">See Also</h2>
+<p><code><a title="bvmpc.bv_plot.ColorManager" href="#bvmpc.bv_plot.ColorManager">ColorManager</a></code></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class GroupManager:
+    &#34;&#34;&#34;
+    Handle groups of figures - mostly for auto coloring.
+
+    See Also
+    --------
+    bvmpc.bv_plot.ColorManager
+
+    &#34;&#34;&#34;
 
     def __init__(self, group_list, color_list=None):
         self.group_list = group_list
@@ -1002,7 +1082,8 @@ pad_inches=0.5</p></div>
             self.set_color_list(color_list)
         else:
             self.color_list = [
-                &#34;Blues_r&#34;, &#34;Oranges_r&#34;, &#34;Greens_r&#34;, &#34;Purples_r&#34;, &#34;PuRd_r&#34;, &#34;Greys_r&#34;]
+                &#34;Blues_r&#34;, &#34;Oranges_r&#34;, &#34;Greens_r&#34;,
+                &#34;Purples_r&#34;, &#34;PuRd_r&#34;, &#34;Greys_r&#34;]
         set_vals = sorted(set(group_list), key=group_list.index)
         # print(set_vals)
         import numpy as np
@@ -1019,6 +1100,7 @@ pad_inches=0.5</p></div>
         # print(self.info_dict)
 
     def get_next_color(self):
+        &#34;&#34;&#34;Get the next colour to use.&#34;&#34;&#34;
         out = self.info_dict[self.group_list[self.index]].get_next_color()
         self._increment()
         return out
@@ -1029,6 +1111,7 @@ pad_inches=0.5</p></div>
             self.index = 0
 
     def test_plot(self):
+        &#34;&#34;&#34;An example of using this class.&#34;&#34;&#34;
         from scipy.stats import norm
         import numpy as np
         fig, ax = plt.subplots()
@@ -1049,7 +1132,7 @@ pad_inches=0.5</p></div>
 
         Parameters
         ----------
-        samples : list or ndarray
+        samples: list or ndarray
             colors
 
         Returns
@@ -1065,12 +1148,13 @@ pad_inches=0.5</p></div>
 <span>def <span class="ident">get_next_color</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Get the next colour to use.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_next_color(self):
+    &#34;&#34;&#34;Get the next colour to use.&#34;&#34;&#34;
     out = self.info_dict[self.group_list[self.index]].get_next_color()
     self._increment()
     return out</code></pre>
@@ -1101,7 +1185,7 @@ pad_inches=0.5</p></div>
 
     Parameters
     ----------
-    samples : list or ndarray
+    samples: list or ndarray
         colors
 
     Returns
@@ -1116,12 +1200,13 @@ pad_inches=0.5</p></div>
 <span>def <span class="ident">test_plot</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>An example of using this class.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def test_plot(self):
+    &#34;&#34;&#34;An example of using this class.&#34;&#34;&#34;
     from scipy.stats import norm
     import numpy as np
     fig, ax = plt.subplots()
