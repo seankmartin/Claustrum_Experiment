@@ -6,6 +6,7 @@ import mne
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from bvmpc.bv_utils import make_dir_if_not_exists, make_path_if_not_exists
 
 
 def get_eloc(ch_names, o_dir, base_name, dummy=False):
@@ -456,3 +457,109 @@ def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name="", exclude=Non
                              base_name),
                          remove_dc=False, scalings=dict(eeg=350e-6))
     return reconst_raw
+
+
+def viz_raw_epochs(epoch_list, comp_conds, picks, sort_reg, plot_reg, topo_seq, plot_image, ppros_dict):
+    """ Pipeline for visualizing raw epochs
+
+        Parameters
+        ----------
+        plot_reg: bool, collates LFP for each region. Results in average magnitute based plot_image.
+        plot_image: bool, plots LFP amplitude across trials in an image, with average below.
+        topo_seq: bool, plots average LFP for each channel, and a topo map for selected timepoints.
+        ppros_dict: dict, contains preprocessing steps performed in text form. Used to label image files.
+
+        """
+
+    # Extract variables from ppros_dict
+    base_name = ppros_dict['base_name']
+    mne_dir = ppros_dict['mne_dir']
+    ica_txt = ppros_dict['ica_txt']
+    bline_txt = ppros_dict['bline_txt']
+    combine = ppros_dict['combine']
+
+    # Plot epoch.plot_image for selected tetrodes seperately
+    if plot_image:
+        for epoch, cond in zip(epoch_list, comp_conds):
+            # epoch_fig = epoch.plot_image(picks=picks, show=True)
+            # for i, pick in enumerate(picks):
+            #     epoch_fig = epoch.plot_image(
+            #         picks=pick, show=False, combine=combine)
+            #     ax = epoch_fig[0].axes[0]
+            #     ax.set_title("{}\n'{}' {}".format(base_name, cond, pick),
+            #                  x=0.5, y=1.01, fontsize=10)
+            #     if plot_reg:
+            #         pick_txt = 'gfp_'+sort_reg[i]
+            #     else:
+            #         pick_txt = pick
+            #     fig_name = os.path.join(
+            #         mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_{}-{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), pick_txt, bline_txt) + '.png')
+            #     make_path_if_not_exists(fig_name)
+            #     print('Saving raw-epoch to ' + fig_name)
+            #     epoch_fig[0].savefig(fig_name)
+
+            # Optional parameter to set bands displayed in topo
+            # Default is [(0, 4, 'Delta'), (4, 8, 'Theta'), (8, 12, 'Alpha'),(12, 30, 'Beta'), (30, 45, 'Gamma')]
+            bands = None
+            if bands is None:
+                n_topo = 5
+            else:
+                n_topo = len(bands)
+
+            # Plot power spectrum density of epoch
+            import matplotlib.gridspec as gridspec
+            psd_fig = plt.figure(figsize=(14, 7))
+            gs = gridspec.GridSpec(2, n_topo, hspace=0.2,
+                                   wspace=0.3, height_ratios=[2, 1])
+            ax = plt.subplot(gs[:-1, :])
+            epoch.plot_psd(show=False, ax=ax)
+            ax = psd_fig.axes[0]
+            ax.set_title("{}\n'{}' PSD".format(base_name, cond),
+                         x=0.5, y=1.01, fontsize=10)
+
+            topo_axes = [plt.subplot(gs[-1, x]) for x in range(n_topo)]
+            epoch.plot_psd_topomap(
+                ch_type='eeg', normalize=True, axes=topo_axes, show=True)
+            psd_fname = os.path.join(
+                mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_psd_{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), bline_txt) + '.png')
+            make_path_if_not_exists(psd_fname)
+            print('Saving raw-epoch to ' + psd_fname)
+            psd_fig.savefig(psd_fname)
+    # exit(-1)
+
+    # Generate dict[conds] for comparing epoch average across conds
+    epoch_ave = {}
+    for epoch, cond in zip(epoch_list, comp_conds):
+        epoch_ave[cond] = epoch.average()
+
+    # Plot all tetrode averages for epoch (includes topo map)
+    if topo_seq:
+        for cond, epoch in epoch_ave.items():
+            pj_fig = epoch.plot_joint(
+                picks='eeg', show=False, times=[-0.25, -0.1, -0.025, 0, 0.025, 0.1, 0.25])
+            # Joint plot title
+            pj_title = '"{}"_{}_{}'.format(
+                cond.replace('/', '-'), ica_txt, base_name)
+            pj_fig.suptitle(pj_title)
+            pj_fname = os.path.join(
+                mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_joint_{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), bline_txt) + '.png')
+            pj_fig.savefig(pj_fname)
+    # plt.show()
+    # exit(-1)
+
+    # Compare average across session types
+    if len(comp_conds) > 1:
+        vs_fig, axes = plt.subplots(
+            len(picks), 1, figsize=(10, 14), sharex=True)
+        plt.rc('legend', **{'fontsize': 6})
+        plt.subplots_adjust(hspace=0.3)
+
+        for ax, pick in zip(axes, picks):
+            mne.viz.plot_compare_evokeds(
+                epoch_ave, picks=pick, legend='upper left', show_sensors='upper right', ylim=dict(eeg=[-80, 80]), show=False, title='{} {}'.format(base_name, pick), axes=ax)
+        vs_fname = os.path.join(mne_dir, '{}_{}_joint_{}{}'.format(
+            base_name, ica_txt, cond.split('/')[0], bline_txt) + '.png')
+        print('Saving joint_plot to ' + vs_fname)
+        vs_fig.savefig(vs_fname)
+
+    exit(-1)

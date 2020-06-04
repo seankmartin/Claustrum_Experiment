@@ -193,12 +193,18 @@ def main(fname, out_main_dir, config):
         mne_array = bvmpc.bv_mne.create_mne_array(
             lfp_odict, fname=fname, ch_names=ch_names,
             regions=regions, o_dir=o_dir, plot_mon=False)
+
         base_name = os.path.basename(fname)[4:]
         # print(base_name)
         # exit(-1)
 
         mne_dir = os.path.join(o_dir, 'MNE')
         make_dir_if_not_exists(mne_dir)
+
+        # Holds basename, dir and preprocessing steps performed. Used in plot naming.
+        ppros_dict = {
+            'base_name': base_name,
+            'mne_dir': mne_dir}
 
         # Add annotations to the created mne object
         annote_loc = os.path.join(
@@ -244,12 +250,12 @@ def main(fname, out_main_dir, config):
         skip_plots = bool(int(config.get("MNE", "skip_plots")))
 
         if do_mne_ICA:
-            ica_txt = 'ICA'  # Used for file naming
+            ppros_dict["ica_txt"] = 'ICA'  # Used for file naming
             # Do ICA artefact removal on the mne object
             recon_raw = bvmpc.bv_mne.ICA_pipeline(mne_array, regions, chans_to_plot=len(lfp_odict),
                                                   base_name=base_name, exclude=exclude, skip_plots=skip_plots)
         else:
-            ica_txt = 'Raw'  # Used for file naming
+            ppros_dict["ica_txt"] = 'Raw'  # Used for file naming
             recon_raw = mne_array
 
         # exit(-1)
@@ -258,6 +264,7 @@ def main(fname, out_main_dir, config):
         # reject_criteria = dict(eeg=700e-6)  # 600 uV
         reject_criteria = None
 
+        # Set baseline normalization
         try:
             baseline = json.loads(config.get("MNE", "baseline"))
             baseline = tuple(baseline)
@@ -267,9 +274,10 @@ def main(fname, out_main_dir, config):
             print("No baseline specified.")
 
         if baseline is None:
-            bline_txt = ''
+            ppros_dict["bline_txt"] = ''
         else:
-            bline_txt = '_Bline[{}s]_[{}s]'.format(baseline[0], baseline[1])
+            ppros_dict["bline_txt"] = '_Bline[{}s]_[{}s]'.format(
+                baseline[0], baseline[1])
 
         # Pick chans based on regions/tetrode number
         # sel = ['ACC'] # Use None to select all channels
@@ -312,13 +320,14 @@ def main(fname, out_main_dir, config):
         # Temp overall control for plotting functions
         plot_image = mne_plot_params["plot_image"]
         topo_seq = mne_plot_params["topo_seq"]
+        plot_reg = mne_plot_params["plot_reg"]
 
         for cond in comp_conds:
             try:
                 epochs[cond].drop(drop_epochs[cond])
             except:
-                # if not skip_plots:
-                epochs[cond].plot(block=True, scalings="350e-6")
+                if not skip_plots:
+                    epochs[cond].plot(block=True, scalings="350e-6")
 
         # if len(comp_conds) > 1:
         #     # epochs.equalize_event_counts(comp_conds, method='truncate')
@@ -328,103 +337,32 @@ def main(fname, out_main_dir, config):
         for conds in comp_conds:
             epoch_list.append(epochs[conds])
 
-        plot_reg = mne_plot_params["plot_reg"]
         # Sets picks as list of each region. Aids plotting of magnitute.
         if plot_reg:
             picks = []
             sort_reg = sorted(set(regions))
             for sel in sort_reg:
                 picks.append(bvmpc.bv_mne.pick_chans(recon_raw, sel=[sel]))
-            combine = 'gfp'
+            ppros_dict['combine'] = 'gfp'
         else:
             picks = ['RSC-14', 'ACC-9', 'CLA-7', 'AI-4']
-            combine = None
+            ppros_dict['combine'] = None
+            sort_reg = None
         # sel = ['ACC']
         # sel = ['ACC']
         # picks = bvmpc.bv_mne.pick_chans(recon_raw, sel=sel)
         del recon_raw, epochs  # Free up memory
 
-        # Plot epoch.plot_image for selected tetrodes seperately
-        if plot_image:
-            for epoch, cond in zip(epoch_list, comp_conds):
-                # epoch_fig = epoch.plot_image(picks=picks, show=True)
-                for i, pick in enumerate(picks):
-                    epoch_fig = epoch.plot_image(
-                        picks=pick, show=False, combine=combine)
-                    ax = epoch_fig[0].axes[0]
-                    ax.set_title("{}\n'{}' {}".format(base_name, cond, pick),
-                                 x=0.5, y=1.01, fontsize=10)
-                    if plot_reg:
-                        pick_txt = 'gfp_'+sort_reg[i]
-                    else:
-                        pick_txt = pick
-                    fig_name = os.path.join(
-                        mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_{}-{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), pick_txt, bline_txt) + '.png')
-                    make_path_if_not_exists(fig_name)
-                    print('Saving raw-epoch to ' + fig_name)
-                    epoch_fig[0].savefig(fig_name)
+        # pipeline for visualizing raw epochs
+        bvmpc.bv_mne.viz_raw_epochs(epoch_list, comp_conds, picks, sort_reg, plot_reg,
+                                    topo_seq, plot_image, ppros_dict)
 
-                # Plot power spectrum density of epoch
-                psd_fig = epoch.plot_psd(show=False)
-                ax = psd_fig.axes[0]
-                ax.set_title("{}\n'{}' PSD".format(base_name, cond),
-                             x=0.5, y=1.01, fontsize=10)
-                psd_fname = os.path.join(
-                    mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_psd_{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), bline_txt) + '.png')
-                make_path_if_not_exists(psd_fname)
-                print('Saving raw-epoch to ' + psd_fname)
-                psd_fig.savefig(psd_fname)
-        # exit(-1)
-
-        # Generate dict[conds] for comparing epoch average across conds
-        epoch_ave = {}
-        for epoch, cond in zip(epoch_list, comp_conds):
-            epoch_ave[cond] = epoch.average()
-
-        # Plot all tetrode averages for epoch (includes topo map)
-        if topo_seq:
-            for cond, epoch in epoch_ave.items():
-                pj_fig = epoch.plot_joint(
-                    picks='eeg', show=False, times=[-0.25, -0.1, -0.025, 0, 0.025, 0.1, 0.25])
-                # Joint plot title
-                pj_title = '"{}"_{}_{}'.format(
-                    cond.replace('/', '-'), ica_txt, base_name)
-                pj_fig.suptitle(pj_title)
-                pj_fname = os.path.join(
-                    mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_joint_{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), bline_txt) + '.png')
-                pj_fig.savefig(pj_fname)
-        # plt.show()
-        # exit(-1)
-
-        # Compare average across session types
-        if len(comp_conds) > 1:
-            vs_fig, axes = plt.subplots(
-                len(picks), 1, figsize=(10, 14), sharex=True)
-            plt.rc('legend', **{'fontsize': 6})
-            plt.subplots_adjust(hspace=0.3)
-
-            for ax, pick in zip(axes, picks):
-                mne.viz.plot_compare_evokeds(
-                    epoch_ave, picks=pick, legend='upper left', show_sensors='upper right', ylim=dict(eeg=[-80, 80]), show=False, title='{} {}'.format(base_name, pick), axes=ax)
-            vs_fname = os.path.join(mne_dir, '{}_{}_joint_{}{}'.format(
-                base_name, ica_txt, cond.split('/')[0], bline_txt) + '.png')
-            print('Saving joint_plot to ' + vs_fname)
-            vs_fig.savefig(vs_fname)
-
-        exit(-1)
-
-        # # Test plot_image in groups
-        # # Get channels for each region in dict format. For use with plot_image
-        # grps = bvmpc.bv_mne.get_reg_chans(mne_array, regions)
-        # for epoch in epoch_list:
-        #     epoch.plot_image(picks=None, group_by=grps)
-
-        # # Test plot PSD for epoch
+        # Test plot PSD for epoch
         # for i, epoch in enumerate(epoch_list):
         #     fig, ax = plt.subplots()
         #     fig.suptitle('{} - {}'.format(comp_conds[i], sel))
-        #     epoch.plot_psd(fmin=1., fmax=40., ax=ax, show=True)
-        #     # epoch.plot_psd_topomap(ch_type='eeg', normalize=True)
+        #     # epoch.plot_psd(fmin=1., fmax=40., ax=ax, show=True)
+        #     epoch.plot_psd_topomap(ch_type='eeg', normalize=True)
         # exit(-1)
 
         # # Test plot power spectrum
