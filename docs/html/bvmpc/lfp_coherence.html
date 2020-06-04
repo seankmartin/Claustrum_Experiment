@@ -1,0 +1,2676 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>bvmpc.lfp_coherence API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>bvmpc.lfp_coherence</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from copy import deepcopy
+
+from scipy.signal import hilbert
+from scipy.signal import coherence
+from scipy.stats import norm
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.image import NonUniformImage
+import pycwt as wavelet
+
+from neurochat.nc_utils import butter_filter
+from neurochat.nc_circular import CircStat
+from neurochat.nc_lfp import NLfp
+import time
+
+
+def mean_vector_length(
+        low_freq_lfp, high_freq_lfp, amp_norm=True, return_all=False):
+    &#34;&#34;&#34;
+    Compute the mean vector length from Hulsemann et al. 2019
+
+    If amp_norm is true, use the sum of the amplitudes to normalise,
+    as opposed to the number of observations.
+    if return_all is true, return the complex values
+    &#34;&#34;&#34;
+    amplitude = split_into_amp_phase(high_freq_lfp)[0]
+    phase = split_into_amp_phase(low_freq_lfp, deg=False)[1]
+    if amplitude.size != phase.size:
+        raise ValueError(
+            &#34;Amp and phase: {} {} elements, equal size needed in MVL&#34;.format(
+                amplitude.size, phase.size))
+    # This could also be computed using CircStat
+    norm = np.sum(amplitude) if amp_norm else amplitude.size
+    polar_vectors = np.multiply(amplitude, np.exp(1j * phase))
+    res_vector = np.sum(polar_vectors)
+    mvl = np.abs(res_vector) / norm
+    if return_all:
+        return polar_vectors, mvl
+    else:
+        return mvl
+
+
+def mvl_shuffle(low_freq_lfp, high_freq_lfp, amp_norm=True, nshuffles=200):
+    &#34;&#34;&#34;Compute a shuffled distribution from Hulsemann et al. 2019&#34;&#34;&#34;
+    samples = high_freq_lfp.get_samples()
+    new_lfp = deepcopy(high_freq_lfp)
+    observed_mvl = mean_vector_length(
+        low_freq_lfp, high_freq_lfp, amp_norm=amp_norm)
+    shuffled_mvl = np.zeros(shape=(nshuffles))
+    for i in range(len(shuffled_mvl)):
+        sample_idx = int(np.floor(
+            (low_freq_lfp.get_total_samples() + 1) * np.random.random_sample()))
+        reversed_arr1 = samples[0:sample_idx][::-1]
+        reversed_arr2 = samples[sample_idx:samples.size][::-1]
+        permuted_amp_time = np.concatenate(
+            [reversed_arr1, reversed_arr2], axis=None)
+        new_lfp._set_samples(permuted_amp_time)
+        mvl = mean_vector_length(
+            low_freq_lfp, new_lfp, amp_norm=amp_norm)
+        shuffled_mvl[i] = mvl
+    z_val = (observed_mvl - np.mean(shuffled_mvl)) / np.std(shuffled_mvl)
+    mvl95 = np.percentile(shuffled_mvl, 95)
+    p_val = norm.sf(z_val)
+
+    return observed_mvl, mvl95, z_val, p_val
+
+
+def calc_coherence(lfp1, lfp2, squared=True):
+    f, Cxy = coherence(
+        lfp1.get_samples(), lfp2.get_samples(),
+        fs=lfp1.get_sampling_rate(), nperseg=1024)
+    if squared:
+        return f, Cxy
+    result = f, np.sqrt(Cxy)
+    return result
+
+
+def split_into_amp_phase(lfp, deg=False):
+    &#34;&#34;&#34;It is assumed that the lfp signal passed in is already filtered.&#34;&#34;&#34;
+    if type(lfp) is NLfp:
+        lfp_samples = lfp.get_samples()
+    else:
+        lfp_samples = lfp
+    complex_lfp = hilbert(lfp_samples)
+    phase = np.angle(complex_lfp, deg=deg)
+    amplitude = np.abs(complex_lfp)
+    return amplitude, phase
+
+# TODO is this function needed?
+
+
+def plot_wave_coherence(
+        wave1, wave2, sample_times,
+        min_freq=1, max_freq=256,
+        sig=False, ax=None, title=&#34;Wavelet Coherence&#34;,
+        plot_arrows=True, plot_coi=True, plot_period=False,
+        resolution=12, all_arrows=True, quiv_x=5, quiv_y=24, block=None):
+    &#34;&#34;&#34;
+    Calculate wavelet coherence between wave1 and wave2 using pycwt.
+
+    TODO fix min_freq, max_freq and add parameters to control arrows.
+    TODO also test out sig on a large dataset
+
+    Parameters
+    ----------
+    wave1 : np.ndarray
+        The values of the first waveform.
+    wave2 : np.ndarray
+        The values of the second waveform.
+    sample_times : np.ndarray
+        The times at which waveform samples occur.
+    min_freq : float
+        Supposed to be minimum frequency, but not quite working.
+    max_freq : float
+        Supposed to be max frequency, but not quite working.
+    sig : bool, default False
+        Optional Should significance of waveform coherence be calculated.
+    ax : plt.axe, default None
+        Optional ax object to plot into.
+    title : str, default &#34;Wavelet Coherence&#34;
+        Optional title for the graph
+    plot_arrows : bool, default True
+        Should phase arrows be plotted.
+    plot_coi : bool, default True
+        Should the cone of influence be plotted
+    plot_period : bool
+        Should the y-axis be in period or in frequency (Hz)
+    resolution : int
+        How many wavelets should be at each level of the graph
+    all_arrows : bool
+        Should phase arrows be plotted uniformly or only at high coherence
+    quiv_x : float
+        sets quiver window in time domain in seconds
+    quiv_y : float
+        sets number of quivers evenly distributed across freq limits
+    block : [int, int]
+        Plots only points between ints.
+
+    Returns
+    -------
+    tuple : (fig, result)
+        Where fig is a matplotlib Figure
+        and result is a tuple consisting of WCT, aWCT, coi, freq, sig
+        WCT - 2D numpy array with coherence values
+        aWCT - 2D numpy array with same shape as aWCT indicating phase angles
+        coi - 1D numpy array with a frequency value for each time
+        freq - 1D numpy array with the frequencies wavelets were calculated at
+        sig - 2D numpy array indicating where data is significant by monte carlo
+
+    &#34;&#34;&#34;
+    t = np.asarray(sample_times)
+    dt = np.mean(np.diff(t))
+    # Set up the scales to match min max input frequencies
+    dj = resolution
+    s0 = min_freq * dt
+    if s0 &lt; 2 * dt:
+        s0 = 2 * dt
+    max_J = max_freq * dt
+    J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
+    # freqs = np.geomspace(max_freq, min_freq, num=50)
+    freqs = None
+
+    # Do the actual calculation
+    print(&#34;Calculating coherence...&#34;)
+    start_time = time.time()
+    WCT, aWCT, coi, freq, sig = wavelet.wct(
+        wave1, wave2, dt,  # Fixed params
+        dj=(1.0 / dj), s0=s0, J=J, sig=sig, normalize=True, freqs=freqs,
+    )
+    print(&#34;Time Taken: %s s&#34; % (time.time() - start_time))
+    if np.max(WCT) &gt; 1 or np.min(WCT) &lt; 0:
+        print(&#39;WCT was out of range: min {},max {}&#39;.format(
+            np.min(WCT), np.max(WCT)))
+        WCT = np.clip(WCT, 0, 1)
+
+    # Convert frequency to period if necessary
+    if plot_period:
+        y_vals = np.log2(1 / freq)
+    if not plot_period:
+        y_vals = np.log2(freq)
+
+    # Calculates the phase between both time series. The phase arrows in the
+    # cross wavelet power spectrum rotate clockwise with &#39;north&#39; origin.
+    # The relative phase relationship convention is the same as adopted
+    # by Torrence and Webster (1999), where in phase signals point
+    # upwards (N), anti-phase signals point downwards (S). If X leads Y,
+    # arrows point to the right (E) and if X lags Y, arrow points to the
+    # left (W).
+    angle = 0.5 * np.pi - aWCT
+    u, v = np.cos(angle), np.sin(angle)
+
+    if ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig = None
+
+    # Set the x and y axes of the plot
+    extent_corr = [t.min(), t.max(), 0, max(y_vals)]
+
+    # Fill the plot with the magnitude squared coherence values
+    # That is, MSC = abs(Pxy) ^ 2 / (Pxx * Pyy)
+    # TODO I think this might be the wrong way to plot this
+    # It assumes that the samples are linearly spaced
+    im = NonUniformImage(ax, interpolation=&#39;bilinear&#39;, extent=extent_corr)
+    if plot_period:
+        im.set_data(t, y_vals, WCT)
+    else:
+        im.set_data(t, y_vals[::-1], WCT[::-1, :])
+    ax.images.append(im)
+    # pcm = ax.pcolormesh(WCT)
+
+    # Plot the cone of influence - Periods greater than
+    # those are subject to edge effects.
+    if plot_coi:
+        # Performed by plotting a polygon
+        x_positions = np.zeros(shape=(len(t),))
+        x_positions = t
+
+        y_positions = np.zeros(shape=(len(t),))
+        if plot_period:
+            y_positions = np.log2(coi)
+        else:
+            y_positions = np.log2(1 / coi)
+
+        ax.plot(x_positions, y_positions,
+                &#39;w--&#39;, linewidth=2, c=&#34;w&#34;)
+
+    # Plot the significance level contour plot
+    if sig:
+        ax.contour(t, y_vals, sig,
+                   [-99, 1], colors=&#39;k&#39;, linewidths=2, extent=extent_corr)
+
+    # Add limits, titles, etc.
+    ax.set_ylim(min(y_vals), max(y_vals))
+    if block:
+        ax.set_xlim(t[block[0]], t[int(block[1] * 1 / dt)])
+    else:
+        ax.set_xlim(t.min(), t.max())
+
+    # TODO split graph into smaller time chunks
+    # Test for smaller timescale
+    # quiv_x = 1
+
+    # Plot the arrows on the plot
+    if plot_arrows:
+        # TODO currently this is a uniform grid, could be changed to WCT &gt; 0.5
+
+        x_res = int(1 / dt * quiv_x)
+        y_res = int(np.floor(len(y_vals) / quiv_y))
+        if all_arrows:
+            ax.quiver(t[::x_res], y_vals[::y_res],
+                      u[::y_res, ::x_res], v[::y_res, ::x_res], units=&#39;height&#39;,
+                      angles=&#39;uv&#39;, pivot=&#39;mid&#39;, linewidth=1, edgecolor=&#39;k&#39;, scale=30,
+                      headwidth=10, headlength=10, headaxislength=5, minshaft=2,
+                      )
+        else:
+            # t[::x_res], y_vals[::y_res],
+            # u[::y_res, ::x_res], v[::y_res, ::x_res]
+            high_points = np.nonzero(WCT[::y_res, ::x_res] &gt; 0.5)
+            sub_t = t[::x_res][high_points[1]]
+            sub_y = y_vals[::y_res][high_points[0]]
+            sub_u = u[::y_res, ::x_res][np.array(
+                high_points[0]), np.array(high_points[1])]
+            sub_v = v[::y_res, ::x_res][high_points[0], high_points[1]]
+            res = 1
+            ax.quiver(sub_t[::res], sub_y[::res],
+                      sub_u[::res], sub_v[::res], units=&#39;height&#39;,
+                      angles=&#39;uv&#39;, pivot=&#39;mid&#39;, linewidth=1, edgecolor=&#39;k&#39;, scale=30,
+                      headwidth=10, headlength=10, headaxislength=5, minshaft=2,
+                      )
+    # splits = [0, 60, 120 ...]
+    # Add the colorbar to the figure
+    if fig is not None:
+        fig.colorbar(im)
+    else:
+        plt.colorbar(im, ax=ax, use_gridspec=True)
+
+    if plot_period:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        y_ticks = [np.log2(x) for x in [0.004, 0.008, 0.016,
+                                        0.032, 0.064, 0.125, 0.25, 0.5, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+        ax.set_ylabel(&#34;Period&#34;)
+    else:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        # y_ticks = [np.log2(x) for x in [256, 128, 64, 32, 16, 8, 4, 2, 1]]
+        y_ticks = [np.log2(x) for x in [64, 32, 16, 8, 4, 2, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+        ax.set_ylabel(&#34;Frequency (Hz)&#34;)
+    plt.yticks(y_ticks, y_labels)
+    ax.set_title(title)
+    ax.set_xlabel(&#34;Time (s)&#34;)
+
+    return (fig, [WCT, aWCT, coi, freq, sig])
+
+
+def calc_wave_coherence(wave1, wave2, sample_times, min_freq=1, max_freq=128, sig=False, resolution=12):
+    &#34;&#34;&#34;
+    Calculate wavelet coherence between wave1 and wave2 using pycwt.
+
+    Parameters
+    ----------
+    wave1 : np.ndarray
+        The values of the first waveform.
+    wave2 : np.ndarray
+        The values of the second waveform.
+    sample_times : np.ndarray
+        The times at which waveform samples occur.
+    min_freq : float
+        Supposed to be minimum frequency, but not quite working.
+    max_freq : float
+        Supposed to be max frequency, but not quite working.
+    sig : bool, default False
+        Optional Should significance of waveform coherence be calculated.
+    resolution : int
+        How many wavelets should be at each level
+
+    Returns
+    -------
+    WCT, t, freq, coi, sig, aWCT
+        WCT - 2D numpy array with coherence values
+        t - 2D numpy array with sample_times
+        freq - 1D numpy array with the frequencies wavelets were calculated at
+        coi - 1D numpy array with a frequency value for each time
+        sig - 2D numpy array indicating where data is significant by monte carlo
+        aWCT - 2D numpy array with same shape as aWCT indicating phase angles
+    &#34;&#34;&#34;
+
+    t = np.asarray(sample_times)
+    dt = np.mean(np.diff(t))  # dt = 0.004
+
+    dj = resolution
+    s0 = 1 / max_freq
+    if s0 &lt; (2 * dt):
+        s0 = 2 * dt
+    max_J = 1 / min_freq
+    J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
+
+    # # Original by Sean
+    # s0 = min_freq * dt
+    # if s0 &lt; (2 * dt):
+    #     s0 = 2 * dt
+    # max_J = max_freq * dt
+    # J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
+
+    # Do the actual calculation
+    print(&#34;Calculating coherence...&#34;)
+    start_time = time.time()
+    WCT, aWCT, coi, freq, sig = wavelet.wct(
+        wave1, wave2, dt,  # Fixed params
+        dj=(1.0 / dj), s0=s0, J=J, sig=sig, normalize=True)
+    print(&#34;Time Taken: %s s&#34; % (time.time() - start_time))
+    if np.max(WCT) &gt; 1 or np.min(WCT) &lt; 0:
+        print(&#39;WCT was out of range: min {},max {}&#39;.format(
+            np.min(WCT), np.max(WCT)))
+        WCT = np.clip(WCT, 0, 1)
+
+    return WCT, t, freq, coi, sig, aWCT
+
+
+def plot_wcohere(WCT, t, freq, coi=None, sig=None, plot_period=False, ax=None, title=&#34;Wavelet Coherence&#34;, block=None, mask=None, cax=None):
+    &#34;&#34;&#34;
+    Plot wavelet coherence using results from calc_wave_coherence.
+
+    Parameters
+    ----------
+    *First 5 parameters can be obtained from from calc_wave_coherence
+        WCT: 2D numpy array with coherence values
+        t : 2D numpy array with sample_times
+        freq : 1D numpy array with the frequencies wavelets were calculated at
+        sig : 2D numpy array, default None
+            Optional. Plots significance of waveform coherence contours.
+        coi : 2D numpy array, default None
+            Optional. Pass coi to plot cone of influence
+    plot_period : bool
+        Should the y-axis be in period or in frequency (Hz)
+    ax : plt.axe, default None
+        Optional ax object to plot into.
+    title : str, default &#34;Wavelet Coherence&#34;
+        Optional title for the graph
+    block : [int, int]
+        Plots only points between ints.
+
+    Returns
+    -------
+    tuple : (fig, wcohere_pvals)
+        Where fig is a matplotlib Figure
+        and result is a tuple consisting of [WCT, t, y_vals]
+    &#34;&#34;&#34;
+    dt = np.mean(np.diff(t))
+
+    if plot_period:
+        y_vals = np.log2(1 / freq)
+    if not plot_period:
+        y_vals = np.log2(freq)
+
+    if ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig = None
+
+    if mask is not None:
+        WCT = np.ma.array(WCT, mask=mask)
+
+    # Set the x and y axes of the plot
+    extent_corr = [t.min(), t.max(), 0, max(y_vals)]
+    # Fill the plot with the magnitude squared coherence values
+    im = NonUniformImage(ax, interpolation=&#39;bilinear&#39;, extent=extent_corr)
+    if plot_period:
+        im.set_data(t, y_vals, WCT)
+    else:
+        im.set_data(t, y_vals[::-1], WCT[::-1, :])
+    im.set_clim(0, 1)
+    ax.images.append(im)
+
+    # Plot the cone of influence - Periods greater thanthose are subject to edge effects.
+    if coi is not None:
+        # Performed by plotting a polygon
+        x_positions = np.zeros(shape=(len(t),))
+        x_positions = t
+
+        y_positions = np.zeros(shape=(len(t),))
+        if plot_period:
+            y_positions = np.log2(coi)
+        else:
+            y_positions = np.log2(1 / coi)
+
+        ax.plot(x_positions, y_positions,
+                &#39;w--&#39;, linewidth=2, c=&#34;w&#34;)
+
+    # Plot the significance level contour plot
+    if sig is not None:
+        ax.contour(t, y_vals, sig,
+                   [-99, 1], colors=&#39;k&#39;, linewidths=2, extent=extent_corr)
+
+    # Add limits, titles, etc.
+    ax.set_ylim(min(y_vals), max(y_vals))
+    if block:
+        ax.set_xlim(t[block[0]], t[int(block[1] * 1 / dt)])
+    else:
+        ax.set_xlim(t.min(), t.max())
+
+    if plot_period:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        y_ticks = [np.log2(x) for x in [0.004, 0.008, 0.016,
+                                        0.032, 0.064, 0.125, 0.25, 0.5, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+        ax.set_ylabel(&#34;Period&#34;)
+    else:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        # y_ticks = [np.log2(x) for x in [256, 128, 64, 32, 16, 8, 4, 2, 1]]
+        y_ticks = [np.log2(x) for x in [64, 32, 16, 8, 4, 2, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+        ax.set_ylabel(&#34;Frequency (Hz)&#34;)
+    ax.set_yticks(y_ticks)
+    ax.set_yticklabels(y_labels)
+    ax.set_title(title)
+    ax.set_xlabel(&#34;Time (s)&#34;)
+
+    if cax is not None:
+        plt.colorbar(im, cax=cax, use_gridspec=False)
+    else:
+        if fig is not None:
+            fig.colorbar(im)
+        else:
+            plt.colorbar(im, ax=ax, use_gridspec=True)
+
+    return fig, [WCT, t, y_vals]
+
+
+def plot_arrows(ax, wcohere_pvals, aWCT=None, u=None, v=None, magnitute=None, quiv_x=5, quiv_y=24, all_arrows=False):
+    &#34;&#34;&#34;
+    Plots phase arrows for wavelet coherence plot using results from plot_wcohere
+
+    Parameters
+    ----------
+    wcohere_pvals:
+        input structure, includes [WCT, t, y_vals]
+        the first three parameters are out from plot_wcohere
+    aWCT : 2D numpy
+        array with same shape as aWCT indicating phase angles
+        *Can be obtained from last value in calc_wave_coherence
+    u : 2D numpy array of unit vector&#39;s cos angle
+    v : 2D numpy array of unit vector&#39;s sin angle
+    magnitute : 2D numpy array of vector magnitute at each freq and timepoint
+    quiv_x : float
+        sets quiver window in time domain in seconds
+    quiv_y : float
+        sets number of quivers evenly distributed across freq limits
+    all_arrows : bool
+        Should phase arrows be plotted uniformly or only at high coherence
+
+    &#34;&#34;&#34;
+    WCT, t, y_vals = wcohere_pvals
+
+    if aWCT is not None:
+        angle = 0.5 * np.pi - aWCT  # To set zero pointing up for arrow
+        u, v = np.cos(angle), np.sin(angle)
+    elif u is None or v is None:
+        raise ValueError(&#34;Must pass aWCT or [u, v]&#34;)
+
+    dt = np.mean(np.diff(t))
+
+    x_res = int(1 / dt * quiv_x)
+    y_res = int(np.floor(len(y_vals) / quiv_y))
+    if all_arrows:
+        ax.quiver(t[::x_res], y_vals[::y_res],
+                  u[::y_res, ::x_res], v[::y_res, ::x_res], units=&#39;height&#39;,
+                  angles=&#39;uv&#39;, pivot=&#39;mid&#39;, linewidth=1, edgecolor=&#39;k&#39;, scale=30,
+                  headwidth=10, headlength=10, headaxislength=5, minshaft=2,
+                  )
+    else:
+        # t[::x_res], y_vals[::y_res],
+        # u[::y_res, ::x_res], v[::y_res, ::x_res]
+        if magnitute is not None:
+            f_mean = np.empty_like(magnitute)
+            for i, f in enumerate(magnitute):
+                # Plot arrows if magnitute &gt; mean of particular frequency
+                f_mean[i, :] = np.mean(f) + np.std(f)
+            high_points = np.nonzero(
+                magnitute[::y_res, ::x_res] &gt; f_mean[::y_res, ::x_res])
+
+        else:
+            high_points = np.nonzero(WCT[::y_res, ::x_res] &gt; 0.5)
+        sub_t = t[::x_res][high_points[1]]
+        sub_y = y_vals[::y_res][high_points[0]]
+        sub_u = u[::y_res, ::x_res][np.array(
+            high_points[0]), np.array(high_points[1])]
+        sub_v = v[::y_res, ::x_res][high_points[0], high_points[1]]
+        res = 1
+        ax.quiver(sub_t[::res], sub_y[::res],
+                  sub_u[::res], sub_v[::res], units=&#39;height&#39;,
+                  angles=&#39;uv&#39;, pivot=&#39;mid&#39;, linewidth=1, edgecolor=&#39;k&#39;, scale=30,
+                  headwidth=10, headlength=10, headaxislength=5, minshaft=2,
+                  )
+
+    return ax
+
+
+def zero_lag_wcohere(aWCT, freq, thres=5):
+    &#34;&#34;&#34;
+    Generate mask for WCT based on phase lag threshold in ms
+
+    Parameters
+    ----------
+    aWCT : 2D numpy array with phase angle for WCT
+        *Can be obtained from last value in calc_wave_coherence
+    freq : list of freq computed in WCT
+    thres : float, 5
+        Threshold in ms to generate mask
+
+    Returns
+    -------
+    zlag_mask : 2D bool array like aWCT for masking
+
+    &#34;&#34;&#34;
+    angle = aWCT * (180/np.pi)  # Converts angle to degrees
+    # print(&#39;min phase: &#39;, np.nanmin(np.abs(aWCT)))
+    # print(&#39;max phase: &#39;, np.nanmax(np.abs(aWCT)))
+    # print(&#39;min angle: &#39;, np.nanmin((angle)))
+    # print(&#39;max angle: &#39;, np.nanmax((angle)))
+    # exit(-1)
+    zlag_mask = np.empty_like(aWCT)
+    print(aWCT.shape)
+    for i, (row, f) in enumerate(zip(np.abs(angle), freq)):
+        # where phase diff is less then threshold (ms)
+        ok = ((row/360)*(1000/f)) &lt; thres
+        zlag_mask[i] = ~ok
+        # (phase_angle/360)*(1000/freq) &lt; threshold(in ms)
+
+    return zlag_mask
+
+
+def wcohere_mean(WCT, aWCT, t_blocks=None):
+    &#34;&#34;&#34;
+    Calculates mean of WCT and corresponding vector magnitute and phase across t_blocks
+
+    Parameters
+    ----------
+    WCT: 2D numpy array with coherence values
+    aWCT : 2D numpy
+        array with same shape as aWCT indicating phase angles
+        *Can be obtained from last value in calc_wave_coherence
+    t_blocks : list, [start end]
+        list of 2 elements with start and end time of each alignment block
+    Returns
+    -------
+    mean_WCT : Mean WCT across blocks
+    norm_u : unit u across blocks
+    norm_v : unit v across blocks
+    magnitute : magnitute of vector summed across blocks
+
+    &#34;&#34;&#34;
+
+    angle = 0.5 * np.pi - aWCT
+    u, v = np.cos(angle), np.sin(angle)
+
+    t_win = int((t_blocks[0][1] - t_blocks[0][0]) * 250)
+    print(&#34;t_win:&#34;, t_win)
+
+    WCT_trial = np.empty((
+        len(t_blocks), WCT.shape[0], t_win), dtype=np.float32)
+    all_u = np.empty((
+        len(t_blocks), u.shape[0], t_win), dtype=np.float32)
+    all_v = np.empty((
+        len(t_blocks), v.shape[0], t_win), dtype=np.float32)
+    WCT_trial.fill(np.nan)
+    all_u.fill(np.nan)
+    all_v.fill(np.nan)
+
+    for i, (a, b) in enumerate(t_blocks):
+        start_idx = int(a * 250)
+        end_idx = start_idx + t_win
+
+        WCT_this_trial = np.empty(
+            (WCT.shape[0], t_win), dtype=np.float32)
+        u_this_trial = np.empty(
+            (u.shape[0], t_win), dtype=np.float32)
+        v_this_trial = np.empty(
+            (v.shape[0], t_win), dtype=np.float32)
+        WCT_this_trial.fill(np.nan)
+        u_this_trial.fill(np.nan)
+        v_this_trial.fill(np.nan)
+
+        if a &gt;= 0:
+            # For when window exceeds session length (eg. Last trial)
+            _, y = WCT[:, start_idx:end_idx].shape
+            WCT_this_trial[:, :y] = WCT[:, start_idx:end_idx]
+            u_this_trial[:, :y] = u[:, start_idx:end_idx]
+            v_this_trial[:, :y] = v[:, start_idx:end_idx]
+        else:
+            # for blocks shorter then t_win with missing values before alignment point (eg. first trial)
+            WCT_this_trial[:, -start_idx:] = WCT[:, 0:end_idx]
+            u_this_trial[:, -start_idx:] = u[:, 0:end_idx]
+            v_this_trial[:, -start_idx:] = v[:, 0:end_idx]
+            # print(a, b)
+            # print(WCT_trial)
+
+        WCT_trial[i] = WCT_this_trial
+        all_u[i] = u_this_trial
+        all_v[i] = v_this_trial
+        # else:
+        # wcohere_trial = np.dstack(wcohere_trial, WCT[:, int(a):int(b)])
+        # print(wcohere_trial[:, :, i])
+        # print(&#34;Shape:&#34;, wcohere_trial.shape)
+        # exit(-1)
+    mean_WCT = np.nanmean(WCT_trial, axis=0)
+
+    sum_u = np.nansum(all_u, axis=0)
+    sum_v = np.nansum(all_v, axis=0)
+
+    # magnitute = np.linalg.norm(np.array(sum_u, sum_v))
+    magnitute = np.sqrt(np.square(sum_u) + np.square(sum_v))
+    # Normalise vectors to obtain unit vector
+    norm_u = sum_u / magnitute
+    norm_v = sum_v / magnitute
+
+    print(len(norm_u))
+
+    # TODO validate length threshold and which arrows to plot....
+    return mean_WCT, norm_u, norm_v, magnitute
+
+
+def plot_single_freq_wcohere(target_freq, WCT, t, freq, aWCT, trials, t_win, trial_df, align_txt, s, reg_sel, sort=True, plot=False, split_b=False, dist=False):
+    &#34;&#34;&#34; Plots wcohere for target freq as heatmap across trials. Produces 2 plots -  FR and FI respectively
+
+    Parameters
+    ----------
+    sort : bool, False
+        Optional. Sort data frame based on coherence at alignment point.
+    plot : bool, False
+        Optional. If false, returns fig as None.
+    dist : bool, False
+        Optional. Plots distribution of phase angles for WCT &gt;0.5. If false, returns fig2 as None.
+
+    Returns
+    -------
+    t_WCT_df - pd.df with trials x sampling ts
+    fig - 3x1 plot (FR heatmap, FI heatmap, FR vs FI average lineplot)
+    fig2 - 3x1 plot (Distribution of phase angles &gt; 0.5 - FR vs FI)
+
+    &#34;&#34;&#34;
+    # TODO add arrows into plot
+
+    import seaborn as sns
+    import pandas as pd
+    freq_idx = np.where(np.round(freq, decimals=1) == target_freq)
+    n_points = np.diff(t_win)[0]*250
+    t_freq_WCT = np.empty((len(trials), n_points))
+    t_freq_aWCT = np.empty((len(trials), n_points))
+    # print(&#39;min phase: &#39;, np.nanmin(np.abs(aWCT)))
+    # print(&#39;max phase: &#39;, np.nanmax(np.abs(aWCT)))
+
+    # Split wcohere matrix into trial-based windows
+    for i, (a, b) in enumerate(trials):
+        a_idx, b_idx = np.searchsorted(t, a), np.searchsorted(t, b)
+        # accounts for trials shorter then window.
+        start = int(n_points - (b_idx-a_idx))
+        t_freq_WCT[i, start:] = WCT[freq_idx,
+                                    a_idx: b_idx]
+        t_freq_aWCT[i, start:] = aWCT[freq_idx,
+                                      a_idx: b_idx]
+
+    # Generate pd.df for WCT &amp; aWCT
+    t_WCT_df = pd.DataFrame(
+        t_freq_WCT, columns=np.round((np.arange(t_win[0], t_win[1], 0.004)), decimals=3), index=trial_df.index)
+    t_aWCT_df = pd.DataFrame(
+        t_freq_aWCT, columns=np.round((np.arange(t_win[0], t_win[1], 0.004)), decimals=3), index=trial_df.index)
+
+    # Mask aWCT for WCT &lt; 0.5
+    mask = (t_WCT_df &gt; 0.5)
+    t_aWCT_df = t_aWCT_df[mask]
+
+    grp_ref = trial_df[&#39;Schedule&#39;]  # Reference column for grouping
+
+    # Dict to hold variables for groups
+    # eg. {&#39;FR&#39; : { &#39;WCT&#39; : g1_WCT
+    #              &#39;aWCT&#39; : g1_aWCT
+    #                &#39;u&#39;  : g1_u}
+    #      &#39;FI&#39; : {...}
+    #       }
+    grp_dict = {x: {} for x in grp_ref.unique()}
+    for g in grp_dict.keys():
+        grp_dict[g][&#39;WCT&#39;] = t_WCT_df.loc[grp_ref
+                                          == g, t_win[0]: t_win[1]]
+        grp_dict[g][&#39;aWCT&#39;] = t_aWCT_df.loc[grp_ref
+                                            == g, t_win[0]: t_win[1]]
+
+    if dist:
+        # Plot distribution of phase shift angles
+        start, stop = [-2.5, 2.5]  # sets range for distribution
+        step = 1  # step in seconds
+        dist_range = np.arange(start, stop, step)
+        fig2, ax = plt.subplots(1,
+                                len(dist_range), figsize=(len(dist_range)*5, 2), sharey=True)
+        fig2.subplots_adjust(wspace=0)
+        for i, a in enumerate(dist_range):
+            for g, val in grp_dict.items():
+                start_m = (val[&#39;aWCT&#39;].columns &gt;= a)
+                end_m = (val[&#39;aWCT&#39;].columns &lt;= a+step)
+                sns.distplot(val[&#39;aWCT&#39;].loc[:, (start_m &amp; end_m)],
+                             ax=ax[i], label=g)
+            ax[i].text(0.5, 1.05, &#39;{} to {} s from {}&#39;.format(
+                a, a+step, align_txt), fontsize=8, va=&#39;center&#39;, ha=&#39;center&#39;, transform=ax[i].transAxes)
+            ax[i].set_ylim(0, 1.25)
+            ax[i].legend(fontsize=8)
+            ax[i].set_xlabel(&#39;Phase Angle (rads)&#39;)
+        fig2.suptitle(&#39;{} vs {} wCohere Phase Distribution ({}Hz) - FR vs FI&#39;.format(reg_sel[0], reg_sel[1], target_freq), y=1.08, ha=&#39;center&#39;,
+                      va=&#39;center&#39;, fontsize=10, transform=fig2.transFigure)
+        fig2.text(0.5, 1, s.get_title(), fontsize=9, va=&#39;center&#39;,
+                  ha=&#39;center&#39;, transform=fig2.transFigure)
+    else:
+        fig2 = None
+
+    # Plots 3 by 1 figure comparing FI and FR wchohere at target freq
+    if plot:
+        # Set up plotting grid
+        from matplotlib.gridspec import GridSpec
+        fig = plt.figure(figsize=(14, 10))
+        fig.suptitle(
+            &#39;{} vs {} Trial-based wCohere ({}Hz) - FR vs FI&#39;.format(reg_sel[0], reg_sel[1], target_freq), y=0.92, ha=&#39;center&#39;,
+            va=&#39;center&#39;, fontsize=15)
+
+        # set ax based on number of groups
+        grp_n = len(grp_dict.keys())
+        gs = GridSpec(grp_n+1, 2, width_ratios=[100, 1], wspace=0.1)
+        ax = [fig.add_subplot(gs[x, :-1]) for x in np.arange(grp_n+1)]
+        axlab = fig.add_subplot(gs[:-1, -1])
+
+        # Sort trials based on magnitute of coherence
+        if sort:
+            for g in grp_dict():
+                g[&#39;WCT&#39;] = g[&#39;WCT&#39;].sort_values([0])
+                g[&#39;aWCT&#39;] = g[&#39;aWCT&#39;].reindex(g[&#39;WCT&#39;].index)
+
+        # Calculate arrow angles
+        for (key, val) in grp_dict.items():
+            # To set zero pointing up for arrow
+            angle = 0.5 * np.pi - val[&#39;aWCT&#39;]
+            U, V = np.cos(angle), np.sin(angle)
+            # Normalize angles to obtain uniform arrows
+            U, V = U / np.sqrt(U**2 + V**2), V / np.sqrt(U**2 + V**2)
+            grp_dict[key][&#39;u&#39;], grp_dict[key][&#39;v&#39;] = U, V
+
+        # Heatmap
+        for i, (g_name, g) in enumerate(grp_dict.items()):
+            if i == 0:
+                sns.heatmap(g[&#39;WCT&#39;], ax=ax[i],
+                            xticklabels=int(250), cbar_ax=axlab)
+                ax[i].set_title(s.get_title(), fontsize=10)
+            else:
+                sns.heatmap(g[&#39;WCT&#39;], ax=ax[i],
+                            xticklabels=int(250), cbar=False)
+
+            # Grid for quiver plot
+            nr, nc = g[&#39;u&#39;].shape
+            indexgrid = np.meshgrid(np.arange(nc), np.arange(nr))
+            X, Y = [np.ravel(a) for a in indexgrid]
+
+            # Set quiver resolution
+            x_res = 25  # Plots arrow every x_res point
+            res_mask = np.ones_like(g[&#39;WCT&#39;])
+            res_mask[:, ::x_res] = 0
+            res_mask = res_mask.astype(bool)
+
+            # Plot quivers
+            ax[i].quiver(X, Y+0.5, g[&#39;u&#39;].mask(res_mask, np.nan), g[&#39;v&#39;].mask(res_mask, np.nan), units=&#39;height&#39;,
+                         angles=&#39;uv&#39;, pivot=&#39;mid&#39;, edgecolor=&#39;k&#39;, scale=20, width=0.005,
+                         headwidth=4, headlength=4, headaxislength=3.5, minshaft=1)
+
+            ax[i].set_ylabel(&#39;{} Trials&#39;.format(g_name), fontsize=14)
+            # Plot alignment line
+            ax[i].axvline((0-t_win[0])*250, linestyle=&#39;-.&#39;, color=&#39;w&#39;,
+                          linewidth=1, label=align_txt)
+            ax[i].text(1, -0.025, &#39;n={}&#39;.format(
+                g[&#39;WCT&#39;].shape[0]), ha=&#39;right&#39;, va=&#39;top&#39;, fontsize=8, transform=ax[i].transAxes)
+            ax[i].legend(loc=1)
+
+        ax[-1].axvline(0, linestyle=&#39;-.&#39;, color=&#39;k&#39;,
+                       linewidth=1, label=align_txt)
+
+        # Average lineplot
+        t_WCT_df[&#39;Groups&#39;] = grp_ref
+        # Rearrange order of color_list for consistent coloring of FI and FR
+        if grp_ref.name in [&#39;Schedule&#39;, &#39;Sch_block&#39;]:
+            if s.get_arrays(&#39;Trial Type&#39;)[0] == 0:
+                color_list = [&#34;Blues_r&#34;, &#34;Oranges_r&#34;]
+            elif s.get_arrays(&#39;Trial Type&#39;)[0] == 1:
+                color_list = [&#34;Oranges_r&#34;, &#34;Blues_r&#34;]
+
+            import bvmpc.bv_plot as bv_plot
+            gm = bv_plot.GroupManager(s.get_arrays(
+                &#39;Trial Type&#39;).tolist(), color_list=color_list)
+            colors = []
+            for b in grp_ref.unique():
+                colors.append(gm.get_next_color())
+            sns.set_palette(sns.color_palette(colors))
+
+        plot_data = pd.melt(t_WCT_df, id_vars=[
+            &#39;Groups&#39;], var_name=&#39;Time (s)&#39;, value_name=&#39;Coherence&#39;)
+        sns.lineplot(x=&#39;Time (s)&#39;, y=&#39;Coherence&#39;,
+                     data=plot_data, hue=&#39;Groups&#39;, ax=ax[-1], n_boot=250)
+        # ax[-1].set_ylim(0, 1)
+        ax[-1].set_xlim([*t_win])
+        ax[-1].set_ylabel(&#39;Coherence&#39;, fontsize=14)
+        ax[-1].set_xlabel(&#39;Time (s)&#39;, fontsize=14)
+        ax[-1].legend(bbox_to_anchor=(1.01, 1))
+    else:
+        fig = None
+
+    return t_WCT_df, fig, fig2
+
+
+def plot_cross_wavelet(
+        wave1, wave2, sample_times,
+        min_freq=1, max_freq=256,
+        sig=False, ax=None, title=&#34;Cross-Wavelet&#34;,
+        plot_coi=True, plot_period=False,
+        resolution=12, all_arrows=True, quiv_x=5, quiv_y=24, block=None):
+    &#34;&#34;&#34;
+    Plot cross wavelet correlation between wave1 and wave2 using pycwt.
+
+    TODO Fix this function
+    TODO also test out sig on a large dataset
+
+    Parameters
+    ----------
+    wave1 : np.ndarray
+        The values of the first waveform.
+    wave2 : np.ndarray
+        The values of the second waveform.
+    sample_times : np.ndarray
+        The times at which waveform samples occur.
+    min_freq : float
+        Supposed to be minimum frequency, but not quite working.
+    max_freq : float
+        Supposed to be max frequency, but not quite working.
+    sig : bool, default False
+        Optional Should significance of waveform coherence be calculated.
+    ax : plt.axe, default None
+        Optional ax object to plot into.
+    title : str, default &#34;Wavelet Coherence&#34;
+        Optional title for the graph
+    plot_coi : bool, default True
+        Should the cone of influence be plotted
+    plot_period : bool
+        Should the y-axis be in period or in frequency (Hz)
+    resolution : int
+        How many wavelets should be at each level of the graph
+    all_arrows : bool
+        Should phase arrows be plotted uniformly or only at high coherence
+    quiv_x : float
+        sets quiver window in time domain in seconds
+    quiv_y : float
+        sets number of quivers evenly distributed across freq limits
+    block : [int, int]
+        Plots only points between ints.
+
+    Returns
+    -------
+    tuple : (fig, result)
+        Where fig is a matplotlib Figure
+        and result is a tuple consisting of WCT, aWCT, coi, freq, sig
+        WCT - 2D numpy array with coherence values
+        aWCT - 2D numpy array with same shape as aWCT indicating phase angles
+        coi - 1D numpy array with a frequency value for each time
+        freq - 1D numpy array with the frequencies wavelets were calculated at
+        sig - 2D numpy array indicating where data is significant by monte carlo
+
+    &#34;&#34;&#34;
+    t = np.asarray(sample_times)
+    dt = np.mean(np.diff(t))
+    # Set up the scales to match min max input frequencies
+    dj = resolution
+    s0 = 1 / max_freq
+    if s0 &lt; (2 * dt):
+        s0 = 2 * dt
+    max_J = 1 / min_freq
+    J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
+
+    # Do the actual calculation
+    W12, coi, freq, signif = wavelet.xwt(
+        wave1, wave2, dt,  # Fixed params
+        dj=(1.0 / dj), s0=s0, J=J, significance_level=0.8646, normalize=True,
+    )
+
+    cross_power = np.abs(W12)**2
+
+    if np.max(W12) &gt; 6**2 or np.min(W12) &lt; 0:
+        print(&#39;W12 was out of range: min{},max{}&#39;.format(
+            np.min(W12), np.max(W12)))
+        cross_power = np.clip(cross_power, 0, 6**2)
+    # print(&#39;cross max:&#39;, np.max(cross_power))
+    # print(&#39;cross min:&#39;, np.min(cross_power))
+
+    cross_sig = np.ones([1, len(t)]) * signif[:, None]
+    cross_sig = cross_power / cross_sig  # Power is significant where ratio &gt; 1
+
+    # Convert frequency to period if necessary
+    if plot_period:
+        y_vals = np.log2(1 / freq)
+    if not plot_period:
+        y_vals = np.log2(freq)
+
+    if ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig = None
+
+    # Set the x and y axes of the plot
+    extent_corr = [t.min(), t.max(), 0, max(y_vals)]
+
+    # Fill the plot with the magnitude squared correlation values
+    # That is, MSC = abs(Pxy) ^ 2 / (Pxx * Pyy)
+    # TODO I think this might be the wrong way to plot this
+    # It assumes that the samples are linearly spaced
+    im = NonUniformImage(ax, interpolation=&#39;bilinear&#39;, extent=extent_corr)
+
+    if plot_period:
+        im.set_data(t, y_vals, cross_power)
+    else:
+        im.set_data(t, y_vals[::-1], cross_power[::-1, :])
+    ax.images.append(im)
+    # pcm = ax.pcolormesh(WCT)
+
+    # Plot the cone of influence - Periods greater than
+    # those are subject to edge effects.
+    if plot_coi:
+        # Performed by plotting a polygon
+        x_positions = np.zeros(shape=(len(t),))
+        x_positions = t
+
+        y_positions = np.zeros(shape=(len(t),))
+        if plot_period:
+            y_positions = np.log2(coi)
+        else:
+            y_positions = np.log2(1 / coi)
+
+        ax.plot(x_positions, y_positions,
+                &#39;w--&#39;, linewidth=2, c=&#34;w&#34;)
+
+    # Plot the significance level contour plot
+    if sig:
+        ax.contour(t, y_vals, cross_sig,
+                   [-99, 1], colors=&#39;k&#39;, linewidths=2, extent=extent_corr)
+
+    # Add limits, titles, etc.
+    ax.set_ylim(min(y_vals), max(y_vals))
+
+    if block:
+        ax.set_xlim(t[block[0]], t[int(block[1] * 1 / dt)])
+    else:
+        ax.set_xlim(t.min(), t.max())
+
+    # TODO split graph into smaller time chunks
+    # Test for smaller timescale
+    # quiv_x = 1
+
+    # Add the colorbar to the figure
+    if fig is not None:
+        fig.colorbar(im)
+    else:
+        plt.colorbar(im, ax=ax, use_gridspec=True)
+
+    if plot_period:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        y_ticks = [np.log2(x) for x in [0.004, 0.008, 0.016,
+                                        0.032, 0.064, 0.125, 0.25, 0.5, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+    else:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        # y_ticks = [np.log2(x) for x in [256, 128, 64, 32, 16, 8, 4, 2, 1]]
+        y_ticks = [np.log2(x) for x in [64, 32, 16, 8, 4, 2, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+    plt.yticks(y_ticks, y_labels)
+    ax.set_title(title)
+    ax.set_xlabel(&#34;Time (s)&#34;)
+
+    if plot_period:
+        ax.set_ylabel(&#34;Period&#34;)
+    else:
+        ax.set_ylabel(&#34;Frequency (Hz)&#34;)
+
+    return (fig, [W12, coi, freq, sig])
+
+
+def test_wave_coherence():
+    # Compare this to Matlab
+    fs = 1000.0
+    t = np.arange(0, 2.0011, 0.001)
+    x = 0.25 * np.random.randn(t.size)
+    temp = np.zeros(t.size)
+    np.cos(2 * np.pi * 10 * t, where=((t &gt;= 0.5) &amp; (t &lt; 1.1)), out=temp)
+    x += temp
+    temp.fill(0)
+    np.cos(2 * np.pi * 50 * t, where=((t &gt;= 0.2) &amp; (t &lt; 1.4)), out=temp)
+    x += temp
+    temp.fill(0)
+
+    y = 0.35 * np.random.randn(t.size)
+    np.sin(2 * np.pi * 10 * t, where=((t &gt;= 0.6) &amp; (t &lt; 1.2)), out=temp)
+    y += temp
+    temp.fill(0)
+    np.sin(2 * np.pi * 50 * t, where=((t &gt;= 0.4) &amp; (t &lt; 1.6)), out=temp)
+    y += temp
+    fig, data = plot_wave_coherence(
+        x, y, t, min_freq=2, max_freq=1000,
+        plot_arrows=True, plot_coi=True, plot_period=True,
+        resolution=12, all_arrows=True)
+    fig.savefig(&#34;test_coherence_o.png&#34;, dpi=400)
+    do_matlab = False
+
+    if do_matlab:
+        import matlab.engine
+
+        eng = matlab.engine.start_matlab()
+        x_m = matlab.double(list(x))
+        y_m = matlab.double(list(y))
+
+        eng.wcoherence(x_m, y_m, fs, nargout=0)
+        fig = eng.gcf()
+        eng.saveas(fig, &#34;test_matlab_freq.png&#34;, nargout=0)
+
+
+def test_coherence():
+    from scipy import signal
+    import matplotlib.pyplot as plt
+    from lfp_plot import plot_coherence
+    fs = 10e3
+    N = 1e5
+    amp = 20
+    freq = 1234.0
+    noise_power = 0.001 * fs / 2
+    time = np.arange(N) / fs
+    b, a = signal.butter(2, 0.25, &#39;low&#39;)
+    x = np.random.normal(scale=np.sqrt(noise_power), size=time.shape)
+    y = signal.lfilter(b, a, x)
+    x += amp * np.sin(2 * np.pi * freq * time)
+    y += np.random.normal(scale=0.1 * np.sqrt(noise_power), size=time.shape)
+    f, Cxy = coherence(x, y, fs, nperseg=1024)
+    plot_coherence(f, Cxy, tick_freq=1000)
+
+
+def test_mvl():
+    from scipy import signal
+    import matplotlib.pyplot as plt
+    t = np.linspace(0, 1, 500)
+    # 10 Hz sawtooth wave sampled at 500Hz
+    sig1 = signal.sawtooth(2 * np.pi * 10 * t)
+    # 50Hz sine wave sampled at 500Hz
+    sig2 = 0.02 * np.sin(2 * np.pi * 50 * t)
+    sig3 = 0.2 * np.sin(np.pi + 2 * np.pi * 10 * t)
+    sig6 = 0.1 * np.sin(2 * np.pi * 20 * t)
+    sig4 = 0.02 * np.sin(2 * np.pi * 55 * t)
+    sig5 = 0.02 * np.sin(np.pi + 2 * np.pi * 65 * t)
+    coupled_sig = sig2 + sig3 + sig6
+    fig, ax = plt.subplots()
+    ax.plot(sig1, c=&#34;b&#34;)
+    ax.plot(coupled_sig, c=&#34;r&#34;)
+    ax.plot(sig2 + sig4 + sig5, c=&#34;g&#34;)
+    plt.show()
+    plt.close(&#34;all&#34;)
+    all1, res1 = mean_vector_length(
+        sig1, coupled_sig, amp_norm=False, return_all=True)
+    all2, res2 = mean_vector_length(
+        sig1, sig2 + sig4 + sig5, amp_norm=False, return_all=True)
+    print(res1, res2)
+    from lfp_plot import plot_polar_coupling
+    plot_polar_coupling(all1, res1)
+    plot_polar_coupling(all2, res2)
+
+
+if __name__ == &#34;__main__&#34;:
+    &#34;&#34;&#34;Test out these functions.&#34;&#34;&#34;
+    test_record = False
+    test_sim = True
+
+    if test_sim:
+        test_coherence()
+        test_mvl()
+
+    if test_record:
+        recording = r&#34;C:\Users\smartin5\Recordings\ER\LFP-cla-V2L\LFP-cla-V2L-ctrl\05112019-white\05112019-white-D&#34;
+        channels = [1, 5]
+        from lfp_odict import LfpODict
+        lfp_odict = LfpODict(recording, channels=channels)
+        f, Cxy = calc_coherence(
+            lfp_odict.get_signal(0),
+            lfp_odict.get_signal(1))
+        from lfp_plot import plot_coherence
+        plot_coherence(f, Cxy)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="bvmpc.lfp_coherence.calc_coherence"><code class="name flex">
+<span>def <span class="ident">calc_coherence</span></span>(<span>lfp1, lfp2, squared=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calc_coherence(lfp1, lfp2, squared=True):
+    f, Cxy = coherence(
+        lfp1.get_samples(), lfp2.get_samples(),
+        fs=lfp1.get_sampling_rate(), nperseg=1024)
+    if squared:
+        return f, Cxy
+    result = f, np.sqrt(Cxy)
+    return result</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_coherence.calc_wave_coherence"><code class="name flex">
+<span>def <span class="ident">calc_wave_coherence</span></span>(<span>wave1, wave2, sample_times, min_freq=1, max_freq=128, sig=False, resolution=12)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculate wavelet coherence between wave1 and wave2 using pycwt.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>wave1</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The values of the first waveform.</dd>
+<dt><strong><code>wave2</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The values of the second waveform.</dd>
+<dt><strong><code>sample_times</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The times at which waveform samples occur.</dd>
+<dt><strong><code>min_freq</code></strong> :&ensp;<code>float</code></dt>
+<dd>Supposed to be minimum frequency, but not quite working.</dd>
+<dt><strong><code>max_freq</code></strong> :&ensp;<code>float</code></dt>
+<dd>Supposed to be max frequency, but not quite working.</dd>
+<dt><strong><code>sig</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>Optional Should significance of waveform coherence be calculated.</dd>
+<dt><strong><code>resolution</code></strong> :&ensp;<code>int</code></dt>
+<dd>How many wavelets should be at each level</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>WCT, t, freq, coi, sig, aWCT</code></dt>
+<dd>WCT - 2D numpy array with coherence values
+t - 2D numpy array with sample_times
+freq - 1D numpy array with the frequencies wavelets were calculated at
+coi - 1D numpy array with a frequency value for each time
+sig - 2D numpy array indicating where data is significant by monte carlo
+aWCT - 2D numpy array with same shape as aWCT indicating phase angles</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calc_wave_coherence(wave1, wave2, sample_times, min_freq=1, max_freq=128, sig=False, resolution=12):
+    &#34;&#34;&#34;
+    Calculate wavelet coherence between wave1 and wave2 using pycwt.
+
+    Parameters
+    ----------
+    wave1 : np.ndarray
+        The values of the first waveform.
+    wave2 : np.ndarray
+        The values of the second waveform.
+    sample_times : np.ndarray
+        The times at which waveform samples occur.
+    min_freq : float
+        Supposed to be minimum frequency, but not quite working.
+    max_freq : float
+        Supposed to be max frequency, but not quite working.
+    sig : bool, default False
+        Optional Should significance of waveform coherence be calculated.
+    resolution : int
+        How many wavelets should be at each level
+
+    Returns
+    -------
+    WCT, t, freq, coi, sig, aWCT
+        WCT - 2D numpy array with coherence values
+        t - 2D numpy array with sample_times
+        freq - 1D numpy array with the frequencies wavelets were calculated at
+        coi - 1D numpy array with a frequency value for each time
+        sig - 2D numpy array indicating where data is significant by monte carlo
+        aWCT - 2D numpy array with same shape as aWCT indicating phase angles
+    &#34;&#34;&#34;
+
+    t = np.asarray(sample_times)
+    dt = np.mean(np.diff(t))  # dt = 0.004
+
+    dj = resolution
+    s0 = 1 / max_freq
+    if s0 &lt; (2 * dt):
+        s0 = 2 * dt
+    max_J = 1 / min_freq
+    J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
+
+    # # Original by Sean
+    # s0 = min_freq * dt
+    # if s0 &lt; (2 * dt):
+    #     s0 = 2 * dt
+    # max_J = max_freq * dt
+    # J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
+
+    # Do the actual calculation
+    print(&#34;Calculating coherence...&#34;)
+    start_time = time.time()
+    WCT, aWCT, coi, freq, sig = wavelet.wct(
+        wave1, wave2, dt,  # Fixed params
+        dj=(1.0 / dj), s0=s0, J=J, sig=sig, normalize=True)
+    print(&#34;Time Taken: %s s&#34; % (time.time() - start_time))
+    if np.max(WCT) &gt; 1 or np.min(WCT) &lt; 0:
+        print(&#39;WCT was out of range: min {},max {}&#39;.format(
+            np.min(WCT), np.max(WCT)))
+        WCT = np.clip(WCT, 0, 1)
+
+    return WCT, t, freq, coi, sig, aWCT</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_coherence.mean_vector_length"><code class="name flex">
+<span>def <span class="ident">mean_vector_length</span></span>(<span>low_freq_lfp, high_freq_lfp, amp_norm=True, return_all=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute the mean vector length from Hulsemann et al. 2019</p>
+<p>If amp_norm is true, use the sum of the amplitudes to normalise,
+as opposed to the number of observations.
+if return_all is true, return the complex values</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mean_vector_length(
+        low_freq_lfp, high_freq_lfp, amp_norm=True, return_all=False):
+    &#34;&#34;&#34;
+    Compute the mean vector length from Hulsemann et al. 2019
+
+    If amp_norm is true, use the sum of the amplitudes to normalise,
+    as opposed to the number of observations.
+    if return_all is true, return the complex values
+    &#34;&#34;&#34;
+    amplitude = split_into_amp_phase(high_freq_lfp)[0]
+    phase = split_into_amp_phase(low_freq_lfp, deg=False)[1]
+    if amplitude.size != phase.size:
+        raise ValueError(
+            &#34;Amp and phase: {} {} elements, equal size needed in MVL&#34;.format(
+                amplitude.size, phase.size))
+    # This could also be computed using CircStat
+    norm = np.sum(amplitude) if amp_norm else amplitude.size
+    polar_vectors = np.multiply(amplitude, np.exp(1j * phase))
+    res_vector = np.sum(polar_vectors)
+    mvl = np.abs(res_vector) / norm
+    if return_all:
+        return polar_vectors, mvl
+    else:
+        return mvl</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_coherence.mvl_shuffle"><code class="name flex">
+<span>def <span class="ident">mvl_shuffle</span></span>(<span>low_freq_lfp, high_freq_lfp, amp_norm=True, nshuffles=200)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute a shuffled distribution from Hulsemann et al. 2019</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mvl_shuffle(low_freq_lfp, high_freq_lfp, amp_norm=True, nshuffles=200):
+    &#34;&#34;&#34;Compute a shuffled distribution from Hulsemann et al. 2019&#34;&#34;&#34;
+    samples = high_freq_lfp.get_samples()
+    new_lfp = deepcopy(high_freq_lfp)
+    observed_mvl = mean_vector_length(
+        low_freq_lfp, high_freq_lfp, amp_norm=amp_norm)
+    shuffled_mvl = np.zeros(shape=(nshuffles))
+    for i in range(len(shuffled_mvl)):
+        sample_idx = int(np.floor(
+            (low_freq_lfp.get_total_samples() + 1) * np.random.random_sample()))
+        reversed_arr1 = samples[0:sample_idx][::-1]
+        reversed_arr2 = samples[sample_idx:samples.size][::-1]
+        permuted_amp_time = np.concatenate(
+            [reversed_arr1, reversed_arr2], axis=None)
+        new_lfp._set_samples(permuted_amp_time)
+        mvl = mean_vector_length(
+            low_freq_lfp, new_lfp, amp_norm=amp_norm)
+        shuffled_mvl[i] = mvl
+    z_val = (observed_mvl - np.mean(shuffled_mvl)) / np.std(shuffled_mvl)
+    mvl95 = np.percentile(shuffled_mvl, 95)
+    p_val = norm.sf(z_val)
+
+    return observed_mvl, mvl95, z_val, p_val</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_coherence.plot_arrows"><code class="name flex">
+<span>def <span class="ident">plot_arrows</span></span>(<span>ax, wcohere_pvals, aWCT=None, u=None, v=None, magnitute=None, quiv_x=5, quiv_y=24, all_arrows=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Plots phase arrows for wavelet coherence plot using results from plot_wcohere</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt>wcohere_pvals:</dt>
+<dt>input structure, includes [WCT, t, y_vals]</dt>
+<dt>the first three parameters are out from plot_wcohere</dt>
+<dt><strong><code>aWCT</code></strong> :&ensp;<code>2D numpy</code></dt>
+<dd>array with same shape as aWCT indicating phase angles
+*Can be obtained from last value in calc_wave_coherence</dd>
+<dt><strong><code>u</code></strong> :&ensp;<code>2D numpy array</code> of <code>unit vector's cos angle</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>v</code></strong> :&ensp;<code>2D numpy array</code> of <code>unit vector's sin angle</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>magnitute</code></strong> :&ensp;<code>2D numpy array</code> of <code>vector magnitute at each freq and timepoint</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>quiv_x</code></strong> :&ensp;<code>float</code></dt>
+<dd>sets quiver window in time domain in seconds</dd>
+<dt><strong><code>quiv_y</code></strong> :&ensp;<code>float</code></dt>
+<dd>sets number of quivers evenly distributed across freq limits</dd>
+<dt><strong><code>all_arrows</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Should phase arrows be plotted uniformly or only at high coherence</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_arrows(ax, wcohere_pvals, aWCT=None, u=None, v=None, magnitute=None, quiv_x=5, quiv_y=24, all_arrows=False):
+    &#34;&#34;&#34;
+    Plots phase arrows for wavelet coherence plot using results from plot_wcohere
+
+    Parameters
+    ----------
+    wcohere_pvals:
+        input structure, includes [WCT, t, y_vals]
+        the first three parameters are out from plot_wcohere
+    aWCT : 2D numpy
+        array with same shape as aWCT indicating phase angles
+        *Can be obtained from last value in calc_wave_coherence
+    u : 2D numpy array of unit vector&#39;s cos angle
+    v : 2D numpy array of unit vector&#39;s sin angle
+    magnitute : 2D numpy array of vector magnitute at each freq and timepoint
+    quiv_x : float
+        sets quiver window in time domain in seconds
+    quiv_y : float
+        sets number of quivers evenly distributed across freq limits
+    all_arrows : bool
+        Should phase arrows be plotted uniformly or only at high coherence
+
+    &#34;&#34;&#34;
+    WCT, t, y_vals = wcohere_pvals
+
+    if aWCT is not None:
+        angle = 0.5 * np.pi - aWCT  # To set zero pointing up for arrow
+        u, v = np.cos(angle), np.sin(angle)
+    elif u is None or v is None:
+        raise ValueError(&#34;Must pass aWCT or [u, v]&#34;)
+
+    dt = np.mean(np.diff(t))
+
+    x_res = int(1 / dt * quiv_x)
+    y_res = int(np.floor(len(y_vals) / quiv_y))
+    if all_arrows:
+        ax.quiver(t[::x_res], y_vals[::y_res],
+                  u[::y_res, ::x_res], v[::y_res, ::x_res], units=&#39;height&#39;,
+                  angles=&#39;uv&#39;, pivot=&#39;mid&#39;, linewidth=1, edgecolor=&#39;k&#39;, scale=30,
+                  headwidth=10, headlength=10, headaxislength=5, minshaft=2,
+                  )
+    else:
+        # t[::x_res], y_vals[::y_res],
+        # u[::y_res, ::x_res], v[::y_res, ::x_res]
+        if magnitute is not None:
+            f_mean = np.empty_like(magnitute)
+            for i, f in enumerate(magnitute):
+                # Plot arrows if magnitute &gt; mean of particular frequency
+                f_mean[i, :] = np.mean(f) + np.std(f)
+            high_points = np.nonzero(
+                magnitute[::y_res, ::x_res] &gt; f_mean[::y_res, ::x_res])
+
+        else:
+            high_points = np.nonzero(WCT[::y_res, ::x_res] &gt; 0.5)
+        sub_t = t[::x_res][high_points[1]]
+        sub_y = y_vals[::y_res][high_points[0]]
+        sub_u = u[::y_res, ::x_res][np.array(
+            high_points[0]), np.array(high_points[1])]
+        sub_v = v[::y_res, ::x_res][high_points[0], high_points[1]]
+        res = 1
+        ax.quiver(sub_t[::res], sub_y[::res],
+                  sub_u[::res], sub_v[::res], units=&#39;height&#39;,
+                  angles=&#39;uv&#39;, pivot=&#39;mid&#39;, linewidth=1, edgecolor=&#39;k&#39;, scale=30,
+                  headwidth=10, headlength=10, headaxislength=5, minshaft=2,
+                  )
+
+    return ax</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_coherence.plot_cross_wavelet"><code class="name flex">
+<span>def <span class="ident">plot_cross_wavelet</span></span>(<span>wave1, wave2, sample_times, min_freq=1, max_freq=256, sig=False, ax=None, title='Cross-Wavelet', plot_coi=True, plot_period=False, resolution=12, all_arrows=True, quiv_x=5, quiv_y=24, block=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Plot cross wavelet correlation between wave1 and wave2 using pycwt.</p>
+<p>TODO Fix this function
+TODO also test out sig on a large dataset</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>wave1</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The values of the first waveform.</dd>
+<dt><strong><code>wave2</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The values of the second waveform.</dd>
+<dt><strong><code>sample_times</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The times at which waveform samples occur.</dd>
+<dt><strong><code>min_freq</code></strong> :&ensp;<code>float</code></dt>
+<dd>Supposed to be minimum frequency, but not quite working.</dd>
+<dt><strong><code>max_freq</code></strong> :&ensp;<code>float</code></dt>
+<dd>Supposed to be max frequency, but not quite working.</dd>
+<dt><strong><code>sig</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>Optional Should significance of waveform coherence be calculated.</dd>
+<dt><strong><code>ax</code></strong> :&ensp;<code>plt.axe</code>, default <code>None</code></dt>
+<dd>Optional ax object to plot into.</dd>
+<dt><strong><code>title</code></strong> :&ensp;<code>str</code>, default <code>"Wavelet Coherence"</code></dt>
+<dd>Optional title for the graph</dd>
+<dt><strong><code>plot_coi</code></strong> :&ensp;<code>bool</code>, default <code>True</code></dt>
+<dd>Should the cone of influence be plotted</dd>
+<dt><strong><code>plot_period</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Should the y-axis be in period or in frequency (Hz)</dd>
+<dt><strong><code>resolution</code></strong> :&ensp;<code>int</code></dt>
+<dd>How many wavelets should be at each level of the graph</dd>
+<dt><strong><code>all_arrows</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Should phase arrows be plotted uniformly or only at high coherence</dd>
+<dt><strong><code>quiv_x</code></strong> :&ensp;<code>float</code></dt>
+<dd>sets quiver window in time domain in seconds</dd>
+<dt><strong><code>quiv_y</code></strong> :&ensp;<code>float</code></dt>
+<dd>sets number of quivers evenly distributed across freq limits</dd>
+<dt><strong><code>block</code></strong> :&ensp;<code>[int, int]</code></dt>
+<dd>Plots only points between ints.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>tuple</code></strong> :&ensp;<code>(fig, result)</code></dt>
+<dd>Where fig is a matplotlib Figure
+and result is a tuple consisting of WCT, aWCT, coi, freq, sig
+WCT - 2D numpy array with coherence values
+aWCT - 2D numpy array with same shape as aWCT indicating phase angles
+coi - 1D numpy array with a frequency value for each time
+freq - 1D numpy array with the frequencies wavelets were calculated at
+sig - 2D numpy array indicating where data is significant by monte carlo</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_cross_wavelet(
+        wave1, wave2, sample_times,
+        min_freq=1, max_freq=256,
+        sig=False, ax=None, title=&#34;Cross-Wavelet&#34;,
+        plot_coi=True, plot_period=False,
+        resolution=12, all_arrows=True, quiv_x=5, quiv_y=24, block=None):
+    &#34;&#34;&#34;
+    Plot cross wavelet correlation between wave1 and wave2 using pycwt.
+
+    TODO Fix this function
+    TODO also test out sig on a large dataset
+
+    Parameters
+    ----------
+    wave1 : np.ndarray
+        The values of the first waveform.
+    wave2 : np.ndarray
+        The values of the second waveform.
+    sample_times : np.ndarray
+        The times at which waveform samples occur.
+    min_freq : float
+        Supposed to be minimum frequency, but not quite working.
+    max_freq : float
+        Supposed to be max frequency, but not quite working.
+    sig : bool, default False
+        Optional Should significance of waveform coherence be calculated.
+    ax : plt.axe, default None
+        Optional ax object to plot into.
+    title : str, default &#34;Wavelet Coherence&#34;
+        Optional title for the graph
+    plot_coi : bool, default True
+        Should the cone of influence be plotted
+    plot_period : bool
+        Should the y-axis be in period or in frequency (Hz)
+    resolution : int
+        How many wavelets should be at each level of the graph
+    all_arrows : bool
+        Should phase arrows be plotted uniformly or only at high coherence
+    quiv_x : float
+        sets quiver window in time domain in seconds
+    quiv_y : float
+        sets number of quivers evenly distributed across freq limits
+    block : [int, int]
+        Plots only points between ints.
+
+    Returns
+    -------
+    tuple : (fig, result)
+        Where fig is a matplotlib Figure
+        and result is a tuple consisting of WCT, aWCT, coi, freq, sig
+        WCT - 2D numpy array with coherence values
+        aWCT - 2D numpy array with same shape as aWCT indicating phase angles
+        coi - 1D numpy array with a frequency value for each time
+        freq - 1D numpy array with the frequencies wavelets were calculated at
+        sig - 2D numpy array indicating where data is significant by monte carlo
+
+    &#34;&#34;&#34;
+    t = np.asarray(sample_times)
+    dt = np.mean(np.diff(t))
+    # Set up the scales to match min max input frequencies
+    dj = resolution
+    s0 = 1 / max_freq
+    if s0 &lt; (2 * dt):
+        s0 = 2 * dt
+    max_J = 1 / min_freq
+    J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
+
+    # Do the actual calculation
+    W12, coi, freq, signif = wavelet.xwt(
+        wave1, wave2, dt,  # Fixed params
+        dj=(1.0 / dj), s0=s0, J=J, significance_level=0.8646, normalize=True,
+    )
+
+    cross_power = np.abs(W12)**2
+
+    if np.max(W12) &gt; 6**2 or np.min(W12) &lt; 0:
+        print(&#39;W12 was out of range: min{},max{}&#39;.format(
+            np.min(W12), np.max(W12)))
+        cross_power = np.clip(cross_power, 0, 6**2)
+    # print(&#39;cross max:&#39;, np.max(cross_power))
+    # print(&#39;cross min:&#39;, np.min(cross_power))
+
+    cross_sig = np.ones([1, len(t)]) * signif[:, None]
+    cross_sig = cross_power / cross_sig  # Power is significant where ratio &gt; 1
+
+    # Convert frequency to period if necessary
+    if plot_period:
+        y_vals = np.log2(1 / freq)
+    if not plot_period:
+        y_vals = np.log2(freq)
+
+    if ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig = None
+
+    # Set the x and y axes of the plot
+    extent_corr = [t.min(), t.max(), 0, max(y_vals)]
+
+    # Fill the plot with the magnitude squared correlation values
+    # That is, MSC = abs(Pxy) ^ 2 / (Pxx * Pyy)
+    # TODO I think this might be the wrong way to plot this
+    # It assumes that the samples are linearly spaced
+    im = NonUniformImage(ax, interpolation=&#39;bilinear&#39;, extent=extent_corr)
+
+    if plot_period:
+        im.set_data(t, y_vals, cross_power)
+    else:
+        im.set_data(t, y_vals[::-1], cross_power[::-1, :])
+    ax.images.append(im)
+    # pcm = ax.pcolormesh(WCT)
+
+    # Plot the cone of influence - Periods greater than
+    # those are subject to edge effects.
+    if plot_coi:
+        # Performed by plotting a polygon
+        x_positions = np.zeros(shape=(len(t),))
+        x_positions = t
+
+        y_positions = np.zeros(shape=(len(t),))
+        if plot_period:
+            y_positions = np.log2(coi)
+        else:
+            y_positions = np.log2(1 / coi)
+
+        ax.plot(x_positions, y_positions,
+                &#39;w--&#39;, linewidth=2, c=&#34;w&#34;)
+
+    # Plot the significance level contour plot
+    if sig:
+        ax.contour(t, y_vals, cross_sig,
+                   [-99, 1], colors=&#39;k&#39;, linewidths=2, extent=extent_corr)
+
+    # Add limits, titles, etc.
+    ax.set_ylim(min(y_vals), max(y_vals))
+
+    if block:
+        ax.set_xlim(t[block[0]], t[int(block[1] * 1 / dt)])
+    else:
+        ax.set_xlim(t.min(), t.max())
+
+    # TODO split graph into smaller time chunks
+    # Test for smaller timescale
+    # quiv_x = 1
+
+    # Add the colorbar to the figure
+    if fig is not None:
+        fig.colorbar(im)
+    else:
+        plt.colorbar(im, ax=ax, use_gridspec=True)
+
+    if plot_period:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        y_ticks = [np.log2(x) for x in [0.004, 0.008, 0.016,
+                                        0.032, 0.064, 0.125, 0.25, 0.5, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+    else:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        # y_ticks = [np.log2(x) for x in [256, 128, 64, 32, 16, 8, 4, 2, 1]]
+        y_ticks = [np.log2(x) for x in [64, 32, 16, 8, 4, 2, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+    plt.yticks(y_ticks, y_labels)
+    ax.set_title(title)
+    ax.set_xlabel(&#34;Time (s)&#34;)
+
+    if plot_period:
+        ax.set_ylabel(&#34;Period&#34;)
+    else:
+        ax.set_ylabel(&#34;Frequency (Hz)&#34;)
+
+    return (fig, [W12, coi, freq, sig])</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_coherence.plot_single_freq_wcohere"><code class="name flex">
+<span>def <span class="ident">plot_single_freq_wcohere</span></span>(<span>target_freq, WCT, t, freq, aWCT, trials, t_win, trial_df, align_txt, s, reg_sel, sort=True, plot=False, split_b=False, dist=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Plots wcohere for target freq as heatmap across trials. Produces 2 plots -
+FR and FI respectively</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sort</code></strong> :&ensp;<code>bool, False</code></dt>
+<dd>Optional. Sort data frame based on coherence at alignment point.</dd>
+<dt><strong><code>plot</code></strong> :&ensp;<code>bool, False</code></dt>
+<dd>Optional. If false, returns fig as None.</dd>
+<dt><strong><code>dist</code></strong> :&ensp;<code>bool, False</code></dt>
+<dd>Optional. Plots distribution of phase angles for WCT &gt;0.5. If false, returns fig2 as None.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>t_WCT_df - pd.df with trials x sampling ts</code></dt>
+<dd>&nbsp;</dd>
+<dt><code>fig - 3x1 plot (FR heatmap, FI heatmap, FR vs FI average lineplot)</code></dt>
+<dd>&nbsp;</dd>
+<dt><code>fig2 - 3x1 plot (Distribution</code> of <code>phase angles &gt; 0.5 - FR vs FI)</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_single_freq_wcohere(target_freq, WCT, t, freq, aWCT, trials, t_win, trial_df, align_txt, s, reg_sel, sort=True, plot=False, split_b=False, dist=False):
+    &#34;&#34;&#34; Plots wcohere for target freq as heatmap across trials. Produces 2 plots -  FR and FI respectively
+
+    Parameters
+    ----------
+    sort : bool, False
+        Optional. Sort data frame based on coherence at alignment point.
+    plot : bool, False
+        Optional. If false, returns fig as None.
+    dist : bool, False
+        Optional. Plots distribution of phase angles for WCT &gt;0.5. If false, returns fig2 as None.
+
+    Returns
+    -------
+    t_WCT_df - pd.df with trials x sampling ts
+    fig - 3x1 plot (FR heatmap, FI heatmap, FR vs FI average lineplot)
+    fig2 - 3x1 plot (Distribution of phase angles &gt; 0.5 - FR vs FI)
+
+    &#34;&#34;&#34;
+    # TODO add arrows into plot
+
+    import seaborn as sns
+    import pandas as pd
+    freq_idx = np.where(np.round(freq, decimals=1) == target_freq)
+    n_points = np.diff(t_win)[0]*250
+    t_freq_WCT = np.empty((len(trials), n_points))
+    t_freq_aWCT = np.empty((len(trials), n_points))
+    # print(&#39;min phase: &#39;, np.nanmin(np.abs(aWCT)))
+    # print(&#39;max phase: &#39;, np.nanmax(np.abs(aWCT)))
+
+    # Split wcohere matrix into trial-based windows
+    for i, (a, b) in enumerate(trials):
+        a_idx, b_idx = np.searchsorted(t, a), np.searchsorted(t, b)
+        # accounts for trials shorter then window.
+        start = int(n_points - (b_idx-a_idx))
+        t_freq_WCT[i, start:] = WCT[freq_idx,
+                                    a_idx: b_idx]
+        t_freq_aWCT[i, start:] = aWCT[freq_idx,
+                                      a_idx: b_idx]
+
+    # Generate pd.df for WCT &amp; aWCT
+    t_WCT_df = pd.DataFrame(
+        t_freq_WCT, columns=np.round((np.arange(t_win[0], t_win[1], 0.004)), decimals=3), index=trial_df.index)
+    t_aWCT_df = pd.DataFrame(
+        t_freq_aWCT, columns=np.round((np.arange(t_win[0], t_win[1], 0.004)), decimals=3), index=trial_df.index)
+
+    # Mask aWCT for WCT &lt; 0.5
+    mask = (t_WCT_df &gt; 0.5)
+    t_aWCT_df = t_aWCT_df[mask]
+
+    grp_ref = trial_df[&#39;Schedule&#39;]  # Reference column for grouping
+
+    # Dict to hold variables for groups
+    # eg. {&#39;FR&#39; : { &#39;WCT&#39; : g1_WCT
+    #              &#39;aWCT&#39; : g1_aWCT
+    #                &#39;u&#39;  : g1_u}
+    #      &#39;FI&#39; : {...}
+    #       }
+    grp_dict = {x: {} for x in grp_ref.unique()}
+    for g in grp_dict.keys():
+        grp_dict[g][&#39;WCT&#39;] = t_WCT_df.loc[grp_ref
+                                          == g, t_win[0]: t_win[1]]
+        grp_dict[g][&#39;aWCT&#39;] = t_aWCT_df.loc[grp_ref
+                                            == g, t_win[0]: t_win[1]]
+
+    if dist:
+        # Plot distribution of phase shift angles
+        start, stop = [-2.5, 2.5]  # sets range for distribution
+        step = 1  # step in seconds
+        dist_range = np.arange(start, stop, step)
+        fig2, ax = plt.subplots(1,
+                                len(dist_range), figsize=(len(dist_range)*5, 2), sharey=True)
+        fig2.subplots_adjust(wspace=0)
+        for i, a in enumerate(dist_range):
+            for g, val in grp_dict.items():
+                start_m = (val[&#39;aWCT&#39;].columns &gt;= a)
+                end_m = (val[&#39;aWCT&#39;].columns &lt;= a+step)
+                sns.distplot(val[&#39;aWCT&#39;].loc[:, (start_m &amp; end_m)],
+                             ax=ax[i], label=g)
+            ax[i].text(0.5, 1.05, &#39;{} to {} s from {}&#39;.format(
+                a, a+step, align_txt), fontsize=8, va=&#39;center&#39;, ha=&#39;center&#39;, transform=ax[i].transAxes)
+            ax[i].set_ylim(0, 1.25)
+            ax[i].legend(fontsize=8)
+            ax[i].set_xlabel(&#39;Phase Angle (rads)&#39;)
+        fig2.suptitle(&#39;{} vs {} wCohere Phase Distribution ({}Hz) - FR vs FI&#39;.format(reg_sel[0], reg_sel[1], target_freq), y=1.08, ha=&#39;center&#39;,
+                      va=&#39;center&#39;, fontsize=10, transform=fig2.transFigure)
+        fig2.text(0.5, 1, s.get_title(), fontsize=9, va=&#39;center&#39;,
+                  ha=&#39;center&#39;, transform=fig2.transFigure)
+    else:
+        fig2 = None
+
+    # Plots 3 by 1 figure comparing FI and FR wchohere at target freq
+    if plot:
+        # Set up plotting grid
+        from matplotlib.gridspec import GridSpec
+        fig = plt.figure(figsize=(14, 10))
+        fig.suptitle(
+            &#39;{} vs {} Trial-based wCohere ({}Hz) - FR vs FI&#39;.format(reg_sel[0], reg_sel[1], target_freq), y=0.92, ha=&#39;center&#39;,
+            va=&#39;center&#39;, fontsize=15)
+
+        # set ax based on number of groups
+        grp_n = len(grp_dict.keys())
+        gs = GridSpec(grp_n+1, 2, width_ratios=[100, 1], wspace=0.1)
+        ax = [fig.add_subplot(gs[x, :-1]) for x in np.arange(grp_n+1)]
+        axlab = fig.add_subplot(gs[:-1, -1])
+
+        # Sort trials based on magnitute of coherence
+        if sort:
+            for g in grp_dict():
+                g[&#39;WCT&#39;] = g[&#39;WCT&#39;].sort_values([0])
+                g[&#39;aWCT&#39;] = g[&#39;aWCT&#39;].reindex(g[&#39;WCT&#39;].index)
+
+        # Calculate arrow angles
+        for (key, val) in grp_dict.items():
+            # To set zero pointing up for arrow
+            angle = 0.5 * np.pi - val[&#39;aWCT&#39;]
+            U, V = np.cos(angle), np.sin(angle)
+            # Normalize angles to obtain uniform arrows
+            U, V = U / np.sqrt(U**2 + V**2), V / np.sqrt(U**2 + V**2)
+            grp_dict[key][&#39;u&#39;], grp_dict[key][&#39;v&#39;] = U, V
+
+        # Heatmap
+        for i, (g_name, g) in enumerate(grp_dict.items()):
+            if i == 0:
+                sns.heatmap(g[&#39;WCT&#39;], ax=ax[i],
+                            xticklabels=int(250), cbar_ax=axlab)
+                ax[i].set_title(s.get_title(), fontsize=10)
+            else:
+                sns.heatmap(g[&#39;WCT&#39;], ax=ax[i],
+                            xticklabels=int(250), cbar=False)
+
+            # Grid for quiver plot
+            nr, nc = g[&#39;u&#39;].shape
+            indexgrid = np.meshgrid(np.arange(nc), np.arange(nr))
+            X, Y = [np.ravel(a) for a in indexgrid]
+
+            # Set quiver resolution
+            x_res = 25  # Plots arrow every x_res point
+            res_mask = np.ones_like(g[&#39;WCT&#39;])
+            res_mask[:, ::x_res] = 0
+            res_mask = res_mask.astype(bool)
+
+            # Plot quivers
+            ax[i].quiver(X, Y+0.5, g[&#39;u&#39;].mask(res_mask, np.nan), g[&#39;v&#39;].mask(res_mask, np.nan), units=&#39;height&#39;,
+                         angles=&#39;uv&#39;, pivot=&#39;mid&#39;, edgecolor=&#39;k&#39;, scale=20, width=0.005,
+                         headwidth=4, headlength=4, headaxislength=3.5, minshaft=1)
+
+            ax[i].set_ylabel(&#39;{} Trials&#39;.format(g_name), fontsize=14)
+            # Plot alignment line
+            ax[i].axvline((0-t_win[0])*250, linestyle=&#39;-.&#39;, color=&#39;w&#39;,
+                          linewidth=1, label=align_txt)
+            ax[i].text(1, -0.025, &#39;n={}&#39;.format(
+                g[&#39;WCT&#39;].shape[0]), ha=&#39;right&#39;, va=&#39;top&#39;, fontsize=8, transform=ax[i].transAxes)
+            ax[i].legend(loc=1)
+
+        ax[-1].axvline(0, linestyle=&#39;-.&#39;, color=&#39;k&#39;,
+                       linewidth=1, label=align_txt)
+
+        # Average lineplot
+        t_WCT_df[&#39;Groups&#39;] = grp_ref
+        # Rearrange order of color_list for consistent coloring of FI and FR
+        if grp_ref.name in [&#39;Schedule&#39;, &#39;Sch_block&#39;]:
+            if s.get_arrays(&#39;Trial Type&#39;)[0] == 0:
+                color_list = [&#34;Blues_r&#34;, &#34;Oranges_r&#34;]
+            elif s.get_arrays(&#39;Trial Type&#39;)[0] == 1:
+                color_list = [&#34;Oranges_r&#34;, &#34;Blues_r&#34;]
+
+            import bvmpc.bv_plot as bv_plot
+            gm = bv_plot.GroupManager(s.get_arrays(
+                &#39;Trial Type&#39;).tolist(), color_list=color_list)
+            colors = []
+            for b in grp_ref.unique():
+                colors.append(gm.get_next_color())
+            sns.set_palette(sns.color_palette(colors))
+
+        plot_data = pd.melt(t_WCT_df, id_vars=[
+            &#39;Groups&#39;], var_name=&#39;Time (s)&#39;, value_name=&#39;Coherence&#39;)
+        sns.lineplot(x=&#39;Time (s)&#39;, y=&#39;Coherence&#39;,
+                     data=plot_data, hue=&#39;Groups&#39;, ax=ax[-1], n_boot=250)
+        # ax[-1].set_ylim(0, 1)
+        ax[-1].set_xlim([*t_win])
+        ax[-1].set_ylabel(&#39;Coherence&#39;, fontsize=14)
+        ax[-1].set_xlabel(&#39;Time (s)&#39;, fontsize=14)
+        ax[-1].legend(bbox_to_anchor=(1.01, 1))
+    else:
+        fig = None
+
+    return t_WCT_df, fig, fig2</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_coherence.plot_wave_coherence"><code class="name flex">
+<span>def <span class="ident">plot_wave_coherence</span></span>(<span>wave1, wave2, sample_times, min_freq=1, max_freq=256, sig=False, ax=None, title='Wavelet Coherence', plot_arrows=True, plot_coi=True, plot_period=False, resolution=12, all_arrows=True, quiv_x=5, quiv_y=24, block=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculate wavelet coherence between wave1 and wave2 using pycwt.</p>
+<p>TODO fix min_freq, max_freq and add parameters to control arrows.
+TODO also test out sig on a large dataset</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>wave1</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The values of the first waveform.</dd>
+<dt><strong><code>wave2</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The values of the second waveform.</dd>
+<dt><strong><code>sample_times</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The times at which waveform samples occur.</dd>
+<dt><strong><code>min_freq</code></strong> :&ensp;<code>float</code></dt>
+<dd>Supposed to be minimum frequency, but not quite working.</dd>
+<dt><strong><code>max_freq</code></strong> :&ensp;<code>float</code></dt>
+<dd>Supposed to be max frequency, but not quite working.</dd>
+<dt><strong><code>sig</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>Optional Should significance of waveform coherence be calculated.</dd>
+<dt><strong><code>ax</code></strong> :&ensp;<code>plt.axe</code>, default <code>None</code></dt>
+<dd>Optional ax object to plot into.</dd>
+<dt><strong><code>title</code></strong> :&ensp;<code>str</code>, default <code>"Wavelet Coherence"</code></dt>
+<dd>Optional title for the graph</dd>
+<dt><strong><code>plot_arrows</code></strong> :&ensp;<code>bool</code>, default <code>True</code></dt>
+<dd>Should phase arrows be plotted.</dd>
+<dt><strong><code>plot_coi</code></strong> :&ensp;<code>bool</code>, default <code>True</code></dt>
+<dd>Should the cone of influence be plotted</dd>
+<dt><strong><code>plot_period</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Should the y-axis be in period or in frequency (Hz)</dd>
+<dt><strong><code>resolution</code></strong> :&ensp;<code>int</code></dt>
+<dd>How many wavelets should be at each level of the graph</dd>
+<dt><strong><code>all_arrows</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Should phase arrows be plotted uniformly or only at high coherence</dd>
+<dt><strong><code>quiv_x</code></strong> :&ensp;<code>float</code></dt>
+<dd>sets quiver window in time domain in seconds</dd>
+<dt><strong><code>quiv_y</code></strong> :&ensp;<code>float</code></dt>
+<dd>sets number of quivers evenly distributed across freq limits</dd>
+<dt><strong><code>block</code></strong> :&ensp;<code>[int, int]</code></dt>
+<dd>Plots only points between ints.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>tuple</code></strong> :&ensp;<code>(fig, result)</code></dt>
+<dd>Where fig is a matplotlib Figure
+and result is a tuple consisting of WCT, aWCT, coi, freq, sig
+WCT - 2D numpy array with coherence values
+aWCT - 2D numpy array with same shape as aWCT indicating phase angles
+coi - 1D numpy array with a frequency value for each time
+freq - 1D numpy array with the frequencies wavelets were calculated at
+sig - 2D numpy array indicating where data is significant by monte carlo</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_wave_coherence(
+        wave1, wave2, sample_times,
+        min_freq=1, max_freq=256,
+        sig=False, ax=None, title=&#34;Wavelet Coherence&#34;,
+        plot_arrows=True, plot_coi=True, plot_period=False,
+        resolution=12, all_arrows=True, quiv_x=5, quiv_y=24, block=None):
+    &#34;&#34;&#34;
+    Calculate wavelet coherence between wave1 and wave2 using pycwt.
+
+    TODO fix min_freq, max_freq and add parameters to control arrows.
+    TODO also test out sig on a large dataset
+
+    Parameters
+    ----------
+    wave1 : np.ndarray
+        The values of the first waveform.
+    wave2 : np.ndarray
+        The values of the second waveform.
+    sample_times : np.ndarray
+        The times at which waveform samples occur.
+    min_freq : float
+        Supposed to be minimum frequency, but not quite working.
+    max_freq : float
+        Supposed to be max frequency, but not quite working.
+    sig : bool, default False
+        Optional Should significance of waveform coherence be calculated.
+    ax : plt.axe, default None
+        Optional ax object to plot into.
+    title : str, default &#34;Wavelet Coherence&#34;
+        Optional title for the graph
+    plot_arrows : bool, default True
+        Should phase arrows be plotted.
+    plot_coi : bool, default True
+        Should the cone of influence be plotted
+    plot_period : bool
+        Should the y-axis be in period or in frequency (Hz)
+    resolution : int
+        How many wavelets should be at each level of the graph
+    all_arrows : bool
+        Should phase arrows be plotted uniformly or only at high coherence
+    quiv_x : float
+        sets quiver window in time domain in seconds
+    quiv_y : float
+        sets number of quivers evenly distributed across freq limits
+    block : [int, int]
+        Plots only points between ints.
+
+    Returns
+    -------
+    tuple : (fig, result)
+        Where fig is a matplotlib Figure
+        and result is a tuple consisting of WCT, aWCT, coi, freq, sig
+        WCT - 2D numpy array with coherence values
+        aWCT - 2D numpy array with same shape as aWCT indicating phase angles
+        coi - 1D numpy array with a frequency value for each time
+        freq - 1D numpy array with the frequencies wavelets were calculated at
+        sig - 2D numpy array indicating where data is significant by monte carlo
+
+    &#34;&#34;&#34;
+    t = np.asarray(sample_times)
+    dt = np.mean(np.diff(t))
+    # Set up the scales to match min max input frequencies
+    dj = resolution
+    s0 = min_freq * dt
+    if s0 &lt; 2 * dt:
+        s0 = 2 * dt
+    max_J = max_freq * dt
+    J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
+    # freqs = np.geomspace(max_freq, min_freq, num=50)
+    freqs = None
+
+    # Do the actual calculation
+    print(&#34;Calculating coherence...&#34;)
+    start_time = time.time()
+    WCT, aWCT, coi, freq, sig = wavelet.wct(
+        wave1, wave2, dt,  # Fixed params
+        dj=(1.0 / dj), s0=s0, J=J, sig=sig, normalize=True, freqs=freqs,
+    )
+    print(&#34;Time Taken: %s s&#34; % (time.time() - start_time))
+    if np.max(WCT) &gt; 1 or np.min(WCT) &lt; 0:
+        print(&#39;WCT was out of range: min {},max {}&#39;.format(
+            np.min(WCT), np.max(WCT)))
+        WCT = np.clip(WCT, 0, 1)
+
+    # Convert frequency to period if necessary
+    if plot_period:
+        y_vals = np.log2(1 / freq)
+    if not plot_period:
+        y_vals = np.log2(freq)
+
+    # Calculates the phase between both time series. The phase arrows in the
+    # cross wavelet power spectrum rotate clockwise with &#39;north&#39; origin.
+    # The relative phase relationship convention is the same as adopted
+    # by Torrence and Webster (1999), where in phase signals point
+    # upwards (N), anti-phase signals point downwards (S). If X leads Y,
+    # arrows point to the right (E) and if X lags Y, arrow points to the
+    # left (W).
+    angle = 0.5 * np.pi - aWCT
+    u, v = np.cos(angle), np.sin(angle)
+
+    if ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig = None
+
+    # Set the x and y axes of the plot
+    extent_corr = [t.min(), t.max(), 0, max(y_vals)]
+
+    # Fill the plot with the magnitude squared coherence values
+    # That is, MSC = abs(Pxy) ^ 2 / (Pxx * Pyy)
+    # TODO I think this might be the wrong way to plot this
+    # It assumes that the samples are linearly spaced
+    im = NonUniformImage(ax, interpolation=&#39;bilinear&#39;, extent=extent_corr)
+    if plot_period:
+        im.set_data(t, y_vals, WCT)
+    else:
+        im.set_data(t, y_vals[::-1], WCT[::-1, :])
+    ax.images.append(im)
+    # pcm = ax.pcolormesh(WCT)
+
+    # Plot the cone of influence - Periods greater than
+    # those are subject to edge effects.
+    if plot_coi:
+        # Performed by plotting a polygon
+        x_positions = np.zeros(shape=(len(t),))
+        x_positions = t
+
+        y_positions = np.zeros(shape=(len(t),))
+        if plot_period:
+            y_positions = np.log2(coi)
+        else:
+            y_positions = np.log2(1 / coi)
+
+        ax.plot(x_positions, y_positions,
+                &#39;w--&#39;, linewidth=2, c=&#34;w&#34;)
+
+    # Plot the significance level contour plot
+    if sig:
+        ax.contour(t, y_vals, sig,
+                   [-99, 1], colors=&#39;k&#39;, linewidths=2, extent=extent_corr)
+
+    # Add limits, titles, etc.
+    ax.set_ylim(min(y_vals), max(y_vals))
+    if block:
+        ax.set_xlim(t[block[0]], t[int(block[1] * 1 / dt)])
+    else:
+        ax.set_xlim(t.min(), t.max())
+
+    # TODO split graph into smaller time chunks
+    # Test for smaller timescale
+    # quiv_x = 1
+
+    # Plot the arrows on the plot
+    if plot_arrows:
+        # TODO currently this is a uniform grid, could be changed to WCT &gt; 0.5
+
+        x_res = int(1 / dt * quiv_x)
+        y_res = int(np.floor(len(y_vals) / quiv_y))
+        if all_arrows:
+            ax.quiver(t[::x_res], y_vals[::y_res],
+                      u[::y_res, ::x_res], v[::y_res, ::x_res], units=&#39;height&#39;,
+                      angles=&#39;uv&#39;, pivot=&#39;mid&#39;, linewidth=1, edgecolor=&#39;k&#39;, scale=30,
+                      headwidth=10, headlength=10, headaxislength=5, minshaft=2,
+                      )
+        else:
+            # t[::x_res], y_vals[::y_res],
+            # u[::y_res, ::x_res], v[::y_res, ::x_res]
+            high_points = np.nonzero(WCT[::y_res, ::x_res] &gt; 0.5)
+            sub_t = t[::x_res][high_points[1]]
+            sub_y = y_vals[::y_res][high_points[0]]
+            sub_u = u[::y_res, ::x_res][np.array(
+                high_points[0]), np.array(high_points[1])]
+            sub_v = v[::y_res, ::x_res][high_points[0], high_points[1]]
+            res = 1
+            ax.quiver(sub_t[::res], sub_y[::res],
+                      sub_u[::res], sub_v[::res], units=&#39;height&#39;,
+                      angles=&#39;uv&#39;, pivot=&#39;mid&#39;, linewidth=1, edgecolor=&#39;k&#39;, scale=30,
+                      headwidth=10, headlength=10, headaxislength=5, minshaft=2,
+                      )
+    # splits = [0, 60, 120 ...]
+    # Add the colorbar to the figure
+    if fig is not None:
+        fig.colorbar(im)
+    else:
+        plt.colorbar(im, ax=ax, use_gridspec=True)
+
+    if plot_period:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        y_ticks = [np.log2(x) for x in [0.004, 0.008, 0.016,
+                                        0.032, 0.064, 0.125, 0.25, 0.5, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+        ax.set_ylabel(&#34;Period&#34;)
+    else:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        # y_ticks = [np.log2(x) for x in [256, 128, 64, 32, 16, 8, 4, 2, 1]]
+        y_ticks = [np.log2(x) for x in [64, 32, 16, 8, 4, 2, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+        ax.set_ylabel(&#34;Frequency (Hz)&#34;)
+    plt.yticks(y_ticks, y_labels)
+    ax.set_title(title)
+    ax.set_xlabel(&#34;Time (s)&#34;)
+
+    return (fig, [WCT, aWCT, coi, freq, sig])</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_coherence.plot_wcohere"><code class="name flex">
+<span>def <span class="ident">plot_wcohere</span></span>(<span>WCT, t, freq, coi=None, sig=None, plot_period=False, ax=None, title='Wavelet Coherence', block=None, mask=None, cax=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Plot wavelet coherence using results from calc_wave_coherence.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt>*First 5 parameters can be obtained from from calc_wave_coherence</dt>
+<dt>WCT: 2D numpy array with coherence values</dt>
+<dt>t : 2D numpy array with sample_times</dt>
+<dt>freq : 1D numpy array with the frequencies wavelets were calculated at</dt>
+<dt>sig : 2D numpy array, default None</dt>
+<dt>Optional. Plots significance of waveform coherence contours.</dt>
+<dt>coi : 2D numpy array, default None</dt>
+<dt>Optional. Pass coi to plot cone of influence</dt>
+<dt><strong><code>plot_period</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Should the y-axis be in period or in frequency (Hz)</dd>
+<dt><strong><code>ax</code></strong> :&ensp;<code>plt.axe</code>, default <code>None</code></dt>
+<dd>Optional ax object to plot into.</dd>
+<dt><strong><code>title</code></strong> :&ensp;<code>str</code>, default <code>"Wavelet Coherence"</code></dt>
+<dd>Optional title for the graph</dd>
+<dt><strong><code>block</code></strong> :&ensp;<code>[int, int]</code></dt>
+<dd>Plots only points between ints.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>tuple</code></strong> :&ensp;<code>(fig, wcohere_pvals)</code></dt>
+<dd>Where fig is a matplotlib Figure
+and result is a tuple consisting of [WCT, t, y_vals]</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_wcohere(WCT, t, freq, coi=None, sig=None, plot_period=False, ax=None, title=&#34;Wavelet Coherence&#34;, block=None, mask=None, cax=None):
+    &#34;&#34;&#34;
+    Plot wavelet coherence using results from calc_wave_coherence.
+
+    Parameters
+    ----------
+    *First 5 parameters can be obtained from from calc_wave_coherence
+        WCT: 2D numpy array with coherence values
+        t : 2D numpy array with sample_times
+        freq : 1D numpy array with the frequencies wavelets were calculated at
+        sig : 2D numpy array, default None
+            Optional. Plots significance of waveform coherence contours.
+        coi : 2D numpy array, default None
+            Optional. Pass coi to plot cone of influence
+    plot_period : bool
+        Should the y-axis be in period or in frequency (Hz)
+    ax : plt.axe, default None
+        Optional ax object to plot into.
+    title : str, default &#34;Wavelet Coherence&#34;
+        Optional title for the graph
+    block : [int, int]
+        Plots only points between ints.
+
+    Returns
+    -------
+    tuple : (fig, wcohere_pvals)
+        Where fig is a matplotlib Figure
+        and result is a tuple consisting of [WCT, t, y_vals]
+    &#34;&#34;&#34;
+    dt = np.mean(np.diff(t))
+
+    if plot_period:
+        y_vals = np.log2(1 / freq)
+    if not plot_period:
+        y_vals = np.log2(freq)
+
+    if ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig = None
+
+    if mask is not None:
+        WCT = np.ma.array(WCT, mask=mask)
+
+    # Set the x and y axes of the plot
+    extent_corr = [t.min(), t.max(), 0, max(y_vals)]
+    # Fill the plot with the magnitude squared coherence values
+    im = NonUniformImage(ax, interpolation=&#39;bilinear&#39;, extent=extent_corr)
+    if plot_period:
+        im.set_data(t, y_vals, WCT)
+    else:
+        im.set_data(t, y_vals[::-1], WCT[::-1, :])
+    im.set_clim(0, 1)
+    ax.images.append(im)
+
+    # Plot the cone of influence - Periods greater thanthose are subject to edge effects.
+    if coi is not None:
+        # Performed by plotting a polygon
+        x_positions = np.zeros(shape=(len(t),))
+        x_positions = t
+
+        y_positions = np.zeros(shape=(len(t),))
+        if plot_period:
+            y_positions = np.log2(coi)
+        else:
+            y_positions = np.log2(1 / coi)
+
+        ax.plot(x_positions, y_positions,
+                &#39;w--&#39;, linewidth=2, c=&#34;w&#34;)
+
+    # Plot the significance level contour plot
+    if sig is not None:
+        ax.contour(t, y_vals, sig,
+                   [-99, 1], colors=&#39;k&#39;, linewidths=2, extent=extent_corr)
+
+    # Add limits, titles, etc.
+    ax.set_ylim(min(y_vals), max(y_vals))
+    if block:
+        ax.set_xlim(t[block[0]], t[int(block[1] * 1 / dt)])
+    else:
+        ax.set_xlim(t.min(), t.max())
+
+    if plot_period:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        y_ticks = [np.log2(x) for x in [0.004, 0.008, 0.016,
+                                        0.032, 0.064, 0.125, 0.25, 0.5, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+        ax.set_ylabel(&#34;Period&#34;)
+    else:
+        y_ticks = np.linspace(min(y_vals), max(y_vals), 8)
+        # TODO improve ticks
+        # y_ticks = [np.log2(x) for x in [256, 128, 64, 32, 16, 8, 4, 2, 1]]
+        y_ticks = [np.log2(x) for x in [64, 32, 16, 8, 4, 2, 1]]
+        y_labels = [str(x) for x in (np.round(np.exp2(y_ticks), 3))]
+        ax.set_ylabel(&#34;Frequency (Hz)&#34;)
+    ax.set_yticks(y_ticks)
+    ax.set_yticklabels(y_labels)
+    ax.set_title(title)
+    ax.set_xlabel(&#34;Time (s)&#34;)
+
+    if cax is not None:
+        plt.colorbar(im, cax=cax, use_gridspec=False)
+    else:
+        if fig is not None:
+            fig.colorbar(im)
+        else:
+            plt.colorbar(im, ax=ax, use_gridspec=True)
+
+    return fig, [WCT, t, y_vals]</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_coherence.split_into_amp_phase"><code class="name flex">
+<span>def <span class="ident">split_into_amp_phase</span></span>(<span>lfp, deg=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>It is assumed that the lfp signal passed in is already filtered.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def split_into_amp_phase(lfp, deg=False):
+    &#34;&#34;&#34;It is assumed that the lfp signal passed in is already filtered.&#34;&#34;&#34;
+    if type(lfp) is NLfp:
+        lfp_samples = lfp.get_samples()
+    else:
+        lfp_samples = lfp
+    complex_lfp = hilbert(lfp_samples)
+    phase = np.angle(complex_lfp, deg=deg)
+    amplitude = np.abs(complex_lfp)
+    return amplitude, phase</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_coherence.test_coherence"><code class="name flex">
+<span>def <span class="ident">test_coherence</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_coherence():
+    from scipy import signal
+    import matplotlib.pyplot as plt
+    from lfp_plot import plot_coherence
+    fs = 10e3
+    N = 1e5
+    amp = 20
+    freq = 1234.0
+    noise_power = 0.001 * fs / 2
+    time = np.arange(N) / fs
+    b, a = signal.butter(2, 0.25, &#39;low&#39;)
+    x = np.random.normal(scale=np.sqrt(noise_power), size=time.shape)
+    y = signal.lfilter(b, a, x)
+    x += amp * np.sin(2 * np.pi * freq * time)
+    y += np.random.normal(scale=0.1 * np.sqrt(noise_power), size=time.shape)
+    f, Cxy = coherence(x, y, fs, nperseg=1024)
+    plot_coherence(f, Cxy, tick_freq=1000)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_coherence.test_mvl"><code class="name flex">
+<span>def <span class="ident">test_mvl</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_mvl():
+    from scipy import signal
+    import matplotlib.pyplot as plt
+    t = np.linspace(0, 1, 500)
+    # 10 Hz sawtooth wave sampled at 500Hz
+    sig1 = signal.sawtooth(2 * np.pi * 10 * t)
+    # 50Hz sine wave sampled at 500Hz
+    sig2 = 0.02 * np.sin(2 * np.pi * 50 * t)
+    sig3 = 0.2 * np.sin(np.pi + 2 * np.pi * 10 * t)
+    sig6 = 0.1 * np.sin(2 * np.pi * 20 * t)
+    sig4 = 0.02 * np.sin(2 * np.pi * 55 * t)
+    sig5 = 0.02 * np.sin(np.pi + 2 * np.pi * 65 * t)
+    coupled_sig = sig2 + sig3 + sig6
+    fig, ax = plt.subplots()
+    ax.plot(sig1, c=&#34;b&#34;)
+    ax.plot(coupled_sig, c=&#34;r&#34;)
+    ax.plot(sig2 + sig4 + sig5, c=&#34;g&#34;)
+    plt.show()
+    plt.close(&#34;all&#34;)
+    all1, res1 = mean_vector_length(
+        sig1, coupled_sig, amp_norm=False, return_all=True)
+    all2, res2 = mean_vector_length(
+        sig1, sig2 + sig4 + sig5, amp_norm=False, return_all=True)
+    print(res1, res2)
+    from lfp_plot import plot_polar_coupling
+    plot_polar_coupling(all1, res1)
+    plot_polar_coupling(all2, res2)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_coherence.test_wave_coherence"><code class="name flex">
+<span>def <span class="ident">test_wave_coherence</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_wave_coherence():
+    # Compare this to Matlab
+    fs = 1000.0
+    t = np.arange(0, 2.0011, 0.001)
+    x = 0.25 * np.random.randn(t.size)
+    temp = np.zeros(t.size)
+    np.cos(2 * np.pi * 10 * t, where=((t &gt;= 0.5) &amp; (t &lt; 1.1)), out=temp)
+    x += temp
+    temp.fill(0)
+    np.cos(2 * np.pi * 50 * t, where=((t &gt;= 0.2) &amp; (t &lt; 1.4)), out=temp)
+    x += temp
+    temp.fill(0)
+
+    y = 0.35 * np.random.randn(t.size)
+    np.sin(2 * np.pi * 10 * t, where=((t &gt;= 0.6) &amp; (t &lt; 1.2)), out=temp)
+    y += temp
+    temp.fill(0)
+    np.sin(2 * np.pi * 50 * t, where=((t &gt;= 0.4) &amp; (t &lt; 1.6)), out=temp)
+    y += temp
+    fig, data = plot_wave_coherence(
+        x, y, t, min_freq=2, max_freq=1000,
+        plot_arrows=True, plot_coi=True, plot_period=True,
+        resolution=12, all_arrows=True)
+    fig.savefig(&#34;test_coherence_o.png&#34;, dpi=400)
+    do_matlab = False
+
+    if do_matlab:
+        import matlab.engine
+
+        eng = matlab.engine.start_matlab()
+        x_m = matlab.double(list(x))
+        y_m = matlab.double(list(y))
+
+        eng.wcoherence(x_m, y_m, fs, nargout=0)
+        fig = eng.gcf()
+        eng.saveas(fig, &#34;test_matlab_freq.png&#34;, nargout=0)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_coherence.wcohere_mean"><code class="name flex">
+<span>def <span class="ident">wcohere_mean</span></span>(<span>WCT, aWCT, t_blocks=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculates mean of WCT and corresponding vector magnitute and phase across t_blocks</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>WCT</code></strong> :&ensp;<code>2D numpy array with coherence values</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>aWCT</code></strong> :&ensp;<code>2D numpy</code></dt>
+<dd>array with same shape as aWCT indicating phase angles
+*Can be obtained from last value in calc_wave_coherence</dd>
+<dt><strong><code>t_blocks</code></strong> :&ensp;<code>list, [start end]</code></dt>
+<dd>list of 2 elements with start and end time of each alignment block</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>mean_WCT</code></strong> :&ensp;<code>Mean WCT across blocks</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>norm_u</code></strong> :&ensp;<code>unit u across blocks</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>norm_v</code></strong> :&ensp;<code>unit v across blocks</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>magnitute</code></strong> :&ensp;<code>magnitute</code> of <code>vector summed across blocks</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def wcohere_mean(WCT, aWCT, t_blocks=None):
+    &#34;&#34;&#34;
+    Calculates mean of WCT and corresponding vector magnitute and phase across t_blocks
+
+    Parameters
+    ----------
+    WCT: 2D numpy array with coherence values
+    aWCT : 2D numpy
+        array with same shape as aWCT indicating phase angles
+        *Can be obtained from last value in calc_wave_coherence
+    t_blocks : list, [start end]
+        list of 2 elements with start and end time of each alignment block
+    Returns
+    -------
+    mean_WCT : Mean WCT across blocks
+    norm_u : unit u across blocks
+    norm_v : unit v across blocks
+    magnitute : magnitute of vector summed across blocks
+
+    &#34;&#34;&#34;
+
+    angle = 0.5 * np.pi - aWCT
+    u, v = np.cos(angle), np.sin(angle)
+
+    t_win = int((t_blocks[0][1] - t_blocks[0][0]) * 250)
+    print(&#34;t_win:&#34;, t_win)
+
+    WCT_trial = np.empty((
+        len(t_blocks), WCT.shape[0], t_win), dtype=np.float32)
+    all_u = np.empty((
+        len(t_blocks), u.shape[0], t_win), dtype=np.float32)
+    all_v = np.empty((
+        len(t_blocks), v.shape[0], t_win), dtype=np.float32)
+    WCT_trial.fill(np.nan)
+    all_u.fill(np.nan)
+    all_v.fill(np.nan)
+
+    for i, (a, b) in enumerate(t_blocks):
+        start_idx = int(a * 250)
+        end_idx = start_idx + t_win
+
+        WCT_this_trial = np.empty(
+            (WCT.shape[0], t_win), dtype=np.float32)
+        u_this_trial = np.empty(
+            (u.shape[0], t_win), dtype=np.float32)
+        v_this_trial = np.empty(
+            (v.shape[0], t_win), dtype=np.float32)
+        WCT_this_trial.fill(np.nan)
+        u_this_trial.fill(np.nan)
+        v_this_trial.fill(np.nan)
+
+        if a &gt;= 0:
+            # For when window exceeds session length (eg. Last trial)
+            _, y = WCT[:, start_idx:end_idx].shape
+            WCT_this_trial[:, :y] = WCT[:, start_idx:end_idx]
+            u_this_trial[:, :y] = u[:, start_idx:end_idx]
+            v_this_trial[:, :y] = v[:, start_idx:end_idx]
+        else:
+            # for blocks shorter then t_win with missing values before alignment point (eg. first trial)
+            WCT_this_trial[:, -start_idx:] = WCT[:, 0:end_idx]
+            u_this_trial[:, -start_idx:] = u[:, 0:end_idx]
+            v_this_trial[:, -start_idx:] = v[:, 0:end_idx]
+            # print(a, b)
+            # print(WCT_trial)
+
+        WCT_trial[i] = WCT_this_trial
+        all_u[i] = u_this_trial
+        all_v[i] = v_this_trial
+        # else:
+        # wcohere_trial = np.dstack(wcohere_trial, WCT[:, int(a):int(b)])
+        # print(wcohere_trial[:, :, i])
+        # print(&#34;Shape:&#34;, wcohere_trial.shape)
+        # exit(-1)
+    mean_WCT = np.nanmean(WCT_trial, axis=0)
+
+    sum_u = np.nansum(all_u, axis=0)
+    sum_v = np.nansum(all_v, axis=0)
+
+    # magnitute = np.linalg.norm(np.array(sum_u, sum_v))
+    magnitute = np.sqrt(np.square(sum_u) + np.square(sum_v))
+    # Normalise vectors to obtain unit vector
+    norm_u = sum_u / magnitute
+    norm_v = sum_v / magnitute
+
+    print(len(norm_u))
+
+    # TODO validate length threshold and which arrows to plot....
+    return mean_WCT, norm_u, norm_v, magnitute</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_coherence.zero_lag_wcohere"><code class="name flex">
+<span>def <span class="ident">zero_lag_wcohere</span></span>(<span>aWCT, freq, thres=5)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate mask for WCT based on phase lag threshold in ms</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>aWCT</code></strong> :&ensp;<code>2D numpy array with phase angle for WCT</code></dt>
+<dd>*Can be obtained from last value in calc_wave_coherence</dd>
+<dt><strong><code>freq</code></strong> :&ensp;<code>list</code> of <code>freq computed in WCT</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>thres</code></strong> :&ensp;<code>float, 5</code></dt>
+<dd>Threshold in ms to generate mask</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>zlag_mask</code></strong> :&ensp;<code>2D bool array like aWCT for masking</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def zero_lag_wcohere(aWCT, freq, thres=5):
+    &#34;&#34;&#34;
+    Generate mask for WCT based on phase lag threshold in ms
+
+    Parameters
+    ----------
+    aWCT : 2D numpy array with phase angle for WCT
+        *Can be obtained from last value in calc_wave_coherence
+    freq : list of freq computed in WCT
+    thres : float, 5
+        Threshold in ms to generate mask
+
+    Returns
+    -------
+    zlag_mask : 2D bool array like aWCT for masking
+
+    &#34;&#34;&#34;
+    angle = aWCT * (180/np.pi)  # Converts angle to degrees
+    # print(&#39;min phase: &#39;, np.nanmin(np.abs(aWCT)))
+    # print(&#39;max phase: &#39;, np.nanmax(np.abs(aWCT)))
+    # print(&#39;min angle: &#39;, np.nanmin((angle)))
+    # print(&#39;max angle: &#39;, np.nanmax((angle)))
+    # exit(-1)
+    zlag_mask = np.empty_like(aWCT)
+    print(aWCT.shape)
+    for i, (row, f) in enumerate(zip(np.abs(angle), freq)):
+        # where phase diff is less then threshold (ms)
+        ok = ((row/360)*(1000/f)) &lt; thres
+        zlag_mask[i] = ~ok
+        # (phase_angle/360)*(1000/freq) &lt; threshold(in ms)
+
+    return zlag_mask</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="bvmpc" href="index.html">bvmpc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="bvmpc.lfp_coherence.calc_coherence" href="#bvmpc.lfp_coherence.calc_coherence">calc_coherence</a></code></li>
+<li><code><a title="bvmpc.lfp_coherence.calc_wave_coherence" href="#bvmpc.lfp_coherence.calc_wave_coherence">calc_wave_coherence</a></code></li>
+<li><code><a title="bvmpc.lfp_coherence.mean_vector_length" href="#bvmpc.lfp_coherence.mean_vector_length">mean_vector_length</a></code></li>
+<li><code><a title="bvmpc.lfp_coherence.mvl_shuffle" href="#bvmpc.lfp_coherence.mvl_shuffle">mvl_shuffle</a></code></li>
+<li><code><a title="bvmpc.lfp_coherence.plot_arrows" href="#bvmpc.lfp_coherence.plot_arrows">plot_arrows</a></code></li>
+<li><code><a title="bvmpc.lfp_coherence.plot_cross_wavelet" href="#bvmpc.lfp_coherence.plot_cross_wavelet">plot_cross_wavelet</a></code></li>
+<li><code><a title="bvmpc.lfp_coherence.plot_single_freq_wcohere" href="#bvmpc.lfp_coherence.plot_single_freq_wcohere">plot_single_freq_wcohere</a></code></li>
+<li><code><a title="bvmpc.lfp_coherence.plot_wave_coherence" href="#bvmpc.lfp_coherence.plot_wave_coherence">plot_wave_coherence</a></code></li>
+<li><code><a title="bvmpc.lfp_coherence.plot_wcohere" href="#bvmpc.lfp_coherence.plot_wcohere">plot_wcohere</a></code></li>
+<li><code><a title="bvmpc.lfp_coherence.split_into_amp_phase" href="#bvmpc.lfp_coherence.split_into_amp_phase">split_into_amp_phase</a></code></li>
+<li><code><a title="bvmpc.lfp_coherence.test_coherence" href="#bvmpc.lfp_coherence.test_coherence">test_coherence</a></code></li>
+<li><code><a title="bvmpc.lfp_coherence.test_mvl" href="#bvmpc.lfp_coherence.test_mvl">test_mvl</a></code></li>
+<li><code><a title="bvmpc.lfp_coherence.test_wave_coherence" href="#bvmpc.lfp_coherence.test_wave_coherence">test_wave_coherence</a></code></li>
+<li><code><a title="bvmpc.lfp_coherence.wcohere_mean" href="#bvmpc.lfp_coherence.wcohere_mean">wcohere_mean</a></code></li>
+<li><code><a title="bvmpc.lfp_coherence.zero_lag_wcohere" href="#bvmpc.lfp_coherence.zero_lag_wcohere">zero_lag_wcohere</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

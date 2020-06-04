@@ -1,0 +1,1401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>bvmpc.bv_mne API documentation</title>
+<meta name="description" content="This module holds analysis using mne and links to mne." />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>bvmpc.bv_mne</code></h1>
+</header>
+<section id="section-intro">
+<p>This module holds analysis using mne and links to mne.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;This module holds analysis using mne and links to mne.&#34;&#34;&#34;
+import os
+
+
+import mne
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from bvmpc.bv_utils import make_dir_if_not_exists, make_path_if_not_exists
+
+
+def get_eloc(ch_names, o_dir, base_name, dummy=False):
+    &#34;&#34;&#34;
+    Read or generate csv with 3D tetrode coordinates.
+    Generate via user input.
+
+    Parameters
+    ----------
+    ch_names : List of str
+        mne eeg channels names. Must match keys in mne raw object.
+
+    o_dir : dir
+        location to save eloc output
+    base_name : str
+        basename of file. Used in naming of eloc output: helps to track session, date, subject.
+    dummy : bool, default False
+        Create dummy tetrode locations for better visualisation.
+
+    &#34;&#34;&#34;
+    def get_next_i(rows, cols, idx):
+        &#34;&#34;&#34;Local helper function.&#34;&#34;&#34;
+        row_idx = (idx % cols)
+        col_idx = (idx // cols)
+        return row_idx, col_idx
+
+    eloc_path = os.path.join(o_dir, base_name + &#34;_eloc.csv&#34;)
+    if dummy:
+        eloc = {}
+        n_acc, n_rsc, n_cla = 0, 0, 0
+        scale = 1
+        for i, ch in enumerate(ch_names):
+            if &#34;ACC&#34; in ch:
+                x, y = get_next_i(2, 2, n_acc)
+                coord_ls = [x / 2, 2 - y / 2, 0 + y / 2]
+                n_acc += 1
+            elif &#34;RSC&#34; in ch:
+                x, y = get_next_i(2, 2, n_rsc)
+                # coord_ls = [x, y - 10, 0]
+                coord_ls = [x / 2, y / 2 - 2, 0 + y / 2]
+                n_rsc += 1
+            else:
+                x, y = get_next_i(4, 2, n_cla)
+                # coord_ls = [x + 5, 2 - y, -5]
+                coord_ls = [x + 3, 2 - y, 1 - x / 2]
+                n_cla += 1
+            eloc[ch] = np.array([x / scale for x in coord_ls])
+
+    else:
+        try:
+            df = pd.read_csv(eloc_path, index_col=0)
+            d = df.to_dict(&#34;split&#34;)
+            eloc = dict(zip(d[&#34;index&#34;], d[&#34;data&#34;]))
+        except Exception:
+            eloc = {}
+            for s, ch in enumerate(ch_names, 1):
+                # Duplicate pos for every second tetrode
+                if (s + 2) % 2 == 0:
+                    eloc[ch] = eloc[ch_names[s - 2]]
+                    eloc[ch][0] += 0.01
+                else:
+                    eloc[ch] = np.empty(3)
+                    for i, axis in enumerate([&#34;x&#34;, &#34;y&#34;, &#34;z&#34;]):
+                        eloc[ch][i] = float(input(
+                            &#34;Enter {} coordinate for S{}-{}: &#34;.format(
+                                axis, s // 2, ch)))
+            df = pd.DataFrame.from_dict(eloc, orient=&#34;index&#34;)
+            df.to_csv(eloc_path)
+        print(eloc)
+    return eloc
+
+
+def lfp_odict_to_np(lfp_odict):
+    &#34;&#34;&#34;Convert an lfp_odict into an mne compatible numpy array.&#34;&#34;&#34;
+    # Extract LFPs from the odict
+    ori_lfp_list = []
+    # TODO based on MNE pipeline should this be the filtered or non filtered
+    for key, lfp in lfp_odict.get_filt_signal().items():
+        ori_lfp_list.append(lfp.get_samples())
+    ori_lfp_list.append([0] * len(ori_lfp_list[0]))
+
+    data = np.array(ori_lfp_list, float)
+    # MNE expects LFP data to be in Volts. But Neurochat stores LFP in mV.
+    data = data / 1000
+
+    return data
+
+
+def create_mne_array(
+        lfp_odict, fname, ch_names=None, regions=None, o_dir=&#34;&#34;, plot_mon=True):
+    &#34;&#34;&#34;
+    Populate a full mne raw array object with information.
+
+    lfp_odict : bvmpc.lfp_odict.LfpODict
+        The lfp_odict object to convert to numpy data.
+    fname : str
+        The full path to the associated session file.
+    ch_names : List of str, Default None
+        Optional. What to name the mne eeg channels, default: region+chan_idx.
+    regions : List of str, Default None
+        Optional. A list of region strings the same length as lfp_odict.
+        This is only used when ch_names is None.
+        If ch_names and regions are both None, names are chan_idx.
+    o_dir : str, Default &#34;&#34;
+        Optional. Path to directory to store the output files in.
+    plot_mon : bool, Default True
+        Plot montage of electrode positions used.
+    &#34;&#34;&#34;
+    raw_data = lfp_odict_to_np(lfp_odict)
+
+    if ch_names is None:
+        if regions is None:
+            ch_names = list(lfp_odict.lfp_odict.keys())
+        else:
+            ch_names = [&#34;{}-{}&#34;.format(x, y) for x,
+                        y in zip(regions, lfp_odict.lfp_odict.keys())]
+
+    # Read or create tetrode locations
+    base_name = os.path.basename(fname)
+    eloc = get_eloc(ch_names, o_dir, base_name, dummy=True)
+    montage = mne.channels.make_dig_montage(ch_pos=eloc)
+
+    # Convert LFP data into mne format
+    example_lfp = lfp_odict.get_filt_signal(key=1)
+    sfreq = example_lfp.get_sampling_rate()
+    ch_types = ([&#34;eeg&#34;] * len(lfp_odict)) + [&#34;stim&#34;, ]
+    ch_names = ch_names + [&#34;Events&#34;, ]
+    info = mne.create_info(
+        ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
+    info.set_montage(montage)
+
+    raw = mne.io.RawArray(raw_data, info)
+
+    # cont = input(&#34;Show raw mne info? (y|n) \n&#34;)
+    #     if cont.strip().lower() == &#34;y&#34;:
+    #         print(raw.info)
+
+    # Plot montage of electrode positions
+    if plot_mon:
+        fig = plt.figure()
+        # sphere = [0, 0, 0, 10]
+
+        ax = fig.add_subplot(1, 1, 1)
+        raw.plot_sensors(kind=&#39;topomap&#39;, ch_type=&#39;eeg&#39;, show_names=True,
+                         axes=ax, block=False)
+
+        ax = fig.add_subplot(1, 2, 1, projection=&#39;3d&#39;)
+        raw.plot_sensors(kind=&#39;3d&#39;, ch_type=&#39;eeg&#39;, show_names=True,
+                         axes=ax, block=True, to_sphere=True)
+
+    return raw
+
+
+def set_annotations(mne_array, annotation_fname):
+    &#34;&#34;&#34;Read annots from annotation_fname and store them on mne_array.&#34;&#34;&#34;
+    try:
+        print(&#39;Loading mne_annotations from&#39;, annotation_fname)
+        annot_from_file = mne.read_annotations(annotation_fname)
+        mne_array.set_annotations(annot_from_file)
+    except FileNotFoundError:
+        print(&#34;WARNING: No annotations found at {}&#34;.format(annotation_fname))
+    # else:
+    #     raise ValueError(
+    #         &#34;An error occured while reading {}&#34;.format(annotation_fname))
+
+
+def save_annotations(mne_array, annotation_fname):
+    &#34;&#34;&#34;Save the annotations on mne_array to file annotation_fname.&#34;&#34;&#34;
+    if len(mne_array.annotations) &gt; 0:
+        print(mne_array.annotations)
+        cont = input(&#34;Save mne annotations? (y|n) \n&#34;)
+        if cont.strip().lower() == &#34;y&#34;:
+            mne_array.annotations.save(annotation_fname)
+
+
+def add_nc_event_to_mne(mne_array, nc_events, sample_rate=250):
+    print(&#34;Adding {} events to mne&#34;.format(len(nc_events._timestamp)))
+    event_data = np.zeros(
+        shape=(len(nc_events._timestamp), 3))
+    for i, (a, b) in enumerate(
+            zip(nc_events._timestamp, nc_events._event_train)):
+        sample_number = int(a * sample_rate)
+        event_data[i] = np.array([sample_number, 0, b + 1])
+    mne_array.add_events(event_data, stim_channel=&#34;Events&#34;)
+
+    event_name_dict = {}
+    for i, (b, a) in enumerate(
+            zip(nc_events._event_names, nc_events._event_train)):
+        event_name_dict[b] = a + 1
+    return event_name_dict
+
+
+def get_layout(o_dir, layout_name):
+    &#34;&#34;&#34;
+    **Layout functions in mne depreciated.**
+    Read or generate layout. Layout generated by clicking on input image.
+
+    Parameters
+    ----------
+    o_dir : dir
+        dir in which layout is to be read or saved into
+    layout_name : str, default None
+        basename of image used as layout template. if None, &#34;topo.lout&#34; is used.
+
+    Returns
+    -------
+    lt : mne layout object
+
+    &#34;&#34;&#34;
+    # Layout function depreciated. Load tetrode layout
+    layout_path = o_dir
+    if layout_name is None:
+        layout_name = &#34;SA5_topo.lout&#34;
+    try:
+        lt = mne.channels.read_layout(
+            layout_name, path=layout_path, scale=False)
+    except:
+        # Generate layout of tetrodes
+        # This code opens the image so you can click on it to designate tetrode positions
+        from mne.viz import ClickableImage  # noqa
+        from mne.viz import (
+            plot_alignment, snapshot_brain_montage, set_3d_view)
+        # The click coordinates are stored as a list of tuples
+        template_loc = r&#39;F:\!Imaging\LKC\SA5\SA5_Histology-07.tif&#39;  # template location
+        im = plt.imread(template_loc)
+        click = ClickableImage(im)
+        click.plot_clicks()
+
+        # Generate a layout from our clicks and normalize by the image
+        print(&#39;Generating and saving layout...&#39;)
+        lt = click.to_layout()
+        # To save if we want
+        lt.save(os.path.join(layout_path, layout_name))
+        print(&#39;Saved layout to&#39;, os.path.join(
+            layout_path, layout_name))
+
+    # Load and display layout
+    lt = mne.channels.read_layout(
+        layout_name, path=layout_path, scale=False)
+    x = lt.pos[:, 0] * float(im.shape[1])
+    y = (1 - lt.pos[:, 1]) * float(im.shape[0])  # Flip the y-position
+    fig, ax = plt.subplots()
+    ax.imshow(im)
+    ax.scatter(x, y, s=120, color=&#39;r&#39;)
+    plt.autoscale(tight=True)
+    ax.set_axis_off()
+    plt.show()
+
+    return lt
+
+
+def generate_events(mne_array, session, plot=False):
+    &#34;&#34;&#34;Generate events based on session object.
+    Parameters
+    ----------
+    mne_array : mne.raw object
+    session : bvmpc.bv_session.Session object
+    plot : bool, default False
+        Plot events figure. Mainly for checking.
+
+    Returns
+    -------
+    events_dict : dict of (event: index). Eg. {&#39;Right&#39;: 1, &#39;Left&#39;: 2}
+    mne_events : mne.events object
+    annot_from events : mne.events converted to mne.annotations
+
+    &#34;&#34;&#34;
+    from bvmpc.bv_nc import events_from_session
+    # Generate events
+    nc_events = events_from_session(session)
+    events_dict = add_nc_event_to_mne(mne_array, nc_events)
+
+    mne_events = mne.find_events(
+        mne_array, stim_channel=&#39;Events&#39;,
+        shortest_event=1, min_duration=(0.1 / mne_array.info[&#39;sfreq&#39;]),
+        consecutive=True, initial_event=True)
+
+    if plot:
+        fig = mne.viz.plot_events(
+            mne_events, sfreq=mne_array.info[&#39;sfreq&#39;],
+            first_samp=mne_array.first_samp, event_id=events_dict, show=True)
+
+    # Set annotations from events
+    # Swap key and values
+    events_map = {value: key[:2] + key[-1]
+                  for key, value in events_dict.items()}
+    onsets = mne_events[:, 0] / mne_array.info[&#39;sfreq&#39;]
+    durations = np.zeros_like(onsets)  # assumes instantaneous events
+    descriptions = [events_map[event_id]
+                    for event_id in mne_events[:, 2]]
+    annot_from_events = mne.Annotations(onset=onsets, duration=durations,
+                                        description=descriptions,
+                                        orig_time=None)
+    return events_dict, mne_events, annot_from_events
+
+
+def pick_chans(raw, sel=None):
+    &#34;&#34;&#34;
+    Pick channels based on sel input. Identifies channels with str or int in sel.
+    Example:
+        Input
+            raw.chan_names = [&#39;ACC-1&#39;,&#39;ACC-2&#39;,&#39;RSC-3&#39;]
+            sel = [&#39;ACC&#39;]
+        Returns
+            picks = [&#39;ACC-1&#39;,&#39;ACC-2&#39;]
+
+    Parameters
+    ----------
+    raw : mne.raw object
+    sel : list of str OR list of int, Default None
+        str/int to include in picks. Sel must be in chan_name(eg. ACC-13)
+        if list of int, channel number will be used to select channels.
+
+    Returns
+    -------
+    picks : list of str
+        list of channel names selected.
+
+    &#34;&#34;&#34;
+    if sel == None:
+        picks = None
+    elif type(sel[0]) == int:
+        picks = []
+        for s in sel:
+            for ch in raw.ch_names[:-1]:
+                try:
+                    if ch.split(&#39;-&#39;)[1] == str(s):
+                        picks.append(ch)
+                except:
+                    pass
+        print(&#39;Picked chans:&#39;, picks)
+    else:
+        picks = []
+        for s in sel:
+            for ch in raw.ch_names:
+                if s in ch:
+                    picks.append(ch)
+        print(&#39;Picked chans:&#39;, picks)
+    return picks
+
+
+def get_reg_chans(raw, regions):
+    &#34;&#34;&#34; Get dict with {regions: list of channels}
+
+    Parameters
+    ----------
+    raw : mne.raw object
+    region_dict : list of str,
+        list of regions to be grouped. set(regions) used to determine dict keys.
+
+    Returns
+    -------
+    grps : dict(region: list of channels)
+
+    &#34;&#34;&#34;
+    grps = {}
+    for reg in set(regions):
+        reg_ls = []
+        for i, ch in enumerate(raw.ch_names):
+            if reg in ch:
+                reg_ls.append(i)
+        grps[reg] = reg_ls
+    print(grps)
+    return grps
+
+
+def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name=&#34;&#34;, exclude=None, skip_plots=False):
+    &#34;&#34;&#34;
+    This is example code using mne.
+
+    Parameters
+    ----------
+
+
+    &#34;&#34;&#34;
+    raw = mne_array
+
+    if not skip_plots:
+        # Plot raw signal
+        raw.plot(
+            n_channels=chans_to_plot, block=True, duration=25,
+            show=True, clipping=&#34;transparent&#34;,
+            title=&#34;Raw LFP Data from {}&#34;.format(base_name),
+            remove_dc=False, scalings=dict(eeg=350e-6))
+
+    # Perform ICA using mne
+    from mne.preprocessing import ICA
+    filt_raw = raw.copy()
+    filt_raw.load_data().filter(l_freq=1., h_freq=None)
+    ica = ICA(method=&#39;fastica&#39;, random_state=97)
+    # ica = ICA(method=&#39;picard&#39;, random_state=97)
+    ica.fit(filt_raw)
+
+    # ica.exclude = [4, 6, 12]
+    raw.load_data()
+    if exclude is None:
+        # Plot raw ICAs
+        print(&#39;Select channels to exclude using this plot...&#39;)
+        ica.plot_sources(
+            raw, block=False, stop=25, title=&#39;ICA from {}&#39;.format(base_name))
+
+        print(&#39;Click topo to get more ICA properties&#39;)
+        ica.plot_components(inst=raw)
+
+        # Overlay ICA cleaned signal over raw. Seperate plot for each region.
+        # TODO Add scroll bar or include window selection option.
+        # cont = input(&#34;Plot region overlay? (y|n) \n&#34;)
+        # if cont.strip().lower() == &#34;y&#34;:
+        #     reg_grps = []
+        #     for reg in set(regions):
+        #         temp_grp = []
+        #         for ch in raw.info.ch_names:
+        #             if reg in ch:
+        #                 temp_grp.append(ch)
+        #         reg_grps.append(temp_grp)
+        #     for grps in reg_grps:
+        #         ica.plot_overlay(raw, stop=int(30 * 250), title=&#39;{}&#39;.format(
+        #             grps[0][:3]), picks=grps)
+    else:
+        # ICAs to exclude
+        ica.exclude = exclude
+        if not skip_plots:
+            ica.plot_sources(
+                raw, block=False, stop=25, title=&#39;ICA from {}&#39;.format(base_name))
+            ica.plot_components(inst=raw)
+    # Apply ICA exclusion
+    reconst_raw = raw.copy()
+    exclude_raw = raw.copy()
+    print(&#34;ICAs excluded: &#34;, ica.exclude)
+    ica.apply(reconst_raw)
+
+    if not skip_plots:
+        # change exclude to all except chosen ICs
+        all_ICs = list(range(ica.n_components_))
+        for i in ica.exclude:
+            all_ICs.remove(i)
+        ica.exclude = all_ICs
+        ica.apply(exclude_raw)
+
+        # Plot excluded ICAs
+        exclude_raw.plot(block=True, show=True, clipping=&#34;transparent&#34;, duration=25,
+                         title=&#34;Excluded ICs from {}&#34;.format(
+                             base_name),
+                         remove_dc=False, scalings=dict(eeg=350e-6))
+
+        # Plot reconstructed signals w/o excluded ICAs
+        reconst_raw.plot(block=True, show=True, clipping=&#34;transparent&#34;, duration=25,
+                         title=&#34;Reconstructed LFP Data from {}&#34;.format(
+                             base_name),
+                         remove_dc=False, scalings=dict(eeg=350e-6))
+    return reconst_raw
+
+
+def viz_raw_epochs(epoch_list, comp_conds, picks, sort_reg, plot_reg, topo_seq, plot_image, ppros_dict):
+    &#34;&#34;&#34; Pipeline for visualizing raw epochs
+
+        Parameters
+        ----------
+        plot_reg: bool, collates LFP for each region. Results in average magnitute based plot_image.
+        plot_image: bool, plots LFP amplitude across trials in an image, with average below.
+        topo_seq: bool, plots average LFP for each channel, and a topo map for selected timepoints.
+        ppros_dict: dict, contains preprocessing steps performed in text form. Used to label image files.
+
+        &#34;&#34;&#34;
+
+    # Extract variables from ppros_dict
+    base_name = ppros_dict[&#39;base_name&#39;]
+    mne_dir = ppros_dict[&#39;mne_dir&#39;]
+    ica_txt = ppros_dict[&#39;ica_txt&#39;]
+    bline_txt = ppros_dict[&#39;bline_txt&#39;]
+    combine = ppros_dict[&#39;combine&#39;]
+
+    # Plot epoch.plot_image for selected tetrodes seperately
+    if plot_image:
+        for epoch, cond in zip(epoch_list, comp_conds):
+            # epoch_fig = epoch.plot_image(picks=picks, show=False)
+            for i, pick in enumerate(picks):
+                epoch_fig = epoch.plot_image(
+                    picks=pick, show=False, combine=combine)
+                ax = epoch_fig[0].axes[0]
+                ax.set_title(&#34;{}\n&#39;{}&#39; {}&#34;.format(base_name, cond, pick),
+                             x=0.5, y=1.01, fontsize=10)
+                if plot_reg:
+                    pick_txt = &#39;gfp_&#39; + sort_reg[i]
+                else:
+                    pick_txt = pick
+                fig_name = os.path.join(
+                    mne_dir, &#39;{}&#39;.format(cond.replace(&#39;/&#39;, &#39;-&#39;)), bline_txt, &#39;{}_{}_{}-{}{}&#39;.format(base_name, ica_txt, cond.replace(&#39;/&#39;, &#39;-&#39;), pick_txt, bline_txt) + &#39;.png&#39;)
+                make_path_if_not_exists(fig_name)
+                print(&#39;Saving raw-epoch to &#39; + fig_name)
+                epoch_fig[0].savefig(fig_name)
+
+            # Optional parameter to set bands displayed in topo
+            # Default is [(0, 4, &#39;Delta&#39;), (4, 8, &#39;Theta&#39;), (8, 12, &#39;Alpha&#39;),(12, 30, &#39;Beta&#39;), (30, 45, &#39;Gamma&#39;)]
+            bands = None
+            if bands is None:
+                n_topo = 5
+            else:
+                n_topo = len(bands)
+
+            # Plot power spectrum density of epoch
+            import matplotlib.gridspec as gridspec
+            psd_fig = plt.figure(figsize=(14, 7))
+            gs = gridspec.GridSpec(2, n_topo, hspace=0.2,
+                                   wspace=0.3, height_ratios=[2, 1])
+            ax = plt.subplot(gs[:-1, :])
+            epoch.plot_psd(show=False, ax=ax)
+            ax = psd_fig.axes[0]
+            ax.set_title(&#34;{}\n&#39;{}&#39; PSD&#34;.format(base_name, cond),
+                         x=0.5, y=1.01, fontsize=10)
+
+            topo_axes = [plt.subplot(gs[-1, x]) for x in range(n_topo)]
+            epoch.plot_psd_topomap(
+                ch_type=&#39;eeg&#39;, normalize=True, axes=topo_axes, show=False)
+            psd_fname = os.path.join(
+                mne_dir, &#39;{}&#39;.format(cond.replace(&#39;/&#39;, &#39;-&#39;)), bline_txt, &#39;{}_{}_psd_{}{}&#39;.format(base_name, ica_txt, cond.replace(&#39;/&#39;, &#39;-&#39;), bline_txt) + &#39;.png&#39;)
+            make_path_if_not_exists(psd_fname)
+            print(&#39;Saving raw-epoch to &#39; + psd_fname)
+            psd_fig.savefig(psd_fname)
+    # exit(-1)
+
+    # Generate dict[conds] for comparing epoch average across conds
+    epoch_ave = {}
+    for epoch, cond in zip(epoch_list, comp_conds):
+        epoch_ave[cond] = epoch.average()
+
+    # Plot all tetrode averages for epoch (includes topo map)
+    if topo_seq:
+        for cond, epoch in epoch_ave.items():
+            pj_fig = epoch.plot_joint(
+                picks=&#39;eeg&#39;, show=False, times=[-0.25, -0.1, -0.025, 0, 0.025, 0.1, 0.25])
+            # Joint plot title
+            pj_title = &#39;&#34;{}&#34;_{}_{}&#39;.format(
+                cond.replace(&#39;/&#39;, &#39;-&#39;), ica_txt, base_name)
+            pj_fig.suptitle(pj_title)
+            pj_fname = os.path.join(
+                mne_dir, &#39;{}&#39;.format(cond.replace(&#39;/&#39;, &#39;-&#39;)), bline_txt, &#39;{}_{}_joint_{}{}&#39;.format(base_name, ica_txt, cond.replace(&#39;/&#39;, &#39;-&#39;), bline_txt) + &#39;.png&#39;)
+            pj_fig.savefig(pj_fname)
+    # plt.show()
+    # exit(-1)
+
+    # Compare average across session types
+    if len(comp_conds) &gt; 1:
+        vs_fig, axes = plt.subplots(
+            len(picks), 1, figsize=(10, 14), sharex=True)
+        plt.rc(&#39;legend&#39;, **{&#39;fontsize&#39;: 6})
+        plt.subplots_adjust(hspace=0.3)
+
+        for ax, pick in zip(axes, picks):
+            mne.viz.plot_compare_evokeds(
+                epoch_ave, picks=pick, legend=&#39;upper left&#39;, show_sensors=&#39;upper right&#39;, ylim=dict(eeg=[-80, 80]), show=False, title=&#39;{} {}&#39;.format(base_name, pick), axes=ax)
+        vs_fname = os.path.join(mne_dir, &#39;{}_{}_joint_{}{}&#39;.format(
+            base_name, ica_txt, cond.split(&#39;/&#39;)[0], bline_txt) + &#39;.png&#39;)
+        print(&#39;Saving joint_plot to &#39; + vs_fname)
+        vs_fig.savefig(vs_fname)
+
+    exit(-1)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="bvmpc.bv_mne.ICA_pipeline"><code class="name flex">
+<span>def <span class="ident">ICA_pipeline</span></span>(<span>mne_array, regions, chans_to_plot=20, base_name='', exclude=None, skip_plots=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This is example code using mne.</p>
+<h2 id="parameters">Parameters</h2></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name=&#34;&#34;, exclude=None, skip_plots=False):
+    &#34;&#34;&#34;
+    This is example code using mne.
+
+    Parameters
+    ----------
+
+
+    &#34;&#34;&#34;
+    raw = mne_array
+
+    if not skip_plots:
+        # Plot raw signal
+        raw.plot(
+            n_channels=chans_to_plot, block=True, duration=25,
+            show=True, clipping=&#34;transparent&#34;,
+            title=&#34;Raw LFP Data from {}&#34;.format(base_name),
+            remove_dc=False, scalings=dict(eeg=350e-6))
+
+    # Perform ICA using mne
+    from mne.preprocessing import ICA
+    filt_raw = raw.copy()
+    filt_raw.load_data().filter(l_freq=1., h_freq=None)
+    ica = ICA(method=&#39;fastica&#39;, random_state=97)
+    # ica = ICA(method=&#39;picard&#39;, random_state=97)
+    ica.fit(filt_raw)
+
+    # ica.exclude = [4, 6, 12]
+    raw.load_data()
+    if exclude is None:
+        # Plot raw ICAs
+        print(&#39;Select channels to exclude using this plot...&#39;)
+        ica.plot_sources(
+            raw, block=False, stop=25, title=&#39;ICA from {}&#39;.format(base_name))
+
+        print(&#39;Click topo to get more ICA properties&#39;)
+        ica.plot_components(inst=raw)
+
+        # Overlay ICA cleaned signal over raw. Seperate plot for each region.
+        # TODO Add scroll bar or include window selection option.
+        # cont = input(&#34;Plot region overlay? (y|n) \n&#34;)
+        # if cont.strip().lower() == &#34;y&#34;:
+        #     reg_grps = []
+        #     for reg in set(regions):
+        #         temp_grp = []
+        #         for ch in raw.info.ch_names:
+        #             if reg in ch:
+        #                 temp_grp.append(ch)
+        #         reg_grps.append(temp_grp)
+        #     for grps in reg_grps:
+        #         ica.plot_overlay(raw, stop=int(30 * 250), title=&#39;{}&#39;.format(
+        #             grps[0][:3]), picks=grps)
+    else:
+        # ICAs to exclude
+        ica.exclude = exclude
+        if not skip_plots:
+            ica.plot_sources(
+                raw, block=False, stop=25, title=&#39;ICA from {}&#39;.format(base_name))
+            ica.plot_components(inst=raw)
+    # Apply ICA exclusion
+    reconst_raw = raw.copy()
+    exclude_raw = raw.copy()
+    print(&#34;ICAs excluded: &#34;, ica.exclude)
+    ica.apply(reconst_raw)
+
+    if not skip_plots:
+        # change exclude to all except chosen ICs
+        all_ICs = list(range(ica.n_components_))
+        for i in ica.exclude:
+            all_ICs.remove(i)
+        ica.exclude = all_ICs
+        ica.apply(exclude_raw)
+
+        # Plot excluded ICAs
+        exclude_raw.plot(block=True, show=True, clipping=&#34;transparent&#34;, duration=25,
+                         title=&#34;Excluded ICs from {}&#34;.format(
+                             base_name),
+                         remove_dc=False, scalings=dict(eeg=350e-6))
+
+        # Plot reconstructed signals w/o excluded ICAs
+        reconst_raw.plot(block=True, show=True, clipping=&#34;transparent&#34;, duration=25,
+                         title=&#34;Reconstructed LFP Data from {}&#34;.format(
+                             base_name),
+                         remove_dc=False, scalings=dict(eeg=350e-6))
+    return reconst_raw</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_mne.add_nc_event_to_mne"><code class="name flex">
+<span>def <span class="ident">add_nc_event_to_mne</span></span>(<span>mne_array, nc_events, sample_rate=250)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_nc_event_to_mne(mne_array, nc_events, sample_rate=250):
+    print(&#34;Adding {} events to mne&#34;.format(len(nc_events._timestamp)))
+    event_data = np.zeros(
+        shape=(len(nc_events._timestamp), 3))
+    for i, (a, b) in enumerate(
+            zip(nc_events._timestamp, nc_events._event_train)):
+        sample_number = int(a * sample_rate)
+        event_data[i] = np.array([sample_number, 0, b + 1])
+    mne_array.add_events(event_data, stim_channel=&#34;Events&#34;)
+
+    event_name_dict = {}
+    for i, (b, a) in enumerate(
+            zip(nc_events._event_names, nc_events._event_train)):
+        event_name_dict[b] = a + 1
+    return event_name_dict</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_mne.create_mne_array"><code class="name flex">
+<span>def <span class="ident">create_mne_array</span></span>(<span>lfp_odict, fname, ch_names=None, regions=None, o_dir='', plot_mon=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Populate a full mne raw array object with information.</p>
+<p>lfp_odict : bvmpc.lfp_odict.LfpODict
+The lfp_odict object to convert to numpy data.
+fname : str
+The full path to the associated session file.
+ch_names : List of str, Default None
+Optional. What to name the mne eeg channels, default: region+chan_idx.
+regions : List of str, Default None
+Optional. A list of region strings the same length as lfp_odict.
+This is only used when ch_names is None.
+If ch_names and regions are both None, names are chan_idx.
+o_dir : str, Default ""
+Optional. Path to directory to store the output files in.
+plot_mon : bool, Default True
+Plot montage of electrode positions used.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_mne_array(
+        lfp_odict, fname, ch_names=None, regions=None, o_dir=&#34;&#34;, plot_mon=True):
+    &#34;&#34;&#34;
+    Populate a full mne raw array object with information.
+
+    lfp_odict : bvmpc.lfp_odict.LfpODict
+        The lfp_odict object to convert to numpy data.
+    fname : str
+        The full path to the associated session file.
+    ch_names : List of str, Default None
+        Optional. What to name the mne eeg channels, default: region+chan_idx.
+    regions : List of str, Default None
+        Optional. A list of region strings the same length as lfp_odict.
+        This is only used when ch_names is None.
+        If ch_names and regions are both None, names are chan_idx.
+    o_dir : str, Default &#34;&#34;
+        Optional. Path to directory to store the output files in.
+    plot_mon : bool, Default True
+        Plot montage of electrode positions used.
+    &#34;&#34;&#34;
+    raw_data = lfp_odict_to_np(lfp_odict)
+
+    if ch_names is None:
+        if regions is None:
+            ch_names = list(lfp_odict.lfp_odict.keys())
+        else:
+            ch_names = [&#34;{}-{}&#34;.format(x, y) for x,
+                        y in zip(regions, lfp_odict.lfp_odict.keys())]
+
+    # Read or create tetrode locations
+    base_name = os.path.basename(fname)
+    eloc = get_eloc(ch_names, o_dir, base_name, dummy=True)
+    montage = mne.channels.make_dig_montage(ch_pos=eloc)
+
+    # Convert LFP data into mne format
+    example_lfp = lfp_odict.get_filt_signal(key=1)
+    sfreq = example_lfp.get_sampling_rate()
+    ch_types = ([&#34;eeg&#34;] * len(lfp_odict)) + [&#34;stim&#34;, ]
+    ch_names = ch_names + [&#34;Events&#34;, ]
+    info = mne.create_info(
+        ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
+    info.set_montage(montage)
+
+    raw = mne.io.RawArray(raw_data, info)
+
+    # cont = input(&#34;Show raw mne info? (y|n) \n&#34;)
+    #     if cont.strip().lower() == &#34;y&#34;:
+    #         print(raw.info)
+
+    # Plot montage of electrode positions
+    if plot_mon:
+        fig = plt.figure()
+        # sphere = [0, 0, 0, 10]
+
+        ax = fig.add_subplot(1, 1, 1)
+        raw.plot_sensors(kind=&#39;topomap&#39;, ch_type=&#39;eeg&#39;, show_names=True,
+                         axes=ax, block=False)
+
+        ax = fig.add_subplot(1, 2, 1, projection=&#39;3d&#39;)
+        raw.plot_sensors(kind=&#39;3d&#39;, ch_type=&#39;eeg&#39;, show_names=True,
+                         axes=ax, block=True, to_sphere=True)
+
+    return raw</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_mne.generate_events"><code class="name flex">
+<span>def <span class="ident">generate_events</span></span>(<span>mne_array, session, plot=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate events based on session object.
+Parameters</p>
+<hr>
+<dl>
+<dt><strong><code>mne_array</code></strong> :&ensp;<code>mne.raw object</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>session</code></strong> :&ensp;<code><a title="bvmpc.bv_session.Session" href="bv_session.html#bvmpc.bv_session.Session">Session</a> object</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>plot</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>Plot events figure. Mainly for checking.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>events_dict</code></strong> :&ensp;<code>dict</code> of <code>(event: index). Eg. {'Right': 1, 'Left': 2}</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>mne_events</code></strong> :&ensp;<code>mne.events object</code></dt>
+<dd>&nbsp;</dd>
+<dt><code>annot_from events : mne.events converted to mne.annotations</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_events(mne_array, session, plot=False):
+    &#34;&#34;&#34;Generate events based on session object.
+    Parameters
+    ----------
+    mne_array : mne.raw object
+    session : bvmpc.bv_session.Session object
+    plot : bool, default False
+        Plot events figure. Mainly for checking.
+
+    Returns
+    -------
+    events_dict : dict of (event: index). Eg. {&#39;Right&#39;: 1, &#39;Left&#39;: 2}
+    mne_events : mne.events object
+    annot_from events : mne.events converted to mne.annotations
+
+    &#34;&#34;&#34;
+    from bvmpc.bv_nc import events_from_session
+    # Generate events
+    nc_events = events_from_session(session)
+    events_dict = add_nc_event_to_mne(mne_array, nc_events)
+
+    mne_events = mne.find_events(
+        mne_array, stim_channel=&#39;Events&#39;,
+        shortest_event=1, min_duration=(0.1 / mne_array.info[&#39;sfreq&#39;]),
+        consecutive=True, initial_event=True)
+
+    if plot:
+        fig = mne.viz.plot_events(
+            mne_events, sfreq=mne_array.info[&#39;sfreq&#39;],
+            first_samp=mne_array.first_samp, event_id=events_dict, show=True)
+
+    # Set annotations from events
+    # Swap key and values
+    events_map = {value: key[:2] + key[-1]
+                  for key, value in events_dict.items()}
+    onsets = mne_events[:, 0] / mne_array.info[&#39;sfreq&#39;]
+    durations = np.zeros_like(onsets)  # assumes instantaneous events
+    descriptions = [events_map[event_id]
+                    for event_id in mne_events[:, 2]]
+    annot_from_events = mne.Annotations(onset=onsets, duration=durations,
+                                        description=descriptions,
+                                        orig_time=None)
+    return events_dict, mne_events, annot_from_events</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_mne.get_eloc"><code class="name flex">
+<span>def <span class="ident">get_eloc</span></span>(<span>ch_names, o_dir, base_name, dummy=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read or generate csv with 3D tetrode coordinates.
+Generate via user input.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ch_names</code></strong> :&ensp;<code>List</code> of <code>str</code></dt>
+<dd>mne eeg channels names. Must match keys in mne raw object.</dd>
+<dt><strong><code>o_dir</code></strong> :&ensp;<code>dir</code></dt>
+<dd>location to save eloc output</dd>
+<dt><strong><code>base_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>basename of file. Used in naming of eloc output: helps to track session, date, subject.</dd>
+<dt><strong><code>dummy</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>Create dummy tetrode locations for better visualisation.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_eloc(ch_names, o_dir, base_name, dummy=False):
+    &#34;&#34;&#34;
+    Read or generate csv with 3D tetrode coordinates.
+    Generate via user input.
+
+    Parameters
+    ----------
+    ch_names : List of str
+        mne eeg channels names. Must match keys in mne raw object.
+
+    o_dir : dir
+        location to save eloc output
+    base_name : str
+        basename of file. Used in naming of eloc output: helps to track session, date, subject.
+    dummy : bool, default False
+        Create dummy tetrode locations for better visualisation.
+
+    &#34;&#34;&#34;
+    def get_next_i(rows, cols, idx):
+        &#34;&#34;&#34;Local helper function.&#34;&#34;&#34;
+        row_idx = (idx % cols)
+        col_idx = (idx // cols)
+        return row_idx, col_idx
+
+    eloc_path = os.path.join(o_dir, base_name + &#34;_eloc.csv&#34;)
+    if dummy:
+        eloc = {}
+        n_acc, n_rsc, n_cla = 0, 0, 0
+        scale = 1
+        for i, ch in enumerate(ch_names):
+            if &#34;ACC&#34; in ch:
+                x, y = get_next_i(2, 2, n_acc)
+                coord_ls = [x / 2, 2 - y / 2, 0 + y / 2]
+                n_acc += 1
+            elif &#34;RSC&#34; in ch:
+                x, y = get_next_i(2, 2, n_rsc)
+                # coord_ls = [x, y - 10, 0]
+                coord_ls = [x / 2, y / 2 - 2, 0 + y / 2]
+                n_rsc += 1
+            else:
+                x, y = get_next_i(4, 2, n_cla)
+                # coord_ls = [x + 5, 2 - y, -5]
+                coord_ls = [x + 3, 2 - y, 1 - x / 2]
+                n_cla += 1
+            eloc[ch] = np.array([x / scale for x in coord_ls])
+
+    else:
+        try:
+            df = pd.read_csv(eloc_path, index_col=0)
+            d = df.to_dict(&#34;split&#34;)
+            eloc = dict(zip(d[&#34;index&#34;], d[&#34;data&#34;]))
+        except Exception:
+            eloc = {}
+            for s, ch in enumerate(ch_names, 1):
+                # Duplicate pos for every second tetrode
+                if (s + 2) % 2 == 0:
+                    eloc[ch] = eloc[ch_names[s - 2]]
+                    eloc[ch][0] += 0.01
+                else:
+                    eloc[ch] = np.empty(3)
+                    for i, axis in enumerate([&#34;x&#34;, &#34;y&#34;, &#34;z&#34;]):
+                        eloc[ch][i] = float(input(
+                            &#34;Enter {} coordinate for S{}-{}: &#34;.format(
+                                axis, s // 2, ch)))
+            df = pd.DataFrame.from_dict(eloc, orient=&#34;index&#34;)
+            df.to_csv(eloc_path)
+        print(eloc)
+    return eloc</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_mne.get_layout"><code class="name flex">
+<span>def <span class="ident">get_layout</span></span>(<span>o_dir, layout_name)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong>Layout functions in mne depreciated.</strong>
+Read or generate layout. Layout generated by clicking on input image.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>o_dir</code></strong> :&ensp;<code>dir</code></dt>
+<dd>dir in which layout is to be read or saved into</dd>
+<dt><strong><code>layout_name</code></strong> :&ensp;<code>str</code>, default <code>None</code></dt>
+<dd>basename of image used as layout template. if None, "topo.lout" is used.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>lt</code></strong> :&ensp;<code>mne layout object</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_layout(o_dir, layout_name):
+    &#34;&#34;&#34;
+    **Layout functions in mne depreciated.**
+    Read or generate layout. Layout generated by clicking on input image.
+
+    Parameters
+    ----------
+    o_dir : dir
+        dir in which layout is to be read or saved into
+    layout_name : str, default None
+        basename of image used as layout template. if None, &#34;topo.lout&#34; is used.
+
+    Returns
+    -------
+    lt : mne layout object
+
+    &#34;&#34;&#34;
+    # Layout function depreciated. Load tetrode layout
+    layout_path = o_dir
+    if layout_name is None:
+        layout_name = &#34;SA5_topo.lout&#34;
+    try:
+        lt = mne.channels.read_layout(
+            layout_name, path=layout_path, scale=False)
+    except:
+        # Generate layout of tetrodes
+        # This code opens the image so you can click on it to designate tetrode positions
+        from mne.viz import ClickableImage  # noqa
+        from mne.viz import (
+            plot_alignment, snapshot_brain_montage, set_3d_view)
+        # The click coordinates are stored as a list of tuples
+        template_loc = r&#39;F:\!Imaging\LKC\SA5\SA5_Histology-07.tif&#39;  # template location
+        im = plt.imread(template_loc)
+        click = ClickableImage(im)
+        click.plot_clicks()
+
+        # Generate a layout from our clicks and normalize by the image
+        print(&#39;Generating and saving layout...&#39;)
+        lt = click.to_layout()
+        # To save if we want
+        lt.save(os.path.join(layout_path, layout_name))
+        print(&#39;Saved layout to&#39;, os.path.join(
+            layout_path, layout_name))
+
+    # Load and display layout
+    lt = mne.channels.read_layout(
+        layout_name, path=layout_path, scale=False)
+    x = lt.pos[:, 0] * float(im.shape[1])
+    y = (1 - lt.pos[:, 1]) * float(im.shape[0])  # Flip the y-position
+    fig, ax = plt.subplots()
+    ax.imshow(im)
+    ax.scatter(x, y, s=120, color=&#39;r&#39;)
+    plt.autoscale(tight=True)
+    ax.set_axis_off()
+    plt.show()
+
+    return lt</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_mne.get_reg_chans"><code class="name flex">
+<span>def <span class="ident">get_reg_chans</span></span>(<span>raw, regions)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get dict with {regions: list of channels}</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>raw</code></strong> :&ensp;<code>mne.raw object</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>region_dict</code></strong> :&ensp;<code>list</code> of <code>str,</code></dt>
+<dd>list of regions to be grouped. set(regions) used to determine dict keys.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>grps</code></strong> :&ensp;<code>dict(region: list</code> of <code>channels)</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_reg_chans(raw, regions):
+    &#34;&#34;&#34; Get dict with {regions: list of channels}
+
+    Parameters
+    ----------
+    raw : mne.raw object
+    region_dict : list of str,
+        list of regions to be grouped. set(regions) used to determine dict keys.
+
+    Returns
+    -------
+    grps : dict(region: list of channels)
+
+    &#34;&#34;&#34;
+    grps = {}
+    for reg in set(regions):
+        reg_ls = []
+        for i, ch in enumerate(raw.ch_names):
+            if reg in ch:
+                reg_ls.append(i)
+        grps[reg] = reg_ls
+    print(grps)
+    return grps</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_mne.lfp_odict_to_np"><code class="name flex">
+<span>def <span class="ident">lfp_odict_to_np</span></span>(<span>lfp_odict)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert an lfp_odict into an mne compatible numpy array.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def lfp_odict_to_np(lfp_odict):
+    &#34;&#34;&#34;Convert an lfp_odict into an mne compatible numpy array.&#34;&#34;&#34;
+    # Extract LFPs from the odict
+    ori_lfp_list = []
+    # TODO based on MNE pipeline should this be the filtered or non filtered
+    for key, lfp in lfp_odict.get_filt_signal().items():
+        ori_lfp_list.append(lfp.get_samples())
+    ori_lfp_list.append([0] * len(ori_lfp_list[0]))
+
+    data = np.array(ori_lfp_list, float)
+    # MNE expects LFP data to be in Volts. But Neurochat stores LFP in mV.
+    data = data / 1000
+
+    return data</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_mne.pick_chans"><code class="name flex">
+<span>def <span class="ident">pick_chans</span></span>(<span>raw, sel=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Pick channels based on sel input. Identifies channels with str or int in sel.</p>
+<h2 id="example">Example</h2>
+<p>Input
+raw.chan_names = ['ACC-1','ACC-2','RSC-3']
+sel = ['ACC']
+Returns
+picks = ['ACC-1','ACC-2']</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>raw</code></strong> :&ensp;<code>mne.raw object</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>sel</code></strong> :&ensp;<code>list</code> of <code>str OR list</code> of <code>int, Default None</code></dt>
+<dd>str/int to include in picks. Sel must be in chan_name(eg. ACC-13)
+if list of int, channel number will be used to select channels.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>picks</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
+<dd>list of channel names selected.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pick_chans(raw, sel=None):
+    &#34;&#34;&#34;
+    Pick channels based on sel input. Identifies channels with str or int in sel.
+    Example:
+        Input
+            raw.chan_names = [&#39;ACC-1&#39;,&#39;ACC-2&#39;,&#39;RSC-3&#39;]
+            sel = [&#39;ACC&#39;]
+        Returns
+            picks = [&#39;ACC-1&#39;,&#39;ACC-2&#39;]
+
+    Parameters
+    ----------
+    raw : mne.raw object
+    sel : list of str OR list of int, Default None
+        str/int to include in picks. Sel must be in chan_name(eg. ACC-13)
+        if list of int, channel number will be used to select channels.
+
+    Returns
+    -------
+    picks : list of str
+        list of channel names selected.
+
+    &#34;&#34;&#34;
+    if sel == None:
+        picks = None
+    elif type(sel[0]) == int:
+        picks = []
+        for s in sel:
+            for ch in raw.ch_names[:-1]:
+                try:
+                    if ch.split(&#39;-&#39;)[1] == str(s):
+                        picks.append(ch)
+                except:
+                    pass
+        print(&#39;Picked chans:&#39;, picks)
+    else:
+        picks = []
+        for s in sel:
+            for ch in raw.ch_names:
+                if s in ch:
+                    picks.append(ch)
+        print(&#39;Picked chans:&#39;, picks)
+    return picks</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_mne.save_annotations"><code class="name flex">
+<span>def <span class="ident">save_annotations</span></span>(<span>mne_array, annotation_fname)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save the annotations on mne_array to file annotation_fname.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_annotations(mne_array, annotation_fname):
+    &#34;&#34;&#34;Save the annotations on mne_array to file annotation_fname.&#34;&#34;&#34;
+    if len(mne_array.annotations) &gt; 0:
+        print(mne_array.annotations)
+        cont = input(&#34;Save mne annotations? (y|n) \n&#34;)
+        if cont.strip().lower() == &#34;y&#34;:
+            mne_array.annotations.save(annotation_fname)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_mne.set_annotations"><code class="name flex">
+<span>def <span class="ident">set_annotations</span></span>(<span>mne_array, annotation_fname)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read annots from annotation_fname and store them on mne_array.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_annotations(mne_array, annotation_fname):
+    &#34;&#34;&#34;Read annots from annotation_fname and store them on mne_array.&#34;&#34;&#34;
+    try:
+        print(&#39;Loading mne_annotations from&#39;, annotation_fname)
+        annot_from_file = mne.read_annotations(annotation_fname)
+        mne_array.set_annotations(annot_from_file)
+    except FileNotFoundError:
+        print(&#34;WARNING: No annotations found at {}&#34;.format(annotation_fname))</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_mne.viz_raw_epochs"><code class="name flex">
+<span>def <span class="ident">viz_raw_epochs</span></span>(<span>epoch_list, comp_conds, picks, sort_reg, plot_reg, topo_seq, plot_image, ppros_dict)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Pipeline for visualizing raw epochs</p>
+<h2 id="parameters">Parameters</h2>
+<p>plot_reg: bool, collates LFP for each region. Results in average magnitute based plot_image.
+plot_image: bool, plots LFP amplitude across trials in an image, with average below.
+topo_seq: bool, plots average LFP for each channel, and a topo map for selected timepoints.
+ppros_dict: dict, contains preprocessing steps performed in text form. Used to label image files.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def viz_raw_epochs(epoch_list, comp_conds, picks, sort_reg, plot_reg, topo_seq, plot_image, ppros_dict):
+    &#34;&#34;&#34; Pipeline for visualizing raw epochs
+
+        Parameters
+        ----------
+        plot_reg: bool, collates LFP for each region. Results in average magnitute based plot_image.
+        plot_image: bool, plots LFP amplitude across trials in an image, with average below.
+        topo_seq: bool, plots average LFP for each channel, and a topo map for selected timepoints.
+        ppros_dict: dict, contains preprocessing steps performed in text form. Used to label image files.
+
+        &#34;&#34;&#34;
+
+    # Extract variables from ppros_dict
+    base_name = ppros_dict[&#39;base_name&#39;]
+    mne_dir = ppros_dict[&#39;mne_dir&#39;]
+    ica_txt = ppros_dict[&#39;ica_txt&#39;]
+    bline_txt = ppros_dict[&#39;bline_txt&#39;]
+    combine = ppros_dict[&#39;combine&#39;]
+
+    # Plot epoch.plot_image for selected tetrodes seperately
+    if plot_image:
+        for epoch, cond in zip(epoch_list, comp_conds):
+            # epoch_fig = epoch.plot_image(picks=picks, show=False)
+            for i, pick in enumerate(picks):
+                epoch_fig = epoch.plot_image(
+                    picks=pick, show=False, combine=combine)
+                ax = epoch_fig[0].axes[0]
+                ax.set_title(&#34;{}\n&#39;{}&#39; {}&#34;.format(base_name, cond, pick),
+                             x=0.5, y=1.01, fontsize=10)
+                if plot_reg:
+                    pick_txt = &#39;gfp_&#39; + sort_reg[i]
+                else:
+                    pick_txt = pick
+                fig_name = os.path.join(
+                    mne_dir, &#39;{}&#39;.format(cond.replace(&#39;/&#39;, &#39;-&#39;)), bline_txt, &#39;{}_{}_{}-{}{}&#39;.format(base_name, ica_txt, cond.replace(&#39;/&#39;, &#39;-&#39;), pick_txt, bline_txt) + &#39;.png&#39;)
+                make_path_if_not_exists(fig_name)
+                print(&#39;Saving raw-epoch to &#39; + fig_name)
+                epoch_fig[0].savefig(fig_name)
+
+            # Optional parameter to set bands displayed in topo
+            # Default is [(0, 4, &#39;Delta&#39;), (4, 8, &#39;Theta&#39;), (8, 12, &#39;Alpha&#39;),(12, 30, &#39;Beta&#39;), (30, 45, &#39;Gamma&#39;)]
+            bands = None
+            if bands is None:
+                n_topo = 5
+            else:
+                n_topo = len(bands)
+
+            # Plot power spectrum density of epoch
+            import matplotlib.gridspec as gridspec
+            psd_fig = plt.figure(figsize=(14, 7))
+            gs = gridspec.GridSpec(2, n_topo, hspace=0.2,
+                                   wspace=0.3, height_ratios=[2, 1])
+            ax = plt.subplot(gs[:-1, :])
+            epoch.plot_psd(show=False, ax=ax)
+            ax = psd_fig.axes[0]
+            ax.set_title(&#34;{}\n&#39;{}&#39; PSD&#34;.format(base_name, cond),
+                         x=0.5, y=1.01, fontsize=10)
+
+            topo_axes = [plt.subplot(gs[-1, x]) for x in range(n_topo)]
+            epoch.plot_psd_topomap(
+                ch_type=&#39;eeg&#39;, normalize=True, axes=topo_axes, show=False)
+            psd_fname = os.path.join(
+                mne_dir, &#39;{}&#39;.format(cond.replace(&#39;/&#39;, &#39;-&#39;)), bline_txt, &#39;{}_{}_psd_{}{}&#39;.format(base_name, ica_txt, cond.replace(&#39;/&#39;, &#39;-&#39;), bline_txt) + &#39;.png&#39;)
+            make_path_if_not_exists(psd_fname)
+            print(&#39;Saving raw-epoch to &#39; + psd_fname)
+            psd_fig.savefig(psd_fname)
+    # exit(-1)
+
+    # Generate dict[conds] for comparing epoch average across conds
+    epoch_ave = {}
+    for epoch, cond in zip(epoch_list, comp_conds):
+        epoch_ave[cond] = epoch.average()
+
+    # Plot all tetrode averages for epoch (includes topo map)
+    if topo_seq:
+        for cond, epoch in epoch_ave.items():
+            pj_fig = epoch.plot_joint(
+                picks=&#39;eeg&#39;, show=False, times=[-0.25, -0.1, -0.025, 0, 0.025, 0.1, 0.25])
+            # Joint plot title
+            pj_title = &#39;&#34;{}&#34;_{}_{}&#39;.format(
+                cond.replace(&#39;/&#39;, &#39;-&#39;), ica_txt, base_name)
+            pj_fig.suptitle(pj_title)
+            pj_fname = os.path.join(
+                mne_dir, &#39;{}&#39;.format(cond.replace(&#39;/&#39;, &#39;-&#39;)), bline_txt, &#39;{}_{}_joint_{}{}&#39;.format(base_name, ica_txt, cond.replace(&#39;/&#39;, &#39;-&#39;), bline_txt) + &#39;.png&#39;)
+            pj_fig.savefig(pj_fname)
+    # plt.show()
+    # exit(-1)
+
+    # Compare average across session types
+    if len(comp_conds) &gt; 1:
+        vs_fig, axes = plt.subplots(
+            len(picks), 1, figsize=(10, 14), sharex=True)
+        plt.rc(&#39;legend&#39;, **{&#39;fontsize&#39;: 6})
+        plt.subplots_adjust(hspace=0.3)
+
+        for ax, pick in zip(axes, picks):
+            mne.viz.plot_compare_evokeds(
+                epoch_ave, picks=pick, legend=&#39;upper left&#39;, show_sensors=&#39;upper right&#39;, ylim=dict(eeg=[-80, 80]), show=False, title=&#39;{} {}&#39;.format(base_name, pick), axes=ax)
+        vs_fname = os.path.join(mne_dir, &#39;{}_{}_joint_{}{}&#39;.format(
+            base_name, ica_txt, cond.split(&#39;/&#39;)[0], bline_txt) + &#39;.png&#39;)
+        print(&#39;Saving joint_plot to &#39; + vs_fname)
+        vs_fig.savefig(vs_fname)
+
+    exit(-1)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="bvmpc" href="index.html">bvmpc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="two-column">
+<li><code><a title="bvmpc.bv_mne.ICA_pipeline" href="#bvmpc.bv_mne.ICA_pipeline">ICA_pipeline</a></code></li>
+<li><code><a title="bvmpc.bv_mne.add_nc_event_to_mne" href="#bvmpc.bv_mne.add_nc_event_to_mne">add_nc_event_to_mne</a></code></li>
+<li><code><a title="bvmpc.bv_mne.create_mne_array" href="#bvmpc.bv_mne.create_mne_array">create_mne_array</a></code></li>
+<li><code><a title="bvmpc.bv_mne.generate_events" href="#bvmpc.bv_mne.generate_events">generate_events</a></code></li>
+<li><code><a title="bvmpc.bv_mne.get_eloc" href="#bvmpc.bv_mne.get_eloc">get_eloc</a></code></li>
+<li><code><a title="bvmpc.bv_mne.get_layout" href="#bvmpc.bv_mne.get_layout">get_layout</a></code></li>
+<li><code><a title="bvmpc.bv_mne.get_reg_chans" href="#bvmpc.bv_mne.get_reg_chans">get_reg_chans</a></code></li>
+<li><code><a title="bvmpc.bv_mne.lfp_odict_to_np" href="#bvmpc.bv_mne.lfp_odict_to_np">lfp_odict_to_np</a></code></li>
+<li><code><a title="bvmpc.bv_mne.pick_chans" href="#bvmpc.bv_mne.pick_chans">pick_chans</a></code></li>
+<li><code><a title="bvmpc.bv_mne.save_annotations" href="#bvmpc.bv_mne.save_annotations">save_annotations</a></code></li>
+<li><code><a title="bvmpc.bv_mne.set_annotations" href="#bvmpc.bv_mne.set_annotations">set_annotations</a></code></li>
+<li><code><a title="bvmpc.bv_mne.viz_raw_epochs" href="#bvmpc.bv_mne.viz_raw_epochs">viz_raw_epochs</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

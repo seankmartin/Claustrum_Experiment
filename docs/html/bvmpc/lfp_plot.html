@@ -1,0 +1,1051 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>bvmpc.lfp_plot API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>bvmpc.lfp_plot</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import math
+import os
+from collections import OrderedDict
+from copy import deepcopy
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+from bvmpc.bv_utils import make_dir_if_not_exists, find_in, ordered_set
+from neurochat.nc_lfp import NLfp
+from neurochat.nc_utils import butter_filter
+import bvmpc.bv_plot as bv_plot
+import pycwt as wavelet
+
+
+def plot_long_lfp(
+        lfp, out_name, nsamples=None, offset=0,
+        nsplits=3, figsize=(32, 4), ylim=(-0.4, 0.4)):
+    &#34;&#34;&#34;
+    Create a figure to display a long LFP signal in nsplits rows.
+
+    Args:
+        lfp (NLfp): The lfp signal to plot.
+        out_name (str): The name of the output, including directory.
+        nsamples (int, optional): Defaults to all samples.
+            The number of samples to plot.
+        offset (int, optional): Defaults to 0.
+            The number of samples into the lfp to start plotting at.
+        nsplits (int, optional): The number of rows in the resulting figure.
+        figsize (tuple of int, optional): Defaults to (32, 4)
+        ylim (tuple of float, optional): Defaults to (-0.4, 0.4)
+
+    Returns:
+        None
+
+    &#34;&#34;&#34;
+    if nsamples is None:
+        nsamples = lfp.get_total_samples()
+
+    fig, axes = plt.subplots(nsplits, 1, figsize=figsize)
+    for i in range(nsplits):
+        start = int(offset + i * (nsamples // nsplits))
+        end = int(offset + (i + 1) * (nsamples // nsplits))
+        if nsplits == 1:
+            ax = axes
+        else:
+            ax = axes[i]
+        ax.plot(
+            lfp.get_timestamp()[start:end],
+            lfp.get_samples()[start:end], color=&#39;k&#39;)
+        ax.set_ylim(ylim)
+    plt.tight_layout()
+    bv_plot.savefig(fig, out_name, dpi=400)
+    plt.close(fig)
+
+
+def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4, filt=False, artf=False, dr_mode=False, session=None, splits=None, x_pad=60):
+    &#34;&#34;&#34;
+    Create a number of figures to display lfp signal on multiple channels.
+
+    There will be one figure for each split of thetotal length
+    into segment_length, and a row for each value in lfp_odict.
+
+    It is assumed that the input lfps are prefiltered if filtering is required.
+
+    Args:
+        out_dir (str): The name of the file to plot to, including dir.
+        lfp_odict (OrderedDict): Keys as channels and NLfp objects as vals.
+        segment_length (float): Time in seconds of LFP to plot in each figure.
+        in_range (tuple(int, int), optional): Time(s) of LFP to plot overall.
+            Defaults to None.
+        dpi (int, optional): Resulting plot dpi.
+        filt (bool): Uses filtered lfp if True
+        artf (bool): Should plot artefacts
+        session (None) : Optional behavioural session to plot data from.
+        splits (np.ndarray) : Optional timepoints to split the lfp at.
+            This should contain a number of elements = num_plots + 1
+            e.g. to split a 300 sec lfp into 0 - 100 and 100 - 300
+            pass splits = [0, 100, 300]
+        x_pad (float) : Optional. Pad x_axis for easy comparison. Sets xlim to be larger of x_pad or actual split len
+
+    Returns:
+        None
+
+    &#34;&#34;&#34;
+    if session:
+        rw_ts = session.get_rw_ts()
+        FRes = session.get_trial_df()[&#39;First_response&#39;].tolist()
+        lev_ts = session.get_lever_ts()
+    if dr_mode:
+        lfp_dict_s = lfp_odict.get_dr_signals()
+        get_info = lfp_odict.get_dr_info
+    else:
+        if filt:
+            lfp_dict_s = lfp_odict.get_filt_signal()
+        else:
+            lfp_dict_s = lfp_odict.get_signal()
+        get_info = lfp_odict.get_info
+
+    if in_range is None:
+        in_range = (0, max([lfp.get_duration()
+                            for lfp in lfp_dict_s.values()]))
+    y_axis_max = max([max(lfp.get_samples())
+                      for lfp in lfp_dict_s.values()])
+    y_axis_min = min([min(lfp.get_samples())
+                      for lfp in lfp_dict_s.values()])
+    if splits is None:
+        seg_splits = np.arange(in_range[0], in_range[1], segment_length)
+        if np.abs(in_range[1] - seg_splits[-1]) &gt; 0.0001:
+            seg_splits = np.concatenate([seg_splits, [in_range[1]]])
+    else:
+        seg_splits = splits
+
+    # print(seg_splits[:5])
+    # exit(-1)
+    max_split_len = max(np.diff(seg_splits))
+    print(&#39;Longest segment is {:.2f}s&#39;.format(max_split_len))
+    if max_split_len &lt; x_pad:
+        x_pad = max_split_len
+
+    for j, split in enumerate(seg_splits[:-1]):
+        fig, axes = plt.subplots(
+            nrows=len(lfp_dict_s),
+            figsize=(40, len(lfp_dict_s) * 2))
+        a = np.round(split, 2)
+        b = np.round(min(seg_splits[j + 1], in_range[1]), 2)
+        if list(lfp_dict_s.keys())[0] == &#39;17&#39;:
+            out_name = os.path.join(
+                out_dir, &#34;1_{}_{:.2f}s_to_{:.2f}s.png&#34;.format(j, a, b))
+        elif dr_mode:
+            out_name = os.path.join(
+                out_dir, &#34;dr_{}_{:.2f}s_to_{:.2f}s.png&#34;.format(j, a, b))
+        else:
+            out_name = os.path.join(
+                out_dir, &#34;0_{}_{:.2f}s_to_{:.2f}s.png&#34;.format(j, a, b))
+        for i, (key, lfp) in enumerate(lfp_dict_s.items()):
+            convert = lfp.get_sampling_rate()
+            c_start, c_end = math.floor(a * convert), math.floor(b * convert)
+            lfp_sample = lfp.get_samples()[c_start:c_end]
+            x_pos = lfp.get_timestamp()[c_start:c_end]
+            axes[i].plot(x_pos, lfp_sample, color=&#34;k&#34;)
+
+            if artf:
+                from bvmpc.bv_utils import find_ranges
+                shading = list(find_ranges(
+                    get_info(key, &#34;thr_locs&#34;)))
+
+                for x, y in shading:    # Shading of artf portions
+                    times = lfp.get_timestamp()
+                    axes[i].axvspan(times[x], times[y], color=&#39;red&#39;, alpha=0.5)
+                mean = get_info(key, &#34;mean&#34;)
+                std = get_info(key, &#34;std&#34;)
+                # Label thresholds
+                axes[i].axhline(mean - sd * std, linestyle=&#39;-&#39;,
+                                color=&#39;red&#39;, linewidth=&#39;1.5&#39;)
+                axes[i].axhline(mean + sd * std, linestyle=&#39;-&#39;,
+                                color=&#39;red&#39;, linewidth=&#39;1.5&#39;)
+
+            if session:
+                for rw in rw_ts:
+                    axes[i].axvline(rw, linestyle=&#39;-&#39;,
+                                    color=&#39;green&#39;, linewidth=&#39;1.5&#39;)    # vline demarcating reward point/end of trial
+                for lev in lev_ts:
+                    axes[i].axvline(lev, linestyle=&#39;-&#39;,
+                                    color=&#39;blue&#39;, linewidth=&#39;1.5&#39;)    # vline demarcating First Resonse
+                for res in FRes:
+                    axes[i].axvline(res, linestyle=&#39;-&#39;,
+                                    color=&#39;orange&#39;, linewidth=&#39;1.5&#39;)    # vline demarcating First Resonse
+
+            axes[i].text(
+                0.03, 1.02, &#34;Channel &#34; + key,
+                transform=axes[i].transAxes, color=&#34;k&#34;, fontsize=15)
+            axes[i].set_ylim(y_axis_min, y_axis_max)
+            axes[i].tick_params(labelsize=12)
+            # axes[i].set_xlim(a, b)
+            seg_len = np.diff([a, b])
+            if seg_len &gt; x_pad:
+                x_pad = seg_len
+            axes[i].set_xlim(a, a+x_pad)
+
+        bv_plot.savefig(fig, out_name)
+        plt.close(&#34;all&#34;)
+
+
+def lfp_csv(fname, out_dir, lfp_odict, sd, min_artf_freq, shuttles, filt=False):
+    &#34;&#34;&#34;
+    Outputs csv for Tetrodes to be used in analysis based on data crossing sd.
+    &#34;&#34;&#34;
+    if filt:
+        lfp_dict_s = lfp_odict.get_filt_signal()
+    else:
+        lfp_dict_s = lfp_odict.get_signal()
+
+    tetrodes, threshold, ex_thres, choose, mean_list, std_list, removed = [
+    ], [], [], [], [], [], []
+    for i, (key, lfp) in enumerate(lfp_dict_s.items()):
+        mean, std, thr_locs, thr_vals, thr_time, per_removed = lfp.find_artf(
+            sd, min_artf_freq)
+        tetrodes.append(&#34;T&#34; + str(key))
+        threshold.append(sd * std)
+        ex_thres.append(len(thr_locs))
+        mean_list.append(mean)
+        std_list.append(std)
+        removed.append(per_removed)
+
+    import pandas as pd
+    min_shut = []
+    for a in set(shuttles):
+        compare = []
+        for j, shut in enumerate(shuttles):
+            if shut == a:
+                compare.append(ex_thres[j])
+        min_shut.append(min(compare))
+
+    truth = find_in(min_shut, ex_thres)
+    for c in truth:
+        if c:
+            choose.append(&#34;C&#34;)
+        else:
+            choose.append(&#34;&#34;)
+
+    csv = {
+        &#34;Tetrode&#34;: tetrodes,
+        &#34;Shuttles&#34;: shuttles,
+        &#34;Choose&#34;: choose,
+        &#34;Threshold&#34;: threshold,
+        &#34;ex_Thres&#34;: ex_thres,
+        &#34;Mean&#34;: mean_list,
+        &#34;STD&#34;: std_list,
+        &#34;% Removed&#34;: removed
+    }
+    df = pd.DataFrame(csv)
+
+    csv_filename = os.path.join(out_dir, &#34;Tetrode_Summary.csv&#34;)
+    if tetrodes[0] == &#34;T17&#34;:
+        check_name = fname.split(&#39;\\&#39;)[-1] + &#34;_p2&#34;
+    else:
+        check_name = fname.split(&#39;\\&#39;)[-1]
+    if os.path.exists(csv_filename):
+        import csv
+        exist = False
+        with open(csv_filename, &#39;rt&#39;, newline=&#39;&#39;) as f:
+            reader = csv.reader(f, delimiter=&#39;,&#39;)
+            print(&#34;Processing {}...&#34;.format(fname))
+            for row in reader:
+                if [check_name] == row:
+                    exist = True
+                    print(&#34;{} info exists.&#34;.format(
+                        check_name))
+                    break
+                else:
+                    continue
+        if not exist:
+            with open(csv_filename, &#39;a&#39;, newline=&#39;&#39;) as f:
+                f.write(&#34;\n{}\n&#34;.format(check_name))
+                df.to_csv(f, index=False)
+            print(&#34;Saved {} to {}&#34;.format(check_name, csv_filename))
+    else:
+        with open(csv_filename, &#39;w&#39;, newline=&#39;&#39;) as f:
+            f.write(&#34;{}\n&#34;.format(check_name))
+            df.to_csv(f, encoding=&#39;utf-8&#39;, index=False)
+        print(&#34;Saved {} to {}&#34;.format(check_name, csv_filename))
+
+
+def plot_sample_of_signal(
+        load_loc, out_dir=None, name=None, offseta=0, length=50,
+        filt_params=(False, None, None)):
+    &#34;&#34;&#34;
+    Plot a small filtered sample of the LFP signal in the given band.
+
+    offseta and length are times
+    &#34;&#34;&#34;
+    in_dir = os.path.dirname(load_loc)
+    lfp = NLfp()
+    lfp.load(load_loc)
+
+    if out_dir is None:
+        out_loc = &#34;nc_signal&#34;
+        out_dir = os.path.join(in_dir, out_loc)
+
+    if name is None:
+        name = &#34;full_signal_filt.png&#34;
+
+    make_dir_if_not_exists(out_dir)
+    out_name = os.path.join(out_dir, name)
+    fs = lfp.get_sampling_rate()
+    filt, lower, upper = filt_params
+    lfp_to_plot = lfp
+    if filt:
+        lfp_to_plot = deepcopy(lfp)
+        lfp_samples = lfp.get_samples()
+        lfp_samples = butter_filter(
+            lfp_samples, fs, 10, lower, upper, &#39;bandpass&#39;)
+        lfp_to_plot._set_samples(lfp_samples)
+    plot_long_lfp(
+        lfp_to_plot, out_name, nsplits=1, ylim=(-0.325, 0.325), figsize=(20, 2),
+        offset=lfp.get_sampling_rate() * offseta,
+        nsamples=lfp.get_sampling_rate() * length)
+
+
+def plot_coherence(f, Cxy, ax=None, color=&#39;k&#39;, legend=None, dpi=100, tick_freq=10):
+    ax, fig1 = _make_ax_if_none(ax)
+    # ax.semilogy(f, Cxy)
+    ax.plot(f, Cxy, c=color, linestyle=&#39;dotted&#39;)
+    ax.set_xlabel(&#39;frequency [Hz]&#39;)
+    ax.set_ylabel(&#39;Coherence&#39;)
+    ax.set_xticks(np.arange(0, f.max(), tick_freq))
+    ax.set_ylim(0, 1)
+    plt.legend(legend)
+    return ax
+    # if name is None:
+    #     plt.show()
+    # else:
+    #     fig.savefig(name, dpi=dpi)
+
+
+def plot_polar_coupling(polar_vectors, mvl, name=None, dpi=100):
+    # Kind of the right idea here, but need avg line in bins
+    # instead of scatter...
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection=&#34;polar&#34;)
+    res_vec = np.sum(polar_vectors)
+    norm = np.abs(res_vec) / mvl
+
+    from neurochat.nc_circular import CircStat
+    cs = CircStat()
+    r = np.abs(polar_vectors)
+    theta = np.rad2deg(np.angle(polar_vectors))
+    print(r, theta)
+    ax.scatter(theta, r)
+    cs.set_rho(r)
+    cs.set_theta(theta)
+    count, ind, bins = cs.circ_histogram()
+    from scipy.stats import binned_statistic
+    binned_amp = (r, )
+    bins = np.append(bins, bins[0])
+    rate = np.append(count, count[0])
+    print(bins, rate)
+    # ax.plot(np.deg2rad(bins), rate, color=&#34;k&#34;)
+    res_line = (res_vec / norm)
+    print(res_vec)
+    ax.plot([np.angle(res_vec), np.angle(res_vec)], [0, norm * mvl], c=&#34;r&#34;)
+    ax.text(np.pi / 8, 0.00001, &#34;MVL {:.5f}&#34;.format(mvl))
+    ax.set_ylim(0, r.max())
+    if name is None:
+        plt.show()
+    else:
+        fig.savefig(name, dpi=dpi)
+
+
+def _make_ax_if_none(ax, **kwargs):
+    &#34;&#34;&#34;
+    Makes a figure and gets the axis from this if no ax exists
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Input axis
+
+    Returns
+    -------
+    ax, fig
+        The created figure and axis if ax is None, else
+        the input ax and None
+    &#34;&#34;&#34;
+
+    fig = None
+    if ax is None:
+        fig = plt.figure()
+        ax = plt.gca(**kwargs)
+    return ax, fig
+
+
+def calc_wPowerSpectrum(dat, sample_times, min_freq=1, max_freq=256, detrend=True, c_sig=False, resolution=12):
+    &#34;&#34;&#34;
+    Calculate wavelet power spectrum using pycwt.
+
+    TODO is this function needed?
+
+    Parameters
+    ----------
+    dat : np.ndarray
+        The values of the waveform.
+    sample_times : : np.ndarray
+        The times at which waveform samples occur.
+    min_freq : float
+        Supposed to be minimum frequency, but not quite working.
+    max_freq : float
+        Supposed to be max frequency, but not quite working.
+    c_sig : bool, default False
+        Optional. Calculate significance.
+    detrend : bool, default False
+        Optional. Detrend and normalize the input data by its standard deviation.
+    resolution : int
+        How many wavelets should be at each level. Number of sub-octaves per octaves
+
+    &#34;&#34;&#34;
+    t = np.asarray(sample_times)
+    dt = np.mean(np.diff(t))
+    dj = resolution
+
+    s0 = min_freq * dt
+    if s0 &lt; 2 * dt:
+        s0 = 2 * dt
+    max_J = max_freq * dt
+    J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
+
+    # alpha, _, _ = wavelet.ar1(dat)  # Lag-1 autocorrelation for red artf
+
+    if detrend:
+        p = np.polyfit(t - t[0], dat, 1)
+        dat_notrend = dat - np.polyval(p, t - t[0])
+        std = dat_notrend.std()  # Standard deviation
+        var = std ** 2  # Variance
+        dat_norm = dat_notrend / std  # Normalized dataset
+    else:
+        std = dat.std()  # Standard deviation
+        dat_nomean = dat - np.mean(dat)
+        dat_norm = dat_nomean / std  # Normalized dataset
+
+    wave, scales, freqs, coi, fft, fftfreqs = wavelet.cwt(
+        dat_norm, dt, dj, s0, J)
+
+    power = (np.abs(wave)) ** 2
+    fft_power = np.abs(fft) ** 2
+    period = 1 / freqs
+
+    if c_sig:
+        # calculate the normalized wavelet and Fourier power spectra, and the Fourier equivalent periods for each wavelet scale.
+        signif, fft_theor = wavelet.significance(1.0, dt, scales, 0, alpha,
+                                                 significance_level=0.95,
+                                                 wavelet=mother)
+        sig95 = np.ones([1, N]) * signif[:, None]
+        sig95 = power / sig95
+
+        # Calculate the global wavelet spectrum and determine its significance level.
+        glbl_power = power.mean(axis=1)
+        dof = N - scales  # Correction for padding at edges
+        glbl_signif, tmp = wavelet.significance(var, dt, scales, 1, alpha,
+                                                significance_level=0.95, dof=dof,
+                                                wavelet=mother)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="bvmpc.lfp_plot.calc_wPowerSpectrum"><code class="name flex">
+<span>def <span class="ident">calc_wPowerSpectrum</span></span>(<span>dat, sample_times, min_freq=1, max_freq=256, detrend=True, c_sig=False, resolution=12)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculate wavelet power spectrum using pycwt.</p>
+<p>TODO is this function needed?</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>dat</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The values of the waveform.</dd>
+<dt><strong><code>sample_times</code></strong> :&ensp;<code>: np.ndarray</code></dt>
+<dd>The times at which waveform samples occur.</dd>
+<dt><strong><code>min_freq</code></strong> :&ensp;<code>float</code></dt>
+<dd>Supposed to be minimum frequency, but not quite working.</dd>
+<dt><strong><code>max_freq</code></strong> :&ensp;<code>float</code></dt>
+<dd>Supposed to be max frequency, but not quite working.</dd>
+<dt><strong><code>c_sig</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>Optional. Calculate significance.</dd>
+<dt><strong><code>detrend</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>Optional. Detrend and normalize the input data by its standard deviation.</dd>
+<dt><strong><code>resolution</code></strong> :&ensp;<code>int</code></dt>
+<dd>How many wavelets should be at each level. Number of sub-octaves per octaves</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calc_wPowerSpectrum(dat, sample_times, min_freq=1, max_freq=256, detrend=True, c_sig=False, resolution=12):
+    &#34;&#34;&#34;
+    Calculate wavelet power spectrum using pycwt.
+
+    TODO is this function needed?
+
+    Parameters
+    ----------
+    dat : np.ndarray
+        The values of the waveform.
+    sample_times : : np.ndarray
+        The times at which waveform samples occur.
+    min_freq : float
+        Supposed to be minimum frequency, but not quite working.
+    max_freq : float
+        Supposed to be max frequency, but not quite working.
+    c_sig : bool, default False
+        Optional. Calculate significance.
+    detrend : bool, default False
+        Optional. Detrend and normalize the input data by its standard deviation.
+    resolution : int
+        How many wavelets should be at each level. Number of sub-octaves per octaves
+
+    &#34;&#34;&#34;
+    t = np.asarray(sample_times)
+    dt = np.mean(np.diff(t))
+    dj = resolution
+
+    s0 = min_freq * dt
+    if s0 &lt; 2 * dt:
+        s0 = 2 * dt
+    max_J = max_freq * dt
+    J = dj * np.int(np.round(np.log2(max_J / np.abs(s0))))
+
+    # alpha, _, _ = wavelet.ar1(dat)  # Lag-1 autocorrelation for red artf
+
+    if detrend:
+        p = np.polyfit(t - t[0], dat, 1)
+        dat_notrend = dat - np.polyval(p, t - t[0])
+        std = dat_notrend.std()  # Standard deviation
+        var = std ** 2  # Variance
+        dat_norm = dat_notrend / std  # Normalized dataset
+    else:
+        std = dat.std()  # Standard deviation
+        dat_nomean = dat - np.mean(dat)
+        dat_norm = dat_nomean / std  # Normalized dataset
+
+    wave, scales, freqs, coi, fft, fftfreqs = wavelet.cwt(
+        dat_norm, dt, dj, s0, J)
+
+    power = (np.abs(wave)) ** 2
+    fft_power = np.abs(fft) ** 2
+    period = 1 / freqs
+
+    if c_sig:
+        # calculate the normalized wavelet and Fourier power spectra, and the Fourier equivalent periods for each wavelet scale.
+        signif, fft_theor = wavelet.significance(1.0, dt, scales, 0, alpha,
+                                                 significance_level=0.95,
+                                                 wavelet=mother)
+        sig95 = np.ones([1, N]) * signif[:, None]
+        sig95 = power / sig95
+
+        # Calculate the global wavelet spectrum and determine its significance level.
+        glbl_power = power.mean(axis=1)
+        dof = N - scales  # Correction for padding at edges
+        glbl_signif, tmp = wavelet.significance(var, dt, scales, 1, alpha,
+                                                significance_level=0.95, dof=dof,
+                                                wavelet=mother)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_plot.lfp_csv"><code class="name flex">
+<span>def <span class="ident">lfp_csv</span></span>(<span>fname, out_dir, lfp_odict, sd, min_artf_freq, shuttles, filt=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Outputs csv for Tetrodes to be used in analysis based on data crossing sd.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def lfp_csv(fname, out_dir, lfp_odict, sd, min_artf_freq, shuttles, filt=False):
+    &#34;&#34;&#34;
+    Outputs csv for Tetrodes to be used in analysis based on data crossing sd.
+    &#34;&#34;&#34;
+    if filt:
+        lfp_dict_s = lfp_odict.get_filt_signal()
+    else:
+        lfp_dict_s = lfp_odict.get_signal()
+
+    tetrodes, threshold, ex_thres, choose, mean_list, std_list, removed = [
+    ], [], [], [], [], [], []
+    for i, (key, lfp) in enumerate(lfp_dict_s.items()):
+        mean, std, thr_locs, thr_vals, thr_time, per_removed = lfp.find_artf(
+            sd, min_artf_freq)
+        tetrodes.append(&#34;T&#34; + str(key))
+        threshold.append(sd * std)
+        ex_thres.append(len(thr_locs))
+        mean_list.append(mean)
+        std_list.append(std)
+        removed.append(per_removed)
+
+    import pandas as pd
+    min_shut = []
+    for a in set(shuttles):
+        compare = []
+        for j, shut in enumerate(shuttles):
+            if shut == a:
+                compare.append(ex_thres[j])
+        min_shut.append(min(compare))
+
+    truth = find_in(min_shut, ex_thres)
+    for c in truth:
+        if c:
+            choose.append(&#34;C&#34;)
+        else:
+            choose.append(&#34;&#34;)
+
+    csv = {
+        &#34;Tetrode&#34;: tetrodes,
+        &#34;Shuttles&#34;: shuttles,
+        &#34;Choose&#34;: choose,
+        &#34;Threshold&#34;: threshold,
+        &#34;ex_Thres&#34;: ex_thres,
+        &#34;Mean&#34;: mean_list,
+        &#34;STD&#34;: std_list,
+        &#34;% Removed&#34;: removed
+    }
+    df = pd.DataFrame(csv)
+
+    csv_filename = os.path.join(out_dir, &#34;Tetrode_Summary.csv&#34;)
+    if tetrodes[0] == &#34;T17&#34;:
+        check_name = fname.split(&#39;\\&#39;)[-1] + &#34;_p2&#34;
+    else:
+        check_name = fname.split(&#39;\\&#39;)[-1]
+    if os.path.exists(csv_filename):
+        import csv
+        exist = False
+        with open(csv_filename, &#39;rt&#39;, newline=&#39;&#39;) as f:
+            reader = csv.reader(f, delimiter=&#39;,&#39;)
+            print(&#34;Processing {}...&#34;.format(fname))
+            for row in reader:
+                if [check_name] == row:
+                    exist = True
+                    print(&#34;{} info exists.&#34;.format(
+                        check_name))
+                    break
+                else:
+                    continue
+        if not exist:
+            with open(csv_filename, &#39;a&#39;, newline=&#39;&#39;) as f:
+                f.write(&#34;\n{}\n&#34;.format(check_name))
+                df.to_csv(f, index=False)
+            print(&#34;Saved {} to {}&#34;.format(check_name, csv_filename))
+    else:
+        with open(csv_filename, &#39;w&#39;, newline=&#39;&#39;) as f:
+            f.write(&#34;{}\n&#34;.format(check_name))
+            df.to_csv(f, encoding=&#39;utf-8&#39;, index=False)
+        print(&#34;Saved {} to {}&#34;.format(check_name, csv_filename))</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_plot.plot_coherence"><code class="name flex">
+<span>def <span class="ident">plot_coherence</span></span>(<span>f, Cxy, ax=None, color='k', legend=None, dpi=100, tick_freq=10)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_coherence(f, Cxy, ax=None, color=&#39;k&#39;, legend=None, dpi=100, tick_freq=10):
+    ax, fig1 = _make_ax_if_none(ax)
+    # ax.semilogy(f, Cxy)
+    ax.plot(f, Cxy, c=color, linestyle=&#39;dotted&#39;)
+    ax.set_xlabel(&#39;frequency [Hz]&#39;)
+    ax.set_ylabel(&#39;Coherence&#39;)
+    ax.set_xticks(np.arange(0, f.max(), tick_freq))
+    ax.set_ylim(0, 1)
+    plt.legend(legend)
+    return ax</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_plot.plot_lfp"><code class="name flex">
+<span>def <span class="ident">plot_lfp</span></span>(<span>out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4, filt=False, artf=False, dr_mode=False, session=None, splits=None, x_pad=60)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a number of figures to display lfp signal on multiple channels.</p>
+<p>There will be one figure for each split of thetotal length
+into segment_length, and a row for each value in lfp_odict.</p>
+<p>It is assumed that the input lfps are prefiltered if filtering is required.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>out_dir</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of the file to plot to, including dir.</dd>
+<dt><strong><code>lfp_odict</code></strong> :&ensp;<code>OrderedDict</code></dt>
+<dd>Keys as channels and NLfp objects as vals.</dd>
+<dt><strong><code>segment_length</code></strong> :&ensp;<code>float</code></dt>
+<dd>Time in seconds of LFP to plot in each figure.</dd>
+<dt>in_range (tuple(int, int), optional): Time(s) of LFP to plot overall.</dt>
+<dt>Defaults to None.</dt>
+<dt><strong><code>dpi</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Resulting plot dpi.</dd>
+<dt><strong><code>filt</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Uses filtered lfp if True</dd>
+<dt><strong><code>artf</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Should plot artefacts</dd>
+</dl>
+<p>session (None) : Optional behavioural session to plot data from.
+splits (np.ndarray) : Optional timepoints to split the lfp at.
+This should contain a number of elements = num_plots + 1
+e.g. to split a 300 sec lfp into 0 - 100 and 100 - 300
+pass splits = [0, 100, 300]
+x_pad (float) : Optional. Pad x_axis for easy comparison. Sets xlim to be larger of x_pad or actual split len</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_lfp(out_dir, lfp_odict, segment_length=150, in_range=None, dpi=50, sd=4, filt=False, artf=False, dr_mode=False, session=None, splits=None, x_pad=60):
+    &#34;&#34;&#34;
+    Create a number of figures to display lfp signal on multiple channels.
+
+    There will be one figure for each split of thetotal length
+    into segment_length, and a row for each value in lfp_odict.
+
+    It is assumed that the input lfps are prefiltered if filtering is required.
+
+    Args:
+        out_dir (str): The name of the file to plot to, including dir.
+        lfp_odict (OrderedDict): Keys as channels and NLfp objects as vals.
+        segment_length (float): Time in seconds of LFP to plot in each figure.
+        in_range (tuple(int, int), optional): Time(s) of LFP to plot overall.
+            Defaults to None.
+        dpi (int, optional): Resulting plot dpi.
+        filt (bool): Uses filtered lfp if True
+        artf (bool): Should plot artefacts
+        session (None) : Optional behavioural session to plot data from.
+        splits (np.ndarray) : Optional timepoints to split the lfp at.
+            This should contain a number of elements = num_plots + 1
+            e.g. to split a 300 sec lfp into 0 - 100 and 100 - 300
+            pass splits = [0, 100, 300]
+        x_pad (float) : Optional. Pad x_axis for easy comparison. Sets xlim to be larger of x_pad or actual split len
+
+    Returns:
+        None
+
+    &#34;&#34;&#34;
+    if session:
+        rw_ts = session.get_rw_ts()
+        FRes = session.get_trial_df()[&#39;First_response&#39;].tolist()
+        lev_ts = session.get_lever_ts()
+    if dr_mode:
+        lfp_dict_s = lfp_odict.get_dr_signals()
+        get_info = lfp_odict.get_dr_info
+    else:
+        if filt:
+            lfp_dict_s = lfp_odict.get_filt_signal()
+        else:
+            lfp_dict_s = lfp_odict.get_signal()
+        get_info = lfp_odict.get_info
+
+    if in_range is None:
+        in_range = (0, max([lfp.get_duration()
+                            for lfp in lfp_dict_s.values()]))
+    y_axis_max = max([max(lfp.get_samples())
+                      for lfp in lfp_dict_s.values()])
+    y_axis_min = min([min(lfp.get_samples())
+                      for lfp in lfp_dict_s.values()])
+    if splits is None:
+        seg_splits = np.arange(in_range[0], in_range[1], segment_length)
+        if np.abs(in_range[1] - seg_splits[-1]) &gt; 0.0001:
+            seg_splits = np.concatenate([seg_splits, [in_range[1]]])
+    else:
+        seg_splits = splits
+
+    # print(seg_splits[:5])
+    # exit(-1)
+    max_split_len = max(np.diff(seg_splits))
+    print(&#39;Longest segment is {:.2f}s&#39;.format(max_split_len))
+    if max_split_len &lt; x_pad:
+        x_pad = max_split_len
+
+    for j, split in enumerate(seg_splits[:-1]):
+        fig, axes = plt.subplots(
+            nrows=len(lfp_dict_s),
+            figsize=(40, len(lfp_dict_s) * 2))
+        a = np.round(split, 2)
+        b = np.round(min(seg_splits[j + 1], in_range[1]), 2)
+        if list(lfp_dict_s.keys())[0] == &#39;17&#39;:
+            out_name = os.path.join(
+                out_dir, &#34;1_{}_{:.2f}s_to_{:.2f}s.png&#34;.format(j, a, b))
+        elif dr_mode:
+            out_name = os.path.join(
+                out_dir, &#34;dr_{}_{:.2f}s_to_{:.2f}s.png&#34;.format(j, a, b))
+        else:
+            out_name = os.path.join(
+                out_dir, &#34;0_{}_{:.2f}s_to_{:.2f}s.png&#34;.format(j, a, b))
+        for i, (key, lfp) in enumerate(lfp_dict_s.items()):
+            convert = lfp.get_sampling_rate()
+            c_start, c_end = math.floor(a * convert), math.floor(b * convert)
+            lfp_sample = lfp.get_samples()[c_start:c_end]
+            x_pos = lfp.get_timestamp()[c_start:c_end]
+            axes[i].plot(x_pos, lfp_sample, color=&#34;k&#34;)
+
+            if artf:
+                from bvmpc.bv_utils import find_ranges
+                shading = list(find_ranges(
+                    get_info(key, &#34;thr_locs&#34;)))
+
+                for x, y in shading:    # Shading of artf portions
+                    times = lfp.get_timestamp()
+                    axes[i].axvspan(times[x], times[y], color=&#39;red&#39;, alpha=0.5)
+                mean = get_info(key, &#34;mean&#34;)
+                std = get_info(key, &#34;std&#34;)
+                # Label thresholds
+                axes[i].axhline(mean - sd * std, linestyle=&#39;-&#39;,
+                                color=&#39;red&#39;, linewidth=&#39;1.5&#39;)
+                axes[i].axhline(mean + sd * std, linestyle=&#39;-&#39;,
+                                color=&#39;red&#39;, linewidth=&#39;1.5&#39;)
+
+            if session:
+                for rw in rw_ts:
+                    axes[i].axvline(rw, linestyle=&#39;-&#39;,
+                                    color=&#39;green&#39;, linewidth=&#39;1.5&#39;)    # vline demarcating reward point/end of trial
+                for lev in lev_ts:
+                    axes[i].axvline(lev, linestyle=&#39;-&#39;,
+                                    color=&#39;blue&#39;, linewidth=&#39;1.5&#39;)    # vline demarcating First Resonse
+                for res in FRes:
+                    axes[i].axvline(res, linestyle=&#39;-&#39;,
+                                    color=&#39;orange&#39;, linewidth=&#39;1.5&#39;)    # vline demarcating First Resonse
+
+            axes[i].text(
+                0.03, 1.02, &#34;Channel &#34; + key,
+                transform=axes[i].transAxes, color=&#34;k&#34;, fontsize=15)
+            axes[i].set_ylim(y_axis_min, y_axis_max)
+            axes[i].tick_params(labelsize=12)
+            # axes[i].set_xlim(a, b)
+            seg_len = np.diff([a, b])
+            if seg_len &gt; x_pad:
+                x_pad = seg_len
+            axes[i].set_xlim(a, a+x_pad)
+
+        bv_plot.savefig(fig, out_name)
+        plt.close(&#34;all&#34;)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_plot.plot_long_lfp"><code class="name flex">
+<span>def <span class="ident">plot_long_lfp</span></span>(<span>lfp, out_name, nsamples=None, offset=0, nsplits=3, figsize=(32, 4), ylim=(-0.4, 0.4))</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a figure to display a long LFP signal in nsplits rows.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lfp</code></strong> :&ensp;<code>NLfp</code></dt>
+<dd>The lfp signal to plot.</dd>
+<dt><strong><code>out_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of the output, including directory.</dd>
+<dt><strong><code>nsamples</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Defaults to all samples.
+The number of samples to plot.</dd>
+<dt><strong><code>offset</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Defaults to 0.
+The number of samples into the lfp to start plotting at.</dd>
+<dt><strong><code>nsplits</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The number of rows in the resulting figure.</dd>
+<dt><strong><code>figsize</code></strong> :&ensp;<code>tuple</code> of <code>int</code>, optional</dt>
+<dd>Defaults to (32, 4)</dd>
+<dt><strong><code>ylim</code></strong> :&ensp;<code>tuple</code> of <code>float</code>, optional</dt>
+<dd>Defaults to (-0.4, 0.4)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_long_lfp(
+        lfp, out_name, nsamples=None, offset=0,
+        nsplits=3, figsize=(32, 4), ylim=(-0.4, 0.4)):
+    &#34;&#34;&#34;
+    Create a figure to display a long LFP signal in nsplits rows.
+
+    Args:
+        lfp (NLfp): The lfp signal to plot.
+        out_name (str): The name of the output, including directory.
+        nsamples (int, optional): Defaults to all samples.
+            The number of samples to plot.
+        offset (int, optional): Defaults to 0.
+            The number of samples into the lfp to start plotting at.
+        nsplits (int, optional): The number of rows in the resulting figure.
+        figsize (tuple of int, optional): Defaults to (32, 4)
+        ylim (tuple of float, optional): Defaults to (-0.4, 0.4)
+
+    Returns:
+        None
+
+    &#34;&#34;&#34;
+    if nsamples is None:
+        nsamples = lfp.get_total_samples()
+
+    fig, axes = plt.subplots(nsplits, 1, figsize=figsize)
+    for i in range(nsplits):
+        start = int(offset + i * (nsamples // nsplits))
+        end = int(offset + (i + 1) * (nsamples // nsplits))
+        if nsplits == 1:
+            ax = axes
+        else:
+            ax = axes[i]
+        ax.plot(
+            lfp.get_timestamp()[start:end],
+            lfp.get_samples()[start:end], color=&#39;k&#39;)
+        ax.set_ylim(ylim)
+    plt.tight_layout()
+    bv_plot.savefig(fig, out_name, dpi=400)
+    plt.close(fig)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_plot.plot_polar_coupling"><code class="name flex">
+<span>def <span class="ident">plot_polar_coupling</span></span>(<span>polar_vectors, mvl, name=None, dpi=100)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_polar_coupling(polar_vectors, mvl, name=None, dpi=100):
+    # Kind of the right idea here, but need avg line in bins
+    # instead of scatter...
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection=&#34;polar&#34;)
+    res_vec = np.sum(polar_vectors)
+    norm = np.abs(res_vec) / mvl
+
+    from neurochat.nc_circular import CircStat
+    cs = CircStat()
+    r = np.abs(polar_vectors)
+    theta = np.rad2deg(np.angle(polar_vectors))
+    print(r, theta)
+    ax.scatter(theta, r)
+    cs.set_rho(r)
+    cs.set_theta(theta)
+    count, ind, bins = cs.circ_histogram()
+    from scipy.stats import binned_statistic
+    binned_amp = (r, )
+    bins = np.append(bins, bins[0])
+    rate = np.append(count, count[0])
+    print(bins, rate)
+    # ax.plot(np.deg2rad(bins), rate, color=&#34;k&#34;)
+    res_line = (res_vec / norm)
+    print(res_vec)
+    ax.plot([np.angle(res_vec), np.angle(res_vec)], [0, norm * mvl], c=&#34;r&#34;)
+    ax.text(np.pi / 8, 0.00001, &#34;MVL {:.5f}&#34;.format(mvl))
+    ax.set_ylim(0, r.max())
+    if name is None:
+        plt.show()
+    else:
+        fig.savefig(name, dpi=dpi)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_plot.plot_sample_of_signal"><code class="name flex">
+<span>def <span class="ident">plot_sample_of_signal</span></span>(<span>load_loc, out_dir=None, name=None, offseta=0, length=50, filt_params=(False, None, None))</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Plot a small filtered sample of the LFP signal in the given band.</p>
+<p>offseta and length are times</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_sample_of_signal(
+        load_loc, out_dir=None, name=None, offseta=0, length=50,
+        filt_params=(False, None, None)):
+    &#34;&#34;&#34;
+    Plot a small filtered sample of the LFP signal in the given band.
+
+    offseta and length are times
+    &#34;&#34;&#34;
+    in_dir = os.path.dirname(load_loc)
+    lfp = NLfp()
+    lfp.load(load_loc)
+
+    if out_dir is None:
+        out_loc = &#34;nc_signal&#34;
+        out_dir = os.path.join(in_dir, out_loc)
+
+    if name is None:
+        name = &#34;full_signal_filt.png&#34;
+
+    make_dir_if_not_exists(out_dir)
+    out_name = os.path.join(out_dir, name)
+    fs = lfp.get_sampling_rate()
+    filt, lower, upper = filt_params
+    lfp_to_plot = lfp
+    if filt:
+        lfp_to_plot = deepcopy(lfp)
+        lfp_samples = lfp.get_samples()
+        lfp_samples = butter_filter(
+            lfp_samples, fs, 10, lower, upper, &#39;bandpass&#39;)
+        lfp_to_plot._set_samples(lfp_samples)
+    plot_long_lfp(
+        lfp_to_plot, out_name, nsplits=1, ylim=(-0.325, 0.325), figsize=(20, 2),
+        offset=lfp.get_sampling_rate() * offseta,
+        nsamples=lfp.get_sampling_rate() * length)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="bvmpc" href="index.html">bvmpc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="bvmpc.lfp_plot.calc_wPowerSpectrum" href="#bvmpc.lfp_plot.calc_wPowerSpectrum">calc_wPowerSpectrum</a></code></li>
+<li><code><a title="bvmpc.lfp_plot.lfp_csv" href="#bvmpc.lfp_plot.lfp_csv">lfp_csv</a></code></li>
+<li><code><a title="bvmpc.lfp_plot.plot_coherence" href="#bvmpc.lfp_plot.plot_coherence">plot_coherence</a></code></li>
+<li><code><a title="bvmpc.lfp_plot.plot_lfp" href="#bvmpc.lfp_plot.plot_lfp">plot_lfp</a></code></li>
+<li><code><a title="bvmpc.lfp_plot.plot_long_lfp" href="#bvmpc.lfp_plot.plot_long_lfp">plot_long_lfp</a></code></li>
+<li><code><a title="bvmpc.lfp_plot.plot_polar_coupling" href="#bvmpc.lfp_plot.plot_polar_coupling">plot_polar_coupling</a></code></li>
+<li><code><a title="bvmpc.lfp_plot.plot_sample_of_signal" href="#bvmpc.lfp_plot.plot_sample_of_signal">plot_sample_of_signal</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

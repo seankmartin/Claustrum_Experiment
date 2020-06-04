@@ -1,0 +1,1023 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>bvmpc.lfp_odict API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>bvmpc.lfp_odict</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import math
+import os
+from collections import OrderedDict
+from copy import deepcopy
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+from neurochat.nc_lfp import NLfp
+from neurochat.nc_utils import butter_filter
+
+
+class LfpODict:
+    &#34;&#34;&#34;This class holds LFP files over multiple channels in a recording.&#34;&#34;&#34;
+
+    def __init__(
+            self, filename, channels=&#34;all&#34;, filt_params=(False, None, None), artf_params=(False, None, None, None, False)):
+        &#34;&#34;&#34;
+        Load the channels from filename.
+
+        Args:
+            filename (str): The basename of the file.
+                filename+&#34;.eegX&#34; are the final loaded files
+            channels (str or List, optional): Defaults to [1, 2, ..., 32].
+                The list of channels to load.
+            filt_params (tuple(bool, float, float), optional):
+                Defaults to (False, None, None)
+                (Should filter, lower_bound, upper_bound)
+            artf_params (tuple(bool, float, float, float, bool), optional):
+                Defaults to (False, None, None, None, False)
+                (Should thresh, sd, min_artf_freq, rep_freq, filt)
+
+        Returns:
+            None
+
+        &#34;&#34;&#34;
+        self._init_lfp(filename, channels)
+        self.lfp_filt_odict = OrderedDict()
+        self.info = None
+        self.lfp_dr_odict = None
+        self.dr_info = None
+        self.artf_params = artf_params
+        if filt_params[0]:
+            self.lfp_filt_odict = self.filter(*filt_params[1:])
+        else:
+            self.lfp_filt_odict = self.lfp_odict
+
+        if artf_params[0]:
+            self.lfp_clean_odict = self.deartf(
+                *artf_params[1:])
+        else:
+            self.lfp_clean_odict = self.lfp_filt_odict
+
+    def get_signal(self, key=None):
+        &#34;&#34;&#34;Return signal at key, or full dict if key is None.&#34;&#34;&#34;
+        if type(key) is int:
+            return list(self.lfp_odict.values())[key]
+        if key is not None:
+            return self.lfp_odict.get(key, None)
+        return self.lfp_odict
+
+    def get_filt_signal(self, key=None):
+        &#34;&#34;&#34;Return filtered signal at key, or full dict if key is None.&#34;&#34;&#34;
+        if type(key) is int:
+            return list(self.lfp_filt_odict.values())[key]
+        if key is not None:
+            return self.lfp_filt_odict.get(key, None)
+        return self.lfp_filt_odict
+
+    def get_clean_signal(self, key=None):
+        &#34;&#34;&#34;Return artefact removed signal at key, or full dict if key is None.&#34;&#34;&#34;
+        if type(key) is int:
+            return list(self.lfp_clean_odict.values())[key]
+        if key is not None:
+            return self.lfp_clean_odict.get(key, None)
+        return self.lfp_clean_odict
+
+    def get_signals(self, keys):
+        &#34;&#34;&#34;Return a list of NLFP objects at the given keys.&#34;&#34;&#34;
+        out_list = []
+        for key in keys:
+            to_add = self.lfp_filt_odict.get(key, None)
+            if to_add is None:
+                print(&#34;Warning {} is not in LFP Dict&#34;.format(key))
+            out_list.append(to_add)
+        return out_list
+
+    def get_dr_signals(self):
+        &#34;&#34;&#34;
+        Convert signals stored lfp dict to differential recording mode. Assumes pairs of consecuvitve signals are recorded from the same region.
+        Returns n/2 signals in a dict, with each being the signal difference between pairs of consecutive signals.
+
+        &#34;&#34;&#34;
+        if self.lfp_dr_odict is None:
+            t1, t2, step = 0, 1, 2  # DR btwn tetrodes from the same shuttle
+            # t1, t2, step = 0, 3, 4  # DR btwn tetrodes from the same region but different shuttle
+            # t1, t2, step = 0, 4, 2  # DR btwn tetrodes from the same region but different shuttle
+            self.lfp_dr_odict = OrderedDict()
+            for (key1, lfp1), (key2, lfp2) in zip(list(self.lfp_odict.items())[t1::step], list(self.lfp_odict.items())[t2::step]):
+                dr_key = &#34;{}_{}&#34;.format(key1, key2)
+                dr_lfp = deepcopy(lfp1)
+                dr_lfp.set_channel_id(channel_id=dr_key)
+                dr_lfp._set_samples(lfp1.get_samples() - lfp2.get_samples())
+                self.lfp_dr_odict[dr_key] = dr_lfp
+            if self.artf_params[0]:
+                self.lfp_clean_odict = self.deartf(
+                    *self.artf_params[1:], dr_mode=True)
+
+        return self.lfp_dr_odict
+
+    def filter(self, lower, upper):
+        &#34;&#34;&#34;
+        Filter all the signals in the stored lfp dict.
+
+        Args:
+            lower, upper (float, float):
+                lower and upper bands of the lfp signal in Hz
+
+        Returns:
+            OrderedDict of filtered singals.
+
+        &#34;&#34;&#34;
+        if upper &lt; lower:
+            print(&#34;Must provide lower less than upper when filtering&#34;)
+            exit(-1)
+        lfp_filt_odict = OrderedDict()
+        for key, lfp in self.lfp_odict.items():
+            filt_lfp = deepcopy(lfp)
+            fs = filt_lfp.get_sampling_rate()
+            filtered_lfp_samples = butter_filter(
+                filt_lfp.get_samples(), fs, 10,
+                lower, upper, &#39;bandpass&#39;)
+            filt_lfp._set_samples(filtered_lfp_samples)
+            lfp_filt_odict[key] = filt_lfp
+        return lfp_filt_odict
+
+    def _init_lfp(self, filename, channels=&#34;all&#34;):
+        &#34;&#34;&#34;
+        Setup an orderedDict of lfp objects, one for each channel.
+
+        Args:
+            filename (str): The basename of the file.
+                filename+&#34;.eegX&#34; are the final loaded files
+            channels (str or List, optional): Defaults to [1, 2, ..., 32].
+                The list of channels to load.
+
+        Returns:
+            None
+
+        &#34;&#34;&#34;
+        lfp_odict = OrderedDict()
+        if channels == &#34;all&#34;:
+            channels = [i + 1 for i in range(32)]
+
+        for i in channels:
+            end = &#34;.eeg&#34;
+            if i != 1 and i != &#34;1&#34;:
+                end = end + str(i)
+            load_loc = filename + end
+            lfp = NLfp(system=&#34;Axona&#34;)
+            lfp.load(load_loc)
+            if lfp.get_samples() is None:
+                raise Exception(&#34;Failed to load lfp {}&#34;.format(load_loc))
+            lfp_odict[str(i)] = lfp
+        self.lfp_odict = lfp_odict
+
+    def __len__(self):
+        return len(self.get_signal())
+
+    def add_info(self, key, info, name):
+        if self.info is None:
+            self.info = OrderedDict()
+        if not key in self.info.keys():
+            self.info[key] = {}
+        self.info[key][name] = info
+
+    def get_info(self, key, name):
+        if self.info is None:
+            raise ValueError(&#34;info has not been initialised in LFPODict&#34;)
+        return self.info[key][name]
+
+    def does_info_exist(self, name):
+        if self.info is not None:
+            for item in self.info.values():
+                if name in item.keys():
+                    return True
+        return False
+
+    def add_dr_info(self, key, info, name):
+        if self.dr_info is None:
+            self.dr_info = OrderedDict()
+        if not key in self.dr_info.keys():
+            self.dr_info[key] = {}
+        self.dr_info[key][name] = info
+
+    def get_dr_info(self, key, name):
+        if self.dr_info is None:
+            raise ValueError(&#34;info has not been initialised in LFPODict&#34;)
+        return self.dr_info[key][name]
+
+    def does_dr_info_exist(self, name):
+        if self.dr_info is not None:
+            for item in self.dr_info.values():
+                if name in item.keys():
+                    return True
+        return False
+
+    def find_artf(self, sd, min_artf_freq, filt=False, dr_mode=False):
+        if dr_mode:
+            lfp_dict_s = self.get_dr_signals()
+            if self.does_dr_info_exist(&#34;mean&#34;):
+                print(&#34;Already calculated artefacts for this lfp_o_dict&#34;)
+                return
+            add_info = self.add_dr_info
+        else:
+            if self.does_info_exist(&#34;mean&#34;):
+                print(&#34;Already calculated artefacts for this lfp_o_dict&#34;)
+                return
+            if filt:
+                lfp_dict_s = self.get_filt_signal()
+            else:
+                lfp_dict_s = self.get_signal()
+
+            add_info = self.add_info
+
+        for key, lfp in lfp_dict_s.items():
+            # info is mean, sd, thr_locs, thr_vals, thr_time
+            mean, std, thr_locs, thr_vals, thr_time, per_removed = lfp.find_artf(
+                sd, min_artf_freq)
+            add_info(key, mean, &#34;mean&#34;)
+            add_info(key, std, &#34;std&#34;)
+            add_info(key, thr_locs, &#34;thr_locs&#34;)
+            add_info(key, thr_vals, &#34;thr_vals&#34;)
+            add_info(key, thr_time, &#34;thr_time&#34;)
+            add_info(key, per_removed, &#34;artf_removed&#34;)
+
+    def deartf(self, sd, min_artf_freq, rep_freq=None, filt=False, dr_mode=False):
+        &#34;&#34;&#34;
+        remove artifacts based on SD thresholding.
+
+        Args:
+            sd, min_artf_freq, filt, rep_freq (float, float, bool, float):
+                Standard Deviation used for thresholding
+                minimum artefact frequency used to determine block removal size
+                True - removes artefacts from filtered signals
+                replaces artefacts with sin wave of this freq
+
+
+        Returns:
+            OrderedDict of signals with artefacts replaced.
+
+        &#34;&#34;&#34;
+        self.find_artf(sd, min_artf_freq, filt, dr_mode)
+
+        lfp_clean_odict = OrderedDict()
+
+        if dr_mode:
+            print(&#39;Removing artf from DR&#39;)
+            signal_used = self.get_dr_signals()
+        else:
+            signal_used = self.lfp_filt_odict
+
+        for key, lfp in signal_used.items():
+            clean_lfp = deepcopy(lfp)
+            if dr_mode:
+                thr_locs = self.get_dr_info(key, &#34;thr_locs&#34;)
+            else:
+                thr_locs = self.get_info(key, &#34;thr_locs&#34;)
+
+            if rep_freq is None:
+                clean_lfp._samples[thr_locs] = np.mean(
+                    clean_lfp._samples)
+            else:
+                times = lfp.get_timestamp()
+                rep_sig = 0.5 * np.sin(2 * np.pi * rep_freq * times)
+                clean_lfp._samples[thr_locs] = rep_sig[thr_locs]
+                # clean_lfp._samples[250*60:250*120] = rep_sig[250*60:250*120]  # To artifically introduce sign at 1-2mins
+            lfp_clean_odict[key] = clean_lfp
+
+        return lfp_clean_odict
+
+    def __len__(self):
+        return len(self.lfp_odict)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="bvmpc.lfp_odict.LfpODict"><code class="flex name class">
+<span>class <span class="ident">LfpODict</span></span>
+<span>(</span><span>filename, channels='all', filt_params=(False, None, None), artf_params=(False, None, None, None, False))</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This class holds LFP files over multiple channels in a recording.</p>
+<p>Load the channels from filename.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>The basename of the file.
+filename+".eegX" are the final loaded files</dd>
+<dt><strong><code>channels</code></strong> :&ensp;<code>str</code> or <code>List</code>, optional</dt>
+<dd>Defaults to [1, 2, &hellip;, 32].
+The list of channels to load.</dd>
+</dl>
+<p>filt_params (tuple(bool, float, float), optional):
+Defaults to (False, None, None)
+(Should filter, lower_bound, upper_bound)
+artf_params (tuple(bool, float, float, float, bool), optional):
+Defaults to (False, None, None, None, False)
+(Should thresh, sd, min_artf_freq, rep_freq, filt)</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LfpODict:
+    &#34;&#34;&#34;This class holds LFP files over multiple channels in a recording.&#34;&#34;&#34;
+
+    def __init__(
+            self, filename, channels=&#34;all&#34;, filt_params=(False, None, None), artf_params=(False, None, None, None, False)):
+        &#34;&#34;&#34;
+        Load the channels from filename.
+
+        Args:
+            filename (str): The basename of the file.
+                filename+&#34;.eegX&#34; are the final loaded files
+            channels (str or List, optional): Defaults to [1, 2, ..., 32].
+                The list of channels to load.
+            filt_params (tuple(bool, float, float), optional):
+                Defaults to (False, None, None)
+                (Should filter, lower_bound, upper_bound)
+            artf_params (tuple(bool, float, float, float, bool), optional):
+                Defaults to (False, None, None, None, False)
+                (Should thresh, sd, min_artf_freq, rep_freq, filt)
+
+        Returns:
+            None
+
+        &#34;&#34;&#34;
+        self._init_lfp(filename, channels)
+        self.lfp_filt_odict = OrderedDict()
+        self.info = None
+        self.lfp_dr_odict = None
+        self.dr_info = None
+        self.artf_params = artf_params
+        if filt_params[0]:
+            self.lfp_filt_odict = self.filter(*filt_params[1:])
+        else:
+            self.lfp_filt_odict = self.lfp_odict
+
+        if artf_params[0]:
+            self.lfp_clean_odict = self.deartf(
+                *artf_params[1:])
+        else:
+            self.lfp_clean_odict = self.lfp_filt_odict
+
+    def get_signal(self, key=None):
+        &#34;&#34;&#34;Return signal at key, or full dict if key is None.&#34;&#34;&#34;
+        if type(key) is int:
+            return list(self.lfp_odict.values())[key]
+        if key is not None:
+            return self.lfp_odict.get(key, None)
+        return self.lfp_odict
+
+    def get_filt_signal(self, key=None):
+        &#34;&#34;&#34;Return filtered signal at key, or full dict if key is None.&#34;&#34;&#34;
+        if type(key) is int:
+            return list(self.lfp_filt_odict.values())[key]
+        if key is not None:
+            return self.lfp_filt_odict.get(key, None)
+        return self.lfp_filt_odict
+
+    def get_clean_signal(self, key=None):
+        &#34;&#34;&#34;Return artefact removed signal at key, or full dict if key is None.&#34;&#34;&#34;
+        if type(key) is int:
+            return list(self.lfp_clean_odict.values())[key]
+        if key is not None:
+            return self.lfp_clean_odict.get(key, None)
+        return self.lfp_clean_odict
+
+    def get_signals(self, keys):
+        &#34;&#34;&#34;Return a list of NLFP objects at the given keys.&#34;&#34;&#34;
+        out_list = []
+        for key in keys:
+            to_add = self.lfp_filt_odict.get(key, None)
+            if to_add is None:
+                print(&#34;Warning {} is not in LFP Dict&#34;.format(key))
+            out_list.append(to_add)
+        return out_list
+
+    def get_dr_signals(self):
+        &#34;&#34;&#34;
+        Convert signals stored lfp dict to differential recording mode. Assumes pairs of consecuvitve signals are recorded from the same region.
+        Returns n/2 signals in a dict, with each being the signal difference between pairs of consecutive signals.
+
+        &#34;&#34;&#34;
+        if self.lfp_dr_odict is None:
+            t1, t2, step = 0, 1, 2  # DR btwn tetrodes from the same shuttle
+            # t1, t2, step = 0, 3, 4  # DR btwn tetrodes from the same region but different shuttle
+            # t1, t2, step = 0, 4, 2  # DR btwn tetrodes from the same region but different shuttle
+            self.lfp_dr_odict = OrderedDict()
+            for (key1, lfp1), (key2, lfp2) in zip(list(self.lfp_odict.items())[t1::step], list(self.lfp_odict.items())[t2::step]):
+                dr_key = &#34;{}_{}&#34;.format(key1, key2)
+                dr_lfp = deepcopy(lfp1)
+                dr_lfp.set_channel_id(channel_id=dr_key)
+                dr_lfp._set_samples(lfp1.get_samples() - lfp2.get_samples())
+                self.lfp_dr_odict[dr_key] = dr_lfp
+            if self.artf_params[0]:
+                self.lfp_clean_odict = self.deartf(
+                    *self.artf_params[1:], dr_mode=True)
+
+        return self.lfp_dr_odict
+
+    def filter(self, lower, upper):
+        &#34;&#34;&#34;
+        Filter all the signals in the stored lfp dict.
+
+        Args:
+            lower, upper (float, float):
+                lower and upper bands of the lfp signal in Hz
+
+        Returns:
+            OrderedDict of filtered singals.
+
+        &#34;&#34;&#34;
+        if upper &lt; lower:
+            print(&#34;Must provide lower less than upper when filtering&#34;)
+            exit(-1)
+        lfp_filt_odict = OrderedDict()
+        for key, lfp in self.lfp_odict.items():
+            filt_lfp = deepcopy(lfp)
+            fs = filt_lfp.get_sampling_rate()
+            filtered_lfp_samples = butter_filter(
+                filt_lfp.get_samples(), fs, 10,
+                lower, upper, &#39;bandpass&#39;)
+            filt_lfp._set_samples(filtered_lfp_samples)
+            lfp_filt_odict[key] = filt_lfp
+        return lfp_filt_odict
+
+    def _init_lfp(self, filename, channels=&#34;all&#34;):
+        &#34;&#34;&#34;
+        Setup an orderedDict of lfp objects, one for each channel.
+
+        Args:
+            filename (str): The basename of the file.
+                filename+&#34;.eegX&#34; are the final loaded files
+            channels (str or List, optional): Defaults to [1, 2, ..., 32].
+                The list of channels to load.
+
+        Returns:
+            None
+
+        &#34;&#34;&#34;
+        lfp_odict = OrderedDict()
+        if channels == &#34;all&#34;:
+            channels = [i + 1 for i in range(32)]
+
+        for i in channels:
+            end = &#34;.eeg&#34;
+            if i != 1 and i != &#34;1&#34;:
+                end = end + str(i)
+            load_loc = filename + end
+            lfp = NLfp(system=&#34;Axona&#34;)
+            lfp.load(load_loc)
+            if lfp.get_samples() is None:
+                raise Exception(&#34;Failed to load lfp {}&#34;.format(load_loc))
+            lfp_odict[str(i)] = lfp
+        self.lfp_odict = lfp_odict
+
+    def __len__(self):
+        return len(self.get_signal())
+
+    def add_info(self, key, info, name):
+        if self.info is None:
+            self.info = OrderedDict()
+        if not key in self.info.keys():
+            self.info[key] = {}
+        self.info[key][name] = info
+
+    def get_info(self, key, name):
+        if self.info is None:
+            raise ValueError(&#34;info has not been initialised in LFPODict&#34;)
+        return self.info[key][name]
+
+    def does_info_exist(self, name):
+        if self.info is not None:
+            for item in self.info.values():
+                if name in item.keys():
+                    return True
+        return False
+
+    def add_dr_info(self, key, info, name):
+        if self.dr_info is None:
+            self.dr_info = OrderedDict()
+        if not key in self.dr_info.keys():
+            self.dr_info[key] = {}
+        self.dr_info[key][name] = info
+
+    def get_dr_info(self, key, name):
+        if self.dr_info is None:
+            raise ValueError(&#34;info has not been initialised in LFPODict&#34;)
+        return self.dr_info[key][name]
+
+    def does_dr_info_exist(self, name):
+        if self.dr_info is not None:
+            for item in self.dr_info.values():
+                if name in item.keys():
+                    return True
+        return False
+
+    def find_artf(self, sd, min_artf_freq, filt=False, dr_mode=False):
+        if dr_mode:
+            lfp_dict_s = self.get_dr_signals()
+            if self.does_dr_info_exist(&#34;mean&#34;):
+                print(&#34;Already calculated artefacts for this lfp_o_dict&#34;)
+                return
+            add_info = self.add_dr_info
+        else:
+            if self.does_info_exist(&#34;mean&#34;):
+                print(&#34;Already calculated artefacts for this lfp_o_dict&#34;)
+                return
+            if filt:
+                lfp_dict_s = self.get_filt_signal()
+            else:
+                lfp_dict_s = self.get_signal()
+
+            add_info = self.add_info
+
+        for key, lfp in lfp_dict_s.items():
+            # info is mean, sd, thr_locs, thr_vals, thr_time
+            mean, std, thr_locs, thr_vals, thr_time, per_removed = lfp.find_artf(
+                sd, min_artf_freq)
+            add_info(key, mean, &#34;mean&#34;)
+            add_info(key, std, &#34;std&#34;)
+            add_info(key, thr_locs, &#34;thr_locs&#34;)
+            add_info(key, thr_vals, &#34;thr_vals&#34;)
+            add_info(key, thr_time, &#34;thr_time&#34;)
+            add_info(key, per_removed, &#34;artf_removed&#34;)
+
+    def deartf(self, sd, min_artf_freq, rep_freq=None, filt=False, dr_mode=False):
+        &#34;&#34;&#34;
+        remove artifacts based on SD thresholding.
+
+        Args:
+            sd, min_artf_freq, filt, rep_freq (float, float, bool, float):
+                Standard Deviation used for thresholding
+                minimum artefact frequency used to determine block removal size
+                True - removes artefacts from filtered signals
+                replaces artefacts with sin wave of this freq
+
+
+        Returns:
+            OrderedDict of signals with artefacts replaced.
+
+        &#34;&#34;&#34;
+        self.find_artf(sd, min_artf_freq, filt, dr_mode)
+
+        lfp_clean_odict = OrderedDict()
+
+        if dr_mode:
+            print(&#39;Removing artf from DR&#39;)
+            signal_used = self.get_dr_signals()
+        else:
+            signal_used = self.lfp_filt_odict
+
+        for key, lfp in signal_used.items():
+            clean_lfp = deepcopy(lfp)
+            if dr_mode:
+                thr_locs = self.get_dr_info(key, &#34;thr_locs&#34;)
+            else:
+                thr_locs = self.get_info(key, &#34;thr_locs&#34;)
+
+            if rep_freq is None:
+                clean_lfp._samples[thr_locs] = np.mean(
+                    clean_lfp._samples)
+            else:
+                times = lfp.get_timestamp()
+                rep_sig = 0.5 * np.sin(2 * np.pi * rep_freq * times)
+                clean_lfp._samples[thr_locs] = rep_sig[thr_locs]
+                # clean_lfp._samples[250*60:250*120] = rep_sig[250*60:250*120]  # To artifically introduce sign at 1-2mins
+            lfp_clean_odict[key] = clean_lfp
+
+        return lfp_clean_odict
+
+    def __len__(self):
+        return len(self.lfp_odict)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="bvmpc.lfp_odict.LfpODict.add_dr_info"><code class="name flex">
+<span>def <span class="ident">add_dr_info</span></span>(<span>self, key, info, name)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_dr_info(self, key, info, name):
+    if self.dr_info is None:
+        self.dr_info = OrderedDict()
+    if not key in self.dr_info.keys():
+        self.dr_info[key] = {}
+    self.dr_info[key][name] = info</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_odict.LfpODict.add_info"><code class="name flex">
+<span>def <span class="ident">add_info</span></span>(<span>self, key, info, name)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_info(self, key, info, name):
+    if self.info is None:
+        self.info = OrderedDict()
+    if not key in self.info.keys():
+        self.info[key] = {}
+    self.info[key][name] = info</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_odict.LfpODict.deartf"><code class="name flex">
+<span>def <span class="ident">deartf</span></span>(<span>self, sd, min_artf_freq, rep_freq=None, filt=False, dr_mode=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>remove artifacts based on SD thresholding.</p>
+<h2 id="args">Args</h2>
+<p>sd, min_artf_freq, filt, rep_freq (float, float, bool, float):
+Standard Deviation used for thresholding
+minimum artefact frequency used to determine block removal size
+True - removes artefacts from filtered signals
+replaces artefacts with sin wave of this freq</p>
+<h2 id="returns">Returns</h2>
+<p>OrderedDict of signals with artefacts replaced.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def deartf(self, sd, min_artf_freq, rep_freq=None, filt=False, dr_mode=False):
+    &#34;&#34;&#34;
+    remove artifacts based on SD thresholding.
+
+    Args:
+        sd, min_artf_freq, filt, rep_freq (float, float, bool, float):
+            Standard Deviation used for thresholding
+            minimum artefact frequency used to determine block removal size
+            True - removes artefacts from filtered signals
+            replaces artefacts with sin wave of this freq
+
+
+    Returns:
+        OrderedDict of signals with artefacts replaced.
+
+    &#34;&#34;&#34;
+    self.find_artf(sd, min_artf_freq, filt, dr_mode)
+
+    lfp_clean_odict = OrderedDict()
+
+    if dr_mode:
+        print(&#39;Removing artf from DR&#39;)
+        signal_used = self.get_dr_signals()
+    else:
+        signal_used = self.lfp_filt_odict
+
+    for key, lfp in signal_used.items():
+        clean_lfp = deepcopy(lfp)
+        if dr_mode:
+            thr_locs = self.get_dr_info(key, &#34;thr_locs&#34;)
+        else:
+            thr_locs = self.get_info(key, &#34;thr_locs&#34;)
+
+        if rep_freq is None:
+            clean_lfp._samples[thr_locs] = np.mean(
+                clean_lfp._samples)
+        else:
+            times = lfp.get_timestamp()
+            rep_sig = 0.5 * np.sin(2 * np.pi * rep_freq * times)
+            clean_lfp._samples[thr_locs] = rep_sig[thr_locs]
+            # clean_lfp._samples[250*60:250*120] = rep_sig[250*60:250*120]  # To artifically introduce sign at 1-2mins
+        lfp_clean_odict[key] = clean_lfp
+
+    return lfp_clean_odict</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_odict.LfpODict.does_dr_info_exist"><code class="name flex">
+<span>def <span class="ident">does_dr_info_exist</span></span>(<span>self, name)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def does_dr_info_exist(self, name):
+    if self.dr_info is not None:
+        for item in self.dr_info.values():
+            if name in item.keys():
+                return True
+    return False</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_odict.LfpODict.does_info_exist"><code class="name flex">
+<span>def <span class="ident">does_info_exist</span></span>(<span>self, name)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def does_info_exist(self, name):
+    if self.info is not None:
+        for item in self.info.values():
+            if name in item.keys():
+                return True
+    return False</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_odict.LfpODict.filter"><code class="name flex">
+<span>def <span class="ident">filter</span></span>(<span>self, lower, upper)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Filter all the signals in the stored lfp dict.</p>
+<h2 id="args">Args</h2>
+<p>lower, upper (float, float):
+lower and upper bands of the lfp signal in Hz</p>
+<h2 id="returns">Returns</h2>
+<p>OrderedDict of filtered singals.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter(self, lower, upper):
+    &#34;&#34;&#34;
+    Filter all the signals in the stored lfp dict.
+
+    Args:
+        lower, upper (float, float):
+            lower and upper bands of the lfp signal in Hz
+
+    Returns:
+        OrderedDict of filtered singals.
+
+    &#34;&#34;&#34;
+    if upper &lt; lower:
+        print(&#34;Must provide lower less than upper when filtering&#34;)
+        exit(-1)
+    lfp_filt_odict = OrderedDict()
+    for key, lfp in self.lfp_odict.items():
+        filt_lfp = deepcopy(lfp)
+        fs = filt_lfp.get_sampling_rate()
+        filtered_lfp_samples = butter_filter(
+            filt_lfp.get_samples(), fs, 10,
+            lower, upper, &#39;bandpass&#39;)
+        filt_lfp._set_samples(filtered_lfp_samples)
+        lfp_filt_odict[key] = filt_lfp
+    return lfp_filt_odict</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_odict.LfpODict.find_artf"><code class="name flex">
+<span>def <span class="ident">find_artf</span></span>(<span>self, sd, min_artf_freq, filt=False, dr_mode=False)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_artf(self, sd, min_artf_freq, filt=False, dr_mode=False):
+    if dr_mode:
+        lfp_dict_s = self.get_dr_signals()
+        if self.does_dr_info_exist(&#34;mean&#34;):
+            print(&#34;Already calculated artefacts for this lfp_o_dict&#34;)
+            return
+        add_info = self.add_dr_info
+    else:
+        if self.does_info_exist(&#34;mean&#34;):
+            print(&#34;Already calculated artefacts for this lfp_o_dict&#34;)
+            return
+        if filt:
+            lfp_dict_s = self.get_filt_signal()
+        else:
+            lfp_dict_s = self.get_signal()
+
+        add_info = self.add_info
+
+    for key, lfp in lfp_dict_s.items():
+        # info is mean, sd, thr_locs, thr_vals, thr_time
+        mean, std, thr_locs, thr_vals, thr_time, per_removed = lfp.find_artf(
+            sd, min_artf_freq)
+        add_info(key, mean, &#34;mean&#34;)
+        add_info(key, std, &#34;std&#34;)
+        add_info(key, thr_locs, &#34;thr_locs&#34;)
+        add_info(key, thr_vals, &#34;thr_vals&#34;)
+        add_info(key, thr_time, &#34;thr_time&#34;)
+        add_info(key, per_removed, &#34;artf_removed&#34;)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_odict.LfpODict.get_clean_signal"><code class="name flex">
+<span>def <span class="ident">get_clean_signal</span></span>(<span>self, key=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return artefact removed signal at key, or full dict if key is None.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_clean_signal(self, key=None):
+    &#34;&#34;&#34;Return artefact removed signal at key, or full dict if key is None.&#34;&#34;&#34;
+    if type(key) is int:
+        return list(self.lfp_clean_odict.values())[key]
+    if key is not None:
+        return self.lfp_clean_odict.get(key, None)
+    return self.lfp_clean_odict</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_odict.LfpODict.get_dr_info"><code class="name flex">
+<span>def <span class="ident">get_dr_info</span></span>(<span>self, key, name)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_dr_info(self, key, name):
+    if self.dr_info is None:
+        raise ValueError(&#34;info has not been initialised in LFPODict&#34;)
+    return self.dr_info[key][name]</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_odict.LfpODict.get_dr_signals"><code class="name flex">
+<span>def <span class="ident">get_dr_signals</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert signals stored lfp dict to differential recording mode. Assumes pairs of consecuvitve signals are recorded from the same region.
+Returns n/2 signals in a dict, with each being the signal difference between pairs of consecutive signals.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_dr_signals(self):
+    &#34;&#34;&#34;
+    Convert signals stored lfp dict to differential recording mode. Assumes pairs of consecuvitve signals are recorded from the same region.
+    Returns n/2 signals in a dict, with each being the signal difference between pairs of consecutive signals.
+
+    &#34;&#34;&#34;
+    if self.lfp_dr_odict is None:
+        t1, t2, step = 0, 1, 2  # DR btwn tetrodes from the same shuttle
+        # t1, t2, step = 0, 3, 4  # DR btwn tetrodes from the same region but different shuttle
+        # t1, t2, step = 0, 4, 2  # DR btwn tetrodes from the same region but different shuttle
+        self.lfp_dr_odict = OrderedDict()
+        for (key1, lfp1), (key2, lfp2) in zip(list(self.lfp_odict.items())[t1::step], list(self.lfp_odict.items())[t2::step]):
+            dr_key = &#34;{}_{}&#34;.format(key1, key2)
+            dr_lfp = deepcopy(lfp1)
+            dr_lfp.set_channel_id(channel_id=dr_key)
+            dr_lfp._set_samples(lfp1.get_samples() - lfp2.get_samples())
+            self.lfp_dr_odict[dr_key] = dr_lfp
+        if self.artf_params[0]:
+            self.lfp_clean_odict = self.deartf(
+                *self.artf_params[1:], dr_mode=True)
+
+    return self.lfp_dr_odict</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_odict.LfpODict.get_filt_signal"><code class="name flex">
+<span>def <span class="ident">get_filt_signal</span></span>(<span>self, key=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return filtered signal at key, or full dict if key is None.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_filt_signal(self, key=None):
+    &#34;&#34;&#34;Return filtered signal at key, or full dict if key is None.&#34;&#34;&#34;
+    if type(key) is int:
+        return list(self.lfp_filt_odict.values())[key]
+    if key is not None:
+        return self.lfp_filt_odict.get(key, None)
+    return self.lfp_filt_odict</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_odict.LfpODict.get_info"><code class="name flex">
+<span>def <span class="ident">get_info</span></span>(<span>self, key, name)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_info(self, key, name):
+    if self.info is None:
+        raise ValueError(&#34;info has not been initialised in LFPODict&#34;)
+    return self.info[key][name]</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_odict.LfpODict.get_signal"><code class="name flex">
+<span>def <span class="ident">get_signal</span></span>(<span>self, key=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return signal at key, or full dict if key is None.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_signal(self, key=None):
+    &#34;&#34;&#34;Return signal at key, or full dict if key is None.&#34;&#34;&#34;
+    if type(key) is int:
+        return list(self.lfp_odict.values())[key]
+    if key is not None:
+        return self.lfp_odict.get(key, None)
+    return self.lfp_odict</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.lfp_odict.LfpODict.get_signals"><code class="name flex">
+<span>def <span class="ident">get_signals</span></span>(<span>self, keys)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a list of NLFP objects at the given keys.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_signals(self, keys):
+    &#34;&#34;&#34;Return a list of NLFP objects at the given keys.&#34;&#34;&#34;
+    out_list = []
+    for key in keys:
+        to_add = self.lfp_filt_odict.get(key, None)
+        if to_add is None:
+            print(&#34;Warning {} is not in LFP Dict&#34;.format(key))
+        out_list.append(to_add)
+    return out_list</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="bvmpc" href="index.html">bvmpc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="bvmpc.lfp_odict.LfpODict" href="#bvmpc.lfp_odict.LfpODict">LfpODict</a></code></h4>
+<ul class="two-column">
+<li><code><a title="bvmpc.lfp_odict.LfpODict.add_dr_info" href="#bvmpc.lfp_odict.LfpODict.add_dr_info">add_dr_info</a></code></li>
+<li><code><a title="bvmpc.lfp_odict.LfpODict.add_info" href="#bvmpc.lfp_odict.LfpODict.add_info">add_info</a></code></li>
+<li><code><a title="bvmpc.lfp_odict.LfpODict.deartf" href="#bvmpc.lfp_odict.LfpODict.deartf">deartf</a></code></li>
+<li><code><a title="bvmpc.lfp_odict.LfpODict.does_dr_info_exist" href="#bvmpc.lfp_odict.LfpODict.does_dr_info_exist">does_dr_info_exist</a></code></li>
+<li><code><a title="bvmpc.lfp_odict.LfpODict.does_info_exist" href="#bvmpc.lfp_odict.LfpODict.does_info_exist">does_info_exist</a></code></li>
+<li><code><a title="bvmpc.lfp_odict.LfpODict.filter" href="#bvmpc.lfp_odict.LfpODict.filter">filter</a></code></li>
+<li><code><a title="bvmpc.lfp_odict.LfpODict.find_artf" href="#bvmpc.lfp_odict.LfpODict.find_artf">find_artf</a></code></li>
+<li><code><a title="bvmpc.lfp_odict.LfpODict.get_clean_signal" href="#bvmpc.lfp_odict.LfpODict.get_clean_signal">get_clean_signal</a></code></li>
+<li><code><a title="bvmpc.lfp_odict.LfpODict.get_dr_info" href="#bvmpc.lfp_odict.LfpODict.get_dr_info">get_dr_info</a></code></li>
+<li><code><a title="bvmpc.lfp_odict.LfpODict.get_dr_signals" href="#bvmpc.lfp_odict.LfpODict.get_dr_signals">get_dr_signals</a></code></li>
+<li><code><a title="bvmpc.lfp_odict.LfpODict.get_filt_signal" href="#bvmpc.lfp_odict.LfpODict.get_filt_signal">get_filt_signal</a></code></li>
+<li><code><a title="bvmpc.lfp_odict.LfpODict.get_info" href="#bvmpc.lfp_odict.LfpODict.get_info">get_info</a></code></li>
+<li><code><a title="bvmpc.lfp_odict.LfpODict.get_signal" href="#bvmpc.lfp_odict.LfpODict.get_signal">get_signal</a></code></li>
+<li><code><a title="bvmpc.lfp_odict.LfpODict.get_signals" href="#bvmpc.lfp_odict.LfpODict.get_signals">get_signals</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.6.3" />
+<meta name="generator" content="pdoc 0.8.1" />
 <title>bvmpc.bv_utils API documentation</title>
 <meta name="description" content="This holds utility functions." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 </head>
 <body>
@@ -22,17 +22,33 @@
 <section id="section-intro">
 <p>This holds utility functions.</p>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">&#34;&#34;&#34;This holds utility functions.&#34;&#34;&#34;
 
+from statistics import mean
 import os
 import re
+import sys
 import argparse
 from datetime import timedelta
 from collections.abc import Iterable
+import shutil
 
-import h5py
 import numpy as np
+import logging
+import configparser
+from pprint import pprint
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+
+def check_fn(item):
+    if isinstance(item, list) or isinstance(item, np.ndarray):
+        if len(item) == 0:
+            return np.nan
+    return item
 
 
 def boolean_indexing(v, fillval=np.nan):
@@ -55,13 +71,22 @@ def make_dir_if_not_exists(location):
     os.makedirs(location, exist_ok=True)
 
 
-def mycolors(subject):
+def mycolors(subject, colors_dict=None):
     &#34;&#34;&#34;Colour options for subject based on number.&#34;&#34;&#34;
-    i = int(subject)
-    mycolors = [&#39;tab:red&#39;, &#39;tab:blue&#39;, &#39;tab:green&#39;, &#39;tab:orange&#39;,
-                &#39;tab:brown&#39;, &#39;deeppink&#39;, &#39;tab:olive&#39;, &#39;tab:pink&#39;,
-                &#39;steelblue&#39;, &#39;firebrick&#39;, &#39;mediumseagreen&#39;]
-    return mycolors[i]
+    try:
+        i = int(subject)
+        if i &gt; 10:
+            i = i % 4
+        mycolors = [&#39;tab:red&#39;, &#39;tab:blue&#39;, &#39;tab:green&#39;, &#39;tab:orange&#39;,
+                    &#39;tab:brown&#39;, &#39;deeppink&#39;, &#39;tab:olive&#39;, &#39;tab:pink&#39;,
+                    &#39;steelblue&#39;, &#39;firebrick&#39;, &#39;mediumseagreen&#39;]
+        color = mycolors[i]
+    except ValueError:
+        if colors_dict == None:
+            print(&#39;Color input for required&#39;)
+            exit(-1)
+        color = colors_dict[subject]
+    return color
 
 
 def split_list(list, chunk_limit):
@@ -86,7 +111,7 @@ def get_attrs(d, depth=0):
     &#34;&#34;&#34;Walk through attributes.&#34;&#34;&#34;
     for k, v in sorted(d.items(), key=lambda x: x[0]):
         spaces = (&#34;  &#34;) * depth
-        if len(v.attrs) is not 0:
+        if len(v.attrs) != 0:
             print(&#34;{}{} has attrs {}&#34;.format(
                 spaces, k, list(v.attrs.items())
             ))
@@ -159,8 +184,15 @@ def get_all_files_in_dir(
     def match_filter(f):
         if re_filter is None:
             return True
-        search_res = re.search(re_filter, f)
-        return search_res is not None
+        if not isinstance(re_filter, list):
+            search_res = re.search(re_filter, f)
+            return search_res is not None
+        else:
+            for re_filt in re_filter:
+                search_res = re.search(re_filt, f)
+                if search_res is None:
+                    return False
+                return True
 
     def ok_file(root_dir, f):
         return (
@@ -248,6 +280,237 @@ def save_dict_to_csv(filename, d):
             f.write(out_str + &#34;\n&#34;)
 
 
+def make_path_if_not_exists(fname):
+    &#34;&#34;&#34;Makes directory structure for given fname&#34;&#34;&#34;
+    os.makedirs(os.path.dirname(fname), exist_ok=True)
+
+
+def setup_logging(in_dir):
+    fname = os.path.join(in_dir, &#39;nc_output.log&#39;)
+    if os.path.isfile(fname):
+        open(fname, &#39;w&#39;).close()
+    logging.basicConfig(
+        filename=fname, level=logging.DEBUG)
+    mpl_logger = logging.getLogger(&#34;matplotlib&#34;)
+    mpl_logger.setLevel(level=logging.WARNING)
+
+
+def print_config(config, msg=&#34;&#34;):
+    &#34;&#34;&#34;Prints the contents of a config file&#34;&#34;&#34;
+    if msg != &#34;&#34;:
+        print(msg)
+    config_dict = [{x: tuple(config.items(x))} for x in config.sections()]
+    pprint(config_dict, width=120)
+    print()
+
+
+def read_cfg(location, verbose=True):
+    config = configparser.ConfigParser()
+    config.read(location)
+
+    if verbose:
+        print_config(config, &#34;Program started with configuration&#34;)
+    return config
+
+
+def parse_args(parser, verbose=True):
+    args, unparsed = parser.parse_known_args()
+
+    if len(unparsed) != 0:
+        print(&#34;Unrecognised command line argument passed&#34;)
+        print(unparsed)
+        exit(-1)
+
+    if verbose:
+        if len(sys.argv) &gt; 1:
+            print(&#34;Command line arguments&#34;, args)
+    return args
+
+
+def get_dirs_matching_regex(start_dir, re_filters=None, return_absolute=True):
+    &#34;&#34;&#34;
+    Recursively get all directories from start_dir that match regex.
+    Parameters
+    ----------
+    start_dir : str
+        The path to the directory to start at.
+    re_filter : str, optional. Defaults to None.
+        The regular expression to match.
+        Returns all directories is passed as None.
+    Returns
+    -------
+    list
+        A list of directories matching the regex.
+    &#34;&#34;&#34;
+    if not os.path.isdir(start_dir):
+        raise ValueError(&#34;Non existant directory &#34; + str(start_dir))
+
+    def match_filter(f):
+        if re_filters is None:
+            return True
+        for re_filter in re_filters:
+            search_res = re.search(re_filter, f)
+            if search_res is None:
+                return False
+        return True
+
+    dirs = []
+    for root, _, _ in os.walk(start_dir):
+        start_root = root[:len(start_dir)]
+
+        if len(root) == len(start_root):
+            end_root = &#34;&#34;
+        else:
+            end_root = root[len(start_dir + os.sep):]
+
+        if match_filter(end_root):
+            to_add = root if return_absolute else end_root
+            dirs.append(to_add)
+    return dirs
+
+
+def interactive_refilt(start_dir, ext=None, write=False, write_loc=None):
+    re_filt = &#34;&#34;
+
+    # Do the interactive setup
+    files = get_all_files_in_dir(
+        start_dir, re_filter=None, return_absolute=False,
+        ext=ext, recursive=True)
+    print(&#34;Without any regex, the result from {} is:&#34;.format(start_dir))
+    for f in files:
+        print(f)
+    while True:
+        this_re_filt = input(
+            &#34;Please enter the regexes seperated by SIM_SEP to test or quit / qt to move on:\n&#34;)
+        done = (
+            (this_re_filt.lower() == &#34;quit&#34;) or
+            (this_re_filt.lower() == &#34;qt&#34;))
+        if done:
+            break
+        if this_re_filt == &#34;&#34;:
+            re_filt = None
+        else:
+            re_filt = this_re_filt.split(&#34; SIM_SEP &#34;)
+        files = get_all_files_in_dir(
+            start_dir, re_filter=re_filt, return_absolute=False,
+            ext=ext, recursive=True)
+        print(&#34;With {} the result is:&#34;.format(re_filt))
+        for f in files:
+            print(f)
+    if re_filt == &#34;&#34;:
+        re_filt = None
+    print(&#34;The final regex was: {}&#34;.format(re_filt))
+
+    # Save the result
+    if write:
+        if write_loc is None:
+            raise ValueError(&#34;Pass a location to write to when writing.&#34;)
+        regex_filts = re_filt
+        neuro_file = open(write_loc, &#34;r&#34;)
+        temp_file = open(&#34;temp.txt&#34;, &#34;w&#34;)
+        for line in neuro_file:
+
+            if line.startswith(&#34;    regex_filter =&#34;):
+                line = &#34;    regex_filter = &#34; + str(regex_filts) + &#34;\n&#34;
+                print(&#34;Set the regex filter to: &#34; + line)
+                temp_file.write(line)
+            elif line.startswith(&#34;interactive =&#34;):
+                line = &#34;interactive = False\n&#34;
+                temp_file.write(line)
+            else:
+                temp_file.write(line)
+
+        neuro_file.close()
+        temp_file.close()
+
+        os.remove(write_loc)
+        shutil.move(&#34;temp.txt&#34;, write_loc)
+
+    return re_filt
+
+
+def find_ranges(iterable):
+    &#34;&#34;&#34;Yield range of consecutive numbers.&#34;&#34;&#34;
+    import more_itertools as mit
+    for group in mit.consecutive_groups(iterable):
+        group = list(group)
+        if len(group) == 1:
+            yield group[0], group[0]
+        else:
+            yield group[0], group[-1]
+
+
+def find_in(a, b):
+    &#34;&#34;&#34;Returns a boolean array of len(b) with True if any elements in a is found in b&#34;&#34;&#34;
+    def t_val(x): return x in a
+    truth = [t_val(x) for x in b]
+    return truth
+
+
+def ordered_set(arr):
+    &#34;&#34;&#34;Returns set in order it was first seen&#34;&#34;&#34;
+    set_a = []
+    for x in arr:
+        if x not in set_a:
+            set_a.append(x)
+    return set_a
+
+
+def get_dist(x, plot=False):
+    &#34;&#34;&#34;
+    x: list
+        Prints Min, Max, Mean and Values in x
+    plot: boolean, False
+        Shows plot of distribution
+
+    &#34;&#34;&#34;
+    if type(x) is np.ndarray:
+        print(&#34;Min: &#34;, np.min(x), &#34;\nMax: &#34;, np.max(x),
+              &#34;\nMean: &#34;, np.mean(x), &#34;\nValues: &#34;, x)
+
+    elif type(x) is list:
+        print(&#34;Min: &#34;, min(x), &#34;\nMax: &#34;, max(x),
+              &#34;\nMean: &#34;, mean(x), &#34;\nValues: &#34;, x)
+
+    if plot:
+        sns.distplot(x)
+        plt.show()
+    exit(-1)
+
+
+def test_all_hier_clustering(data, verbose=False):
+    &#34;&#34;&#34; For testing all perumatations for hierarchical clustering linkage &#34;&#34;&#34;
+    import pandas as pd
+    import scipy.cluster.hierarchy as shc
+    from scipy.cluster.hierarchy import cophenet
+    from scipy.spatial.distance import pdist
+
+    link_methods = [&#39;single&#39;, &#39;complete&#39;,
+                    &#39;average&#39;, &#39;weighted&#39;, &#39;centroid&#39;, &#39;median&#39;, &#39;ward&#39;]
+    link_metric = [&#39;braycurtis&#39;, &#39;canberra&#39;, &#39;chebyshev&#39;, &#39;cityblock&#39;, &#39;correlation&#39;, &#39;cosine&#39;, &#39;dice&#39;, &#39;euclidean&#39;, &#39;hamming&#39;, &#39;jaccard&#39;, &#39;jensenshannon&#39;,
+                   &#39;kulsinski&#39;, &#39;mahalanobis&#39;, &#39;matching&#39;, &#39;minkowski&#39;, &#39;rogerstanimoto&#39;, &#39;russellrao&#39;, &#39;seuclidean&#39;, &#39;sokalmichener&#39;, &#39;sokalsneath&#39;, &#39;sqeuclidean&#39;, &#39;yule&#39;]
+
+    coph = np.zeros((len(link_methods), len(link_metric)))
+    for i, link in enumerate(link_methods):
+        for j, metric in enumerate(link_metric):
+            try:
+                Z = shc.linkage(data, method=link, metric=metric)
+                c, coph_dists = cophenet(Z, pdist(data))
+                coph[i, j] = c
+            except:
+                coph[i, j] = np.nan
+
+    max_coph = np.nanmax(coph)
+    a, b = np.where(coph == max_coph)
+    coph_df = pd.DataFrame(coph, index=link_methods,
+                           columns=link_metric)
+    if verbose:
+        print(coph_df)
+    print(&#39;\nMax Cophentic Correlation Coefficient: &#39;,
+          coph_df.index.values[a], coph_df.columns.values[b], max_coph)
+    return coph_df
+
+
 if __name__ == &#34;__main__&#34;:
     &#34;&#34;&#34;Main entry point.&#34;&#34;&#34;
     PARSER = argparse.ArgumentParser(
@@ -271,9 +534,11 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">boolean_indexing</span></span>(<span>v, fillval=nan)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Index a numpy array using a boolean mask.</p></section>
+<div class="desc"><p>Index a numpy array using a boolean mask.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def boolean_indexing(v, fillval=np.nan):
     &#34;&#34;&#34;Index a numpy array using a boolean mask.&#34;&#34;&#34;
     lens = np.array([len(item) for item in v])
@@ -283,13 +548,31 @@ if __name__ == &#34;__main__&#34;:
     return out</code></pre>
 </details>
 </dd>
+<dt id="bvmpc.bv_utils.check_fn"><code class="name flex">
+<span>def <span class="ident">check_fn</span></span>(<span>item)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_fn(item):
+    if isinstance(item, list) or isinstance(item, np.ndarray):
+        if len(item) == 0:
+            return np.nan
+    return item</code></pre>
+</details>
+</dd>
 <dt id="bvmpc.bv_utils.chunks"><code class="name flex">
 <span>def <span class="ident">chunks</span></span>(<span>l, n)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Yield successive n-sized chunks from l.</p></section>
+<div class="desc"><p>Yield successive n-sized chunks from l.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def chunks(l, n):
     &#34;&#34;&#34;Yield successive n-sized chunks from l.&#34;&#34;&#34;
     for i in range(0, len(l), n):
@@ -300,20 +583,58 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">daterange</span></span>(<span>start_date, end_date)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Yield a generator of dates between start and end date.</p></section>
+<div class="desc"><p>Yield a generator of dates between start and end date.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def daterange(start_date, end_date):
     &#34;&#34;&#34;Yield a generator of dates between start and end date.&#34;&#34;&#34;
     for n in range(int((end_date - start_date).days)):
         yield start_date + timedelta(n)</code></pre>
 </details>
 </dd>
+<dt id="bvmpc.bv_utils.find_in"><code class="name flex">
+<span>def <span class="ident">find_in</span></span>(<span>a, b)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a boolean array of len(b) with True if any elements in a is found in b</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_in(a, b):
+    &#34;&#34;&#34;Returns a boolean array of len(b) with True if any elements in a is found in b&#34;&#34;&#34;
+    def t_val(x): return x in a
+    truth = [t_val(x) for x in b]
+    return truth</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.find_ranges"><code class="name flex">
+<span>def <span class="ident">find_ranges</span></span>(<span>iterable)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Yield range of consecutive numbers.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_ranges(iterable):
+    &#34;&#34;&#34;Yield range of consecutive numbers.&#34;&#34;&#34;
+    import more_itertools as mit
+    for group in mit.consecutive_groups(iterable):
+        group = list(group)
+        if len(group) == 1:
+            yield group[0], group[0]
+        else:
+            yield group[0], group[-1]</code></pre>
+</details>
+</dd>
 <dt id="bvmpc.bv_utils.get_all_files_in_dir"><code class="name flex">
 <span>def <span class="ident">get_all_files_in_dir</span></span>(<span>in_dir, ext=None, return_absolute=True, recursive=False, verbose=False, re_filter=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Get all files in the directory with the given extension.</p>
+<div class="desc"><p>Get all files in the directory with the given extension.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>in_dir</code></strong> :&ensp;<code>str</code></dt>
@@ -329,11 +650,13 @@ verbose: bool, optional. Defaults to False.
 Whether to print the files found.</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>List</code></strong> :&ensp;<code>A</code> <code>list</code> of <code>filenames</code></dt>
+<dt><strong><code>List</code></strong> :&ensp;<code>A list</code> of <code>filenames</code></dt>
 <dd>&nbsp;</dd>
-</dl></section>
+</dl></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_all_files_in_dir(
         in_dir, ext=None, return_absolute=True,
         recursive=False, verbose=False, re_filter=None):
@@ -365,8 +688,15 @@ Whether to print the files found.</p>
     def match_filter(f):
         if re_filter is None:
             return True
-        search_res = re.search(re_filter, f)
-        return search_res is not None
+        if not isinstance(re_filter, list):
+            search_res = re.search(re_filter, f)
+            return search_res is not None
+        else:
+            for re_filt in re_filter:
+                search_res = re.search(re_filt, f)
+                if search_res is None:
+                    return False
+                return True
 
     def ok_file(root_dir, f):
         return (
@@ -414,14 +744,16 @@ Whether to print the files found.</p>
 <span>def <span class="ident">get_attrs</span></span>(<span>d, depth=0)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Walk through attributes.</p></section>
+<div class="desc"><p>Walk through attributes.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_attrs(d, depth=0):
     &#34;&#34;&#34;Walk through attributes.&#34;&#34;&#34;
     for k, v in sorted(d.items(), key=lambda x: x[0]):
         spaces = (&#34;  &#34;) * depth
-        if len(v.attrs) is not 0:
+        if len(v.attrs) != 0:
             print(&#34;{}{} has attrs {}&#34;.format(
                 spaces, k, list(v.attrs.items())
             ))
@@ -429,11 +761,111 @@ Whether to print the files found.</p>
             get_attrs(v, depth=depth + 1)</code></pre>
 </details>
 </dd>
+<dt id="bvmpc.bv_utils.get_dirs_matching_regex"><code class="name flex">
+<span>def <span class="ident">get_dirs_matching_regex</span></span>(<span>start_dir, re_filters=None, return_absolute=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Recursively get all directories from start_dir that match regex.
+Parameters</p>
+<hr>
+<dl>
+<dt><strong><code>start_dir</code></strong> :&ensp;<code>str</code></dt>
+<dd>The path to the directory to start at.</dd>
+</dl>
+<p>re_filter : str, optional. Defaults to None.
+The regular expression to match.
+Returns all directories is passed as None.
+Returns</p>
+<hr>
+<dl>
+<dt><code>list</code></dt>
+<dd>A list of directories matching the regex.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_dirs_matching_regex(start_dir, re_filters=None, return_absolute=True):
+    &#34;&#34;&#34;
+    Recursively get all directories from start_dir that match regex.
+    Parameters
+    ----------
+    start_dir : str
+        The path to the directory to start at.
+    re_filter : str, optional. Defaults to None.
+        The regular expression to match.
+        Returns all directories is passed as None.
+    Returns
+    -------
+    list
+        A list of directories matching the regex.
+    &#34;&#34;&#34;
+    if not os.path.isdir(start_dir):
+        raise ValueError(&#34;Non existant directory &#34; + str(start_dir))
+
+    def match_filter(f):
+        if re_filters is None:
+            return True
+        for re_filter in re_filters:
+            search_res = re.search(re_filter, f)
+            if search_res is None:
+                return False
+        return True
+
+    dirs = []
+    for root, _, _ in os.walk(start_dir):
+        start_root = root[:len(start_dir)]
+
+        if len(root) == len(start_root):
+            end_root = &#34;&#34;
+        else:
+            end_root = root[len(start_dir + os.sep):]
+
+        if match_filter(end_root):
+            to_add = root if return_absolute else end_root
+            dirs.append(to_add)
+    return dirs</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.get_dist"><code class="name flex">
+<span>def <span class="ident">get_dist</span></span>(<span>x, plot=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>x: list
+Prints Min, Max, Mean and Values in x
+plot: boolean, False
+Shows plot of distribution</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_dist(x, plot=False):
+    &#34;&#34;&#34;
+    x: list
+        Prints Min, Max, Mean and Values in x
+    plot: boolean, False
+        Shows plot of distribution
+
+    &#34;&#34;&#34;
+    if type(x) is np.ndarray:
+        print(&#34;Min: &#34;, np.min(x), &#34;\nMax: &#34;, np.max(x),
+              &#34;\nMean: &#34;, np.mean(x), &#34;\nValues: &#34;, x)
+
+    elif type(x) is list:
+        print(&#34;Min: &#34;, min(x), &#34;\nMax: &#34;, max(x),
+              &#34;\nMean: &#34;, mean(x), &#34;\nValues: &#34;, x)
+
+    if plot:
+        sns.distplot(x)
+        plt.show()
+    exit(-1)</code></pre>
+</details>
+</dd>
 <dt id="bvmpc.bv_utils.has_ext"><code class="name flex">
 <span>def <span class="ident">has_ext</span></span>(<span>filename, ext)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Check if the filename ends in the extension.</p>
+<div class="desc"><p>Check if the filename ends in the extension.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
@@ -443,11 +875,13 @@ Whether to print the files found.</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>bool</code> <code>indicating</code> <code>if</code> <code>the</code> <code>filename</code> <code>has</code> <code>the</code> <code>extension</code></dt>
+<dt><code>bool indicating if the filename has the extension</code></dt>
 <dd>&nbsp;</dd>
-</dl></section>
+</dl></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def has_ext(filename, ext):
     &#34;&#34;&#34;
     Check if the filename ends in the extension.
@@ -471,11 +905,80 @@ Whether to print the files found.</p>
     return filename[-len(ext):].lower() == ext.lower()</code></pre>
 </details>
 </dd>
+<dt id="bvmpc.bv_utils.interactive_refilt"><code class="name flex">
+<span>def <span class="ident">interactive_refilt</span></span>(<span>start_dir, ext=None, write=False, write_loc=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def interactive_refilt(start_dir, ext=None, write=False, write_loc=None):
+    re_filt = &#34;&#34;
+
+    # Do the interactive setup
+    files = get_all_files_in_dir(
+        start_dir, re_filter=None, return_absolute=False,
+        ext=ext, recursive=True)
+    print(&#34;Without any regex, the result from {} is:&#34;.format(start_dir))
+    for f in files:
+        print(f)
+    while True:
+        this_re_filt = input(
+            &#34;Please enter the regexes seperated by SIM_SEP to test or quit / qt to move on:\n&#34;)
+        done = (
+            (this_re_filt.lower() == &#34;quit&#34;) or
+            (this_re_filt.lower() == &#34;qt&#34;))
+        if done:
+            break
+        if this_re_filt == &#34;&#34;:
+            re_filt = None
+        else:
+            re_filt = this_re_filt.split(&#34; SIM_SEP &#34;)
+        files = get_all_files_in_dir(
+            start_dir, re_filter=re_filt, return_absolute=False,
+            ext=ext, recursive=True)
+        print(&#34;With {} the result is:&#34;.format(re_filt))
+        for f in files:
+            print(f)
+    if re_filt == &#34;&#34;:
+        re_filt = None
+    print(&#34;The final regex was: {}&#34;.format(re_filt))
+
+    # Save the result
+    if write:
+        if write_loc is None:
+            raise ValueError(&#34;Pass a location to write to when writing.&#34;)
+        regex_filts = re_filt
+        neuro_file = open(write_loc, &#34;r&#34;)
+        temp_file = open(&#34;temp.txt&#34;, &#34;w&#34;)
+        for line in neuro_file:
+
+            if line.startswith(&#34;    regex_filter =&#34;):
+                line = &#34;    regex_filter = &#34; + str(regex_filts) + &#34;\n&#34;
+                print(&#34;Set the regex filter to: &#34; + line)
+                temp_file.write(line)
+            elif line.startswith(&#34;interactive =&#34;):
+                line = &#34;interactive = False\n&#34;
+                temp_file.write(line)
+            else:
+                temp_file.write(line)
+
+        neuro_file.close()
+        temp_file.close()
+
+        os.remove(write_loc)
+        shutil.move(&#34;temp.txt&#34;, write_loc)
+
+    return re_filt</code></pre>
+</details>
+</dd>
 <dt id="bvmpc.bv_utils.log_exception"><code class="name flex">
 <span>def <span class="ident">log_exception</span></span>(<span>ex, more_info='')</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Log an expection and additional info.</p>
+<div class="desc"><p>Log an expection and additional info.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>ex</code></strong> :&ensp;<code>Exception</code></dt>
@@ -487,9 +990,11 @@ Additional string to log</p>
 <dl>
 <dt><code>None</code></dt>
 <dd>&nbsp;</dd>
-</dl></section>
+</dl></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def log_exception(ex, more_info=&#34;&#34;):
     &#34;&#34;&#34;
     Log an expection and additional info.
@@ -515,37 +1020,125 @@ Additional string to log</p>
 <span>def <span class="ident">make_dir_if_not_exists</span></span>(<span>location)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Make directory structure for given location.</p></section>
+<div class="desc"><p>Make directory structure for given location.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def make_dir_if_not_exists(location):
     &#34;&#34;&#34;Make directory structure for given location.&#34;&#34;&#34;
     os.makedirs(location, exist_ok=True)</code></pre>
 </details>
 </dd>
-<dt id="bvmpc.bv_utils.mycolors"><code class="name flex">
-<span>def <span class="ident">mycolors</span></span>(<span>subject)</span>
+<dt id="bvmpc.bv_utils.make_path_if_not_exists"><code class="name flex">
+<span>def <span class="ident">make_path_if_not_exists</span></span>(<span>fname)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Colour options for subject based on number.</p></section>
+<div class="desc"><p>Makes directory structure for given fname</p></div>
 <details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def mycolors(subject):
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_path_if_not_exists(fname):
+    &#34;&#34;&#34;Makes directory structure for given fname&#34;&#34;&#34;
+    os.makedirs(os.path.dirname(fname), exist_ok=True)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.mycolors"><code class="name flex">
+<span>def <span class="ident">mycolors</span></span>(<span>subject, colors_dict=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Colour options for subject based on number.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mycolors(subject, colors_dict=None):
     &#34;&#34;&#34;Colour options for subject based on number.&#34;&#34;&#34;
-    i = int(subject)
-    mycolors = [&#39;tab:red&#39;, &#39;tab:blue&#39;, &#39;tab:green&#39;, &#39;tab:orange&#39;,
-                &#39;tab:brown&#39;, &#39;deeppink&#39;, &#39;tab:olive&#39;, &#39;tab:pink&#39;,
-                &#39;steelblue&#39;, &#39;firebrick&#39;, &#39;mediumseagreen&#39;]
-    return mycolors[i]</code></pre>
+    try:
+        i = int(subject)
+        if i &gt; 10:
+            i = i % 4
+        mycolors = [&#39;tab:red&#39;, &#39;tab:blue&#39;, &#39;tab:green&#39;, &#39;tab:orange&#39;,
+                    &#39;tab:brown&#39;, &#39;deeppink&#39;, &#39;tab:olive&#39;, &#39;tab:pink&#39;,
+                    &#39;steelblue&#39;, &#39;firebrick&#39;, &#39;mediumseagreen&#39;]
+        color = mycolors[i]
+    except ValueError:
+        if colors_dict == None:
+            print(&#39;Color input for required&#39;)
+            exit(-1)
+        color = colors_dict[subject]
+    return color</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.ordered_set"><code class="name flex">
+<span>def <span class="ident">ordered_set</span></span>(<span>arr)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns set in order it was first seen</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ordered_set(arr):
+    &#34;&#34;&#34;Returns set in order it was first seen&#34;&#34;&#34;
+    set_a = []
+    for x in arr:
+        if x not in set_a:
+            set_a.append(x)
+    return set_a</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.parse_args"><code class="name flex">
+<span>def <span class="ident">parse_args</span></span>(<span>parser, verbose=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parse_args(parser, verbose=True):
+    args, unparsed = parser.parse_known_args()
+
+    if len(unparsed) != 0:
+        print(&#34;Unrecognised command line argument passed&#34;)
+        print(unparsed)
+        exit(-1)
+
+    if verbose:
+        if len(sys.argv) &gt; 1:
+            print(&#34;Command line arguments&#34;, args)
+    return args</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_utils.print_config"><code class="name flex">
+<span>def <span class="ident">print_config</span></span>(<span>config, msg='')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Prints the contents of a config file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_config(config, msg=&#34;&#34;):
+    &#34;&#34;&#34;Prints the contents of a config file&#34;&#34;&#34;
+    if msg != &#34;&#34;:
+        print(msg)
+    config_dict = [{x: tuple(config.items(x))} for x in config.sections()]
+    pprint(config_dict, width=120)
+    print()</code></pre>
 </details>
 </dd>
 <dt id="bvmpc.bv_utils.print_h5"><code class="name flex">
 <span>def <span class="ident">print_h5</span></span>(<span>file_location)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Print a summary of a h5 file.</p></section>
+<div class="desc"><p>Print a summary of a h5 file.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def print_h5(file_location):
     &#34;&#34;&#34;Print a summary of a h5 file.&#34;&#34;&#34;
     import h5py
@@ -557,13 +1150,33 @@ Additional string to log</p>
         print()</code></pre>
 </details>
 </dd>
+<dt id="bvmpc.bv_utils.read_cfg"><code class="name flex">
+<span>def <span class="ident">read_cfg</span></span>(<span>location, verbose=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_cfg(location, verbose=True):
+    config = configparser.ConfigParser()
+    config.read(location)
+
+    if verbose:
+        print_config(config, &#34;Program started with configuration&#34;)
+    return config</code></pre>
+</details>
+</dd>
 <dt id="bvmpc.bv_utils.save_dict_to_csv"><code class="name flex">
 <span>def <span class="ident">save_dict_to_csv</span></span>(<span>filename, d)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Save d to a file.</p></section>
+<div class="desc"><p>Save d to a file.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def save_dict_to_csv(filename, d):
     &#34;&#34;&#34;Save d to a file.&#34;&#34;&#34;
     with open(filename, &#34;w&#34;) as f:
@@ -581,13 +1194,34 @@ Additional string to log</p>
             f.write(out_str + &#34;\n&#34;)</code></pre>
 </details>
 </dd>
+<dt id="bvmpc.bv_utils.setup_logging"><code class="name flex">
+<span>def <span class="ident">setup_logging</span></span>(<span>in_dir)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup_logging(in_dir):
+    fname = os.path.join(in_dir, &#39;nc_output.log&#39;)
+    if os.path.isfile(fname):
+        open(fname, &#39;w&#39;).close()
+    logging.basicConfig(
+        filename=fname, level=logging.DEBUG)
+    mpl_logger = logging.getLogger(&#34;matplotlib&#34;)
+    mpl_logger.setLevel(level=logging.WARNING)</code></pre>
+</details>
+</dd>
 <dt id="bvmpc.bv_utils.split_list"><code class="name flex">
 <span>def <span class="ident">split_list</span></span>(<span>list, chunk_limit)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Split a list into small chunks based on chunk_limit.</p></section>
+<div class="desc"><p>Split a list into small chunks based on chunk_limit.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def split_list(list, chunk_limit):
     &#34;&#34;&#34;Split a list into small chunks based on chunk_limit.&#34;&#34;&#34;
     new_list = [list[i:i + chunk_limit]
@@ -595,13 +1229,57 @@ Additional string to log</p>
     return new_list</code></pre>
 </details>
 </dd>
+<dt id="bvmpc.bv_utils.test_all_hier_clustering"><code class="name flex">
+<span>def <span class="ident">test_all_hier_clustering</span></span>(<span>data, verbose=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>For testing all perumatations for hierarchical clustering linkage</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_all_hier_clustering(data, verbose=False):
+    &#34;&#34;&#34; For testing all perumatations for hierarchical clustering linkage &#34;&#34;&#34;
+    import pandas as pd
+    import scipy.cluster.hierarchy as shc
+    from scipy.cluster.hierarchy import cophenet
+    from scipy.spatial.distance import pdist
+
+    link_methods = [&#39;single&#39;, &#39;complete&#39;,
+                    &#39;average&#39;, &#39;weighted&#39;, &#39;centroid&#39;, &#39;median&#39;, &#39;ward&#39;]
+    link_metric = [&#39;braycurtis&#39;, &#39;canberra&#39;, &#39;chebyshev&#39;, &#39;cityblock&#39;, &#39;correlation&#39;, &#39;cosine&#39;, &#39;dice&#39;, &#39;euclidean&#39;, &#39;hamming&#39;, &#39;jaccard&#39;, &#39;jensenshannon&#39;,
+                   &#39;kulsinski&#39;, &#39;mahalanobis&#39;, &#39;matching&#39;, &#39;minkowski&#39;, &#39;rogerstanimoto&#39;, &#39;russellrao&#39;, &#39;seuclidean&#39;, &#39;sokalmichener&#39;, &#39;sokalsneath&#39;, &#39;sqeuclidean&#39;, &#39;yule&#39;]
+
+    coph = np.zeros((len(link_methods), len(link_metric)))
+    for i, link in enumerate(link_methods):
+        for j, metric in enumerate(link_metric):
+            try:
+                Z = shc.linkage(data, method=link, metric=metric)
+                c, coph_dists = cophenet(Z, pdist(data))
+                coph[i, j] = c
+            except:
+                coph[i, j] = np.nan
+
+    max_coph = np.nanmax(coph)
+    a, b = np.where(coph == max_coph)
+    coph_df = pd.DataFrame(coph, index=link_methods,
+                           columns=link_metric)
+    if verbose:
+        print(coph_df)
+    print(&#39;\nMax Cophentic Correlation Coefficient: &#39;,
+          coph_df.index.values[a], coph_df.columns.values[b], max_coph)
+    return coph_df</code></pre>
+</details>
+</dd>
 <dt id="bvmpc.bv_utils.walk_dict"><code class="name flex">
 <span>def <span class="ident">walk_dict</span></span>(<span>d, depth=0)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Walk a Dictionary.</p></section>
+<div class="desc"><p>Walk a Dictionary.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def walk_dict(d, depth=0):
     &#34;&#34;&#34;Walk a Dictionary.&#34;&#34;&#34;
     for k, v in sorted(d.items(), key=lambda x: x[0]):
@@ -632,17 +1310,30 @@ Additional string to log</p>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="bvmpc.bv_utils.boolean_indexing" href="#bvmpc.bv_utils.boolean_indexing">boolean_indexing</a></code></li>
+<li><code><a title="bvmpc.bv_utils.check_fn" href="#bvmpc.bv_utils.check_fn">check_fn</a></code></li>
 <li><code><a title="bvmpc.bv_utils.chunks" href="#bvmpc.bv_utils.chunks">chunks</a></code></li>
 <li><code><a title="bvmpc.bv_utils.daterange" href="#bvmpc.bv_utils.daterange">daterange</a></code></li>
+<li><code><a title="bvmpc.bv_utils.find_in" href="#bvmpc.bv_utils.find_in">find_in</a></code></li>
+<li><code><a title="bvmpc.bv_utils.find_ranges" href="#bvmpc.bv_utils.find_ranges">find_ranges</a></code></li>
 <li><code><a title="bvmpc.bv_utils.get_all_files_in_dir" href="#bvmpc.bv_utils.get_all_files_in_dir">get_all_files_in_dir</a></code></li>
 <li><code><a title="bvmpc.bv_utils.get_attrs" href="#bvmpc.bv_utils.get_attrs">get_attrs</a></code></li>
+<li><code><a title="bvmpc.bv_utils.get_dirs_matching_regex" href="#bvmpc.bv_utils.get_dirs_matching_regex">get_dirs_matching_regex</a></code></li>
+<li><code><a title="bvmpc.bv_utils.get_dist" href="#bvmpc.bv_utils.get_dist">get_dist</a></code></li>
 <li><code><a title="bvmpc.bv_utils.has_ext" href="#bvmpc.bv_utils.has_ext">has_ext</a></code></li>
+<li><code><a title="bvmpc.bv_utils.interactive_refilt" href="#bvmpc.bv_utils.interactive_refilt">interactive_refilt</a></code></li>
 <li><code><a title="bvmpc.bv_utils.log_exception" href="#bvmpc.bv_utils.log_exception">log_exception</a></code></li>
 <li><code><a title="bvmpc.bv_utils.make_dir_if_not_exists" href="#bvmpc.bv_utils.make_dir_if_not_exists">make_dir_if_not_exists</a></code></li>
+<li><code><a title="bvmpc.bv_utils.make_path_if_not_exists" href="#bvmpc.bv_utils.make_path_if_not_exists">make_path_if_not_exists</a></code></li>
 <li><code><a title="bvmpc.bv_utils.mycolors" href="#bvmpc.bv_utils.mycolors">mycolors</a></code></li>
+<li><code><a title="bvmpc.bv_utils.ordered_set" href="#bvmpc.bv_utils.ordered_set">ordered_set</a></code></li>
+<li><code><a title="bvmpc.bv_utils.parse_args" href="#bvmpc.bv_utils.parse_args">parse_args</a></code></li>
+<li><code><a title="bvmpc.bv_utils.print_config" href="#bvmpc.bv_utils.print_config">print_config</a></code></li>
 <li><code><a title="bvmpc.bv_utils.print_h5" href="#bvmpc.bv_utils.print_h5">print_h5</a></code></li>
+<li><code><a title="bvmpc.bv_utils.read_cfg" href="#bvmpc.bv_utils.read_cfg">read_cfg</a></code></li>
 <li><code><a title="bvmpc.bv_utils.save_dict_to_csv" href="#bvmpc.bv_utils.save_dict_to_csv">save_dict_to_csv</a></code></li>
+<li><code><a title="bvmpc.bv_utils.setup_logging" href="#bvmpc.bv_utils.setup_logging">setup_logging</a></code></li>
 <li><code><a title="bvmpc.bv_utils.split_list" href="#bvmpc.bv_utils.split_list">split_list</a></code></li>
+<li><code><a title="bvmpc.bv_utils.test_all_hier_clustering" href="#bvmpc.bv_utils.test_all_hier_clustering">test_all_hier_clustering</a></code></li>
 <li><code><a title="bvmpc.bv_utils.walk_dict" href="#bvmpc.bv_utils.walk_dict">walk_dict</a></code></li>
 </ul>
 </li>
@@ -650,7 +1341,7 @@ Additional string to log</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

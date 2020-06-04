@@ -41,19 +41,19 @@ def get_eloc(ch_names, o_dir, base_name, dummy=False):
         for i, ch in enumerate(ch_names):
             if "ACC" in ch:
                 x, y = get_next_i(2, 2, n_acc)
-                coord_ls = [x/2, 2 - y/2, 0+y/2]
+                coord_ls = [x / 2, 2 - y / 2, 0 + y / 2]
                 n_acc += 1
             elif "RSC" in ch:
                 x, y = get_next_i(2, 2, n_rsc)
                 # coord_ls = [x, y - 10, 0]
-                coord_ls = [x/2, y/2 - 2, 0 + y/2]
+                coord_ls = [x / 2, y / 2 - 2, 0 + y / 2]
                 n_rsc += 1
             else:
                 x, y = get_next_i(4, 2, n_cla)
                 # coord_ls = [x + 5, 2 - y, -5]
-                coord_ls = [x + 3, 2 - y, 1-x/2]
+                coord_ls = [x + 3, 2 - y, 1 - x / 2]
                 n_cla += 1
-            eloc[ch] = np.array([x/scale for x in coord_ls])
+            eloc[ch] = np.array([x / scale for x in coord_ls])
 
     else:
         try:
@@ -230,7 +230,7 @@ def get_layout(o_dir, layout_name):
         from mne.viz import (
             plot_alignment, snapshot_brain_montage, set_3d_view)
         # The click coordinates are stored as a list of tuples
-        template_loc = 'F:\!Imaging\LKC\SA5\SA5_Histology-07.tif'  # template location
+        template_loc = r'F:\!Imaging\LKC\SA5\SA5_Histology-07.tif'  # template location
         im = plt.imread(template_loc)
         click = ClickableImage(im)
         click.plot_clicks()
@@ -263,7 +263,7 @@ def generate_events(mne_array, session, plot=False):
     Parameters
     ----------
     mne_array : mne.raw object
-    session : bvmpc.session object
+    session : bvmpc.bv_session.Session object
     plot : bool, default False
         Plot events figure. Mainly for checking.
 
@@ -291,7 +291,8 @@ def generate_events(mne_array, session, plot=False):
 
     # Set annotations from events
     # Swap key and values
-    events_map = {value: key[:2]+key[-1] for key, value in events_dict.items()}
+    events_map = {value: key[:2] + key[-1]
+                  for key, value in events_dict.items()}
     onsets = mne_events[:, 0] / mne_array.info['sfreq']
     durations = np.zeros_like(onsets)  # assumes instantaneous events
     descriptions = [events_map[event_id]
@@ -489,7 +490,7 @@ def viz_raw_epochs(epoch_list, comp_conds, picks, sort_reg, plot_reg, topo_seq, 
                 ax.set_title("{}\n'{}' {}".format(base_name, cond, pick),
                              x=0.5, y=1.01, fontsize=10)
                 if plot_reg:
-                    pick_txt = 'gfp_'+sort_reg[i]
+                    pick_txt = 'gfp_' + sort_reg[i]
                 else:
                     pick_txt = pick
                 fig_name = os.path.join(

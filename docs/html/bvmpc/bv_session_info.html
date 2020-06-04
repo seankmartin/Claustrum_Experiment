@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.6.3" />
+<meta name="generator" content="pdoc 0.8.1" />
 <title>bvmpc.bv_session_info API documentation</title>
 <meta name="description" content="Session information is held here." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 </head>
 <body>
@@ -22,7 +22,9 @@
 <section id="section-intro">
 <p>Session information is held here.</p>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">&#34;&#34;&#34;Session information is held here.&#34;&#34;&#34;
 
 import numpy as np
@@ -37,6 +39,7 @@ class SessionInfo:
         self._init_session_info()
         self._init_experiment_vars()
         self._init_io_channels()
+        self._init_axona_metadata_map()
 
     def _init_metadata_info(self):
         self.metadata_info = [
@@ -59,14 +62,15 @@ class SessionInfo:
     def _init_session_info(self):
         self.session_info_dict = {}
 
-        self.session_info_dict[&#39;DNMTS_0_delay&#39;] = (
-            np.array([
-                [&#39;C:&#39;, &#39;D:&#39;, &#39;Counters&#39;],
-                [&#39;E:&#39;, &#39;F:&#39;, &#39;Results&#39;]
-            ]))
+        # For Fion
+        # self.session_info_dict[&#39;DNMTS_0_delay&#39;] = (
+        #     np.array([
+        #         [&#39;C:&#39;, &#39;D:&#39;, &#39;Counters&#39;],
+        #         [&#39;E:&#39;, &#39;F:&#39;, &#39;Results&#39;]
+        #     ]))
 
-        self.session_info_dict[&#39;Match_to_sample_0_delay&#39;] = (
-            self.session_info_dict[&#39;DNMTS_0_delay&#39;])
+        # self.session_info_dict[&#39;Match_to_sample_0_delay&#39;] = (
+        #     self.session_info_dict[&#39;DNMTS_0_delay&#39;])
 
         self.session_info_dict[&#39;2_MagazineHabituation_p&#39;] = (
             np.array([
@@ -179,7 +183,7 @@ class SessionInfo:
         self.experiment_var_dict[&#39;5a_FixedRatio_p&#39;] = (
             base_exp_list[:3] +
             [&#34;fixed_ratio&#34;, &#34;ending_ratio&#34;, &#34;ratio_increment&#34;,
-                &#34;max_ratio&#34;, base_exp_list[4], &#34;fast_trials_to_advance&#34;])
+             &#34;max_ratio&#34;, base_exp_list[4], &#34;fast_trials_to_advance&#34;])
 
         self.experiment_var_dict[&#39;5b_FixedInterval_p&#39;] = (
             base_exp_list[:3] + [base_exp_list[5]])
@@ -202,11 +206,20 @@ class SessionInfo:
             &#34;left_out&#34;: (1, False),
             &#34;right_out&#34;: (2, False),
             &#34;left_light&#34;: (4, False),
-            &#34;right_light&#34;: (5, False)}
+            &#34;right_light&#34;: (5, False),
+            &#34;sound&#34;: (8, True)}  # ts when sound is turned OFF
 
         self.io_channel_map[&#34;6&#34;] = {
             &#34;i&#34;: input_dict, &#34;o&#34;: output_dict}
         self.io_channel_map[&#34;7&#34;] = self.io_channel_map[&#34;6&#34;]
+
+    def _init_axona_metadata_map(self):
+        self.axona_metadata_map = {
+            &#34;start_date&#34;: &#34;trial_date&#34;,
+            &#34;end_date&#34;: &#34;trial_date&#34;,
+            &#34;start_time&#34;: &#34;trial_time&#34;,
+            &#34;end_time&#34;: &#34;end_time&#34;,
+            &#34;name&#34;: &#34;script&#34;}
 
     def get_session_type_info(self, key=None):
         &#34;&#34;&#34;
@@ -320,11 +333,16 @@ class SessionInfo:
 
         Returns
         -------
-        int: The channel for the given key
+        int: The channel for the given date
         Dict: If key is None, the full dictionary of channels.
 
         &#34;&#34;&#34;
         return self._get_channel(&#34;o&#34;, s_type, key=key)
+
+    def get_axona_metadata_map(self, key=None):
+        if key is None:
+            return self.axona_metadata_map
+        return self.axona_metadata_map.get(key, None)
 
     def _get_channel(self, io, s_type, key=None):
         &#34;&#34;&#34;Intended private function to help channel retrieval.&#34;&#34;&#34;
@@ -348,10 +366,12 @@ class SessionInfo:
 <span>class <span class="ident">SessionInfo</span></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Holds mappings of information in MEDPC sessions.</p>
-<p>Init and setup the session information map.</p></section>
+<div class="desc"><p>Holds mappings of information in MEDPC sessions.</p>
+<p>Init and setup the session information map.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">class SessionInfo:
     &#34;&#34;&#34;Holds mappings of information in MEDPC sessions.&#34;&#34;&#34;
 
@@ -361,6 +381,7 @@ class SessionInfo:
         self._init_session_info()
         self._init_experiment_vars()
         self._init_io_channels()
+        self._init_axona_metadata_map()
 
     def _init_metadata_info(self):
         self.metadata_info = [
@@ -383,14 +404,15 @@ class SessionInfo:
     def _init_session_info(self):
         self.session_info_dict = {}
 
-        self.session_info_dict[&#39;DNMTS_0_delay&#39;] = (
-            np.array([
-                [&#39;C:&#39;, &#39;D:&#39;, &#39;Counters&#39;],
-                [&#39;E:&#39;, &#39;F:&#39;, &#39;Results&#39;]
-            ]))
+        # For Fion
+        # self.session_info_dict[&#39;DNMTS_0_delay&#39;] = (
+        #     np.array([
+        #         [&#39;C:&#39;, &#39;D:&#39;, &#39;Counters&#39;],
+        #         [&#39;E:&#39;, &#39;F:&#39;, &#39;Results&#39;]
+        #     ]))
 
-        self.session_info_dict[&#39;Match_to_sample_0_delay&#39;] = (
-            self.session_info_dict[&#39;DNMTS_0_delay&#39;])
+        # self.session_info_dict[&#39;Match_to_sample_0_delay&#39;] = (
+        #     self.session_info_dict[&#39;DNMTS_0_delay&#39;])
 
         self.session_info_dict[&#39;2_MagazineHabituation_p&#39;] = (
             np.array([
@@ -503,7 +525,7 @@ class SessionInfo:
         self.experiment_var_dict[&#39;5a_FixedRatio_p&#39;] = (
             base_exp_list[:3] +
             [&#34;fixed_ratio&#34;, &#34;ending_ratio&#34;, &#34;ratio_increment&#34;,
-                &#34;max_ratio&#34;, base_exp_list[4], &#34;fast_trials_to_advance&#34;])
+             &#34;max_ratio&#34;, base_exp_list[4], &#34;fast_trials_to_advance&#34;])
 
         self.experiment_var_dict[&#39;5b_FixedInterval_p&#39;] = (
             base_exp_list[:3] + [base_exp_list[5]])
@@ -526,11 +548,20 @@ class SessionInfo:
             &#34;left_out&#34;: (1, False),
             &#34;right_out&#34;: (2, False),
             &#34;left_light&#34;: (4, False),
-            &#34;right_light&#34;: (5, False)}
+            &#34;right_light&#34;: (5, False),
+            &#34;sound&#34;: (8, True)}  # ts when sound is turned OFF
 
         self.io_channel_map[&#34;6&#34;] = {
             &#34;i&#34;: input_dict, &#34;o&#34;: output_dict}
         self.io_channel_map[&#34;7&#34;] = self.io_channel_map[&#34;6&#34;]
+
+    def _init_axona_metadata_map(self):
+        self.axona_metadata_map = {
+            &#34;start_date&#34;: &#34;trial_date&#34;,
+            &#34;end_date&#34;: &#34;trial_date&#34;,
+            &#34;start_time&#34;: &#34;trial_time&#34;,
+            &#34;end_time&#34;: &#34;end_time&#34;,
+            &#34;name&#34;: &#34;script&#34;}
 
     def get_session_type_info(self, key=None):
         &#34;&#34;&#34;
@@ -644,11 +675,16 @@ class SessionInfo:
 
         Returns
         -------
-        int: The channel for the given key
+        int: The channel for the given date
         Dict: If key is None, the full dictionary of channels.
 
         &#34;&#34;&#34;
         return self._get_channel(&#34;o&#34;, s_type, key=key)
+
+    def get_axona_metadata_map(self, key=None):
+        if key is None:
+            return self.axona_metadata_map
+        return self.axona_metadata_map.get(key, None)
 
     def _get_channel(self, io, s_type, key=None):
         &#34;&#34;&#34;Intended private function to help channel retrieval.&#34;&#34;&#34;
@@ -660,11 +696,26 @@ class SessionInfo:
 </details>
 <h3>Methods</h3>
 <dl>
+<dt id="bvmpc.bv_session_info.SessionInfo.get_axona_metadata_map"><code class="name flex">
+<span>def <span class="ident">get_axona_metadata_map</span></span>(<span>self, key=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_axona_metadata_map(self, key=None):
+    if key is None:
+        return self.axona_metadata_map
+    return self.axona_metadata_map.get(key, None)</code></pre>
+</details>
+</dd>
 <dt id="bvmpc.bv_session_info.SessionInfo.get_input_channel"><code class="name flex">
 <span>def <span class="ident">get_input_channel</span></span>(<span>self, s_type, key=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Return the input channel for the given key.</p>
+<div class="desc"><p>Return the input channel for the given key.</p>
 <p>If key is None, return the full input channel dictionary.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -673,12 +724,14 @@ class SessionInfo:
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>int</code></strong> :&ensp;<code>The</code> <code>channel</code> <code>for</code> <code>the</code> <code>given</code> <code>key</code></dt>
+<dt><strong><code>int</code></strong> :&ensp;<code>The channel for the given key</code></dt>
 <dd>&nbsp;</dd>
 </dl>
-<p>Dict: If key is None, the full dictionary of channels.</p></section>
+<p>Dict: If key is None, the full dictionary of channels.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_input_channel(self, s_type, key=None):
     &#34;&#34;&#34;
     Return the input channel for the given key.
@@ -702,18 +755,20 @@ class SessionInfo:
 <span>def <span class="ident">get_metadata</span></span>(<span>self, key=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Return the metadata index of the session.</p>
+<div class="desc"><p>Return the metadata index of the session.</p>
 <p>If key is passed as None, return a list of metadata keys.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>key</code></strong> :&ensp;<code>str</code> - <code>Default</code> <code>None</code></dt>
+<dt><strong><code>key</code></strong> :&ensp;<code>str - Default None</code></dt>
 <dd>Which metadata item to get.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>int : the index for key.
-List : if key is None, all the keys.</p></section>
+List : if key is None, all the keys.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_metadata(self, key=None):
     &#34;&#34;&#34;
     Return the metadata index of the session.
@@ -740,7 +795,7 @@ List : if key is None, all the keys.</p></section>
 <span>def <span class="ident">get_metadata_start</span></span>(<span>self, idx=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Return the start index of the metadata information.</p>
+<div class="desc"><p>Return the start index of the metadata information.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>idx</code></strong> :&ensp;<code>int</code></dt>
@@ -748,12 +803,14 @@ List : if key is None, all the keys.</p></section>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>int</code></strong> :&ensp;<code>The</code> <code>start</code> <code>index</code> <code>for</code> <code>the</code> <code>information</code></dt>
+<dt><strong><code>int</code></strong> :&ensp;<code>The start index for the information</code></dt>
 <dd>&nbsp;</dd>
 </dl>
-<p>List : If idx is None, all the start indices.</p></section>
+<p>List : If idx is None, all the start indices.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_metadata_start(self, idx=None):
     &#34;&#34;&#34;
     Return the start index of the metadata information.
@@ -778,7 +835,7 @@ List : if key is None, all the keys.</p></section>
 <span>def <span class="ident">get_output_channel</span></span>(<span>self, s_type, key=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Return the output channel for the given key.</p>
+<div class="desc"><p>Return the output channel for the given key.</p>
 <p>If key is None, return the full output channel dictionary.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -787,12 +844,14 @@ List : if key is None, all the keys.</p></section>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>int</code></strong> :&ensp;<code>The</code> <code>channel</code> <code>for</code> <code>the</code> <code>given</code> <code>key</code></dt>
+<dt><strong><code>int</code></strong> :&ensp;<code>The channel for the given date</code></dt>
 <dd>&nbsp;</dd>
 </dl>
-<p>Dict: If key is None, the full dictionary of channels.</p></section>
+<p>Dict: If key is None, the full dictionary of channels.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_output_channel(self, s_type, key=None):
     &#34;&#34;&#34;
     Return the output channel for the given key.
@@ -805,7 +864,7 @@ List : if key is None, all the keys.</p></section>
 
     Returns
     -------
-    int: The channel for the given key
+    int: The channel for the given date
     Dict: If key is None, the full dictionary of channels.
 
     &#34;&#34;&#34;
@@ -816,7 +875,7 @@ List : if key is None, all the keys.</p></section>
 <span>def <span class="ident">get_session_type_info</span></span>(<span>self, key=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Return the mapping for a given session type.</p>
+<div class="desc"><p>Return the mapping for a given session type.</p>
 <p>If key is passed as None, return a Dict of all possible maps.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -825,9 +884,11 @@ List : if key is None, all the keys.</p></section>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>np.ndarray : an array of mappings.
-Dict: if key is None, all the mappings.</p></section>
+Dict: if key is None, all the mappings.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_session_type_info(self, key=None):
     &#34;&#34;&#34;
     Return the mapping for a given session type.
@@ -854,7 +915,7 @@ Dict: if key is None, all the mappings.</p></section>
 <span>def <span class="ident">get_session_variable_list</span></span>(<span>self, key=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Return the mapping of Experiment variables to keys.</p>
+<div class="desc"><p>Return the mapping of Experiment variables to keys.</p>
 <p>If key is passed as None, return a Dict of all maps.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -863,9 +924,11 @@ Dict: if key is None, all the mappings.</p></section>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>np.ndarray : an array of mappings.
-Dict: if key is None, all the mappings.</p></section>
+Dict: if key is None, all the mappings.</p></div>
 <details class="source">
-<summary>Source code</summary>
+<summary>
+<span>Expand source code</span>
+</summary>
 <pre><code class="python">def get_session_variable_list(self, key=None):
     &#34;&#34;&#34;
     Return the mapping of Experiment variables to keys.
@@ -909,6 +972,7 @@ Dict: if key is None, all the mappings.</p></section>
 <li>
 <h4><code><a title="bvmpc.bv_session_info.SessionInfo" href="#bvmpc.bv_session_info.SessionInfo">SessionInfo</a></code></h4>
 <ul class="">
+<li><code><a title="bvmpc.bv_session_info.SessionInfo.get_axona_metadata_map" href="#bvmpc.bv_session_info.SessionInfo.get_axona_metadata_map">get_axona_metadata_map</a></code></li>
 <li><code><a title="bvmpc.bv_session_info.SessionInfo.get_input_channel" href="#bvmpc.bv_session_info.SessionInfo.get_input_channel">get_input_channel</a></code></li>
 <li><code><a title="bvmpc.bv_session_info.SessionInfo.get_metadata" href="#bvmpc.bv_session_info.SessionInfo.get_metadata">get_metadata</a></code></li>
 <li><code><a title="bvmpc.bv_session_info.SessionInfo.get_metadata_start" href="#bvmpc.bv_session_info.SessionInfo.get_metadata_start">get_metadata_start</a></code></li>
@@ -923,7 +987,7 @@ Dict: if key is None, all the mappings.</p></section>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>

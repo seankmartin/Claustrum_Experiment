@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>bvmpc.bv_file API documentation</title>
+<meta name="description" content="This module implements functions related to reading and writing files." />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>bvmpc.bv_file</code></h1>
+</header>
+<section id="section-intro">
+<p>This module implements functions related to reading and writing files.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;This module implements functions related to reading and writing files.&#34;&#34;&#34;
+import os
+
+from bvmpc.bv_session import Session
+from bvmpc.bv_session_extractor import SessionExtractor
+from bvmpc.lfp_odict import LfpODict
+
+import bvmpc.bv_utils
+
+
+def extract_sessions(
+        in_dir, sub_list=None, s_list=None, d_list=None,
+        load_backend=&#34;neo&#34;, neo_backend=&#34;nix&#34;):
+    &#39;&#39;&#39;Extracts specified sessions from files &#39;&#39;&#39;
+
+    def should_use(val, vlist):
+        if vlist is None:
+            return True
+        if val in vlist:
+            return True
+        return False
+
+    in_files = sorted(os.listdir(in_dir))
+    s_grp = []
+    for file in in_files:
+        splits = file.split(&#39;_&#39;)
+        subject = splits[0]
+        subject = str(subject)
+        # NOTE date not have year
+        date = splits[1][:-3]
+        s_type = splits[3]
+        subject_ok = should_use(subject, sub_list)
+        type_ok = should_use(s_type, s_list)
+        date_ok = should_use(date, d_list)
+        if subject_ok and type_ok and date_ok:
+            filename = os.path.join(in_dir, file)
+            if os.path.isfile(filename):
+                if load_backend == &#34;neo&#34;:
+                    session = load_neo(filename)
+                elif load_backend == &#34;hdf5&#34;:
+                    session = load_hdf5(filename)
+                else:
+                    print(&#34;Backend {} invalid, using neo&#34;.format(
+                        load_backend))
+                    session = load_neo(filename)
+
+                s_grp.append(session)
+    print(&#39;Total Files extracted: {}&#39;.format(len(s_grp)))
+    return s_grp
+
+
+def convert_to_hdf5(filename, out_dir):
+    &#34;&#34;&#34;Convert all sessions in filename to hdf5 and store in out_dir.&#34;&#34;&#34;
+    bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
+
+    s_extractor = SessionExtractor(filename, verbose=True)
+
+    for s in s_extractor:  # Batch run for file
+        stage = s.get_metadata(&#39;name&#39;)
+        if stage not in s.session_info.session_info_dict.keys():
+            continue
+        else:
+            s.save_to_h5(out_dir)
+
+
+def convert_to_neo(filename, out_dir, neo_backend=&#34;nix&#34;, remove_existing=False):
+    &#34;&#34;&#34;Convert all sessions in filename to hdf5 and store in out_dir.&#34;&#34;&#34;
+    bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
+    print(&#34;Converting files in {} to neo&#34;.format(
+        os.path.basename(filename)))
+    s_extractor = SessionExtractor(
+        filename, verbose=False)
+
+    for s in s_extractor:  # Batch run for file
+        stage = s.get_metadata(&#39;name&#39;)
+        if stage not in s.session_info.session_info_dict.keys():
+            continue
+        else:
+            s.save_to_neo(
+                out_dir, neo_backend=neo_backend,
+                remove_existing=remove_existing)
+
+
+def convert_axona_to_neo(
+        filename, out_dir, neo_backend=&#34;nix&#34;, remove_existing=False):
+    &#34;&#34;&#34;Convert .inp files to Sessions and store in out_dir.&#34;&#34;&#34;
+    bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
+    print(&#34;Converting {} to neo&#34;.format(os.path.basename(filename)))
+    s = Session(axona_file=filename)
+    s.save_to_neo(
+        out_dir, neo_backend=neo_backend,
+        remove_existing=remove_existing)
+
+
+def load_hdf5(filename, verbose=False):
+    if verbose:
+        bvmpc.bv_utils.print_h5(filename)
+    session = Session(h5_file=filename)
+
+    return session
+
+
+def load_neo(filename, neo_backend=&#34;nix&#34;):
+    session = Session(neo_file=filename, neo_backend=&#34;nix&#34;)
+    return session
+
+
+def session_from_mpc_file(filename, out_dir):
+    &#34;&#34;&#34;Use this to work on MEDPC files without converting to HDF5.&#34;&#34;&#34;
+    bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
+
+    s_extractor = SessionExtractor(filename, verbose=False)
+
+    return s_extractor
+
+
+def load_bv_from_set(fname):
+    &#34;&#34;&#34;Loads session based from .inp&#34;&#34;&#34;
+    if os.path.isfile(fname + &#34;.inp&#34;):
+        return Session(axona_file=fname + &#34;.inp&#34;)
+    elif os.path.isfile(fname[:-3] + &#34;inp&#34;):
+        return Session(axona_file=fname[:-3] + &#34;inp&#34;)
+    else:
+        print(&#34;.inp does not exist.&#34;)
+        return None
+
+
+def select_lfp(fname, ROI):  # Select lfp based on region
+    # Single Hemi Multisite Drive settings
+    lfp_list = []
+    chans = [i for i in range(1, 17)]
+    regions = [&#34;CLA&#34;] * 8 + [&#34;ACC&#34;] * 4 + [&#34;RSC&#34;] * 4
+    # Change filt values here. Default order 10.
+    filt_btm = 1.0
+    filt_top = 50
+
+    # Actual function
+    for r in ROI:
+        idx = [i for i, x in enumerate(regions) if x == ROI[r]]
+        lfp_odict = LfpODict(
+            fname, channels=chans[idx], filt_params=(True, filt_btm, filt_top))
+        lfp_list.append(lfp_odict)
+    return lfp_list</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="bvmpc.bv_file.convert_axona_to_neo"><code class="name flex">
+<span>def <span class="ident">convert_axona_to_neo</span></span>(<span>filename, out_dir, neo_backend='nix', remove_existing=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert .inp files to Sessions and store in out_dir.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def convert_axona_to_neo(
+        filename, out_dir, neo_backend=&#34;nix&#34;, remove_existing=False):
+    &#34;&#34;&#34;Convert .inp files to Sessions and store in out_dir.&#34;&#34;&#34;
+    bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
+    print(&#34;Converting {} to neo&#34;.format(os.path.basename(filename)))
+    s = Session(axona_file=filename)
+    s.save_to_neo(
+        out_dir, neo_backend=neo_backend,
+        remove_existing=remove_existing)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_file.convert_to_hdf5"><code class="name flex">
+<span>def <span class="ident">convert_to_hdf5</span></span>(<span>filename, out_dir)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert all sessions in filename to hdf5 and store in out_dir.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def convert_to_hdf5(filename, out_dir):
+    &#34;&#34;&#34;Convert all sessions in filename to hdf5 and store in out_dir.&#34;&#34;&#34;
+    bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
+
+    s_extractor = SessionExtractor(filename, verbose=True)
+
+    for s in s_extractor:  # Batch run for file
+        stage = s.get_metadata(&#39;name&#39;)
+        if stage not in s.session_info.session_info_dict.keys():
+            continue
+        else:
+            s.save_to_h5(out_dir)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_file.convert_to_neo"><code class="name flex">
+<span>def <span class="ident">convert_to_neo</span></span>(<span>filename, out_dir, neo_backend='nix', remove_existing=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert all sessions in filename to hdf5 and store in out_dir.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def convert_to_neo(filename, out_dir, neo_backend=&#34;nix&#34;, remove_existing=False):
+    &#34;&#34;&#34;Convert all sessions in filename to hdf5 and store in out_dir.&#34;&#34;&#34;
+    bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
+    print(&#34;Converting files in {} to neo&#34;.format(
+        os.path.basename(filename)))
+    s_extractor = SessionExtractor(
+        filename, verbose=False)
+
+    for s in s_extractor:  # Batch run for file
+        stage = s.get_metadata(&#39;name&#39;)
+        if stage not in s.session_info.session_info_dict.keys():
+            continue
+        else:
+            s.save_to_neo(
+                out_dir, neo_backend=neo_backend,
+                remove_existing=remove_existing)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_file.extract_sessions"><code class="name flex">
+<span>def <span class="ident">extract_sessions</span></span>(<span>in_dir, sub_list=None, s_list=None, d_list=None, load_backend='neo', neo_backend='nix')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Extracts specified sessions from files</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def extract_sessions(
+        in_dir, sub_list=None, s_list=None, d_list=None,
+        load_backend=&#34;neo&#34;, neo_backend=&#34;nix&#34;):
+    &#39;&#39;&#39;Extracts specified sessions from files &#39;&#39;&#39;
+
+    def should_use(val, vlist):
+        if vlist is None:
+            return True
+        if val in vlist:
+            return True
+        return False
+
+    in_files = sorted(os.listdir(in_dir))
+    s_grp = []
+    for file in in_files:
+        splits = file.split(&#39;_&#39;)
+        subject = splits[0]
+        subject = str(subject)
+        # NOTE date not have year
+        date = splits[1][:-3]
+        s_type = splits[3]
+        subject_ok = should_use(subject, sub_list)
+        type_ok = should_use(s_type, s_list)
+        date_ok = should_use(date, d_list)
+        if subject_ok and type_ok and date_ok:
+            filename = os.path.join(in_dir, file)
+            if os.path.isfile(filename):
+                if load_backend == &#34;neo&#34;:
+                    session = load_neo(filename)
+                elif load_backend == &#34;hdf5&#34;:
+                    session = load_hdf5(filename)
+                else:
+                    print(&#34;Backend {} invalid, using neo&#34;.format(
+                        load_backend))
+                    session = load_neo(filename)
+
+                s_grp.append(session)
+    print(&#39;Total Files extracted: {}&#39;.format(len(s_grp)))
+    return s_grp</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_file.load_bv_from_set"><code class="name flex">
+<span>def <span class="ident">load_bv_from_set</span></span>(<span>fname)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Loads session based from .inp</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_bv_from_set(fname):
+    &#34;&#34;&#34;Loads session based from .inp&#34;&#34;&#34;
+    if os.path.isfile(fname + &#34;.inp&#34;):
+        return Session(axona_file=fname + &#34;.inp&#34;)
+    elif os.path.isfile(fname[:-3] + &#34;inp&#34;):
+        return Session(axona_file=fname[:-3] + &#34;inp&#34;)
+    else:
+        print(&#34;.inp does not exist.&#34;)
+        return None</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_file.load_hdf5"><code class="name flex">
+<span>def <span class="ident">load_hdf5</span></span>(<span>filename, verbose=False)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_hdf5(filename, verbose=False):
+    if verbose:
+        bvmpc.bv_utils.print_h5(filename)
+    session = Session(h5_file=filename)
+
+    return session</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_file.load_neo"><code class="name flex">
+<span>def <span class="ident">load_neo</span></span>(<span>filename, neo_backend='nix')</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_neo(filename, neo_backend=&#34;nix&#34;):
+    session = Session(neo_file=filename, neo_backend=&#34;nix&#34;)
+    return session</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_file.select_lfp"><code class="name flex">
+<span>def <span class="ident">select_lfp</span></span>(<span>fname, ROI)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def select_lfp(fname, ROI):  # Select lfp based on region
+    # Single Hemi Multisite Drive settings
+    lfp_list = []
+    chans = [i for i in range(1, 17)]
+    regions = [&#34;CLA&#34;] * 8 + [&#34;ACC&#34;] * 4 + [&#34;RSC&#34;] * 4
+    # Change filt values here. Default order 10.
+    filt_btm = 1.0
+    filt_top = 50
+
+    # Actual function
+    for r in ROI:
+        idx = [i for i, x in enumerate(regions) if x == ROI[r]]
+        lfp_odict = LfpODict(
+            fname, channels=chans[idx], filt_params=(True, filt_btm, filt_top))
+        lfp_list.append(lfp_odict)
+    return lfp_list</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_file.session_from_mpc_file"><code class="name flex">
+<span>def <span class="ident">session_from_mpc_file</span></span>(<span>filename, out_dir)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Use this to work on MEDPC files without converting to HDF5.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def session_from_mpc_file(filename, out_dir):
+    &#34;&#34;&#34;Use this to work on MEDPC files without converting to HDF5.&#34;&#34;&#34;
+    bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
+
+    s_extractor = SessionExtractor(filename, verbose=False)
+
+    return s_extractor</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="bvmpc" href="index.html">bvmpc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="bvmpc.bv_file.convert_axona_to_neo" href="#bvmpc.bv_file.convert_axona_to_neo">convert_axona_to_neo</a></code></li>
+<li><code><a title="bvmpc.bv_file.convert_to_hdf5" href="#bvmpc.bv_file.convert_to_hdf5">convert_to_hdf5</a></code></li>
+<li><code><a title="bvmpc.bv_file.convert_to_neo" href="#bvmpc.bv_file.convert_to_neo">convert_to_neo</a></code></li>
+<li><code><a title="bvmpc.bv_file.extract_sessions" href="#bvmpc.bv_file.extract_sessions">extract_sessions</a></code></li>
+<li><code><a title="bvmpc.bv_file.load_bv_from_set" href="#bvmpc.bv_file.load_bv_from_set">load_bv_from_set</a></code></li>
+<li><code><a title="bvmpc.bv_file.load_hdf5" href="#bvmpc.bv_file.load_hdf5">load_hdf5</a></code></li>
+<li><code><a title="bvmpc.bv_file.load_neo" href="#bvmpc.bv_file.load_neo">load_neo</a></code></li>
+<li><code><a title="bvmpc.bv_file.select_lfp" href="#bvmpc.bv_file.select_lfp">select_lfp</a></code></li>
+<li><code><a title="bvmpc.bv_file.session_from_mpc_file" href="#bvmpc.bv_file.session_from_mpc_file">session_from_mpc_file</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
