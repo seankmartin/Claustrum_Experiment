@@ -677,3 +677,33 @@ def viz_raw_epochs(
         vs_fig.savefig(vs_fname)
 
     exit(-1)
+
+
+def random_white_noise(epochs, channels, samples_per_epoch, mean=0, std=1):
+    """
+    Generate a random white noise signal as Epochs in MNE.
+
+    Parameters
+    ----------
+    epochs : int
+    channels : int
+    samples_per_epoch : int
+    mean : float, optional
+    std : float, optional
+
+    Returns
+    -------
+    mne.Epochs
+
+    """
+    num_samples = epochs * channels * samples_per_epoch
+    samples = np.random.normal(loc=mean, scale=std, size=num_samples)
+    random_data = samples.reshape(epochs, channels, samples_per_epoch)
+
+    sfreq = 250
+    ch_types = ["eeg"] * channels
+    ch_names = [str(i) for i in range(channels)]
+    info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
+    mne_epochs = mne.EpochsArray(random_data, info)
+
+    return mne_epochs
