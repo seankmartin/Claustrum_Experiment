@@ -250,19 +250,19 @@ def main(fname, out_main_dir, config):
         skip_plots = bool(int(config.get("MNE", "skip_plots")))
 
         if do_mne_ICA:
-            ppros_dict["ica_txt"] = 'ICA'  # Used for file naming
+            ica_txt = 'ICA'  # Used for file naming
             # Do ICA artefact removal on the mne object
             recon_raw = bvmpc.bv_mne.ICA_pipeline(mne_array, regions, chans_to_plot=len(lfp_odict),
                                                   base_name=base_name, exclude=exclude, skip_plots=skip_plots)
         else:
-            ppros_dict["ica_txt"] = 'Raw'  # Used for file naming
+            ica_txt = 'Raw'  # Used for file naming
             recon_raw = mne_array
-
+        ppros_dict["ica_txt"] = ica_txt
         # exit(-1)
 
         # Epoch events
-        # reject_criteria = dict(eeg=700e-6)  # 600 uV
-        reject_criteria = None
+        reject_criteria = dict(eeg=700e-6)  # 600 uV
+        # reject_criteria = None
 
         # Set baseline normalization
         try:
@@ -274,10 +274,11 @@ def main(fname, out_main_dir, config):
             print("No baseline specified.")
 
         if baseline is None:
-            ppros_dict["bline_txt"] = ''
+            bline_txt = ''
         else:
-            ppros_dict["bline_txt"] = '_Bline[{}s]_[{}s]'.format(
+            bline_txt = '_Bline[{}s]_[{}s]'.format(
                 baseline[0], baseline[1])
+        ppros_dict["bline_txt"] = bline_txt
 
         # Pick chans based on regions/tetrode number
         # sel = ['ACC'] # Use None to select all channels
@@ -357,20 +358,48 @@ def main(fname, out_main_dir, config):
         bvmpc.bv_mne.viz_raw_epochs(epoch_list, comp_conds, picks, sort_reg, plot_reg,
                                     topo_seq, plot_image, ppros_dict)
 
-        # Test plot PSD for epoch
-        # for i, epoch in enumerate(epoch_list):
-        #     fig, ax = plt.subplots()
-        #     fig.suptitle('{} - {}'.format(comp_conds[i], sel))
-        #     # epoch.plot_psd(fmin=1., fmax=40., ax=ax, show=True)
-        #     epoch.plot_psd_topomap(ch_type='eeg', normalize=True)
-        # exit(-1)
+        # Power spectrum for epochs
+        plot_power = False
+        if plot_power:
+            for epoch, cond in zip(epoch_list, comp_conds):
+                # Test plot power spectrum
+                freqs = np.logspace(*np.log2([2, 64]), base=2, num=10)
+                # freqs = np.logspace(*np.log10([2, 64]), num=10)
+                # print(freqs)
+                # exit(-1)
+                n_cycles = freqs / 2
+                power, itc = mne.time_frequency.tfr_morlet(epoch, freqs=freqs, n_cycles=n_cycles, use_fft=True,
+                                                           return_itc=True, decim=3, n_jobs=1)
 
-        # # Test plot power spectrum
-        # frequencies = np.arange(2, 30, 3)
-        # power = mne.time_frequency.tfr_morlet(epoch, n_cycles=2, return_itc=False,
-        #                                       freqs=frequencies, decim=3)
-        # for chan in chan_picks:
-        #     power.plot([chan])
+                split_fig = True
+                if split_fig:
+                    for i, pick in enumerate(picks):
+                        if plot_reg:
+                            pick_txt = 'gfp_'+sort_reg[i]
+                        else:
+                            pick_txt = pick
+
+                        pspec_fig = power.plot(picks=pick, baseline=baseline, mode='logratio',
+                                               title="{}\n'{}' {}".format(base_name, cond, pick), show=False)
+                        pspec_fname = os.path.join(
+                            mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_pspec_{}-{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), pick_txt, bline_txt) + '.png')
+                        make_path_if_not_exists(pspec_fname)
+                        print('Saving raw-epoch to ' + pspec_fname)
+                        pspec_fig.savefig(pspec_fname)
+                else:
+                    # Join plot. Not working yet.
+                    import math
+                    pspec_fig, axes = plt.subplots(1, len(picks))
+
+                    power.plot(picks=picks, baseline=baseline,
+                               mode='logratio', axes=axes, show=False)
+                    pspec_fname = os.path.join(
+                        mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_pspec_{}-{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), 'Combi', bline_txt) + '.png')
+                    make_path_if_not_exists(pspec_fname)
+                    print('Saving raw-epoch to ' + pspec_fname)
+                    pspec_fig.savefig(pspec_fname)
+
+    exit(-1)
 
     if "Pre" in fname:
         behav = False

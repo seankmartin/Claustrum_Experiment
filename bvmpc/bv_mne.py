@@ -481,22 +481,22 @@ def viz_raw_epochs(epoch_list, comp_conds, picks, sort_reg, plot_reg, topo_seq, 
     # Plot epoch.plot_image for selected tetrodes seperately
     if plot_image:
         for epoch, cond in zip(epoch_list, comp_conds):
-            # epoch_fig = epoch.plot_image(picks=picks, show=True)
-            # for i, pick in enumerate(picks):
-            #     epoch_fig = epoch.plot_image(
-            #         picks=pick, show=False, combine=combine)
-            #     ax = epoch_fig[0].axes[0]
-            #     ax.set_title("{}\n'{}' {}".format(base_name, cond, pick),
-            #                  x=0.5, y=1.01, fontsize=10)
-            #     if plot_reg:
-            #         pick_txt = 'gfp_'+sort_reg[i]
-            #     else:
-            #         pick_txt = pick
-            #     fig_name = os.path.join(
-            #         mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_{}-{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), pick_txt, bline_txt) + '.png')
-            #     make_path_if_not_exists(fig_name)
-            #     print('Saving raw-epoch to ' + fig_name)
-            #     epoch_fig[0].savefig(fig_name)
+            # epoch_fig = epoch.plot_image(picks=picks, show=False)
+            for i, pick in enumerate(picks):
+                epoch_fig = epoch.plot_image(
+                    picks=pick, show=False, combine=combine)
+                ax = epoch_fig[0].axes[0]
+                ax.set_title("{}\n'{}' {}".format(base_name, cond, pick),
+                             x=0.5, y=1.01, fontsize=10)
+                if plot_reg:
+                    pick_txt = 'gfp_'+sort_reg[i]
+                else:
+                    pick_txt = pick
+                fig_name = os.path.join(
+                    mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_{}-{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), pick_txt, bline_txt) + '.png')
+                make_path_if_not_exists(fig_name)
+                print('Saving raw-epoch to ' + fig_name)
+                epoch_fig[0].savefig(fig_name)
 
             # Optional parameter to set bands displayed in topo
             # Default is [(0, 4, 'Delta'), (4, 8, 'Theta'), (8, 12, 'Alpha'),(12, 30, 'Beta'), (30, 45, 'Gamma')]
@@ -519,7 +519,7 @@ def viz_raw_epochs(epoch_list, comp_conds, picks, sort_reg, plot_reg, topo_seq, 
 
             topo_axes = [plt.subplot(gs[-1, x]) for x in range(n_topo)]
             epoch.plot_psd_topomap(
-                ch_type='eeg', normalize=True, axes=topo_axes, show=True)
+                ch_type='eeg', normalize=True, axes=topo_axes, show=False)
             psd_fname = os.path.join(
                 mne_dir, '{}'.format(cond.replace('/', '-')), bline_txt, '{}_{}_psd_{}{}'.format(base_name, ica_txt, cond.replace('/', '-'), bline_txt) + '.png')
             make_path_if_not_exists(psd_fname)
