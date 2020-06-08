@@ -1,6 +1,7 @@
 """This module handles decoding routines."""
 
 import numpy as np
+import scipy.stats
 
 
 class LFPDecoder(object):
@@ -20,7 +21,7 @@ class LFPDecoder(object):
         This is used to get
         a 3D array of shape (n_epochs, n_channels, n_times)
         For calculations.
-    tags : np.ndarray
+    labels : np.ndarray
         The tag of each epoch, or what is decoded.
     selected_data : str | list | slice | None
         See mne.Epochs.get_data
@@ -30,14 +31,16 @@ class LFPDecoder(object):
 
     """
 
-    def __init__(self, mne_epochs=None, tags=None, selected_data=None, sample_rate=250):
+    def __init__(
+        self, mne_epochs=None, labels=None, selected_data=None, sample_rate=250
+    ):
         self.mne_epochs = mne_epochs
-        self.tags = tags
+        self.labels = labels
         self.selected_data = selected_data
         self.sample_rate = sample_rate
 
-    def get_tags(self):
-        return self.tags
+    def get_labels(self):
+        return self.labels
 
     def get_data(self):
         return self.mne_epochs.get_data(picks=self.selected_data)
@@ -77,22 +80,27 @@ class LFPDecoder(object):
 
         return features
 
-    def get_features(self, feature_type="window"):
+    def get_features(self, feature_type="window", feature_params={}):
         if feature_type == "window":
-            features = self.window_features()
+            features = self.window_features(**feature_params)
         else:
             raise ValueError("Unrecognised feature type {}".format(feature_type))
 
         return features
 
     @staticmethod
-    def get_classifier(class_type="nn", classifier_params={}):
+    def get_classifier(class_type="nn", classifier_params={}, return_param_dist=False):
         if class_type == "nn":
             from sklearn import neighbors
 
             classifier_params.setdefault("weights", "distance")
             classifier_params.setdefault("n_neighbors", 10)
             clf = neighbors.KNeighborsClassifier(**classifier_params)
+
+            param_dist = {
+                "n_neighbors": scipy.stats.randint(3, 12),
+                "weights": ("uniform", "distance"),
+            }
 
         elif class_type == "pipeline":
             from sklearn import preprocessing
@@ -104,17 +112,20 @@ class LFPDecoder(object):
         else:
             raise ValueError("Unrecognised classifier type {}".format(class_type))
 
-        return clf
+        if return_param_dist:
+            return clf, param_dist
+        else:
+            return clf
 
     @staticmethod
     def get_cross_val_set(strategy="shuffle", cross_val_params={}):
         if strategy == "shuffle":
-            from sklearn.model_selection import ShuffleSplit
+            from sklearn.model_selection import StratifiedShuffleSplit
 
             cross_val_params.setdefault("n_splits", 10)
             cross_val_params.setdefault("test_size", 0.2)
             cross_val_params.setdefault("random_state", 0)
-            shuffle = ShuffleSplit(**cross_val_params)
+            shuffle = StratifiedShuffleSplit(**cross_val_params)
         else:
             raise ValueError("Unrecognised cross validation {}".format(strategy))
         return shuffle
@@ -124,7 +135,7 @@ class LFPDecoder(object):
         # TODO change the test set
         features = self.get_features()
         clf = self.get_classifier()
-        to_predict = self.get_tags()
+        to_predict = self.get_labels()
         clf.fit(features[:-10], to_predict[:-10])
         output = clf.predict(features[-10:])
         return clf, output
@@ -134,7 +145,7 @@ class LFPDecoder(object):
         """
         A report on decoding accuracy from true and predicted.
 
-        Target names indicates the name of the tags (usually 0, 1, 2...)
+        Target names indicates the name of the labels (usually 0, 1, 2...)
         """
         from sklearn.metrics import classification_report
 
@@ -145,9 +156,11 @@ class LFPDecoder(object):
     def cross_val_decoding(
         self,
         class_type="nn",
-        feature_type="window",
+        classifier_params={},
         cv_strategy="shuffle",
         cross_val_params={"n_splits": 10, "test_size": 0.2, "random_state": 0},
+        feature_type="window",
+        feature_params={},
         scoring=["accuracy", "balanced_accuracy"],
         verbose=False,
     ):
@@ -157,18 +170,80 @@ class LFPDecoder(object):
         """
         from sklearn.model_selection import cross_validate
 
-        cv = self.get_cross_val_set(strategy="shuffle")
-        features = self.get_features(feature_type=feature_type)
-        clf = self.get_classifier(class_type=class_type)
-        tags = self.get_tags()
+        clf = self.get_classifier(
+            class_type=class_type, classifier_params=classifier_params
+        )
+        cv = self.get_cross_val_set(
+            strategy="shuffle", cross_val_params=cross_val_params
+        )
+        features = self.get_features(
+            feature_type=feature_type, feature_params=feature_params
+        )
+        labels = self.get_labels()
         print(
             "Running cross val on\n{}\nwith cv\n{}\nusing features: {}".format(
                 clf, cv, feature_type
             )
         )
         return cross_validate(
-            clf, features, tags, return_train_score=True, scoring=scoring, cv=cv
+            clf, features, labels, return_train_score=True, scoring=scoring, cv=cv
         )
+
+    def hyper_param_search(
+        self,
+        n_top=3,
+        class_type="nn",
+        classifier_params={},
+        cv_strategy="shuffle",
+        cross_val_params={"n_splits": 10, "test_size": 0.2, "random_state": 0},
+        feature_type="window",
+        feature_params={},
+        scoring=["accuracy", "balanced_accuracy"],
+        verbose=False,
+    ):
+        """
+        Perform hyper-param searching.
+        """
+        from sklearn.model_selection import RandomizedSearchCV
+
+        def report(results, n_top=n_top):
+            for i in range(1, n_top + 1):
+                candidates = np.flatnonzero(results["rank_test_score"] == i)
+                for candidate in candidates:
+                    print("Model with rank: {0}".format(i))
+                    print(
+                        "Mean validation score: {0:.3f} (std: {1:.3f})".format(
+                            results["mean_test_score"][candidate],
+                            results["std_test_score"][candidate],
+                        )
+                    )
+                    print("Parameters: {0}".format(results["params"][candidate]))
+                    print("")
+
+        clf, param_dist = self.get_classifier(
+            class_type=class_type,
+            classifier_params=classifier_params,
+            return_param_dist=True,
+        )
+        cv = self.get_cross_val_set(
+            strategy="shuffle", cross_val_params=cross_val_params
+        )
+        features = self.get_features(
+            feature_type=feature_type, feature_params=feature_params
+        )
+        labels = self.get_labels()
+        random_search = RandomizedSearchCV(
+            clf, param_distributions=param_dist, n_iter=30, cv=cv
+        )
+        random_search.fit(features, labels)
+
+        if verbose:
+            report(random_search.cv_results_)
+
+        # clf.set_params(**random_search.best_params_)
+        return random_search
+
+        # You can set the params on a classifier using
 
     @staticmethod
     def confidence_interval_estimate(cross_val_result, key):
@@ -192,25 +267,28 @@ def random_decoding():
     # Just random white noise signal
     random_epochs = random_white_noise(100, 4, 500)
 
-    # Random one or zero tags for now
-    tags = np.random.randint(low=0, high=2, size=100)
+    # Random one or zero labels for now
+    labels = np.random.randint(low=0, high=2, size=100)
     target_names = ["Random OFF", "Random ON"]
 
-    decoder = LFPDecoder(mne_epochs=random_epochs, tags=tags)
+    decoder = LFPDecoder(mne_epochs=random_epochs, labels=labels)
     out = decoder.decode()
-    print("Actual :", tags[-10:])
+    print("Actual :", labels[-10:])
     print("Predict:", out[1])
-    print(decoder.decoding_accuracy(tags[-10:], out[1], target_names))
+    print(decoder.decoding_accuracy(labels[-10:], out[1], target_names))
 
     print("----------Cross Validation-------------")
     from pprint import pprint
 
     cv_result = decoder.cross_val_decoding(
-        cross_val_params={"n_splits": 1000, "test_size": 0.2, "random_state": None},
+        cross_val_params={"n_splits": 100, "test_size": 0.2, "random_state": 0},
         verbose=True,
     )
     pprint(cv_result)
     pprint(decoder.confidence_interval_estimate(cv_result, "accuracy"))
+
+    random_search = decoder.hyper_param_search(verbose=True)
+    print("Best params:", random_search.best_params_)
 
 
 if __name__ == "__main__":
