@@ -35,7 +35,7 @@ class LFPDecoder(object):
 
     TODO
     ----
-    Perhaps reorganise so that the class sets up decoding 
+    Perhaps reorganise so that the class sets up decoding
     parameters on init, such as the classifier to be used.
 
     """
@@ -55,12 +55,20 @@ class LFPDecoder(object):
         self.sample_rate = sample_rate
 
     def get_labels(self):
+        """Return the labels of each epoch as a numpy array."""
         return self.labels
 
     def get_data(self):
+        """
+        Return a 3D numpy array of the LFP data.
+
+        This array is in the shape (epochs, chans, times).
+
+        """
         return self.mne_epochs.get_data(picks=self.selected_data)
 
     def get_features(self, feature_type="window", feature_params={}):
+        """Get a set of features matching feature_type and pass feature_params to it."""
         if feature_type == "window":
             features = self.window_features(**feature_params)
         else:
@@ -71,6 +79,13 @@ class LFPDecoder(object):
     def get_classifier(
         self, class_type="nn", classifier_params={}, return_param_dist=False
     ):
+        """
+        Get a classifier matching class_type and pass classifier_params to it.
+
+        If return_param_dist is True, also returns a sensible distribution of
+        hyperparameters to search over for that classifier.
+
+        """
         if class_type == "nn":
             from sklearn import neighbors
 
@@ -99,6 +114,7 @@ class LFPDecoder(object):
             return clf
 
     def get_cross_val_set(self, strategy="shuffle", cross_val_params={}):
+        """Get a split of the data into cross validation sets."""
         if strategy == "shuffle":
             from sklearn.model_selection import StratifiedShuffleSplit
 
@@ -274,6 +290,7 @@ class LFPDecoder(object):
 
     @staticmethod
     def confidence_interval_estimate(cross_val_result, key):
+        """Returns 95% confidence interval estimates from cross_val results."""
         test_key = "test_" + key
         train_key = "train_" + key
         test_scores = cross_val_result[test_key]
@@ -289,6 +306,7 @@ class LFPDecoder(object):
 
 
 def random_decoding():
+    """Perform a full decoding pipeline from random white noise."""
     from bvmpc.bv_mne import random_white_noise
     from pprint import pprint
 
