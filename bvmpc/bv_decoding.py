@@ -77,29 +77,56 @@ class LFPDecoder(object):
 
         return features
 
-    def decode(self, class_type="nn"):
-        """
-        1. Compute features
+    def get_features(self, feature_type="window"):
+        if feature_type == "window":
+            features = self.window_features()
+        else:
+            raise ValueError("Unrecognised feature type {}".format(feature_type))
 
-        2. Select dependent var
+        return features
 
-        3. Perform ML
-        """
-        # This demonstrates really simple leave 10 out cross val
-        # Will be update to use proper cross val later
-        features = self.window_features()
-        to_predict = self.get_tags()
-
-        # You can use whatever here I'll just switch on type for now
+    @staticmethod
+    def get_classifier(class_type="nn", classifier_params={}):
         if class_type == "nn":
             from sklearn import neighbors
 
-            clf = neighbors.KNeighborsClassifier(5, weights="distance")
+            classifier_params.setdefault("weights", "distance")
+            classifier_params.setdefault("n_neighbors", 10)
+            clf = neighbors.KNeighborsClassifier(**classifier_params)
+
+        elif class_type == "pipeline":
+            from sklearn import preprocessing
+            from sklearn.pipeline import make_pipeline
+            from sklearn import svm
+
+            clf = make_pipeline(preprocessing.StandardScaler(), svm.SVC(C=1))
+
         else:
             raise ValueError("Unrecognised classifier type {}".format(class_type))
+
+        return clf
+
+    @staticmethod
+    def get_cross_val_set(strategy="shuffle", cross_val_params={}):
+        if strategy == "shuffle":
+            from sklearn.model_selection import ShuffleSplit
+
+            cross_val_params.setdefault("n_splits", 10)
+            cross_val_params.setdefault("test_size", 0.2)
+            cross_val_params.setdefault("random_state", 0)
+            shuffle = ShuffleSplit(**cross_val_params)
+        else:
+            raise ValueError("Unrecognised cross validation {}".format(strategy))
+        return shuffle
+
+    def decode(self, class_type="nn"):
+        """Decode by fitting with default parameters."""
+        # TODO change the test set
+        features = self.get_features()
+        clf = self.get_classifier()
+        to_predict = self.get_tags()
         clf.fit(features[:-10], to_predict[:-10])
         output = clf.predict(features[-10:])
-
         return clf, output
 
     @staticmethod
@@ -115,8 +142,51 @@ class LFPDecoder(object):
             true, predicted, target_names=target_names, output_dict=as_dict
         )
 
+    def cross_val_decoding(
+        self,
+        class_type="nn",
+        feature_type="window",
+        cv_strategy="shuffle",
+        cross_val_params={"n_splits": 10, "test_size": 0.2, "random_state": 0},
+        scoring=["accuracy", "balanced_accuracy"],
+        verbose=False,
+    ):
+        """
+        Perform decoding with cross-validation.
 
-if __name__ == "__main__":
+        """
+        from sklearn.model_selection import cross_validate
+
+        cv = self.get_cross_val_set(strategy="shuffle")
+        features = self.get_features(feature_type=feature_type)
+        clf = self.get_classifier(class_type=class_type)
+        tags = self.get_tags()
+        print(
+            "Running cross val on\n{}\nwith cv\n{}\nusing features: {}".format(
+                clf, cv, feature_type
+            )
+        )
+        return cross_validate(
+            clf, features, tags, return_train_score=True, scoring=scoring, cv=cv
+        )
+
+    @staticmethod
+    def confidence_interval_estimate(cross_val_result, key):
+        test_key = "test_" + key
+        train_key = "train_" + key
+        test_scores = cross_val_result[test_key]
+        train_scores = cross_val_result[train_key]
+
+        test_str = "Test {}: {:.2f} (+/- {:.2f})".format(
+            key, test_scores.mean(), test_scores.std() * 2
+        )
+        train_str = "Train {}: {:.2f} (+/- {:.2f})".format(
+            key, train_scores.mean(), train_scores.std() * 2
+        )
+        return test_str, train_str
+
+
+def random_decoding():
     from bvmpc.bv_mne import random_white_noise
 
     # Just random white noise signal
@@ -128,6 +198,20 @@ if __name__ == "__main__":
 
     decoder = LFPDecoder(mne_epochs=random_epochs, tags=tags)
     out = decoder.decode()
-    print(tags[-10:])
-    print(out[1])
+    print("Actual :", tags[-10:])
+    print("Predict:", out[1])
     print(decoder.decoding_accuracy(tags[-10:], out[1], target_names))
+
+    print("----------Cross Validation-------------")
+    from pprint import pprint
+
+    cv_result = decoder.cross_val_decoding(
+        cross_val_params={"n_splits": 1000, "test_size": 0.2, "random_state": None},
+        verbose=True,
+    )
+    pprint(cv_result)
+    pprint(decoder.confidence_interval_estimate(cv_result, "accuracy"))
+
+
+if __name__ == "__main__":
+    random_decoding()
