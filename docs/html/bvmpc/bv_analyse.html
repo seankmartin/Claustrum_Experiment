@@ -72,13 +72,12 @@ def split_lever_ts(session):
     lever_ts = session.get_lever_ts()
     switch_ts = np.arange(5, 1830, 305)
     reward_times = session.get_rw_ts()
-    trial_type = session.get_arrays(&#39;Trial Type&#39;)
+    trial_type = session.get_arrays(&#34;Trial Type&#34;)
 
     ratio_lever_ts = []
     interval_lever_ts = []
     block_lever_ts = np.split(lever_ts, np.searchsorted(lever_ts, switch_ts))
-    block_reward_ts = np.split(reward_times,
-                               np.searchsorted(reward_times, switch_ts))
+    block_reward_ts = np.split(reward_times, np.searchsorted(reward_times, switch_ts))
     for i, (l, r) in enumerate(zip(block_lever_ts, block_reward_ts)):
         if trial_type[i] == 1:  # FR Block
             split_lever_ts = np.split(l, np.searchsorted(l, r))
@@ -87,9 +86,9 @@ def split_lever_ts(session):
             split_lever_ts = np.split(l, np.searchsorted(l, r))
             interval_lever_ts.append(split_lever_ts)
         else:
-            print(&#39;Not Ready for analysis!&#39;)
-    print(&#39;len of ratio_l&#39; + len(ratio_lever_ts))
-    print(&#39;len of interval_l&#39; + len(interval_lever_ts))
+            print(&#34;Not Ready for analysis!&#34;)
+    print(&#34;len of ratio_l&#34; + len(ratio_lever_ts))
+    print(&#34;len of interval_l&#34; + len(interval_lever_ts))
     return ratio_lever_ts, interval_lever_ts
 
 
@@ -113,8 +112,8 @@ def cumplot_axona(s, ax=None, p_errors=False, p_all=False):
     else:
         fig = None
 
-    date = s.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
-    sub = s.get_metadata(&#39;subject&#39;)
+    date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)
+    sub = s.get_metadata(&#34;subject&#34;)
     stage = s.get_stage()
     blocks = s.get_tone_starts()
     lever_ts = s.get_lever_ts()
@@ -127,44 +126,56 @@ def cumplot_axona(s, ax=None, p_errors=False, p_all=False):
     err_FR = 0
     rw_FR = 0
     rw_FI = 0
-    reward_double = reward_times[np.searchsorted(
-        reward_times, pell_ts[pell_double], side=&#39;right&#39;)]
+    reward_double = reward_times[
+        np.searchsorted(reward_times, pell_ts[pell_double], side=&#34;right&#34;)
+    ]
 
-    norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl = s.split_sess(blocks=blocks,
-                                                                       error_only=p_errors, all_levers=p_all)
-    sch_type = s.get_arrays(&#39;Trial Type&#39;)
-    ratio_c = plt.cm.get_cmap(&#39;Wistia&#39;)
-    interval_c = plt.cm.get_cmap(&#39;winter&#39;)
+    norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl = s.split_sess(
+        blocks=blocks, error_only=p_errors, all_levers=p_all
+    )
+    sch_type = s.get_arrays(&#34;Trial Type&#34;)
+    ratio_c = plt.cm.get_cmap(&#34;Wistia&#34;)
+    interval_c = plt.cm.get_cmap(&#34;winter&#34;)
 
-    if stage == &#39;7&#39;:
+    if stage == &#34;7&#34;:
         err_lever_ts = s.get_err_lever_ts()
-        lever_ts = np.sort(np.concatenate((
-            lever_ts, err_lever_ts), axis=None))
+        lever_ts = np.sort(np.concatenate((lever_ts, err_lever_ts), axis=None))
     lever_times = np.insert(lever_ts, 0, 0, axis=0)
-    ax[0].step(lever_times, np.arange(
-        lever_times.size), where=&#34;post&#34;, label=sub, zorder=1)
-    if stage == &#39;7&#39;:    # plots error press in red
-        ax[0].scatter(err_lever_ts, np.isin(
-            lever_times, err_lever_ts).nonzero()[0],
-            c=&#39;r&#39;, label=&#39;Errors&#39;, s=1, zorder=2)
+    ax[0].step(
+        lever_times, np.arange(lever_times.size), where=&#34;post&#34;, label=sub, zorder=1,
+    )
+    if stage == &#34;7&#34;:  # plots error press in red
+        ax[0].scatter(
+            err_lever_ts,
+            np.isin(lever_times, err_lever_ts).nonzero()[0],
+            c=&#34;r&#34;,
+            label=&#34;Errors&#34;,
+            s=1,
+            zorder=2,
+        )
     bins = lever_times
     reward_y = np.digitize(reward_times, bins) - 1
     double_y = np.digitize(reward_double, bins) - 1
-    ax[0].scatter(reward_times, reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;,
-                  label=&#39;Reward Collected&#39;, s=25)
+    ax[0].scatter(
+        reward_times, reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;, label=&#34;Reward Collected&#34;, s=25,
+    )
     if len(reward_double) &gt; 0:
-        dr_print = &#34;\nTotal # of Double Rewards: &#34; + \
-            str(len(reward_double))
-        ax[0].scatter(reward_double, double_y, marker=&#34;x&#34;, c=&#34;magenta&#34;,
-                      label=&#39;Double Reward&#39;, s=25)
+        dr_print = &#34;\nTotal # of Double Rewards: &#34; + str(len(reward_double))
+        ax[0].scatter(
+            reward_double,
+            double_y,
+            marker=&#34;x&#34;,
+            c=&#34;magenta&#34;,
+            label=&#34;Double Reward&#34;,
+            s=25,
+        )
     else:
         dr_print = &#34;&#34;
-    ax[0].legend(loc=&#39;lower right&#39;)
+    ax[0].legend(loc=&#34;lower right&#34;)
 
     # for printing of error rates on graph
-    norm_r_ts, _, norm_err_ts, _, _ = s.split_sess(
-        blocks=blocks, all_levers=True)
-    sch_type = s.get_arrays(&#39;Trial Type&#39;)
+    norm_r_ts, _, norm_err_ts, _, _ = s.split_sess(blocks=blocks, all_levers=True)
+    sch_type = s.get_arrays(&#34;Trial Type&#34;)
     for i, l in enumerate(norm_err_ts):
         if sch_type[i] == 1:
             err_FR = err_FR + len(norm_err_ts[i])
@@ -175,12 +186,10 @@ def cumplot_axona(s, ax=None, p_errors=False, p_all=False):
             rw_FR = rw_FR + len(norm_r_ts[i])
         elif sch_type[i] == 0:
             rw_FI = rw_FI + len(norm_r_ts[i])
-    rw_print = &#34;\nCorrect FR \\ FI: &#34; + \
-        str(rw_FR) + r&#34; \ &#34; + str(rw_FI)
+    rw_print = &#34;\nCorrect FR \\ FI: &#34; + str(rw_FR) + r&#34; \ &#34; + str(rw_FI)
 
     if err_FR &gt; 0 or err_FI &gt; 0:
-        err_print = &#34;\nErrors FR \\ FI: &#34; + \
-            str(err_FR) + r&#34; \ &#34; + str(err_FI)
+        err_print = &#34;\nErrors FR \\ FI: &#34; + str(err_FR) + r&#34; \ &#34; + str(err_FI)
     else:
         err_print = &#34;&#34;
 
@@ -190,61 +199,94 @@ def cumplot_axona(s, ax=None, p_errors=False, p_all=False):
         cum_l += l.size
         if sch_type[i] == 1:
             ax[0].axhline(cum_l, c=ratio_c(i * 45), lw=0.75, zorder=-1)
-            ax[0].text(ax[0].set_xlim()[1]-10, cum_l+1,
-                       &#34;n = {}&#34;.format(l.size), ha=&#39;right&#39;, fontsize=8)
+            ax[0].text(
+                ax[0].set_xlim()[1] - 10,
+                cum_l + 1,
+                &#34;n = {}&#34;.format(l.size),
+                ha=&#34;right&#34;,
+                fontsize=8,
+            )
         elif sch_type[i] == 0:
             ax[0].axhline(cum_l, c=interval_c(i * 45), lw=0.75, zorder=-1)
-            ax[0].text(ax[0].set_xlim()[1]-10, cum_l+1,
-                       &#34;n = {}&#34;.format(l.size), ha=&#39;right&#39;, fontsize=8)
+            ax[0].text(
+                ax[0].set_xlim()[1] - 10,
+                cum_l + 1,
+                &#34;n = {}&#34;.format(l.size),
+                ha=&#34;right&#34;,
+                fontsize=8,
+            )
         print(i, l.size, cum_l)
 
-    text = (&#39;Total # of Lever Press: &#39; + &#39;{}\nTotal # of Rewards: {}{}{}{}&#39;.format(
-            len(lever_ts), len(reward_times) + len(reward_double),
-            dr_print, rw_print, err_print))
-    ax[0].text(0.03, 0.97, text, ha=&#34;left&#34;,
-               va=&#34;top&#34;, transform=ax[0].transAxes)
-    ax[0].set_title(&#39;Cumulative Lever Presses&#39;, fontsize=10)
-    ax[0].set_xlabel(&#39;Time (s)&#39;)
-    ax[0].set_ylabel(&#39;Cumulative Lever Presses&#39;)
+    text = &#34;Total # of Lever Press: &#34; + &#34;{}\nTotal # of Rewards: {}{}{}{}&#34;.format(
+        len(lever_ts),
+        len(reward_times) + len(reward_double),
+        dr_print,
+        rw_print,
+        err_print,
+    )
+    ax[0].text(0.03, 0.97, text, ha=&#34;left&#34;, va=&#34;top&#34;, transform=ax[0].transAxes)
+    ax[0].set_title(&#34;Cumulative Lever Presses&#34;, fontsize=10)
+    ax[0].set_xlabel(&#34;Time (s)&#34;)
+    ax[0].set_ylabel(&#34;Cumulative Lever Presses&#34;)
 
     # Plot cummulative lever press split into blocks
     for i, l in enumerate(norm_l_ts):
         if sch_type[i] == 1:
-            ax[1].step(l, np.arange(l.size), c=ratio_c(i * 45), where=&#34;post&#34;,
-                       label=&#39;B&#39; + str(i + 1) + &#39; - FR&#39;, zorder=1)
+            ax[1].step(
+                l,
+                np.arange(l.size),
+                c=ratio_c(i * 45),
+                where=&#34;post&#34;,
+                label=&#34;B&#34; + str(i + 1) + &#34; - FR&#34;,
+                zorder=1,
+            )
         elif sch_type[i] == 0:
-            ax[1].step(l, np.arange(l.size), c=interval_c(i * 45), where=&#34;post&#34;,
-                       label=&#39;B&#39; + str(i + 1) + &#39; - FI&#39;, zorder=1)
+            ax[1].step(
+                l,
+                np.arange(l.size),
+                c=interval_c(i * 45),
+                where=&#34;post&#34;,
+                label=&#34;B&#34; + str(i + 1) + &#34; - FI&#34;,
+                zorder=1,
+            )
         bins = l
         reward_y = np.digitize(norm_r_ts[i], bins) - 1
         double_y = np.digitize(norm_dr_ts[i], bins) - 1
-        if stage == &#39;7&#39; and p_all:  # plots all responses incl. errors
-            ax[1].scatter(norm_err_ts[i], np.isin(
-                l, norm_err_ts[i]).nonzero()[0],
-                c=&#39;r&#39;, s=1, zorder=2)
-            incl = &#39;_All&#39;
+        if stage == &#34;7&#34; and p_all:  # plots all responses incl. errors
+            ax[1].scatter(
+                norm_err_ts[i],
+                np.isin(l, norm_err_ts[i]).nonzero()[0],
+                c=&#34;r&#34;,
+                s=1,
+                zorder=2,
+            )
+            incl = &#34;_All&#34;
 
-        ax[1].scatter(norm_r_ts[i], reward_y,
-                      marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
-        ax[1].scatter(norm_dr_ts[i], double_y,
-                      marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
-    ax[1].set_title(&#39;{}, Block-Split {}&#39;.format(
-        sub, incl), fontsize=10)
-    ax[1].legend(loc=&#39;upper left&#39;)
-    fig.suptitle(&#39;{} {} S{}&#39;.format(sub, date, stage),
-                 y=0.99, fontsize=20)
+        ax[1].scatter(norm_r_ts[i], reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+        ax[1].scatter(norm_dr_ts[i], double_y, marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
+    ax[1].set_title(&#34;{}, Block-Split {}&#34;.format(sub, incl), fontsize=10)
+    ax[1].legend(loc=&#34;upper left&#34;)
+    fig.suptitle(&#34;{} {} S{}&#34;.format(sub, date, stage), y=0.99, fontsize=20)
     return fig
 
 
-def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
-            zoom_sch=False, plot_error=False, plot_all=False):
+def cumplot(
+    session,
+    out_dir,
+    ax=None,
+    int_only=False,
+    zoom=False,
+    zoom_sch=False,
+    plot_error=False,
+    plot_all=False,
+):
     &#34;&#34;&#34;Perform a cumulative plot for a Session.&#34;&#34;&#34;
-    date = session.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
+    date = session.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)
     timestamps = session.get_arrays()
     lever_ts = session.get_lever_ts()
-    session_type = session.get_metadata(&#39;name&#39;)
-    stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
-    subject = session.get_metadata(&#39;subject&#39;)
+    session_type = session.get_metadata(&#34;name&#34;)
+    stage = session_type[:2].replace(&#34;_&#34;, &#34;&#34;)
+    subject = session.get_metadata(&#34;subject&#34;)
     reward_times = session.get_rw_ts()
     pell_ts = timestamps[&#34;Reward&#34;]
     pell_double = np.nonzero(np.diff(pell_ts) &lt; 0.5)
@@ -254,8 +296,9 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     err_FR = 0
     rw_FR = 0
     rw_FI = 0
-    reward_double = reward_times[np.searchsorted(
-        reward_times, pell_ts[pell_double], side=&#39;right&#39;)]
+    reward_double = reward_times[
+        np.searchsorted(reward_times, pell_ts[pell_double], side=&#34;right&#34;)
+    ]
     single_plot = False
     ratio = session.get_ratio()
     interval = session.get_interval()
@@ -263,51 +306,80 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
     if ax is None:
         single_plot = True
         fig, ax = plt.subplots()
-        ax.set_title(&#39;Cumulative Lever Presses\n&#39;, fontsize=15)
-        if session_type == &#39;5a_FixedRatio_p&#39;:
-            plt.suptitle(&#39;\n{}, {} {}, {}&#39;.format(
-                subject, session_type[:-2], ratio, date),
-                color=mycolors(subject), fontsize=10, y=.98, x=.51)
-        elif session_type == &#39;5b_FixedInterval_p&#39;:
-            plt.suptitle(&#39;\n{}, {} {}s, {}&#39;.format(
-                subject, session_type[:-2], interval, date),
-                color=mycolors(subject), fontsize=10, y=.98, x=.51)
-        elif session_type == &#39;6_RandomisedBlocks_p:&#39;:
-            plt.suptitle(&#39;\n{}, {} FR{}/FI{}s, {}&#39;.format(
-                subject, session_type[:-2], ratio, interval, date),
-                color=mycolors(subject), fontsize=10, y=.98, x=.51)
+        ax.set_title(&#34;Cumulative Lever Presses\n&#34;, fontsize=15)
+        if session_type == &#34;5a_FixedRatio_p&#34;:
+            plt.suptitle(
+                &#34;\n{}, {} {}, {}&#34;.format(subject, session_type[:-2], ratio, date),
+                color=mycolors(subject),
+                fontsize=10,
+                y=0.98,
+                x=0.51,
+            )
+        elif session_type == &#34;5b_FixedInterval_p&#34;:
+            plt.suptitle(
+                &#34;\n{}, {} {}s, {}&#34;.format(subject, session_type[:-2], interval, date),
+                color=mycolors(subject),
+                fontsize=10,
+                y=0.98,
+                x=0.51,
+            )
+        elif session_type == &#34;6_RandomisedBlocks_p:&#34;:
+            plt.suptitle(
+                &#34;\n{}, {} FR{}/FI{}s, {}&#34;.format(
+                    subject, session_type[:-2], ratio, interval, date
+                ),
+                color=mycolors(subject),
+                fontsize=10,
+                y=0.98,
+                x=0.51,
+            )
         else:
-            plt.suptitle(&#39;\n{}, S{}, {}&#39;.format(
-                subject, stage, date), color=mycolors(subject),
-                fontsize=10, y=.98, x=.51)
+            plt.suptitle(
+                &#34;\n{}, S{}, {}&#34;.format(subject, stage, date),
+                color=mycolors(subject),
+                fontsize=10,
+                y=0.98,
+                x=0.51,
+            )
     else:
-        if session_type == &#39;5a_FixedRatio_p&#39;:
-            ax.set_title(&#39;\n{}, S{}, FR{}, {}&#39;.format(
-                subject, stage, ratio, date),
-                color=mycolors(subject), fontsize=10)
-        elif session_type == &#39;5b_FixedInterval_p&#39;:
-            ax.set_title(&#39;\n{}, S{}, FI{}s, {}&#39;.format(
-                subject, stage, interval, date),
-                color=mycolors(subject), fontsize=10)
-        elif session_type == &#39;6_RandomisedBlocks_p&#39; or stage == &#39;7&#39;:
+        if session_type == &#34;5a_FixedRatio_p&#34;:
+            ax.set_title(
+                &#34;\n{}, S{}, FR{}, {}&#34;.format(subject, stage, ratio, date),
+                color=mycolors(subject),
+                fontsize=10,
+            )
+        elif session_type == &#34;5b_FixedInterval_p&#34;:
+            ax.set_title(
+                &#34;\n{}, S{}, FI{}s, {}&#34;.format(subject, stage, interval, date),
+                color=mycolors(subject),
+                fontsize=10,
+            )
+        elif session_type == &#34;6_RandomisedBlocks_p&#34; or stage == &#34;7&#34;:
             switch_ts = np.arange(5, 1830, 305)
             for x in switch_ts:
-                plt.axvline(x, color=&#39;g&#39;, linestyle=&#39;-.&#39;, linewidth=&#39;.4&#39;)
-            ax.set_title(&#39;\n{}, S{}, FR{}/FI{}s, {}&#39;.format(
-                subject, stage, ratio, interval, date),
-                color=mycolors(subject), fontsize=10)
+                plt.axvline(x, color=&#34;g&#34;, linestyle=&#34;-.&#34;, linewidth=&#34;.4&#34;)
+            ax.set_title(
+                &#34;\n{}, S{}, FR{}/FI{}s, {}&#34;.format(
+                    subject, stage, ratio, interval, date
+                ),
+                color=mycolors(subject),
+                fontsize=10,
+            )
         else:
-            ax.set_title(&#39;\n{}, S{}, {}&#39;.format(
-                subject, stage, date), color=mycolors(subject),
-                fontsize=10, y=1, x=.51)
+            ax.set_title(
+                &#34;\n{}, S{}, {}&#34;.format(subject, stage, date),
+                color=mycolors(subject),
+                fontsize=10,
+                y=1,
+                x=0.51,
+            )
 
-    ax.set_xlabel(&#39;Time (s)&#39;)
-    ax.set_ylabel(&#39;Cumulative Lever Presses&#39;)
+    ax.set_xlabel(&#34;Time (s)&#34;)
+    ax.set_ylabel(&#34;Cumulative Lever Presses&#34;)
 
     # Broken and plots are ugly - Plots single trials
     if zoom:
-        trial_lever_ts = np.split(lever_ts,
-                                  np.searchsorted(lever_ts, reward_times))
+        trial_lever_ts = np.split(lever_ts, np.searchsorted(lever_ts, reward_times))
         norm_reward_ts = []
         norm_lever_ts = []
         reward_times_0 = np.append([0], reward_times, axis=0)
@@ -315,140 +387,177 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
             norm_lever_ts.append(np.append([0], l - reward_times_0[i], axis=0))
             norm_reward_ts.append(reward_times[i] - reward_times_0[i])
         ax.set_xlim(0, np.max(norm_reward_ts))
-        color = plt.cm.get_cmap(&#39;autumn&#39;)
+        color = plt.cm.get_cmap(&#34;autumn&#34;)
         for i, l in enumerate(norm_lever_ts):
             ax.step(l, np.arange(l.size), c=color(i * 20), where=&#34;post&#34;)
             bins = l
             reward_y = np.digitize(norm_reward_ts[i], bins) - 1
-            plt.scatter(norm_reward_ts[i], reward_y,
-                        marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
-        ax.set_title(&#39;\n{}, Trial-Based&#39;.format(
-            subject), color=mycolors(subject), fontsize=10)
-        ax.legend(loc=&#39;lower right&#39;)
+            plt.scatter(norm_reward_ts[i], reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+        ax.set_title(
+            &#34;\n{}, Trial-Based&#34;.format(subject), color=mycolors(subject), fontsize=10,
+        )
+        ax.legend(loc=&#34;lower right&#34;)
         return fig
 
-    elif zoom_sch and (session_type == &#39;6_RandomisedBlocks_p&#39; or stage == &#39;7&#39;):
+    elif zoom_sch and (session_type == &#34;6_RandomisedBlocks_p&#34; or stage == &#34;7&#34;):
         # plots cum graph based on schedule type (i.e. FI/FR)
-        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl = session.split_sess(
-            plot_error=plot_error, all_levers=plot_all)
+        (norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl,) = session.split_sess(
+            plot_error=plot_error, all_levers=plot_all
+        )
 
-        sch_type = session.get_arrays(&#39;Trial Type&#39;)
-        ratio_c = plt.cm.get_cmap(&#39;Wistia&#39;)
-        interval_c = plt.cm.get_cmap(&#39;winter&#39;)
+        sch_type = session.get_arrays(&#34;Trial Type&#34;)
+        ratio_c = plt.cm.get_cmap(&#34;Wistia&#34;)
+        interval_c = plt.cm.get_cmap(&#34;winter&#34;)
         ax.set_xlim(0, 305)
         for i, l in enumerate(norm_l_ts):
             if sch_type[i] == 1 and not int_only:
-                ax.step(l, np.arange(l.size), c=ratio_c(i * 45), where=&#34;post&#34;,
-                        label=&#39;B&#39; + str(i + 1) + &#39; - FR&#39;, zorder=1)
+                ax.step(
+                    l,
+                    np.arange(l.size),
+                    c=ratio_c(i * 45),
+                    where=&#34;post&#34;,
+                    label=&#34;B&#34; + str(i + 1) + &#34; - FR&#34;,
+                    zorder=1,
+                )
             elif sch_type[i] == 0:
-                ax.step(l, np.arange(l.size), c=interval_c(i * 45), where=&#34;post&#34;,
-                        label=&#39;B&#39; + str(i + 1) + &#39; - FI&#39;, zorder=1)
+                ax.step(
+                    l,
+                    np.arange(l.size),
+                    c=interval_c(i * 45),
+                    where=&#34;post&#34;,
+                    label=&#34;B&#34; + str(i + 1) + &#34; - FI&#34;,
+                    zorder=1,
+                )
             bins = l
             reward_y = np.digitize(norm_r_ts[i], bins) - 1
             double_y = np.digitize(norm_dr_ts[i], bins) - 1
-            if stage == &#39;7&#39; and plot_all:  # plots all responses incl. errors
-                ax.scatter(norm_err_ts[i], np.isin(
-                    l, norm_err_ts[i]).nonzero()[0],
-                    c=&#39;r&#39;, s=1, zorder=2)
-                incl = &#39;_All&#39;
+            if stage == &#34;7&#34; and plot_all:  # plots all responses incl. errors
+                ax.scatter(
+                    norm_err_ts[i],
+                    np.isin(l, norm_err_ts[i]).nonzero()[0],
+                    c=&#34;r&#34;,
+                    s=1,
+                    zorder=2,
+                )
+                incl = &#34;_All&#34;
             if int_only:
                 if sch_type[i] == 0:
-                    plt.scatter(norm_r_ts[i], reward_y,
-                                marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
-                    plt.scatter(norm_dr_ts[i], double_y,
-                                marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
+                    plt.scatter(norm_r_ts[i], reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+                    plt.scatter(norm_dr_ts[i], double_y, marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
             else:
-                plt.scatter(norm_r_ts[i], reward_y,
-                            marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
-                plt.scatter(norm_dr_ts[i], double_y,
-                            marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
-        ax.set_title(&#39;\n{}, Block-Split {}&#39;.format(
-            subject, incl), color=mycolors(subject), fontsize=10)
-        ax.legend(loc=&#39;upper left&#39;)
+                plt.scatter(norm_r_ts[i], reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+                plt.scatter(norm_dr_ts[i], double_y, marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
+        ax.set_title(
+            &#34;\n{}, Block-Split {}&#34;.format(subject, incl),
+            color=mycolors(subject),
+            fontsize=10,
+        )
+        ax.legend(loc=&#34;upper left&#34;)
         return fig
 
     elif zoom_sch:  # plots cum graph split into 5 min blocks
-        if session_type == &#39;5a_FixedRatio_p&#39;:
-            sch_type = &#39;FR&#39;
-            ax.set_title(&#39;\n{}, FR{} Split&#39;.format(
-                subject, ratio), color=mycolors(subject),
-                fontsize=10)
-        elif session_type == &#39;5b_FixedInterval_p&#39;:
-            sch_type = &#39;FI&#39;
-            ax.set_title(&#39;\n{}, FI{}s Split&#39;.format(
-                subject, interval), color=mycolors(subject),
-                fontsize=10)
+        if session_type == &#34;5a_FixedRatio_p&#34;:
+            sch_type = &#34;FR&#34;
+            ax.set_title(
+                &#34;\n{}, FR{} Split&#34;.format(subject, ratio),
+                color=mycolors(subject),
+                fontsize=10,
+            )
+        elif session_type == &#34;5b_FixedInterval_p&#34;:
+            sch_type = &#34;FI&#34;
+            ax.set_title(
+                &#34;\n{}, FI{}s Split&#34;.format(subject, interval),
+                color=mycolors(subject),
+                fontsize=10,
+            )
         elif stage == 6 or stage == 7:
             pass
         else:
             return print(&#34;Unable to split session&#34;)
         # Change values to set division blocks
         blocks = np.arange(0, 60 * 30, 300)
-        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, _ = session.split_sess(
-            blocks)
+        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, _ = session.split_sess(blocks)
         ax.set_xlim(0, 305)
         for i, l in enumerate(norm_l_ts):
-            ax.step(l, np.arange(l.size), c=mycolors(i), where=&#34;post&#34;,
-                    label=&#39;B&#39; + str(i + 1) + &#39; - {}&#39;.format(sch_type))
+            ax.step(
+                l,
+                np.arange(l.size),
+                c=mycolors(i),
+                where=&#34;post&#34;,
+                label=&#34;B&#34; + str(i + 1) + &#34; - {}&#34;.format(sch_type),
+            )
             bins = l
             reward_y = np.digitize(norm_r_ts[i], bins) - 1
             double_y = np.digitize(norm_dr_ts[i], bins) - 1
-            plt.scatter(norm_r_ts[i], reward_y,
-                        marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
-            plt.scatter(norm_dr_ts[i], double_y,
-                        marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
-        ax.legend(loc=&#39;upper left&#39;)
+            plt.scatter(norm_r_ts[i], reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+            plt.scatter(norm_dr_ts[i], double_y, marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
+        ax.legend(loc=&#34;upper left&#34;)
         return fig
 
     else:
-        if stage == &#39;7&#39;:
+        if stage == &#34;7&#34;:
             err_lever_ts = session.get_err_lever_ts()
-            lever_ts = np.sort(np.concatenate((
-                lever_ts, err_lever_ts), axis=None))
+            lever_ts = np.sort(np.concatenate((lever_ts, err_lever_ts), axis=None))
         lever_times = np.insert(lever_ts, 0, 0, axis=0)
-        ax.step(lever_times, np.arange(
-            lever_times.size), c=mycolors(subject),
-            where=&#34;post&#34;, label=&#39;Animal&#39; + subject, zorder=1)
-        if stage == &#39;7&#39;:  # plots error press in red
-            ax.scatter(err_lever_ts, np.isin(
-                lever_times, err_lever_ts).nonzero()[0],
-                c=&#39;r&#39;, label=&#39;Errors&#39;, s=1, zorder=2)
+        ax.step(
+            lever_times,
+            np.arange(lever_times.size),
+            c=mycolors(subject),
+            where=&#34;post&#34;,
+            label=&#34;Animal&#34; + subject,
+            zorder=1,
+        )
+        if stage == &#34;7&#34;:  # plots error press in red
+            ax.scatter(
+                err_lever_ts,
+                np.isin(lever_times, err_lever_ts).nonzero()[0],
+                c=&#34;r&#34;,
+                label=&#34;Errors&#34;,
+                s=1,
+                zorder=2,
+            )
         if reward_times[-1] &gt; lever_times[-1]:
             ax.plot(
                 [lever_times[-1], reward_times[-1] + 2],
                 [lever_times.size - 1, lever_times.size - 1],
-                c=mycolors(subject))
+                c=mycolors(subject),
+            )
         bins = lever_times
         reward_y = np.digitize(reward_times, bins) - 1
         double_y = np.digitize(reward_double, bins) - 1
         # for printing of error rates on graph
-        norm_r_ts, _, norm_err_ts, _, _ = session.split_sess(
-            all_levers=True)
-        sch_type = session.get_arrays(&#39;Trial Type&#39;)
+        norm_r_ts, _, norm_err_ts, _, _ = session.split_sess(all_levers=True)
+        sch_type = session.get_arrays(&#34;Trial Type&#34;)
         for i, l in enumerate(norm_err_ts):
             if sch_type[i] == 1:
                 err_FR = err_FR + len(norm_err_ts[i])
             elif sch_type[i] == 0:
                 err_FI = err_FI + len(norm_err_ts[i])
-        if stage == &#39;6&#39; or stage == &#39;7&#39;:
+        if stage == &#34;6&#34; or stage == &#34;7&#34;:
             for i, l in enumerate(norm_r_ts):
                 if sch_type[i] == 1:
                     rw_FR = rw_FR + len(norm_r_ts[i])
                 elif sch_type[i] == 0:
                     rw_FI = rw_FI + len(norm_r_ts[i])
-            rw_print = &#34;\nCorrect FR \\ FI: &#34; + \
-                str(rw_FR) + r&#34; \ &#34; + str(rw_FI)
+            rw_print = &#34;\nCorrect FR \\ FI: &#34; + str(rw_FR) + r&#34; \ &#34; + str(rw_FI)
 
-    ax.scatter(reward_times, reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;,
-               label=&#39;Reward Collected&#39;, s=25)
+    ax.scatter(
+        reward_times, reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;, label=&#34;Reward Collected&#34;, s=25,
+    )
     if len(reward_double) &gt; 0:
         dr_print = &#34;\nTotal # of Double Rewards: &#34; + str(len(reward_double))
-        ax.scatter(reward_double, double_y, marker=&#34;x&#34;, c=&#34;magenta&#34;,
-                   label=&#39;Double Reward&#39;, s=25)
+        ax.scatter(
+            reward_double,
+            double_y,
+            marker=&#34;x&#34;,
+            c=&#34;magenta&#34;,
+            label=&#34;Double Reward&#34;,
+            s=25,
+        )
     else:
         dr_print = &#34;&#34;
-    ax.legend(loc=&#39;lower right&#39;)
-#    ax.set_xlim(0, 30 * 60 + 30)
+    ax.legend(loc=&#34;lower right&#34;)
+    #    ax.set_xlim(0, 30 * 60 + 30)
 
     if err_FR &gt; 0 or err_FI &gt; 0:
         err_print = &#34;\nErrors FR \\ FI: &#34; + str(err_FR) + r&#34; \ &#34; + str(err_FI)
@@ -456,28 +565,44 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         err_print = &#34;&#34;
 
     if single_plot:
-        out_name = (subject.zfill(3) + &#34;_CumulativeHist_&#34; + date +
-                    &#34;_&#34; + session_type[:-2] + &#34;.png&#34;)
+        out_name = (
+            subject.zfill(3)
+            + &#34;_CumulativeHist_&#34;
+            + date
+            + &#34;_&#34;
+            + session_type[:-2]
+            + &#34;.png&#34;
+        )
         out_name = os.path.join(out_dir, out_name)
         print(&#34;Saved figure to {}&#34;.format(out_name))
         # Text Display on Graph
-        if stage == &#39;6&#39; or stage == &#39;7&#39;:
+        if stage == &#34;6&#34; or stage == &#34;7&#34;:
             text = (
-                &#39;Total # of Lever Press: &#39; +
-                &#39;{}\nTotal # of Rewards: {}{}{}{}&#39;.format(
-                    len(lever_ts), len(reward_times) + len(reward_double),
-                    dr_print, rw_print, err_print))
+                &#34;Total # of Lever Press: &#34;
+                + &#34;{}\nTotal # of Rewards: {}{}{}{}&#34;.format(
+                    len(lever_ts),
+                    len(reward_times) + len(reward_double),
+                    dr_print,
+                    rw_print,
+                    err_print,
+                )
+            )
             ax.text(0.55, 0.15, text, transform=ax.transAxes)
         bv_plot.savefig(fig, out_name)
         plt.close()
     else:
         # Text Display on Graph
-        if stage == &#39;6&#39; or stage == &#39;7&#39;:
+        if stage == &#34;6&#34; or stage == &#34;7&#34;:
             text = (
-                &#39;Total # of Lever Press: &#39; +
-                &#39;{}\nTotal # of Rewards: {}{}{}{}&#39;.format(
-                    len(lever_ts), len(reward_times) + len(reward_double),
-                    dr_print, rw_print, err_print))
+                &#34;Total # of Lever Press: &#34;
+                + &#34;{}\nTotal # of Rewards: {}{}{}{}&#34;.format(
+                    len(lever_ts),
+                    len(reward_times) + len(reward_double),
+                    dr_print,
+                    rw_print,
+                    err_print,
+                )
+            )
             ax.text(0.05, 0.75, text, transform=ax.transAxes)
         return fig
 
@@ -491,10 +616,10 @@ def IRT(session, out_dir, ax=None, showIRT=False):
     single_plot = False
 
     # General session info
-    date = session.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
-    session_type = session.get_metadata(&#39;name&#39;)
-    stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
-    subject = session.get_metadata(&#39;subject&#39;)
+    date = session.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)
+    session_type = session.get_metadata(&#34;name&#34;)
+    stage = session_type[:2].replace(&#34;_&#34;, &#34;&#34;)
+    subject = session.get_metadata(&#34;subject&#34;)
     ratio = session.get_ratio()
     interval = session.get_interval()
 
@@ -513,7 +638,7 @@ def IRT(session, out_dir, ax=None, showIRT=False):
     _, a = np.unique(b, return_index=True)  # returns index for good rewards
 
     good_rewards = rewards[a]  # nosepoke ts for pressing levers
-    if session_type == &#39;5a_FixedRatio_p&#39;:
+    if session_type == &#34;5a_FixedRatio_p&#34;:
         last_lever_ts = []
         for i in b:
             last_lever_ts.append(good_lever_ts[i - 1])
@@ -527,52 +652,72 @@ def IRT(session, out_dir, ax=None, showIRT=False):
         IRT = last_lever_ts[1:] - good_rewards[:-1]
 
     hist_count, hist_bins, _ = ax.hist(
-        IRT, bins=math.ceil(np.amax(IRT)),
-        range=(0, math.ceil(np.amax(IRT))), color=mycolors(subject))
+        IRT,
+        bins=math.ceil(np.amax(IRT)),
+        range=(0, math.ceil(np.amax(IRT))),
+        color=mycolors(subject),
+    )
 
     # Plotting of IRT Graphs
     if ax is None:
         single_plot = True
         fig, ax = plt.subplots()
-        ax.set_title(&#39;Inter-Response Time\n&#39;, fontsize=15)
-        if session_type == &#39;5a_FixedRatio_p&#39;:
-            plt.suptitle(&#39;\n({}, {} {}, {})&#39;.format(
-                subject, session_type[:-2], ratio, date),
-                fontsize=10, y=.98, x=.51)
-        elif session_type == &#39;5b_FixedInterval_p&#39;:
-            plt.suptitle(&#39;\n({}, {} {}s, {})&#39;.format(
-                subject, session_type[:-2], interval, date),
-                fontsize=10, y=.98, x=.51)
+        ax.set_title(&#34;Inter-Response Time\n&#34;, fontsize=15)
+        if session_type == &#34;5a_FixedRatio_p&#34;:
+            plt.suptitle(
+                &#34;\n({}, {} {}, {})&#34;.format(subject, session_type[:-2], ratio, date),
+                fontsize=10,
+                y=0.98,
+                x=0.51,
+            )
+        elif session_type == &#34;5b_FixedInterval_p&#34;:
+            plt.suptitle(
+                &#34;\n({}, {} {}s, {})&#34;.format(subject, session_type[:-2], interval, date),
+                fontsize=10,
+                y=0.98,
+                x=0.51,
+            )
         else:
-            plt.suptitle(&#39;\n({}, {}, {})&#39;.format(
-                subject, session_type[:-2], date),
-                fontsize=10, y=.98, x=.51)
+            plt.suptitle(
+                &#34;\n({}, {}, {})&#34;.format(subject, session_type[:-2], date),
+                fontsize=10,
+                y=0.98,
+                x=0.51,
+            )
     else:
-        ax.set_title(&#39;\n{}, S{}, IRT&#39;.format(
-            subject, stage), color=mycolors(subject),
-            fontsize=10, y=1, x=.51)
+        ax.set_title(
+            &#34;\n{}, S{}, IRT&#34;.format(subject, stage),
+            color=mycolors(subject),
+            fontsize=10,
+            y=1,
+            x=0.51,
+        )
 
-    ax.set_xlabel(&#39;IRT (s)&#39;)
-    ax.set_ylabel(&#39;Counts&#39;)
+    ax.set_xlabel(&#34;IRT (s)&#34;)
+    ax.set_ylabel(&#34;Counts&#34;)
     maxidx = np.argmax(np.array(hist_count))
-    maxval = (hist_bins[maxidx + 1] - hist_bins[maxidx]) / \
-        2 + hist_bins[maxidx]
-    ax.text(0.45, 0.85, &#39;Session Duration: {} mins\nMost Freq. IRT Bin: {} s&#39;
-            .format(time_taken, maxval), transform=ax.transAxes)
+    maxval = (hist_bins[maxidx + 1] - hist_bins[maxidx]) / 2 + hist_bins[maxidx]
+    ax.text(
+        0.45,
+        0.85,
+        &#34;Session Duration: {} mins\nMost Freq. IRT Bin: {} s&#34;.format(
+            time_taken, maxval
+        ),
+        transform=ax.transAxes,
+    )
 
     if showIRT:
         show_IRT_details(IRT, maxidx, hist_bins)
     if single_plot:
         # Text Display on Graph
-        text = (
-            &#39;Session Duration: &#39; +
-            &#39;{} mins\nMost Freq. IRT Bin: {} s&#39;.format(
-                time_taken, maxval))
+        text = &#34;Session Duration: &#34; + &#34;{} mins\nMost Freq. IRT Bin: {} s&#34;.format(
+            time_taken, maxval
+        )
         ax.text(0.55, 0.8, text, transform=ax.transAxes)
-        out_name = (subject.zfill(3) + &#34;_IRT_Hist_&#34; +
-                    session_type[:-2] + &#34;_&#34; + date + &#34;.png&#34;)
-        print(&#34;Saved figure to {}&#34;.format(
-            os.path.join(out_dir, out_name)))
+        out_name = (
+            subject.zfill(3) + &#34;_IRT_Hist_&#34; + session_type[:-2] + &#34;_&#34; + date + &#34;.png&#34;
+        )
+        print(&#34;Saved figure to {}&#34;.format(os.path.join(out_dir, out_name)))
         bv_plot.savefig(fig, os.path.join(out_dir, out_name))
         plt.close()
     else:
@@ -582,17 +727,21 @@ def IRT(session, out_dir, ax=None, showIRT=False):
 def show_IRT_details(IRT, maxidx, hist_bins):
     &#34;&#34;&#34;Display further information for an IRT.&#34;&#34;&#34;
     plt.show()
-    print(&#39;Most Freq. IRT Bin: {} s&#39;.format(
-        ((hist_bins[maxidx + 1] - hist_bins[maxidx]) / 2) + hist_bins[maxidx]))
     print(
-        &#39;Median Inter-Response Time (IRT): {0:.2f} s&#39;.format(np.median(IRT)))
-    print(&#39;Min IRT: {0:.2f} s&#39;.format(np.amin(IRT)))
-    print(&#39;Max IRT: {0:.2f} s&#39;.format(np.amax(IRT)))
-    print(&#39;IRTs: &#39;, np.round(IRT, decimals=2))
+        &#34;Most Freq. IRT Bin: {} s&#34;.format(
+            ((hist_bins[maxidx + 1] - hist_bins[maxidx]) / 2) + hist_bins[maxidx]
+        )
+    )
+    print(&#34;Median Inter-Response Time (IRT): {0:.2f} s&#34;.format(np.median(IRT)))
+    print(&#34;Min IRT: {0:.2f} s&#34;.format(np.amin(IRT)))
+    print(&#34;Max IRT: {0:.2f} s&#34;.format(np.amax(IRT)))
+    print(&#34;IRTs: &#34;, np.round(IRT, decimals=2))
 
 
-def lever_hist(s, ax=None, valid=True, excl_dr=False, split_t=False, sub_colors_dict=None):
-    &#39;&#39;&#39;
+def lever_hist(
+    s, ax=None, valid=True, excl_dr=False, split_t=False, sub_colors_dict=None
+):
+    &#34;&#34;&#34;
     Plot histrogram of lever presses
 
     Parameters
@@ -603,7 +752,7 @@ def lever_hist(s, ax=None, valid=True, excl_dr=False, split_t=False, sub_colors_
     split_t : bool, False
         Optional. Plots lever histogram by trials
 
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     if ax is None:
         fig, ax = plt.subplots(figsize=(10, 10))
     else:
@@ -615,25 +764,28 @@ def lever_hist(s, ax=None, valid=True, excl_dr=False, split_t=False, sub_colors_
         t_df = s.get_trial_df_norm()
 
     if split_t:
-        gm = bv_plot.GroupManager(t_df[&#39;Schedule&#39;].values.tolist())
+        gm = bv_plot.GroupManager(t_df[&#34;Schedule&#34;].values.tolist())
         for idx, row in t_df.iterrows():
             color = gm.get_next_color()
 
-            lev_ts = row[&#39;Levers_ts&#39;]
+            lev_ts = row[&#34;Levers_ts&#34;]
             x = lev_ts[~np.isnan(lev_ts)]  # Remove NaN from lever timestamps
 
-            if row[&#39;Schedule&#39;] == &#39;FR&#39;:
-                sns.distplot(x, ax=ax,
-                             label=&#39;FR-t{}&#39;.format(idx + 1), color=color, hist=True)
-            elif row[&#39;Schedule&#39;] == &#39;FI&#39;:
-                sns.distplot(x, ax=ax,
-                             label=&#39;FI-t{}&#39;.format(idx + 1), color=color, hist=True)
+            if row[&#34;Schedule&#34;] == &#34;FR&#34;:
+                sns.distplot(
+                    x, ax=ax, label=&#34;FR-t{}&#34;.format(idx + 1), color=color, hist=True,
+                )
+            elif row[&#34;Schedule&#34;] == &#34;FI&#34;:
+                sns.distplot(
+                    x, ax=ax, label=&#34;FI-t{}&#34;.format(idx + 1), color=color, hist=True,
+                )
         legend_size = 6
     else:
-        gm = bv_plot.GroupManager([&#39;FI&#39;, &#39;FR&#39;])
+        gm = bv_plot.GroupManager([&#34;FI&#34;, &#34;FR&#34;])
         t_lev = {
-            &#39;FI&#39;: t_df[t_df[&#39;Schedule&#39;] == &#39;FI&#39;][&#39;Levers_ts&#39;],
-            &#39;FR&#39;: t_df[t_df[&#39;Schedule&#39;] == &#39;FR&#39;][&#39;Levers_ts&#39;]}
+            &#34;FI&#34;: t_df[t_df[&#34;Schedule&#34;] == &#34;FI&#34;][&#34;Levers_ts&#34;],
+            &#34;FR&#34;: t_df[t_df[&#34;Schedule&#34;] == &#34;FR&#34;][&#34;Levers_ts&#34;],
+        }
         for key, x in t_lev.items():
             c = gm.get_next_color()
             x = x.to_numpy()  # convert pandas to numpy
@@ -644,35 +796,43 @@ def lever_hist(s, ax=None, valid=True, excl_dr=False, split_t=False, sub_colors_
         legend_size = 10
 
     # Plot customization
-    date = s.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
-    sub = s.get_metadata(&#39;subject&#39;)
+    date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)
+    sub = s.get_metadata(&#34;subject&#34;)
     stage = s.get_stage()
-    plot_name = &#39;Lever Response Hist&#39;
+    plot_name = &#34;Lever Response Hist&#34;
     if split_t:
-        plot_name += &#39; (Trials)&#39;
+        plot_name += &#34; (Trials)&#34;
     if valid:
-        plot_name += &#39;_v&#39;
+        plot_name += &#34;_v&#34;
     if excl_dr:
-        plot_name += &#39;_exdr&#39;
+        plot_name += &#34;_exdr&#34;
 
-    ax.tick_params(axis=&#39;both&#39;, labelsize=12)
-    ax.set_ylabel(&#39;Probability Density&#39;, fontsize=20)
-    ax.set_xlabel(&#39;Time (s)&#39;, fontsize=20)
+    ax.tick_params(axis=&#34;both&#34;, labelsize=12)
+    ax.set_ylabel(&#34;Probability Density&#34;, fontsize=20)
+    ax.set_xlabel(&#34;Time (s)&#34;, fontsize=20)
     # ax.set_ylabel(&#39;Trials&#39;, fontsize=20)
     if sub_colors_dict == None:
         color = &#34;k&#34;
     else:
         color = mycolors(sub, sub_colors_dict)
-    ax.set_title(&#39;  {}&#39;.format(plot_name),
-                 y=1.04, ha=&#39;center&#39;, fontsize=25, color=color)
-    ax.text(0.5, 1.015, &#39;{} {} S{}&#39;.format(sub, date, stage),
-            ha=&#39;center&#39;, transform=ax.transAxes, fontsize=12, color=color)
+    ax.set_title(
+        &#34;  {}&#34;.format(plot_name), y=1.04, ha=&#34;center&#34;, fontsize=25, color=color
+    )
+    ax.text(
+        0.5,
+        1.015,
+        &#34;{} {} S{}&#34;.format(sub, date, stage),
+        ha=&#34;center&#34;,
+        transform=ax.transAxes,
+        fontsize=12,
+        color=color,
+    )
     ax.legend(fontsize=legend_size, ncol=2)
     return fig
 
 
 def trial_length_hist(s, valid=True, ax=None, loop=None, sub_colors_dict=None):
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     Plot histrogram of trial durations
 
     Parameters
@@ -686,7 +846,7 @@ def trial_length_hist(s, valid=True, ax=None, loop=None, sub_colors_dict=None):
     sub_colors_dict: dict, None
         dict with subject: colors, used to assign color to title
 
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     if ax is None:
         fig, ax = plt.subplots(figsize=(10, 10))
     else:
@@ -699,9 +859,10 @@ def trial_length_hist(s, valid=True, ax=None, loop=None, sub_colors_dict=None):
 
     # Trial duration in ms for FR and FI
     t_len = {
-        &#39;FI&#39;: t_df[t_df[&#39;Schedule&#39;] == &#39;FI&#39;][&#39;Reward_ts&#39;],
-        &#39;FR&#39;: t_df[t_df[&#39;Schedule&#39;] == &#39;FR&#39;][&#39;Reward_ts&#39;]}
-    gm = bv_plot.GroupManager([&#39;FI&#39;, &#39;FR&#39;])
+        &#34;FI&#34;: t_df[t_df[&#34;Schedule&#34;] == &#34;FI&#34;][&#34;Reward_ts&#34;],
+        &#34;FR&#34;: t_df[t_df[&#34;Schedule&#34;] == &#34;FR&#34;][&#34;Reward_ts&#34;],
+    }
+    gm = bv_plot.GroupManager([&#34;FI&#34;, &#34;FR&#34;])
 
     if loop:
         txt = &#34;_p&#34; + str(loop)
@@ -713,35 +874,44 @@ def trial_length_hist(s, valid=True, ax=None, loop=None, sub_colors_dict=None):
         c = gm.get_next_color()
         if log:
             x = np.log(x)
-        sns.distplot(x, ax=ax, label=&#39;{}{}&#39;.format(key, txt), color=c)
+        sns.distplot(x, ax=ax, label=&#34;{}{}&#34;.format(key, txt), color=c)
 
     # Plot customization
-    date = s.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
-    sub = s.get_metadata(&#39;subject&#39;)
+    date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)
+    sub = s.get_metadata(&#34;subject&#34;)
     stage = s.get_stage()
-    plot_name = &#39;Trial Length Hist&#39;
+    plot_name = &#34;Trial Length Hist&#34;
     if valid:
-        plot_name += &#39;_v&#39;
+        plot_name += &#34;_v&#34;
 
-    ax.tick_params(axis=&#39;both&#39;, labelsize=12)
-    ax.set_ylabel(&#39;Probability Density&#39;, fontsize=20)
-    ax.set_xlabel(&#39;Time (s)&#39;, fontsize=20)
+    ax.tick_params(axis=&#34;both&#34;, labelsize=12)
+    ax.set_ylabel(&#34;Probability Density&#34;, fontsize=20)
+    ax.set_xlabel(&#34;Time (s)&#34;, fontsize=20)
     # ax.set_ylabel(&#39;Trials&#39;, fontsize=20)
     if sub_colors_dict == None:
         color = &#34;k&#34;
     else:
         color = mycolors(sub, sub_colors_dict)
-    ax.set_title(&#39;  {}&#39;.format(plot_name),
-                 y=1.04, ha=&#39;center&#39;, fontsize=25, color=color)
-    ax.text(0.5, 1.015, &#39;{} {} S{}&#39;.format(sub, date, stage),
-            ha=&#39;center&#39;, transform=ax.transAxes, fontsize=12, color=color)
+    ax.set_title(
+        &#34;  {}&#34;.format(plot_name), y=1.04, ha=&#34;center&#34;, fontsize=25, color=color
+    )
+    ax.text(
+        0.5,
+        1.015,
+        &#34;{} {} S{}&#34;.format(sub, date, stage),
+        ha=&#34;center&#34;,
+        transform=ax.transAxes,
+        fontsize=12,
+        color=color,
+    )
     ax.legend(fontsize=20)
     return fig
 
 
 def plot_raster_trials(
-        s, ax=None, sub_colors_dict=None, align=[0, 0, 0, 0], reindex=None):
-    &#39;&#39;&#39;
+    s, ax=None, sub_colors_dict=None, align=[0, 0, 0, 0], reindex=None
+):
+    &#34;&#34;&#34;
     Plot raster of behaviour related ts aligned to different points.
 
     Parameters
@@ -757,7 +927,7 @@ def plot_raster_trials(
     reindex: list, None
         list of which to reorder trials by
 
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     if ax is None:
         fig, ax = plt.subplots(figsize=(20, 10))
     else:
@@ -767,8 +937,8 @@ def plot_raster_trials(
     align_rw, align_pell, align_FI, align_FRes = align
 
     # Retrive session related variables
-    date = s.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
-    sub = s.get_metadata(&#39;subject&#39;)
+    date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)
+    sub = s.get_metadata(&#34;subject&#34;)
     stage = s.get_stage()
     trial_df = s.get_trial_df_norm()
     if reindex is not None:
@@ -790,57 +960,57 @@ def plot_raster_trials(
     norm_pell = df_col_to_2d_list(trial_df, &#34;Pellet_ts&#34;)
     norm_rw = df_col_to_2d_list(trial_df, &#34;Reward_ts&#34;)
     norm_FRes = df_col_to_2d_list(trial_df, &#34;First_response&#34;)
-    schedule_type = trial_df[&#39;Schedule&#39;].copy(deep=True)
-    norm_tone = trial_df[&#39;Tone_s&#39;].copy(deep=True)
-    norm_start = trial_df[&#39;Trial_s&#39;].copy(deep=True)
+    schedule_type = trial_df[&#34;Schedule&#34;].copy(deep=True)
+    norm_tone = trial_df[&#34;Tone_s&#34;].copy(deep=True)
+    norm_start = trial_df[&#34;Trial_s&#34;].copy(deep=True)
 
     color = []
 
     # Alignment Specific Parameters
     if align_rw:
-        plot_type = &#39;Reward-Aligned&#39;
+        plot_type = &#34;Reward-Aligned&#34;
         norm_arr = norm_rw
 
     elif align_pell:
-        plot_type = &#39;Pell-Aligned&#39;
+        plot_type = &#34;Pell-Aligned&#34;
         norm_arr = norm_pell
         xmax = 5
         xmin = -30
 
     elif align_FI:
-        plot_type = &#39;Interval-Aligned&#39;
+        plot_type = &#34;Interval-Aligned&#34;
         norm_arr = np.empty_like(norm_rw)
         norm_arr.fill(30)
 
     elif align_FRes:
-        plot_type = &#39;First_Resp-Aligned&#39;
+        plot_type = &#34;First_Resp-Aligned&#34;
         norm_arr = norm_FRes
         xmax = 40
         xmin = -10
 
     else:
-        plot_type = &#39;Start-Aligned&#39;
+        plot_type = &#34;Start-Aligned&#34;
         norm_arr = norm_start
         xmax = None
         xmin = None
         # xmax = 60
         # xmin = -10
 
-    plot_name = &#39;Raster ({})&#39;.format(plot_type)
+    plot_name = &#34;Raster ({})&#34;.format(plot_type)
 
-    ax.axvline(0, linestyle=&#39;-.&#39;, color=&#39;g&#39;,
-               linewidth=1)
-    ax.text(0.1, -1, plot_type.split(&#39;-&#39;)[0], fontsize=12,
-            color=&#39;g&#39;, ha=&#39;left&#39;, va=&#39;top&#39;)
+    ax.axvline(0, linestyle=&#34;-.&#34;, color=&#34;g&#34;, linewidth=1)
+    ax.text(
+        0.1, -1, plot_type.split(&#34;-&#34;)[0], fontsize=12, color=&#34;g&#34;, ha=&#34;left&#34;, va=&#34;top&#34;,
+    )
 
     for i in range(len(norm_rw)):
         # color assigment for trial type
-        if schedule_type[i] == &#39;FR&#39;:
-            color.append(&#39;black&#39;)
-        elif schedule_type[i] == &#39;FI&#39;:
-            color.append(&#39;b&#39;)
+        if schedule_type[i] == &#34;FR&#34;:
+            color.append(&#34;black&#34;)
+        elif schedule_type[i] == &#34;FI&#34;:
+            color.append(&#34;b&#34;)
         else:
-            color.append(&#39;g&#39;)
+            color.append(&#34;g&#34;)
         subtract_val = norm_arr[i].flatten()
         if len(subtract_val) != 1:
             raise ValueError(&#34;Can&#39;t align to non single value&#34;)
@@ -855,84 +1025,133 @@ def plot_raster_trials(
 
     # Plotting of raster
     ax.eventplot(norm_lever, color=color)
-    ax.eventplot(norm_err, color=&#39;red&#39;)
+    ax.eventplot(norm_err, color=&#34;red&#34;)
     for i, x in enumerate(norm_rw):
         if len(x) == 0:
             norm_rw[i] = None
-    rw_plot = ax.scatter(norm_rw, np.arange(len(norm_rw)), s=5,
-                         color=&#39;orange&#39;, label=&#39;Reward Collection&#39;)
-    ax.eventplot(norm_dr, color=&#39;magenta&#39;)
+    rw_plot = ax.scatter(
+        norm_rw,
+        np.arange(len(norm_rw)),
+        s=5,
+        color=&#34;orange&#34;,
+        label=&#34;Reward Collection&#34;,
+    )
+    ax.eventplot(norm_dr, color=&#34;magenta&#34;)
 
     # Legend construction (Standard items)
-    FR_label = lines.Line2D([], [], color=&#39;black&#39;, marker=&#39;|&#39;, linestyle=&#39;None&#39;,
-                            markersize=10, markeredgewidth=1.5, label=&#39;FR press&#39;)
-    FI_label = lines.Line2D([], [], color=&#39;b&#39;, marker=&#39;|&#39;, linestyle=&#39;None&#39;,
-                            markersize=10, markeredgewidth=1.5, label=&#39;FI press&#39;)
-    drw_label = lines.Line2D([], [], color=&#39;magenta&#39;, marker=&#39;|&#39;, linestyle=&#39;None&#39;,
-                             markersize=10, markeredgewidth=1.5, label=&#39;Double Reward&#39;)
+    FR_label = lines.Line2D(
+        [],
+        [],
+        color=&#34;black&#34;,
+        marker=&#34;|&#34;,
+        linestyle=&#34;None&#34;,
+        markersize=10,
+        markeredgewidth=1.5,
+        label=&#34;FR press&#34;,
+    )
+    FI_label = lines.Line2D(
+        [],
+        [],
+        color=&#34;b&#34;,
+        marker=&#34;|&#34;,
+        linestyle=&#34;None&#34;,
+        markersize=10,
+        markeredgewidth=1.5,
+        label=&#34;FI press&#34;,
+    )
+    drw_label = lines.Line2D(
+        [],
+        [],
+        color=&#34;magenta&#34;,
+        marker=&#34;|&#34;,
+        linestyle=&#34;None&#34;,
+        markersize=10,
+        markeredgewidth=1.5,
+        label=&#34;Double Reward&#34;,
+    )
     handles = [FR_label, FI_label, drw_label, rw_plot]
 
     # Figure labels
     ax.set_xlim(xmin, xmax)  # Uncomment to set x limit
     ax.set_ylim(-3, len(norm_rw) + 3)  # Uncomment to set y limit
-    ax.tick_params(axis=&#39;both&#39;, labelsize=15)
-    ax.set_xlabel(&#39;Time (s)&#39;, fontsize=20)
-    ax.set_ylabel(&#39;Trials&#39;, fontsize=20)
+    ax.tick_params(axis=&#34;both&#34;, labelsize=15)
+    ax.set_xlabel(&#34;Time (s)&#34;, fontsize=20)
+    ax.set_ylabel(&#34;Trials&#34;, fontsize=20)
 
     if sub_colors_dict == None:
         color = &#34;k&#34;
     else:
         color = mycolors(sub, sub_colors_dict)
 
-    ax.set_title(&#39;  {}&#39;.format(plot_name),
-                 y=1.04, ha=&#39;center&#39;, fontsize=20)
-    ax.text(0.5, 1.015, &#39;{} {} S{}&#39;.format(sub, date, stage),
-            ha=&#39;center&#39;, transform=ax.transAxes, fontsize=12)
+    ax.set_title(&#34;  {}&#34;.format(plot_name), y=1.04, ha=&#34;center&#34;, fontsize=20)
+    ax.text(
+        0.5,
+        1.015,
+        &#34;{} {} S{}&#34;.format(sub, date, stage),
+        ha=&#34;center&#34;,
+        transform=ax.transAxes,
+        fontsize=12,
+    )
 
     # Optional plot options [Pell, Tone, dr_win]
     opt_plot = [1, 1, 1]
     if opt_plot[0]:
         # Plot pellet drops
         x = norm_pell
-        ax.eventplot(x, color=&#39;green&#39;)
-        pell_label = lines.Line2D([], [], color=&#39;green&#39;, marker=&#39;|&#39;, linestyle=&#39;None&#39;,
-                                  markersize=10, markeredgewidth=1.5, label=&#39;Pell&#39;)
+        ax.eventplot(x, color=&#34;green&#34;)
+        pell_label = lines.Line2D(
+            [],
+            [],
+            color=&#34;green&#34;,
+            marker=&#34;|&#34;,
+            linestyle=&#34;None&#34;,
+            markersize=10,
+            markeredgewidth=1.5,
+            label=&#34;Pell&#34;,
+        )
         handles.append(pell_label)
 
     if opt_plot[1]:
         for i, x in enumerate(norm_tone):  # Plot Tone presentation
             if x:
-                plt.broken_barh([(x, 5)], (i - .5, 1), color=&#39;grey&#39;, alpha=0.2,
-                                hatch=&#39;///&#39;, edgecolor=&#39;k&#39;)
+                plt.broken_barh(
+                    [(x, 5)],
+                    (i - 0.5, 1),
+                    color=&#34;grey&#34;,
+                    alpha=0.2,
+                    hatch=&#34;///&#34;,
+                    edgecolor=&#34;k&#34;,
+                )
         tone_label = mpatches.Patch(
-            facecolor=&#39;grey&#39;, hatch=&#39;///&#39;, edgecolor=&#39;k&#39;, alpha=0.2, label=&#39;Tone&#39;)
+            facecolor=&#34;grey&#34;, hatch=&#34;///&#34;, edgecolor=&#34;k&#34;, alpha=0.2, label=&#34;Tone&#34;,
+        )
         handles.append(tone_label)
 
     if opt_plot[2]:
         for i, (x, sch) in enumerate(zip(norm_start, schedule_type)):  # Plot DR window
-            if sch == &#39;FI&#39;:
-                plt.broken_barh([(x + 20, 20)], (i - .4, 0.8),
-                                color=&#39;magenta&#39;, alpha=0.05)
-        drwin_label = mpatches.Patch(
-            color=&#39;magenta&#39;, alpha=0.05, label=&#39;dr_win&#39;)
+            if sch == &#34;FI&#34;:
+                plt.broken_barh(
+                    [(x + 20, 20)], (i - 0.4, 0.8), color=&#34;magenta&#34;, alpha=0.05
+                )
+        drwin_label = mpatches.Patch(color=&#34;magenta&#34;, alpha=0.05, label=&#34;dr_win&#34;)
         handles.append(drwin_label)
 
-    ax.legend(handles=handles, fontsize=12, loc=&#39;upper right&#39;)
+    ax.legend(handles=handles, fontsize=12, loc=&#34;upper right&#34;)
 
     # Highlight specific trials
     hline, h_ref = [], []
     h_dr, h_err, h_fr = [1, 0, 0]
 
     if h_dr:
-        c = &#39;pink&#39;
+        c = &#34;pink&#34;
         h_ref = norm_dr
     elif h_err:
-        c = &#39;magenta&#39;
+        c = &#34;magenta&#34;
         h_ref = norm_err
     elif h_fr:
-        c = &#39;k&#39;
+        c = &#34;k&#34;
         for s in schedule_type:
-            if s == &#39;FR&#39;:
+            if s == &#34;FR&#34;:
                 h_ref.append([1])
             else:
                 h_ref.append([])
@@ -944,13 +1163,13 @@ def plot_raster_trials(
         if len(ts) &gt; 0:
             hline.append(i)
     for l in hline:
-        plt.axhline(l, linestyle=&#39;-&#39;, color=c, linewidth=&#39;5&#39;, alpha=0.1)
+        plt.axhline(l, linestyle=&#34;-&#34;, color=c, linewidth=&#34;5&#34;, alpha=0.1)
 
     return fig
 
 
 def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     Plot cluster results for trials.
 
     Parameters
@@ -971,7 +1190,7 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     data : pd.Dataframe of features after PCA or normalization
     feat_df: pd.Dataframe of features before PCA or normalization
 
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     if ax is None:
         fig = plt.figure(figsize=(20, 10))
     else:
@@ -980,20 +1199,27 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     if should_pca:
         feat_df, data, pca = s.perform_pca(should_scale=True)
         if (sum(pca.explained_variance_ratio_[:3]) &lt; 0.8) and (p_2D is False):
-            xs, ys, zs = data.iloc[:, 0], data.iloc[:,
-                                                    1], data.iloc[:, 2]  # Plot PC 1-3
+            xs, ys, zs = (
+                data.iloc[:, 0],
+                data.iloc[:, 1],
+                data.iloc[:, 2],
+            )  # Plot PC 1-3
             # fig = plt.figure(figsize=plt.figaspect(0.85))
-            ax = fig.add_subplot(1, 2, 1, projection=&#39;3d&#39;)
+            ax = fig.add_subplot(1, 2, 1, projection=&#34;3d&#34;)
         else:
             ax = fig.add_subplot(1, 2, 1)
-            xs, ys, zs = data.iloc[:, 0], data.iloc[:,
-                                                    1], None  # Plot PC 1 and 2 only
-        ax.set_xlabel(&#39;PC1&#39;)
-        ax.set_ylabel(&#39;PC2&#39;)
+            xs, ys, zs = (
+                data.iloc[:, 0],
+                data.iloc[:, 1],
+                None,
+            )  # Plot PC 1 and 2 only
+        ax.set_xlabel(&#34;PC1&#34;)
+        ax.set_ylabel(&#34;PC2&#34;)
 
     else:
         data = s.extract_features(should_scale=False)
         from scipy import stats
+
         feat_df = data
         data = stats.zscore(data)
         plot_dims1, plot_dims2 = [0, 1]  # Index for dimensions to be plot
@@ -1006,64 +1232,66 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     markers = df[&#34;Schedule&#34;]
     cmap = sns.color_palette(&#34;bright&#34;)
     if zs is None:
-        sns.scatterplot(xs, ys, ax=ax, style=markers,
-                        hue=cluster.labels_, palette=&#39;bright&#39;)
-        ax.legend(fontsize=20, loc=&#39;upper right&#39;)
+        sns.scatterplot(
+            xs, ys, ax=ax, style=markers, hue=cluster.labels_, palette=&#34;bright&#34;
+        )
+        ax.legend(fontsize=20, loc=&#34;upper right&#34;)
     else:
         # ax.scatter(xs, ys, zs, c=cluster.labels_, cmap=&#39;rainbow&#39;)
-        mask = {&#39;FR&#39;: &#39;x&#39;, &#39;FI&#39;: &#39;^&#39;}
+        mask = {&#34;FR&#34;: &#34;x&#34;, &#34;FI&#34;: &#34;^&#34;}
         PCA_colors = []
         for i in np.arange(len(xs)):
             ic = cmap[cluster.labels_[i]]
-            ax.scatter(xs[i], ys[i], zs[i],
-                       marker=mask[markers[i]], c=[ic], s=40)
+            ax.scatter(xs[i], ys[i], zs[i], marker=mask[markers[i]], c=[ic], s=40)
             PCA_colors.append(ic)
-        ax.set_zlabel(&#39;PC3&#39;)
+        ax.set_zlabel(&#34;PC3&#34;)
         ax.dist = 10
-        legend_c = [lines.Line2D([], [], color=cmap[c], ls=&#39;&#39;, marker=&#39;s&#39;, label=&#39;c{}&#39;.format(c))
-                    for c in np.unique(cluster.labels_)]
-        legend_c.append(lines.Line2D([], [], color=&#39;k&#39;,
-                                     ls=&#39;&#39;, marker=&#39;x&#39;, label=&#39;FR&#39;))
-        legend_c.append(lines.Line2D([], [], color=&#39;k&#39;,
-                                     ls=&#39;&#39;, marker=&#39;^&#39;, label=&#39;FI&#39;))
-        ax.legend(handles=legend_c, fontsize=10, loc=&#39;upper right&#39;)
+        legend_c = [
+            lines.Line2D(
+                [], [], color=cmap[c], ls=&#34;&#34;, marker=&#34;s&#34;, label=&#34;c{}&#34;.format(c)
+            )
+            for c in np.unique(cluster.labels_)
+        ]
+        legend_c.append(lines.Line2D([], [], color=&#34;k&#34;, ls=&#34;&#34;, marker=&#34;x&#34;, label=&#34;FR&#34;))
+        legend_c.append(lines.Line2D([], [], color=&#34;k&#34;, ls=&#34;&#34;, marker=&#34;^&#34;, label=&#34;FI&#34;))
+        ax.legend(handles=legend_c, fontsize=10, loc=&#34;upper right&#34;)
 
-    plt.scatter(centroids[:, 0], centroids[:, 1], c=&#39;grey&#39;, s=25)
+    plt.scatter(centroids[:, 0], centroids[:, 1], c=&#34;grey&#34;, s=25)
 
     # Plot cosmetics
-    plot_name = &#39;Clusters = {}&#39;.format(num_clusts)
-    ax.set_title(&#39;  {}&#39;.format(plot_name),
-                 y=1.04, ha=&#39;center&#39;, fontsize=20)
+    plot_name = &#34;Clusters = {}&#34;.format(num_clusts)
+    ax.set_title(&#34;  {}&#34;.format(plot_name), y=1.04, ha=&#34;center&#34;, fontsize=20)
     if zs is None:
-        ax.text(0.5, 1.015, s.get_title(),
-                ha=&#39;center&#39;, transform=ax.transAxes, fontsize=12)
+        ax.text(
+            0.5, 1.015, s.get_title(), ha=&#34;center&#34;, transform=ax.transAxes, fontsize=12,
+        )
     # plot_loc = os.path.join(&#34;PCAclust.png&#34;)
 
     # Plot raster sorted by PCA clustering
-    df[&#39;PCA_Clus&#39;] = cluster.labels_
-    df[&#39;colors&#39;] = PCA_colors
-    sorted_df = df.sort_values(&#39;PCA_Clus&#39;)
+    df[&#34;PCA_Clus&#34;] = cluster.labels_
+    df[&#34;colors&#34;] = PCA_colors
+    sorted_df = df.sort_values(&#34;PCA_Clus&#34;)
     reindex = sorted_df.index
-    leaf_colors = sorted_df[&#39;colors&#39;]
+    leaf_colors = sorted_df[&#34;colors&#34;]
 
     ax1 = fig.add_subplot(1, 2, 2)
 
     plot_raster_trials(s, ax1, reindex=reindex)
-    ax1.tick_params(axis=&#39;y&#39;, labelsize=10)
+    ax1.tick_params(axis=&#34;y&#34;, labelsize=10)
     for i, color in enumerate(leaf_colors):
         ax1.get_yticklabels()[i].set_color(color)
 
     # Figure title
-    plot_title = &#39;K-Means Clustering&#39;
+    plot_title = &#34;K-Means Clustering&#34;
     if should_pca:
-        plot_title += &#39;_PCA&#39;
-    fig.suptitle(plot_title, ha=&#39;center&#39;, fontsize=25)
+        plot_title += &#34;_PCA&#34;
+    fig.suptitle(plot_title, ha=&#34;center&#34;, fontsize=25)
 
     return fig, data, feat_df
 
 
 def plot_feats(feat_df, ax=None):
-    &#39;&#39;&#39; Plot feature boxplots used for clustering. &#39;&#39;&#39;
+    &#34;&#34;&#34; Plot feature boxplots used for clustering. &#34;&#34;&#34;
     if ax is None:
         fig, ax = plt.subplots(figsize=(20, 10))
     else:
@@ -1073,14 +1301,13 @@ def plot_feats(feat_df, ax=None):
     # data = stats.zscore(feat_df)
 
     sns.boxplot(data=feat_df)
-    ax.set_title(&#39;Cluster Features Boxplot&#39;,
-                 y=1.04, ha=&#39;center&#39;, fontsize=25)
+    ax.set_title(&#34;Cluster Features Boxplot&#34;, y=1.04, ha=&#34;center&#34;, fontsize=25)
 
     return fig
 
 
 def trial_clust_hier(s, ax=None, should_pca=True, cutoff=None):
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     Plot dendrogram for trial-based hierarchical clustering results.
 
     Parameters
@@ -1096,7 +1323,7 @@ def trial_clust_hier(s, ax=None, should_pca=True, cutoff=None):
     fig : plot of first and second features
     data : pd.Dataframe of features
 
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     if ax is None:
         fig, ax = plt.subplots(1, 2, figsize=(20, 10))
     else:
@@ -1106,46 +1333,65 @@ def trial_clust_hier(s, ax=None, should_pca=True, cutoff=None):
     df[&#34;Temp&#34;] = (df.index.map(str)) + &#34; &#34; + df[&#34;Schedule&#34;]
     label = df[&#34;Temp&#34;].tolist()
 
-    clust_results = s.get_cluster_results(
-        should_pca=should_pca, cutoff=cutoff)
+    clust_results = s.get_cluster_results(should_pca=should_pca, cutoff=cutoff)
     import scipy.cluster.hierarchy as shc
-    Z = clust_results[&#39;Z&#39;]
+
+    Z = clust_results[&#34;Z&#34;]
     dend = shc.dendrogram(Z, ax=ax[0], color_threshold=cutoff, count_sort=True)
-    reindex = clust_results[&#39;reindex&#39;]
+    reindex = clust_results[&#34;reindex&#34;]
     ax[0].set_xticklabels(label[x] for x in reindex)
     if cutoff is None:
         cutoff = 0.7 * max(Z[:, 2])
-        ax[0].text(ax[0].set_xlim()[1] * 0.9, cutoff,
-                   &#39;Default&#39;, ha=&#39;right&#39;, va=&#39;center&#39;, backgroundcolor=&#39;w&#39;, fontsize=8)
+        ax[0].text(
+            ax[0].set_xlim()[1] * 0.9,
+            cutoff,
+            &#34;Default&#34;,
+            ha=&#34;right&#34;,
+            va=&#34;center&#34;,
+            backgroundcolor=&#34;w&#34;,
+            fontsize=8,
+        )
     else:
-        ax[0].text(ax[0].set_xlim()[1] * 0.9, cutoff,
-                   &#39;Cutoff = {}&#39;.format(cutoff), ha=&#39;right&#39;, va=&#39;center&#39;, backgroundcolor=&#39;w&#39;, fontsize=8)
-    ax[0].axhline(y=cutoff, c=&#39;k&#39;)
+        ax[0].text(
+            ax[0].set_xlim()[1] * 0.9,
+            cutoff,
+            &#34;Cutoff = {}&#34;.format(cutoff),
+            ha=&#34;right&#34;,
+            va=&#34;center&#34;,
+            backgroundcolor=&#34;w&#34;,
+            fontsize=8,
+        )
+    ax[0].axhline(y=cutoff, c=&#34;k&#34;)
 
     # Plot cosmetics
-    date = s.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
-    sub = s.get_metadata(&#39;subject&#39;)
+    date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)
+    sub = s.get_metadata(&#34;subject&#34;)
     stage = s.get_stage()
-    plot_name = &#39;Dendrogram&#39;
-    ax[0].set_title(&#39;  {}&#39;.format(plot_name),
-                    y=1.04, ha=&#39;center&#39;, fontsize=20)
-    ax[0].text(0.5, 1.015, &#39;{} {} S{}&#39;.format(sub, date, stage),
-               ha=&#39;center&#39;, transform=ax[0].transAxes, fontsize=12)
+    plot_name = &#34;Dendrogram&#34;
+    ax[0].set_title(&#34;  {}&#34;.format(plot_name), y=1.04, ha=&#34;center&#34;, fontsize=20)
+    ax[0].text(
+        0.5,
+        1.015,
+        &#34;{} {} S{}&#34;.format(sub, date, stage),
+        ha=&#34;center&#34;,
+        transform=ax[0].transAxes,
+        fontsize=12,
+    )
     ax[0].legend(fontsize=20)
 
     leaf_colors = bv_plot.dend_leaf_colors(dend)
 
     plot_raster_trials(s, ax[1], reindex=reindex)
-    ax[1].tick_params(axis=&#39;y&#39;, labelsize=10)
+    ax[1].tick_params(axis=&#34;y&#34;, labelsize=10)
 
     for i, color in enumerate(leaf_colors):
         ax[1].get_yticklabels()[i].set_color(color)
 
     # Figure title
-    plot_title = &#39;Hierarchical Clustering&#39;
+    plot_title = &#34;Hierarchical Clustering&#34;
     if should_pca:
-        plot_title += &#39;_PCA&#39;
-    fig.suptitle(plot_title, ha=&#39;center&#39;, fontsize=25)
+        plot_title += &#34;_PCA&#34;
+    fig.suptitle(plot_title, ha=&#34;center&#34;, fontsize=25)
 
     # # Plot cluster using hier clustering results
     # from sklearn.cluster import AgglomerativeClustering
@@ -1176,7 +1422,7 @@ def plot_feat_dist(session, feat_df, sel_col=None):
     df = session.get_trial_df_norm()
 
     if sel_col is None:
-        print(&#39;Features available: &#39;, feat_df.columns)
+        print(&#34;Features available: &#34;, feat_df.columns)
         sel_col = input(&#34;Select feature index to plot: \n&#34;)
         try:
             sel_col = feat_df.columns[int(sel_col)]
@@ -1184,8 +1430,8 @@ def plot_feat_dist(session, feat_df, sel_col=None):
             pass
 
     print(&#39;Plotting dist for &#34;{}&#34;&#39;.format(sel_col))
-    feat_df[&#39;markers&#39;] = df[&#34;Schedule&#34;].astype(&#39;category&#39;)
-    for i, (key, data) in enumerate(feat_df.groupby(&#39;markers&#39;)[sel_col]):
+    feat_df[&#34;markers&#34;] = df[&#34;Schedule&#34;].astype(&#34;category&#34;)
+    for i, (key, data) in enumerate(feat_df.groupby(&#34;markers&#34;)[sel_col]):
         ax = sns.distplot(data, label=key)
 
         # Annotate max of dist
@@ -1195,8 +1441,13 @@ def plot_feat_dist(session, feat_df, sel_col=None):
         y = ax.lines[i].get_ydata()
         maxid = np.argmax(y)  # The id of the peak (maximum of y data)
         # print(round(x[maxid], 2))
-        plt.annotate(round(x[maxid], 2), xy=(x[maxid], y[maxid]), xytext=(20, 15),
-                     textcoords=&#39;offset points&#39;, arrowprops={&#39;arrowstyle&#39;: &#39;-&#39;})
+        plt.annotate(
+            round(x[maxid], 2),
+            xy=(x[maxid], y[maxid]),
+            xytext=(20, 15),
+            textcoords=&#34;offset points&#34;,
+            arrowprops={&#34;arrowstyle&#34;: &#34;-&#34;},
+        )
         print(&#34;{} Median: {:.2f}s&#34;.format(key, data.median()))
         print(&#34;{} Min / Max: {:.2f}s / {:.2f}s&#34;.format(key, data.min(), data.max()))
     plt.legend()
@@ -1205,7 +1456,7 @@ def plot_feat_dist(session, feat_df, sel_col=None):
     return ax
 
 
-def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name=&#39;default.png&#39;):
+def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name=&#34;default.png&#34;):
     try:
         import matlab.engine
     except Exception:
@@ -1224,12 +1475,11 @@ def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name=&#39;def
 
     rw_ts = matlab.double(list(rw_ts))
     o = 7.0
-    eng.wcoherence(x_m, y_m, fs, &#39;NumOctaves&#39;, o, nargout=0)
+    eng.wcoherence(x_m, y_m, fs, &#34;NumOctaves&#34;, o, nargout=0)
     aspect_ratio = matlab.double([2, 1, 1])
     eng.pbaspect(aspect_ratio, nargout=0)
 
-    title = (&#34;{} vs {} Wavelet Coherence {}&#34;.format(
-        reg_sel[0], reg_sel[1], sch_n))
+    title = &#34;{} vs {} Wavelet Coherence {}&#34;.format(reg_sel[0], reg_sel[1], sch_n)
     eng.title(title)
     # eng.hold(&#34;on&#34;, nargout=0)
 
@@ -1244,27 +1494,30 @@ def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name=&#39;def
 
 def test_wct(lfp1, lfp2, sig=True):  # python CWT
     import pycwt as wavelet
+
     dt = 1 / lfp1.get_sampling_rate()
     WCT, aWCT, coi, freq, sig = wavelet.wct(
-        lfp1.get_samples(), lfp2.get_samples(), dt, sig=sig)
+        lfp1.get_samples(), lfp2.get_samples(), dt, sig=sig
+    )
     _, ax = plt.subplots()
     t = lfp1.get_timestamp()
-    ax.contourf(t, freq, WCT, 6, extend=&#39;both&#39;, cmap=&#34;viridis&#34;)
+    ax.contourf(t, freq, WCT, 6, extend=&#34;both&#34;, cmap=&#34;viridis&#34;)
     extent = [t.min(), t.max(), 0, max(freq)]
     N = lfp1.get_total_samples()
     sig95 = np.ones([1, N]) * sig[:, None]
     sig95 = WCT / sig95
-    ax.contour(t, freq, sig95, [-99, 1], colors=&#39;k&#39;, linewidths=2,
-               extent=extent)
-    ax.fill(np.concatenate([t, t[-1:] + dt, t[-1:] + dt,
-                            t[:1] - dt, t[:1] - dt]),
-            np.concatenate([coi, [1e-9], freq[-1:],
-                            freq[-1:], [1e-9]]),
-            &#39;k&#39;, alpha=0.3, hatch=&#39;x&#39;)
+    ax.contour(t, freq, sig95, [-99, 1], colors=&#34;k&#34;, linewidths=2, extent=extent)
+    ax.fill(
+        np.concatenate([t, t[-1:] + dt, t[-1:] + dt, t[:1] - dt, t[:1] - dt]),
+        np.concatenate([coi, [1e-9], freq[-1:], freq[-1:], [1e-9]]),
+        &#34;k&#34;,
+        alpha=0.3,
+        hatch=&#34;x&#34;,
+    )
 
-    ax.set_title(&#39;Wavelet Power Spectrum&#39;)
-    ax.set_ylabel(&#39;Freq (Hz)&#39;)
-    ax.set_xlabel(&#39;Time (s)&#39;)
+    ax.set_title(&#34;Wavelet Power Spectrum&#34;)
+    ax.set_ylabel(&#34;Freq (Hz)&#34;)
+    ax.set_xlabel(&#34;Time (s)&#34;)
 
     plt.show()
     exit(-1)</code></pre>
@@ -1296,10 +1549,10 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
     single_plot = False
 
     # General session info
-    date = session.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
-    session_type = session.get_metadata(&#39;name&#39;)
-    stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
-    subject = session.get_metadata(&#39;subject&#39;)
+    date = session.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)
+    session_type = session.get_metadata(&#34;name&#34;)
+    stage = session_type[:2].replace(&#34;_&#34;, &#34;&#34;)
+    subject = session.get_metadata(&#34;subject&#34;)
     ratio = session.get_ratio()
     interval = session.get_interval()
 
@@ -1318,7 +1571,7 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
     _, a = np.unique(b, return_index=True)  # returns index for good rewards
 
     good_rewards = rewards[a]  # nosepoke ts for pressing levers
-    if session_type == &#39;5a_FixedRatio_p&#39;:
+    if session_type == &#34;5a_FixedRatio_p&#34;:
         last_lever_ts = []
         for i in b:
             last_lever_ts.append(good_lever_ts[i - 1])
@@ -1332,52 +1585,72 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
         IRT = last_lever_ts[1:] - good_rewards[:-1]
 
     hist_count, hist_bins, _ = ax.hist(
-        IRT, bins=math.ceil(np.amax(IRT)),
-        range=(0, math.ceil(np.amax(IRT))), color=mycolors(subject))
+        IRT,
+        bins=math.ceil(np.amax(IRT)),
+        range=(0, math.ceil(np.amax(IRT))),
+        color=mycolors(subject),
+    )
 
     # Plotting of IRT Graphs
     if ax is None:
         single_plot = True
         fig, ax = plt.subplots()
-        ax.set_title(&#39;Inter-Response Time\n&#39;, fontsize=15)
-        if session_type == &#39;5a_FixedRatio_p&#39;:
-            plt.suptitle(&#39;\n({}, {} {}, {})&#39;.format(
-                subject, session_type[:-2], ratio, date),
-                fontsize=10, y=.98, x=.51)
-        elif session_type == &#39;5b_FixedInterval_p&#39;:
-            plt.suptitle(&#39;\n({}, {} {}s, {})&#39;.format(
-                subject, session_type[:-2], interval, date),
-                fontsize=10, y=.98, x=.51)
+        ax.set_title(&#34;Inter-Response Time\n&#34;, fontsize=15)
+        if session_type == &#34;5a_FixedRatio_p&#34;:
+            plt.suptitle(
+                &#34;\n({}, {} {}, {})&#34;.format(subject, session_type[:-2], ratio, date),
+                fontsize=10,
+                y=0.98,
+                x=0.51,
+            )
+        elif session_type == &#34;5b_FixedInterval_p&#34;:
+            plt.suptitle(
+                &#34;\n({}, {} {}s, {})&#34;.format(subject, session_type[:-2], interval, date),
+                fontsize=10,
+                y=0.98,
+                x=0.51,
+            )
         else:
-            plt.suptitle(&#39;\n({}, {}, {})&#39;.format(
-                subject, session_type[:-2], date),
-                fontsize=10, y=.98, x=.51)
+            plt.suptitle(
+                &#34;\n({}, {}, {})&#34;.format(subject, session_type[:-2], date),
+                fontsize=10,
+                y=0.98,
+                x=0.51,
+            )
     else:
-        ax.set_title(&#39;\n{}, S{}, IRT&#39;.format(
-            subject, stage), color=mycolors(subject),
-            fontsize=10, y=1, x=.51)
+        ax.set_title(
+            &#34;\n{}, S{}, IRT&#34;.format(subject, stage),
+            color=mycolors(subject),
+            fontsize=10,
+            y=1,
+            x=0.51,
+        )
 
-    ax.set_xlabel(&#39;IRT (s)&#39;)
-    ax.set_ylabel(&#39;Counts&#39;)
+    ax.set_xlabel(&#34;IRT (s)&#34;)
+    ax.set_ylabel(&#34;Counts&#34;)
     maxidx = np.argmax(np.array(hist_count))
-    maxval = (hist_bins[maxidx + 1] - hist_bins[maxidx]) / \
-        2 + hist_bins[maxidx]
-    ax.text(0.45, 0.85, &#39;Session Duration: {} mins\nMost Freq. IRT Bin: {} s&#39;
-            .format(time_taken, maxval), transform=ax.transAxes)
+    maxval = (hist_bins[maxidx + 1] - hist_bins[maxidx]) / 2 + hist_bins[maxidx]
+    ax.text(
+        0.45,
+        0.85,
+        &#34;Session Duration: {} mins\nMost Freq. IRT Bin: {} s&#34;.format(
+            time_taken, maxval
+        ),
+        transform=ax.transAxes,
+    )
 
     if showIRT:
         show_IRT_details(IRT, maxidx, hist_bins)
     if single_plot:
         # Text Display on Graph
-        text = (
-            &#39;Session Duration: &#39; +
-            &#39;{} mins\nMost Freq. IRT Bin: {} s&#39;.format(
-                time_taken, maxval))
+        text = &#34;Session Duration: &#34; + &#34;{} mins\nMost Freq. IRT Bin: {} s&#34;.format(
+            time_taken, maxval
+        )
         ax.text(0.55, 0.8, text, transform=ax.transAxes)
-        out_name = (subject.zfill(3) + &#34;_IRT_Hist_&#34; +
-                    session_type[:-2] + &#34;_&#34; + date + &#34;.png&#34;)
-        print(&#34;Saved figure to {}&#34;.format(
-            os.path.join(out_dir, out_name)))
+        out_name = (
+            subject.zfill(3) + &#34;_IRT_Hist_&#34; + session_type[:-2] + &#34;_&#34; + date + &#34;.png&#34;
+        )
+        print(&#34;Saved figure to {}&#34;.format(os.path.join(out_dir, out_name)))
         bv_plot.savefig(fig, os.path.join(out_dir, out_name))
         plt.close()
     else:
@@ -1393,15 +1666,23 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
-            zoom_sch=False, plot_error=False, plot_all=False):
+<pre><code class="python">def cumplot(
+    session,
+    out_dir,
+    ax=None,
+    int_only=False,
+    zoom=False,
+    zoom_sch=False,
+    plot_error=False,
+    plot_all=False,
+):
     &#34;&#34;&#34;Perform a cumulative plot for a Session.&#34;&#34;&#34;
-    date = session.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
+    date = session.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)
     timestamps = session.get_arrays()
     lever_ts = session.get_lever_ts()
-    session_type = session.get_metadata(&#39;name&#39;)
-    stage = session_type[:2].replace(&#39;_&#39;, &#39;&#39;)
-    subject = session.get_metadata(&#39;subject&#39;)
+    session_type = session.get_metadata(&#34;name&#34;)
+    stage = session_type[:2].replace(&#34;_&#34;, &#34;&#34;)
+    subject = session.get_metadata(&#34;subject&#34;)
     reward_times = session.get_rw_ts()
     pell_ts = timestamps[&#34;Reward&#34;]
     pell_double = np.nonzero(np.diff(pell_ts) &lt; 0.5)
@@ -1411,8 +1692,9 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
     err_FR = 0
     rw_FR = 0
     rw_FI = 0
-    reward_double = reward_times[np.searchsorted(
-        reward_times, pell_ts[pell_double], side=&#39;right&#39;)]
+    reward_double = reward_times[
+        np.searchsorted(reward_times, pell_ts[pell_double], side=&#34;right&#34;)
+    ]
     single_plot = False
     ratio = session.get_ratio()
     interval = session.get_interval()
@@ -1420,51 +1702,80 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
     if ax is None:
         single_plot = True
         fig, ax = plt.subplots()
-        ax.set_title(&#39;Cumulative Lever Presses\n&#39;, fontsize=15)
-        if session_type == &#39;5a_FixedRatio_p&#39;:
-            plt.suptitle(&#39;\n{}, {} {}, {}&#39;.format(
-                subject, session_type[:-2], ratio, date),
-                color=mycolors(subject), fontsize=10, y=.98, x=.51)
-        elif session_type == &#39;5b_FixedInterval_p&#39;:
-            plt.suptitle(&#39;\n{}, {} {}s, {}&#39;.format(
-                subject, session_type[:-2], interval, date),
-                color=mycolors(subject), fontsize=10, y=.98, x=.51)
-        elif session_type == &#39;6_RandomisedBlocks_p:&#39;:
-            plt.suptitle(&#39;\n{}, {} FR{}/FI{}s, {}&#39;.format(
-                subject, session_type[:-2], ratio, interval, date),
-                color=mycolors(subject), fontsize=10, y=.98, x=.51)
+        ax.set_title(&#34;Cumulative Lever Presses\n&#34;, fontsize=15)
+        if session_type == &#34;5a_FixedRatio_p&#34;:
+            plt.suptitle(
+                &#34;\n{}, {} {}, {}&#34;.format(subject, session_type[:-2], ratio, date),
+                color=mycolors(subject),
+                fontsize=10,
+                y=0.98,
+                x=0.51,
+            )
+        elif session_type == &#34;5b_FixedInterval_p&#34;:
+            plt.suptitle(
+                &#34;\n{}, {} {}s, {}&#34;.format(subject, session_type[:-2], interval, date),
+                color=mycolors(subject),
+                fontsize=10,
+                y=0.98,
+                x=0.51,
+            )
+        elif session_type == &#34;6_RandomisedBlocks_p:&#34;:
+            plt.suptitle(
+                &#34;\n{}, {} FR{}/FI{}s, {}&#34;.format(
+                    subject, session_type[:-2], ratio, interval, date
+                ),
+                color=mycolors(subject),
+                fontsize=10,
+                y=0.98,
+                x=0.51,
+            )
         else:
-            plt.suptitle(&#39;\n{}, S{}, {}&#39;.format(
-                subject, stage, date), color=mycolors(subject),
-                fontsize=10, y=.98, x=.51)
+            plt.suptitle(
+                &#34;\n{}, S{}, {}&#34;.format(subject, stage, date),
+                color=mycolors(subject),
+                fontsize=10,
+                y=0.98,
+                x=0.51,
+            )
     else:
-        if session_type == &#39;5a_FixedRatio_p&#39;:
-            ax.set_title(&#39;\n{}, S{}, FR{}, {}&#39;.format(
-                subject, stage, ratio, date),
-                color=mycolors(subject), fontsize=10)
-        elif session_type == &#39;5b_FixedInterval_p&#39;:
-            ax.set_title(&#39;\n{}, S{}, FI{}s, {}&#39;.format(
-                subject, stage, interval, date),
-                color=mycolors(subject), fontsize=10)
-        elif session_type == &#39;6_RandomisedBlocks_p&#39; or stage == &#39;7&#39;:
+        if session_type == &#34;5a_FixedRatio_p&#34;:
+            ax.set_title(
+                &#34;\n{}, S{}, FR{}, {}&#34;.format(subject, stage, ratio, date),
+                color=mycolors(subject),
+                fontsize=10,
+            )
+        elif session_type == &#34;5b_FixedInterval_p&#34;:
+            ax.set_title(
+                &#34;\n{}, S{}, FI{}s, {}&#34;.format(subject, stage, interval, date),
+                color=mycolors(subject),
+                fontsize=10,
+            )
+        elif session_type == &#34;6_RandomisedBlocks_p&#34; or stage == &#34;7&#34;:
             switch_ts = np.arange(5, 1830, 305)
             for x in switch_ts:
-                plt.axvline(x, color=&#39;g&#39;, linestyle=&#39;-.&#39;, linewidth=&#39;.4&#39;)
-            ax.set_title(&#39;\n{}, S{}, FR{}/FI{}s, {}&#39;.format(
-                subject, stage, ratio, interval, date),
-                color=mycolors(subject), fontsize=10)
+                plt.axvline(x, color=&#34;g&#34;, linestyle=&#34;-.&#34;, linewidth=&#34;.4&#34;)
+            ax.set_title(
+                &#34;\n{}, S{}, FR{}/FI{}s, {}&#34;.format(
+                    subject, stage, ratio, interval, date
+                ),
+                color=mycolors(subject),
+                fontsize=10,
+            )
         else:
-            ax.set_title(&#39;\n{}, S{}, {}&#39;.format(
-                subject, stage, date), color=mycolors(subject),
-                fontsize=10, y=1, x=.51)
+            ax.set_title(
+                &#34;\n{}, S{}, {}&#34;.format(subject, stage, date),
+                color=mycolors(subject),
+                fontsize=10,
+                y=1,
+                x=0.51,
+            )
 
-    ax.set_xlabel(&#39;Time (s)&#39;)
-    ax.set_ylabel(&#39;Cumulative Lever Presses&#39;)
+    ax.set_xlabel(&#34;Time (s)&#34;)
+    ax.set_ylabel(&#34;Cumulative Lever Presses&#34;)
 
     # Broken and plots are ugly - Plots single trials
     if zoom:
-        trial_lever_ts = np.split(lever_ts,
-                                  np.searchsorted(lever_ts, reward_times))
+        trial_lever_ts = np.split(lever_ts, np.searchsorted(lever_ts, reward_times))
         norm_reward_ts = []
         norm_lever_ts = []
         reward_times_0 = np.append([0], reward_times, axis=0)
@@ -1472,140 +1783,177 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
             norm_lever_ts.append(np.append([0], l - reward_times_0[i], axis=0))
             norm_reward_ts.append(reward_times[i] - reward_times_0[i])
         ax.set_xlim(0, np.max(norm_reward_ts))
-        color = plt.cm.get_cmap(&#39;autumn&#39;)
+        color = plt.cm.get_cmap(&#34;autumn&#34;)
         for i, l in enumerate(norm_lever_ts):
             ax.step(l, np.arange(l.size), c=color(i * 20), where=&#34;post&#34;)
             bins = l
             reward_y = np.digitize(norm_reward_ts[i], bins) - 1
-            plt.scatter(norm_reward_ts[i], reward_y,
-                        marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
-        ax.set_title(&#39;\n{}, Trial-Based&#39;.format(
-            subject), color=mycolors(subject), fontsize=10)
-        ax.legend(loc=&#39;lower right&#39;)
+            plt.scatter(norm_reward_ts[i], reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+        ax.set_title(
+            &#34;\n{}, Trial-Based&#34;.format(subject), color=mycolors(subject), fontsize=10,
+        )
+        ax.legend(loc=&#34;lower right&#34;)
         return fig
 
-    elif zoom_sch and (session_type == &#39;6_RandomisedBlocks_p&#39; or stage == &#39;7&#39;):
+    elif zoom_sch and (session_type == &#34;6_RandomisedBlocks_p&#34; or stage == &#34;7&#34;):
         # plots cum graph based on schedule type (i.e. FI/FR)
-        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl = session.split_sess(
-            plot_error=plot_error, all_levers=plot_all)
+        (norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl,) = session.split_sess(
+            plot_error=plot_error, all_levers=plot_all
+        )
 
-        sch_type = session.get_arrays(&#39;Trial Type&#39;)
-        ratio_c = plt.cm.get_cmap(&#39;Wistia&#39;)
-        interval_c = plt.cm.get_cmap(&#39;winter&#39;)
+        sch_type = session.get_arrays(&#34;Trial Type&#34;)
+        ratio_c = plt.cm.get_cmap(&#34;Wistia&#34;)
+        interval_c = plt.cm.get_cmap(&#34;winter&#34;)
         ax.set_xlim(0, 305)
         for i, l in enumerate(norm_l_ts):
             if sch_type[i] == 1 and not int_only:
-                ax.step(l, np.arange(l.size), c=ratio_c(i * 45), where=&#34;post&#34;,
-                        label=&#39;B&#39; + str(i + 1) + &#39; - FR&#39;, zorder=1)
+                ax.step(
+                    l,
+                    np.arange(l.size),
+                    c=ratio_c(i * 45),
+                    where=&#34;post&#34;,
+                    label=&#34;B&#34; + str(i + 1) + &#34; - FR&#34;,
+                    zorder=1,
+                )
             elif sch_type[i] == 0:
-                ax.step(l, np.arange(l.size), c=interval_c(i * 45), where=&#34;post&#34;,
-                        label=&#39;B&#39; + str(i + 1) + &#39; - FI&#39;, zorder=1)
+                ax.step(
+                    l,
+                    np.arange(l.size),
+                    c=interval_c(i * 45),
+                    where=&#34;post&#34;,
+                    label=&#34;B&#34; + str(i + 1) + &#34; - FI&#34;,
+                    zorder=1,
+                )
             bins = l
             reward_y = np.digitize(norm_r_ts[i], bins) - 1
             double_y = np.digitize(norm_dr_ts[i], bins) - 1
-            if stage == &#39;7&#39; and plot_all:  # plots all responses incl. errors
-                ax.scatter(norm_err_ts[i], np.isin(
-                    l, norm_err_ts[i]).nonzero()[0],
-                    c=&#39;r&#39;, s=1, zorder=2)
-                incl = &#39;_All&#39;
+            if stage == &#34;7&#34; and plot_all:  # plots all responses incl. errors
+                ax.scatter(
+                    norm_err_ts[i],
+                    np.isin(l, norm_err_ts[i]).nonzero()[0],
+                    c=&#34;r&#34;,
+                    s=1,
+                    zorder=2,
+                )
+                incl = &#34;_All&#34;
             if int_only:
                 if sch_type[i] == 0:
-                    plt.scatter(norm_r_ts[i], reward_y,
-                                marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
-                    plt.scatter(norm_dr_ts[i], double_y,
-                                marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
+                    plt.scatter(norm_r_ts[i], reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+                    plt.scatter(norm_dr_ts[i], double_y, marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
             else:
-                plt.scatter(norm_r_ts[i], reward_y,
-                            marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
-                plt.scatter(norm_dr_ts[i], double_y,
-                            marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
-        ax.set_title(&#39;\n{}, Block-Split {}&#39;.format(
-            subject, incl), color=mycolors(subject), fontsize=10)
-        ax.legend(loc=&#39;upper left&#39;)
+                plt.scatter(norm_r_ts[i], reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+                plt.scatter(norm_dr_ts[i], double_y, marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
+        ax.set_title(
+            &#34;\n{}, Block-Split {}&#34;.format(subject, incl),
+            color=mycolors(subject),
+            fontsize=10,
+        )
+        ax.legend(loc=&#34;upper left&#34;)
         return fig
 
     elif zoom_sch:  # plots cum graph split into 5 min blocks
-        if session_type == &#39;5a_FixedRatio_p&#39;:
-            sch_type = &#39;FR&#39;
-            ax.set_title(&#39;\n{}, FR{} Split&#39;.format(
-                subject, ratio), color=mycolors(subject),
-                fontsize=10)
-        elif session_type == &#39;5b_FixedInterval_p&#39;:
-            sch_type = &#39;FI&#39;
-            ax.set_title(&#39;\n{}, FI{}s Split&#39;.format(
-                subject, interval), color=mycolors(subject),
-                fontsize=10)
+        if session_type == &#34;5a_FixedRatio_p&#34;:
+            sch_type = &#34;FR&#34;
+            ax.set_title(
+                &#34;\n{}, FR{} Split&#34;.format(subject, ratio),
+                color=mycolors(subject),
+                fontsize=10,
+            )
+        elif session_type == &#34;5b_FixedInterval_p&#34;:
+            sch_type = &#34;FI&#34;
+            ax.set_title(
+                &#34;\n{}, FI{}s Split&#34;.format(subject, interval),
+                color=mycolors(subject),
+                fontsize=10,
+            )
         elif stage == 6 or stage == 7:
             pass
         else:
             return print(&#34;Unable to split session&#34;)
         # Change values to set division blocks
         blocks = np.arange(0, 60 * 30, 300)
-        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, _ = session.split_sess(
-            blocks)
+        norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, _ = session.split_sess(blocks)
         ax.set_xlim(0, 305)
         for i, l in enumerate(norm_l_ts):
-            ax.step(l, np.arange(l.size), c=mycolors(i), where=&#34;post&#34;,
-                    label=&#39;B&#39; + str(i + 1) + &#39; - {}&#39;.format(sch_type))
+            ax.step(
+                l,
+                np.arange(l.size),
+                c=mycolors(i),
+                where=&#34;post&#34;,
+                label=&#34;B&#34; + str(i + 1) + &#34; - {}&#34;.format(sch_type),
+            )
             bins = l
             reward_y = np.digitize(norm_r_ts[i], bins) - 1
             double_y = np.digitize(norm_dr_ts[i], bins) - 1
-            plt.scatter(norm_r_ts[i], reward_y,
-                        marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
-            plt.scatter(norm_dr_ts[i], double_y,
-                        marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
-        ax.legend(loc=&#39;upper left&#39;)
+            plt.scatter(norm_r_ts[i], reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+            plt.scatter(norm_dr_ts[i], double_y, marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
+        ax.legend(loc=&#34;upper left&#34;)
         return fig
 
     else:
-        if stage == &#39;7&#39;:
+        if stage == &#34;7&#34;:
             err_lever_ts = session.get_err_lever_ts()
-            lever_ts = np.sort(np.concatenate((
-                lever_ts, err_lever_ts), axis=None))
+            lever_ts = np.sort(np.concatenate((lever_ts, err_lever_ts), axis=None))
         lever_times = np.insert(lever_ts, 0, 0, axis=0)
-        ax.step(lever_times, np.arange(
-            lever_times.size), c=mycolors(subject),
-            where=&#34;post&#34;, label=&#39;Animal&#39; + subject, zorder=1)
-        if stage == &#39;7&#39;:  # plots error press in red
-            ax.scatter(err_lever_ts, np.isin(
-                lever_times, err_lever_ts).nonzero()[0],
-                c=&#39;r&#39;, label=&#39;Errors&#39;, s=1, zorder=2)
+        ax.step(
+            lever_times,
+            np.arange(lever_times.size),
+            c=mycolors(subject),
+            where=&#34;post&#34;,
+            label=&#34;Animal&#34; + subject,
+            zorder=1,
+        )
+        if stage == &#34;7&#34;:  # plots error press in red
+            ax.scatter(
+                err_lever_ts,
+                np.isin(lever_times, err_lever_ts).nonzero()[0],
+                c=&#34;r&#34;,
+                label=&#34;Errors&#34;,
+                s=1,
+                zorder=2,
+            )
         if reward_times[-1] &gt; lever_times[-1]:
             ax.plot(
                 [lever_times[-1], reward_times[-1] + 2],
                 [lever_times.size - 1, lever_times.size - 1],
-                c=mycolors(subject))
+                c=mycolors(subject),
+            )
         bins = lever_times
         reward_y = np.digitize(reward_times, bins) - 1
         double_y = np.digitize(reward_double, bins) - 1
         # for printing of error rates on graph
-        norm_r_ts, _, norm_err_ts, _, _ = session.split_sess(
-            all_levers=True)
-        sch_type = session.get_arrays(&#39;Trial Type&#39;)
+        norm_r_ts, _, norm_err_ts, _, _ = session.split_sess(all_levers=True)
+        sch_type = session.get_arrays(&#34;Trial Type&#34;)
         for i, l in enumerate(norm_err_ts):
             if sch_type[i] == 1:
                 err_FR = err_FR + len(norm_err_ts[i])
             elif sch_type[i] == 0:
                 err_FI = err_FI + len(norm_err_ts[i])
-        if stage == &#39;6&#39; or stage == &#39;7&#39;:
+        if stage == &#34;6&#34; or stage == &#34;7&#34;:
             for i, l in enumerate(norm_r_ts):
                 if sch_type[i] == 1:
                     rw_FR = rw_FR + len(norm_r_ts[i])
                 elif sch_type[i] == 0:
                     rw_FI = rw_FI + len(norm_r_ts[i])
-            rw_print = &#34;\nCorrect FR \\ FI: &#34; + \
-                str(rw_FR) + r&#34; \ &#34; + str(rw_FI)
+            rw_print = &#34;\nCorrect FR \\ FI: &#34; + str(rw_FR) + r&#34; \ &#34; + str(rw_FI)
 
-    ax.scatter(reward_times, reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;,
-               label=&#39;Reward Collected&#39;, s=25)
+    ax.scatter(
+        reward_times, reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;, label=&#34;Reward Collected&#34;, s=25,
+    )
     if len(reward_double) &gt; 0:
         dr_print = &#34;\nTotal # of Double Rewards: &#34; + str(len(reward_double))
-        ax.scatter(reward_double, double_y, marker=&#34;x&#34;, c=&#34;magenta&#34;,
-                   label=&#39;Double Reward&#39;, s=25)
+        ax.scatter(
+            reward_double,
+            double_y,
+            marker=&#34;x&#34;,
+            c=&#34;magenta&#34;,
+            label=&#34;Double Reward&#34;,
+            s=25,
+        )
     else:
         dr_print = &#34;&#34;
-    ax.legend(loc=&#39;lower right&#39;)
-#    ax.set_xlim(0, 30 * 60 + 30)
+    ax.legend(loc=&#34;lower right&#34;)
+    #    ax.set_xlim(0, 30 * 60 + 30)
 
     if err_FR &gt; 0 or err_FI &gt; 0:
         err_print = &#34;\nErrors FR \\ FI: &#34; + str(err_FR) + r&#34; \ &#34; + str(err_FI)
@@ -1613,28 +1961,44 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
         err_print = &#34;&#34;
 
     if single_plot:
-        out_name = (subject.zfill(3) + &#34;_CumulativeHist_&#34; + date +
-                    &#34;_&#34; + session_type[:-2] + &#34;.png&#34;)
+        out_name = (
+            subject.zfill(3)
+            + &#34;_CumulativeHist_&#34;
+            + date
+            + &#34;_&#34;
+            + session_type[:-2]
+            + &#34;.png&#34;
+        )
         out_name = os.path.join(out_dir, out_name)
         print(&#34;Saved figure to {}&#34;.format(out_name))
         # Text Display on Graph
-        if stage == &#39;6&#39; or stage == &#39;7&#39;:
+        if stage == &#34;6&#34; or stage == &#34;7&#34;:
             text = (
-                &#39;Total # of Lever Press: &#39; +
-                &#39;{}\nTotal # of Rewards: {}{}{}{}&#39;.format(
-                    len(lever_ts), len(reward_times) + len(reward_double),
-                    dr_print, rw_print, err_print))
+                &#34;Total # of Lever Press: &#34;
+                + &#34;{}\nTotal # of Rewards: {}{}{}{}&#34;.format(
+                    len(lever_ts),
+                    len(reward_times) + len(reward_double),
+                    dr_print,
+                    rw_print,
+                    err_print,
+                )
+            )
             ax.text(0.55, 0.15, text, transform=ax.transAxes)
         bv_plot.savefig(fig, out_name)
         plt.close()
     else:
         # Text Display on Graph
-        if stage == &#39;6&#39; or stage == &#39;7&#39;:
+        if stage == &#34;6&#34; or stage == &#34;7&#34;:
             text = (
-                &#39;Total # of Lever Press: &#39; +
-                &#39;{}\nTotal # of Rewards: {}{}{}{}&#39;.format(
-                    len(lever_ts), len(reward_times) + len(reward_double),
-                    dr_print, rw_print, err_print))
+                &#34;Total # of Lever Press: &#34;
+                + &#34;{}\nTotal # of Rewards: {}{}{}{}&#34;.format(
+                    len(lever_ts),
+                    len(reward_times) + len(reward_double),
+                    dr_print,
+                    rw_print,
+                    err_print,
+                )
+            )
             ax.text(0.05, 0.75, text, transform=ax.transAxes)
         return fig</code></pre>
 </details>
@@ -1679,8 +2043,8 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
     else:
         fig = None
 
-    date = s.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
-    sub = s.get_metadata(&#39;subject&#39;)
+    date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)
+    sub = s.get_metadata(&#34;subject&#34;)
     stage = s.get_stage()
     blocks = s.get_tone_starts()
     lever_ts = s.get_lever_ts()
@@ -1693,44 +2057,56 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
     err_FR = 0
     rw_FR = 0
     rw_FI = 0
-    reward_double = reward_times[np.searchsorted(
-        reward_times, pell_ts[pell_double], side=&#39;right&#39;)]
+    reward_double = reward_times[
+        np.searchsorted(reward_times, pell_ts[pell_double], side=&#34;right&#34;)
+    ]
 
-    norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl = s.split_sess(blocks=blocks,
-                                                                       error_only=p_errors, all_levers=p_all)
-    sch_type = s.get_arrays(&#39;Trial Type&#39;)
-    ratio_c = plt.cm.get_cmap(&#39;Wistia&#39;)
-    interval_c = plt.cm.get_cmap(&#39;winter&#39;)
+    norm_r_ts, norm_l_ts, norm_err_ts, norm_dr_ts, incl = s.split_sess(
+        blocks=blocks, error_only=p_errors, all_levers=p_all
+    )
+    sch_type = s.get_arrays(&#34;Trial Type&#34;)
+    ratio_c = plt.cm.get_cmap(&#34;Wistia&#34;)
+    interval_c = plt.cm.get_cmap(&#34;winter&#34;)
 
-    if stage == &#39;7&#39;:
+    if stage == &#34;7&#34;:
         err_lever_ts = s.get_err_lever_ts()
-        lever_ts = np.sort(np.concatenate((
-            lever_ts, err_lever_ts), axis=None))
+        lever_ts = np.sort(np.concatenate((lever_ts, err_lever_ts), axis=None))
     lever_times = np.insert(lever_ts, 0, 0, axis=0)
-    ax[0].step(lever_times, np.arange(
-        lever_times.size), where=&#34;post&#34;, label=sub, zorder=1)
-    if stage == &#39;7&#39;:    # plots error press in red
-        ax[0].scatter(err_lever_ts, np.isin(
-            lever_times, err_lever_ts).nonzero()[0],
-            c=&#39;r&#39;, label=&#39;Errors&#39;, s=1, zorder=2)
+    ax[0].step(
+        lever_times, np.arange(lever_times.size), where=&#34;post&#34;, label=sub, zorder=1,
+    )
+    if stage == &#34;7&#34;:  # plots error press in red
+        ax[0].scatter(
+            err_lever_ts,
+            np.isin(lever_times, err_lever_ts).nonzero()[0],
+            c=&#34;r&#34;,
+            label=&#34;Errors&#34;,
+            s=1,
+            zorder=2,
+        )
     bins = lever_times
     reward_y = np.digitize(reward_times, bins) - 1
     double_y = np.digitize(reward_double, bins) - 1
-    ax[0].scatter(reward_times, reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;,
-                  label=&#39;Reward Collected&#39;, s=25)
+    ax[0].scatter(
+        reward_times, reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;, label=&#34;Reward Collected&#34;, s=25,
+    )
     if len(reward_double) &gt; 0:
-        dr_print = &#34;\nTotal # of Double Rewards: &#34; + \
-            str(len(reward_double))
-        ax[0].scatter(reward_double, double_y, marker=&#34;x&#34;, c=&#34;magenta&#34;,
-                      label=&#39;Double Reward&#39;, s=25)
+        dr_print = &#34;\nTotal # of Double Rewards: &#34; + str(len(reward_double))
+        ax[0].scatter(
+            reward_double,
+            double_y,
+            marker=&#34;x&#34;,
+            c=&#34;magenta&#34;,
+            label=&#34;Double Reward&#34;,
+            s=25,
+        )
     else:
         dr_print = &#34;&#34;
-    ax[0].legend(loc=&#39;lower right&#39;)
+    ax[0].legend(loc=&#34;lower right&#34;)
 
     # for printing of error rates on graph
-    norm_r_ts, _, norm_err_ts, _, _ = s.split_sess(
-        blocks=blocks, all_levers=True)
-    sch_type = s.get_arrays(&#39;Trial Type&#39;)
+    norm_r_ts, _, norm_err_ts, _, _ = s.split_sess(blocks=blocks, all_levers=True)
+    sch_type = s.get_arrays(&#34;Trial Type&#34;)
     for i, l in enumerate(norm_err_ts):
         if sch_type[i] == 1:
             err_FR = err_FR + len(norm_err_ts[i])
@@ -1741,12 +2117,10 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
             rw_FR = rw_FR + len(norm_r_ts[i])
         elif sch_type[i] == 0:
             rw_FI = rw_FI + len(norm_r_ts[i])
-    rw_print = &#34;\nCorrect FR \\ FI: &#34; + \
-        str(rw_FR) + r&#34; \ &#34; + str(rw_FI)
+    rw_print = &#34;\nCorrect FR \\ FI: &#34; + str(rw_FR) + r&#34; \ &#34; + str(rw_FI)
 
     if err_FR &gt; 0 or err_FI &gt; 0:
-        err_print = &#34;\nErrors FR \\ FI: &#34; + \
-            str(err_FR) + r&#34; \ &#34; + str(err_FI)
+        err_print = &#34;\nErrors FR \\ FI: &#34; + str(err_FR) + r&#34; \ &#34; + str(err_FI)
     else:
         err_print = &#34;&#34;
 
@@ -1756,49 +2130,74 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
         cum_l += l.size
         if sch_type[i] == 1:
             ax[0].axhline(cum_l, c=ratio_c(i * 45), lw=0.75, zorder=-1)
-            ax[0].text(ax[0].set_xlim()[1]-10, cum_l+1,
-                       &#34;n = {}&#34;.format(l.size), ha=&#39;right&#39;, fontsize=8)
+            ax[0].text(
+                ax[0].set_xlim()[1] - 10,
+                cum_l + 1,
+                &#34;n = {}&#34;.format(l.size),
+                ha=&#34;right&#34;,
+                fontsize=8,
+            )
         elif sch_type[i] == 0:
             ax[0].axhline(cum_l, c=interval_c(i * 45), lw=0.75, zorder=-1)
-            ax[0].text(ax[0].set_xlim()[1]-10, cum_l+1,
-                       &#34;n = {}&#34;.format(l.size), ha=&#39;right&#39;, fontsize=8)
+            ax[0].text(
+                ax[0].set_xlim()[1] - 10,
+                cum_l + 1,
+                &#34;n = {}&#34;.format(l.size),
+                ha=&#34;right&#34;,
+                fontsize=8,
+            )
         print(i, l.size, cum_l)
 
-    text = (&#39;Total # of Lever Press: &#39; + &#39;{}\nTotal # of Rewards: {}{}{}{}&#39;.format(
-            len(lever_ts), len(reward_times) + len(reward_double),
-            dr_print, rw_print, err_print))
-    ax[0].text(0.03, 0.97, text, ha=&#34;left&#34;,
-               va=&#34;top&#34;, transform=ax[0].transAxes)
-    ax[0].set_title(&#39;Cumulative Lever Presses&#39;, fontsize=10)
-    ax[0].set_xlabel(&#39;Time (s)&#39;)
-    ax[0].set_ylabel(&#39;Cumulative Lever Presses&#39;)
+    text = &#34;Total # of Lever Press: &#34; + &#34;{}\nTotal # of Rewards: {}{}{}{}&#34;.format(
+        len(lever_ts),
+        len(reward_times) + len(reward_double),
+        dr_print,
+        rw_print,
+        err_print,
+    )
+    ax[0].text(0.03, 0.97, text, ha=&#34;left&#34;, va=&#34;top&#34;, transform=ax[0].transAxes)
+    ax[0].set_title(&#34;Cumulative Lever Presses&#34;, fontsize=10)
+    ax[0].set_xlabel(&#34;Time (s)&#34;)
+    ax[0].set_ylabel(&#34;Cumulative Lever Presses&#34;)
 
     # Plot cummulative lever press split into blocks
     for i, l in enumerate(norm_l_ts):
         if sch_type[i] == 1:
-            ax[1].step(l, np.arange(l.size), c=ratio_c(i * 45), where=&#34;post&#34;,
-                       label=&#39;B&#39; + str(i + 1) + &#39; - FR&#39;, zorder=1)
+            ax[1].step(
+                l,
+                np.arange(l.size),
+                c=ratio_c(i * 45),
+                where=&#34;post&#34;,
+                label=&#34;B&#34; + str(i + 1) + &#34; - FR&#34;,
+                zorder=1,
+            )
         elif sch_type[i] == 0:
-            ax[1].step(l, np.arange(l.size), c=interval_c(i * 45), where=&#34;post&#34;,
-                       label=&#39;B&#39; + str(i + 1) + &#39; - FI&#39;, zorder=1)
+            ax[1].step(
+                l,
+                np.arange(l.size),
+                c=interval_c(i * 45),
+                where=&#34;post&#34;,
+                label=&#34;B&#34; + str(i + 1) + &#34; - FI&#34;,
+                zorder=1,
+            )
         bins = l
         reward_y = np.digitize(norm_r_ts[i], bins) - 1
         double_y = np.digitize(norm_dr_ts[i], bins) - 1
-        if stage == &#39;7&#39; and p_all:  # plots all responses incl. errors
-            ax[1].scatter(norm_err_ts[i], np.isin(
-                l, norm_err_ts[i]).nonzero()[0],
-                c=&#39;r&#39;, s=1, zorder=2)
-            incl = &#39;_All&#39;
+        if stage == &#34;7&#34; and p_all:  # plots all responses incl. errors
+            ax[1].scatter(
+                norm_err_ts[i],
+                np.isin(l, norm_err_ts[i]).nonzero()[0],
+                c=&#34;r&#34;,
+                s=1,
+                zorder=2,
+            )
+            incl = &#34;_All&#34;
 
-        ax[1].scatter(norm_r_ts[i], reward_y,
-                      marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
-        ax[1].scatter(norm_dr_ts[i], double_y,
-                      marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
-    ax[1].set_title(&#39;{}, Block-Split {}&#39;.format(
-        sub, incl), fontsize=10)
-    ax[1].legend(loc=&#39;upper left&#39;)
-    fig.suptitle(&#39;{} {} S{}&#39;.format(sub, date, stage),
-                 y=0.99, fontsize=20)
+        ax[1].scatter(norm_r_ts[i], reward_y, marker=&#34;x&#34;, c=&#34;grey&#34;, s=25)
+        ax[1].scatter(norm_dr_ts[i], double_y, marker=&#34;x&#34;, c=&#34;magenta&#34;, s=25)
+    ax[1].set_title(&#34;{}, Block-Split {}&#34;.format(sub, incl), fontsize=10)
+    ax[1].legend(loc=&#34;upper left&#34;)
+    fig.suptitle(&#34;{} {} S{}&#34;.format(sub, date, stage), y=0.99, fontsize=20)
     return fig</code></pre>
 </details>
 </dd>
@@ -1820,8 +2219,10 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def lever_hist(s, ax=None, valid=True, excl_dr=False, split_t=False, sub_colors_dict=None):
-    &#39;&#39;&#39;
+<pre><code class="python">def lever_hist(
+    s, ax=None, valid=True, excl_dr=False, split_t=False, sub_colors_dict=None
+):
+    &#34;&#34;&#34;
     Plot histrogram of lever presses
 
     Parameters
@@ -1832,7 +2233,7 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
     split_t : bool, False
         Optional. Plots lever histogram by trials
 
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     if ax is None:
         fig, ax = plt.subplots(figsize=(10, 10))
     else:
@@ -1844,25 +2245,28 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
         t_df = s.get_trial_df_norm()
 
     if split_t:
-        gm = bv_plot.GroupManager(t_df[&#39;Schedule&#39;].values.tolist())
+        gm = bv_plot.GroupManager(t_df[&#34;Schedule&#34;].values.tolist())
         for idx, row in t_df.iterrows():
             color = gm.get_next_color()
 
-            lev_ts = row[&#39;Levers_ts&#39;]
+            lev_ts = row[&#34;Levers_ts&#34;]
             x = lev_ts[~np.isnan(lev_ts)]  # Remove NaN from lever timestamps
 
-            if row[&#39;Schedule&#39;] == &#39;FR&#39;:
-                sns.distplot(x, ax=ax,
-                             label=&#39;FR-t{}&#39;.format(idx + 1), color=color, hist=True)
-            elif row[&#39;Schedule&#39;] == &#39;FI&#39;:
-                sns.distplot(x, ax=ax,
-                             label=&#39;FI-t{}&#39;.format(idx + 1), color=color, hist=True)
+            if row[&#34;Schedule&#34;] == &#34;FR&#34;:
+                sns.distplot(
+                    x, ax=ax, label=&#34;FR-t{}&#34;.format(idx + 1), color=color, hist=True,
+                )
+            elif row[&#34;Schedule&#34;] == &#34;FI&#34;:
+                sns.distplot(
+                    x, ax=ax, label=&#34;FI-t{}&#34;.format(idx + 1), color=color, hist=True,
+                )
         legend_size = 6
     else:
-        gm = bv_plot.GroupManager([&#39;FI&#39;, &#39;FR&#39;])
+        gm = bv_plot.GroupManager([&#34;FI&#34;, &#34;FR&#34;])
         t_lev = {
-            &#39;FI&#39;: t_df[t_df[&#39;Schedule&#39;] == &#39;FI&#39;][&#39;Levers_ts&#39;],
-            &#39;FR&#39;: t_df[t_df[&#39;Schedule&#39;] == &#39;FR&#39;][&#39;Levers_ts&#39;]}
+            &#34;FI&#34;: t_df[t_df[&#34;Schedule&#34;] == &#34;FI&#34;][&#34;Levers_ts&#34;],
+            &#34;FR&#34;: t_df[t_df[&#34;Schedule&#34;] == &#34;FR&#34;][&#34;Levers_ts&#34;],
+        }
         for key, x in t_lev.items():
             c = gm.get_next_color()
             x = x.to_numpy()  # convert pandas to numpy
@@ -1873,29 +2277,37 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
         legend_size = 10
 
     # Plot customization
-    date = s.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
-    sub = s.get_metadata(&#39;subject&#39;)
+    date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)
+    sub = s.get_metadata(&#34;subject&#34;)
     stage = s.get_stage()
-    plot_name = &#39;Lever Response Hist&#39;
+    plot_name = &#34;Lever Response Hist&#34;
     if split_t:
-        plot_name += &#39; (Trials)&#39;
+        plot_name += &#34; (Trials)&#34;
     if valid:
-        plot_name += &#39;_v&#39;
+        plot_name += &#34;_v&#34;
     if excl_dr:
-        plot_name += &#39;_exdr&#39;
+        plot_name += &#34;_exdr&#34;
 
-    ax.tick_params(axis=&#39;both&#39;, labelsize=12)
-    ax.set_ylabel(&#39;Probability Density&#39;, fontsize=20)
-    ax.set_xlabel(&#39;Time (s)&#39;, fontsize=20)
+    ax.tick_params(axis=&#34;both&#34;, labelsize=12)
+    ax.set_ylabel(&#34;Probability Density&#34;, fontsize=20)
+    ax.set_xlabel(&#34;Time (s)&#34;, fontsize=20)
     # ax.set_ylabel(&#39;Trials&#39;, fontsize=20)
     if sub_colors_dict == None:
         color = &#34;k&#34;
     else:
         color = mycolors(sub, sub_colors_dict)
-    ax.set_title(&#39;  {}&#39;.format(plot_name),
-                 y=1.04, ha=&#39;center&#39;, fontsize=25, color=color)
-    ax.text(0.5, 1.015, &#39;{} {} S{}&#39;.format(sub, date, stage),
-            ha=&#39;center&#39;, transform=ax.transAxes, fontsize=12, color=color)
+    ax.set_title(
+        &#34;  {}&#34;.format(plot_name), y=1.04, ha=&#34;center&#34;, fontsize=25, color=color
+    )
+    ax.text(
+        0.5,
+        1.015,
+        &#34;{} {} S{}&#34;.format(sub, date, stage),
+        ha=&#34;center&#34;,
+        transform=ax.transAxes,
+        fontsize=12,
+        color=color,
+    )
     ax.legend(fontsize=legend_size, ncol=2)
     return fig</code></pre>
 </details>
@@ -1932,7 +2344,7 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
     df = session.get_trial_df_norm()
 
     if sel_col is None:
-        print(&#39;Features available: &#39;, feat_df.columns)
+        print(&#34;Features available: &#34;, feat_df.columns)
         sel_col = input(&#34;Select feature index to plot: \n&#34;)
         try:
             sel_col = feat_df.columns[int(sel_col)]
@@ -1940,8 +2352,8 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
             pass
 
     print(&#39;Plotting dist for &#34;{}&#34;&#39;.format(sel_col))
-    feat_df[&#39;markers&#39;] = df[&#34;Schedule&#34;].astype(&#39;category&#39;)
-    for i, (key, data) in enumerate(feat_df.groupby(&#39;markers&#39;)[sel_col]):
+    feat_df[&#34;markers&#34;] = df[&#34;Schedule&#34;].astype(&#34;category&#34;)
+    for i, (key, data) in enumerate(feat_df.groupby(&#34;markers&#34;)[sel_col]):
         ax = sns.distplot(data, label=key)
 
         # Annotate max of dist
@@ -1951,8 +2363,13 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
         y = ax.lines[i].get_ydata()
         maxid = np.argmax(y)  # The id of the peak (maximum of y data)
         # print(round(x[maxid], 2))
-        plt.annotate(round(x[maxid], 2), xy=(x[maxid], y[maxid]), xytext=(20, 15),
-                     textcoords=&#39;offset points&#39;, arrowprops={&#39;arrowstyle&#39;: &#39;-&#39;})
+        plt.annotate(
+            round(x[maxid], 2),
+            xy=(x[maxid], y[maxid]),
+            xytext=(20, 15),
+            textcoords=&#34;offset points&#34;,
+            arrowprops={&#34;arrowstyle&#34;: &#34;-&#34;},
+        )
         print(&#34;{} Median: {:.2f}s&#34;.format(key, data.median()))
         print(&#34;{} Min / Max: {:.2f}s / {:.2f}s&#34;.format(key, data.min(), data.max()))
     plt.legend()
@@ -1971,7 +2388,7 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def plot_feats(feat_df, ax=None):
-    &#39;&#39;&#39; Plot feature boxplots used for clustering. &#39;&#39;&#39;
+    &#34;&#34;&#34; Plot feature boxplots used for clustering. &#34;&#34;&#34;
     if ax is None:
         fig, ax = plt.subplots(figsize=(20, 10))
     else:
@@ -1981,8 +2398,7 @@ def test_wct(lfp1, lfp2, sig=True):  # python CWT
     # data = stats.zscore(feat_df)
 
     sns.boxplot(data=feat_df)
-    ax.set_title(&#39;Cluster Features Boxplot&#39;,
-                 y=1.04, ha=&#39;center&#39;, fontsize=25)
+    ax.set_title(&#34;Cluster Features Boxplot&#34;, y=1.04, ha=&#34;center&#34;, fontsize=25)
 
     return fig</code></pre>
 </details>
@@ -2011,8 +2427,9 @@ if [0, 0, 0, 0], start aligned.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def plot_raster_trials(
-        s, ax=None, sub_colors_dict=None, align=[0, 0, 0, 0], reindex=None):
-    &#39;&#39;&#39;
+    s, ax=None, sub_colors_dict=None, align=[0, 0, 0, 0], reindex=None
+):
+    &#34;&#34;&#34;
     Plot raster of behaviour related ts aligned to different points.
 
     Parameters
@@ -2028,7 +2445,7 @@ if [0, 0, 0, 0], start aligned.</dd>
     reindex: list, None
         list of which to reorder trials by
 
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     if ax is None:
         fig, ax = plt.subplots(figsize=(20, 10))
     else:
@@ -2038,8 +2455,8 @@ if [0, 0, 0, 0], start aligned.</dd>
     align_rw, align_pell, align_FI, align_FRes = align
 
     # Retrive session related variables
-    date = s.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
-    sub = s.get_metadata(&#39;subject&#39;)
+    date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)
+    sub = s.get_metadata(&#34;subject&#34;)
     stage = s.get_stage()
     trial_df = s.get_trial_df_norm()
     if reindex is not None:
@@ -2061,57 +2478,57 @@ if [0, 0, 0, 0], start aligned.</dd>
     norm_pell = df_col_to_2d_list(trial_df, &#34;Pellet_ts&#34;)
     norm_rw = df_col_to_2d_list(trial_df, &#34;Reward_ts&#34;)
     norm_FRes = df_col_to_2d_list(trial_df, &#34;First_response&#34;)
-    schedule_type = trial_df[&#39;Schedule&#39;].copy(deep=True)
-    norm_tone = trial_df[&#39;Tone_s&#39;].copy(deep=True)
-    norm_start = trial_df[&#39;Trial_s&#39;].copy(deep=True)
+    schedule_type = trial_df[&#34;Schedule&#34;].copy(deep=True)
+    norm_tone = trial_df[&#34;Tone_s&#34;].copy(deep=True)
+    norm_start = trial_df[&#34;Trial_s&#34;].copy(deep=True)
 
     color = []
 
     # Alignment Specific Parameters
     if align_rw:
-        plot_type = &#39;Reward-Aligned&#39;
+        plot_type = &#34;Reward-Aligned&#34;
         norm_arr = norm_rw
 
     elif align_pell:
-        plot_type = &#39;Pell-Aligned&#39;
+        plot_type = &#34;Pell-Aligned&#34;
         norm_arr = norm_pell
         xmax = 5
         xmin = -30
 
     elif align_FI:
-        plot_type = &#39;Interval-Aligned&#39;
+        plot_type = &#34;Interval-Aligned&#34;
         norm_arr = np.empty_like(norm_rw)
         norm_arr.fill(30)
 
     elif align_FRes:
-        plot_type = &#39;First_Resp-Aligned&#39;
+        plot_type = &#34;First_Resp-Aligned&#34;
         norm_arr = norm_FRes
         xmax = 40
         xmin = -10
 
     else:
-        plot_type = &#39;Start-Aligned&#39;
+        plot_type = &#34;Start-Aligned&#34;
         norm_arr = norm_start
         xmax = None
         xmin = None
         # xmax = 60
         # xmin = -10
 
-    plot_name = &#39;Raster ({})&#39;.format(plot_type)
+    plot_name = &#34;Raster ({})&#34;.format(plot_type)
 
-    ax.axvline(0, linestyle=&#39;-.&#39;, color=&#39;g&#39;,
-               linewidth=1)
-    ax.text(0.1, -1, plot_type.split(&#39;-&#39;)[0], fontsize=12,
-            color=&#39;g&#39;, ha=&#39;left&#39;, va=&#39;top&#39;)
+    ax.axvline(0, linestyle=&#34;-.&#34;, color=&#34;g&#34;, linewidth=1)
+    ax.text(
+        0.1, -1, plot_type.split(&#34;-&#34;)[0], fontsize=12, color=&#34;g&#34;, ha=&#34;left&#34;, va=&#34;top&#34;,
+    )
 
     for i in range(len(norm_rw)):
         # color assigment for trial type
-        if schedule_type[i] == &#39;FR&#39;:
-            color.append(&#39;black&#39;)
-        elif schedule_type[i] == &#39;FI&#39;:
-            color.append(&#39;b&#39;)
+        if schedule_type[i] == &#34;FR&#34;:
+            color.append(&#34;black&#34;)
+        elif schedule_type[i] == &#34;FI&#34;:
+            color.append(&#34;b&#34;)
         else:
-            color.append(&#39;g&#39;)
+            color.append(&#34;g&#34;)
         subtract_val = norm_arr[i].flatten()
         if len(subtract_val) != 1:
             raise ValueError(&#34;Can&#39;t align to non single value&#34;)
@@ -2126,84 +2543,133 @@ if [0, 0, 0, 0], start aligned.</dd>
 
     # Plotting of raster
     ax.eventplot(norm_lever, color=color)
-    ax.eventplot(norm_err, color=&#39;red&#39;)
+    ax.eventplot(norm_err, color=&#34;red&#34;)
     for i, x in enumerate(norm_rw):
         if len(x) == 0:
             norm_rw[i] = None
-    rw_plot = ax.scatter(norm_rw, np.arange(len(norm_rw)), s=5,
-                         color=&#39;orange&#39;, label=&#39;Reward Collection&#39;)
-    ax.eventplot(norm_dr, color=&#39;magenta&#39;)
+    rw_plot = ax.scatter(
+        norm_rw,
+        np.arange(len(norm_rw)),
+        s=5,
+        color=&#34;orange&#34;,
+        label=&#34;Reward Collection&#34;,
+    )
+    ax.eventplot(norm_dr, color=&#34;magenta&#34;)
 
     # Legend construction (Standard items)
-    FR_label = lines.Line2D([], [], color=&#39;black&#39;, marker=&#39;|&#39;, linestyle=&#39;None&#39;,
-                            markersize=10, markeredgewidth=1.5, label=&#39;FR press&#39;)
-    FI_label = lines.Line2D([], [], color=&#39;b&#39;, marker=&#39;|&#39;, linestyle=&#39;None&#39;,
-                            markersize=10, markeredgewidth=1.5, label=&#39;FI press&#39;)
-    drw_label = lines.Line2D([], [], color=&#39;magenta&#39;, marker=&#39;|&#39;, linestyle=&#39;None&#39;,
-                             markersize=10, markeredgewidth=1.5, label=&#39;Double Reward&#39;)
+    FR_label = lines.Line2D(
+        [],
+        [],
+        color=&#34;black&#34;,
+        marker=&#34;|&#34;,
+        linestyle=&#34;None&#34;,
+        markersize=10,
+        markeredgewidth=1.5,
+        label=&#34;FR press&#34;,
+    )
+    FI_label = lines.Line2D(
+        [],
+        [],
+        color=&#34;b&#34;,
+        marker=&#34;|&#34;,
+        linestyle=&#34;None&#34;,
+        markersize=10,
+        markeredgewidth=1.5,
+        label=&#34;FI press&#34;,
+    )
+    drw_label = lines.Line2D(
+        [],
+        [],
+        color=&#34;magenta&#34;,
+        marker=&#34;|&#34;,
+        linestyle=&#34;None&#34;,
+        markersize=10,
+        markeredgewidth=1.5,
+        label=&#34;Double Reward&#34;,
+    )
     handles = [FR_label, FI_label, drw_label, rw_plot]
 
     # Figure labels
     ax.set_xlim(xmin, xmax)  # Uncomment to set x limit
     ax.set_ylim(-3, len(norm_rw) + 3)  # Uncomment to set y limit
-    ax.tick_params(axis=&#39;both&#39;, labelsize=15)
-    ax.set_xlabel(&#39;Time (s)&#39;, fontsize=20)
-    ax.set_ylabel(&#39;Trials&#39;, fontsize=20)
+    ax.tick_params(axis=&#34;both&#34;, labelsize=15)
+    ax.set_xlabel(&#34;Time (s)&#34;, fontsize=20)
+    ax.set_ylabel(&#34;Trials&#34;, fontsize=20)
 
     if sub_colors_dict == None:
         color = &#34;k&#34;
     else:
         color = mycolors(sub, sub_colors_dict)
 
-    ax.set_title(&#39;  {}&#39;.format(plot_name),
-                 y=1.04, ha=&#39;center&#39;, fontsize=20)
-    ax.text(0.5, 1.015, &#39;{} {} S{}&#39;.format(sub, date, stage),
-            ha=&#39;center&#39;, transform=ax.transAxes, fontsize=12)
+    ax.set_title(&#34;  {}&#34;.format(plot_name), y=1.04, ha=&#34;center&#34;, fontsize=20)
+    ax.text(
+        0.5,
+        1.015,
+        &#34;{} {} S{}&#34;.format(sub, date, stage),
+        ha=&#34;center&#34;,
+        transform=ax.transAxes,
+        fontsize=12,
+    )
 
     # Optional plot options [Pell, Tone, dr_win]
     opt_plot = [1, 1, 1]
     if opt_plot[0]:
         # Plot pellet drops
         x = norm_pell
-        ax.eventplot(x, color=&#39;green&#39;)
-        pell_label = lines.Line2D([], [], color=&#39;green&#39;, marker=&#39;|&#39;, linestyle=&#39;None&#39;,
-                                  markersize=10, markeredgewidth=1.5, label=&#39;Pell&#39;)
+        ax.eventplot(x, color=&#34;green&#34;)
+        pell_label = lines.Line2D(
+            [],
+            [],
+            color=&#34;green&#34;,
+            marker=&#34;|&#34;,
+            linestyle=&#34;None&#34;,
+            markersize=10,
+            markeredgewidth=1.5,
+            label=&#34;Pell&#34;,
+        )
         handles.append(pell_label)
 
     if opt_plot[1]:
         for i, x in enumerate(norm_tone):  # Plot Tone presentation
             if x:
-                plt.broken_barh([(x, 5)], (i - .5, 1), color=&#39;grey&#39;, alpha=0.2,
-                                hatch=&#39;///&#39;, edgecolor=&#39;k&#39;)
+                plt.broken_barh(
+                    [(x, 5)],
+                    (i - 0.5, 1),
+                    color=&#34;grey&#34;,
+                    alpha=0.2,
+                    hatch=&#34;///&#34;,
+                    edgecolor=&#34;k&#34;,
+                )
         tone_label = mpatches.Patch(
-            facecolor=&#39;grey&#39;, hatch=&#39;///&#39;, edgecolor=&#39;k&#39;, alpha=0.2, label=&#39;Tone&#39;)
+            facecolor=&#34;grey&#34;, hatch=&#34;///&#34;, edgecolor=&#34;k&#34;, alpha=0.2, label=&#34;Tone&#34;,
+        )
         handles.append(tone_label)
 
     if opt_plot[2]:
         for i, (x, sch) in enumerate(zip(norm_start, schedule_type)):  # Plot DR window
-            if sch == &#39;FI&#39;:
-                plt.broken_barh([(x + 20, 20)], (i - .4, 0.8),
-                                color=&#39;magenta&#39;, alpha=0.05)
-        drwin_label = mpatches.Patch(
-            color=&#39;magenta&#39;, alpha=0.05, label=&#39;dr_win&#39;)
+            if sch == &#34;FI&#34;:
+                plt.broken_barh(
+                    [(x + 20, 20)], (i - 0.4, 0.8), color=&#34;magenta&#34;, alpha=0.05
+                )
+        drwin_label = mpatches.Patch(color=&#34;magenta&#34;, alpha=0.05, label=&#34;dr_win&#34;)
         handles.append(drwin_label)
 
-    ax.legend(handles=handles, fontsize=12, loc=&#39;upper right&#39;)
+    ax.legend(handles=handles, fontsize=12, loc=&#34;upper right&#34;)
 
     # Highlight specific trials
     hline, h_ref = [], []
     h_dr, h_err, h_fr = [1, 0, 0]
 
     if h_dr:
-        c = &#39;pink&#39;
+        c = &#34;pink&#34;
         h_ref = norm_dr
     elif h_err:
-        c = &#39;magenta&#39;
+        c = &#34;magenta&#34;
         h_ref = norm_err
     elif h_fr:
-        c = &#39;k&#39;
+        c = &#34;k&#34;
         for s in schedule_type:
-            if s == &#39;FR&#39;:
+            if s == &#34;FR&#34;:
                 h_ref.append([1])
             else:
                 h_ref.append([])
@@ -2215,7 +2681,7 @@ if [0, 0, 0, 0], start aligned.</dd>
         if len(ts) &gt; 0:
             hline.append(i)
     for l in hline:
-        plt.axhline(l, linestyle=&#39;-&#39;, color=c, linewidth=&#39;5&#39;, alpha=0.1)
+        plt.axhline(l, linestyle=&#34;-&#34;, color=c, linewidth=&#34;5&#34;, alpha=0.1)
 
     return fig</code></pre>
 </details>
@@ -2232,13 +2698,15 @@ if [0, 0, 0, 0], start aligned.</dd>
 <pre><code class="python">def show_IRT_details(IRT, maxidx, hist_bins):
     &#34;&#34;&#34;Display further information for an IRT.&#34;&#34;&#34;
     plt.show()
-    print(&#39;Most Freq. IRT Bin: {} s&#39;.format(
-        ((hist_bins[maxidx + 1] - hist_bins[maxidx]) / 2) + hist_bins[maxidx]))
     print(
-        &#39;Median Inter-Response Time (IRT): {0:.2f} s&#39;.format(np.median(IRT)))
-    print(&#39;Min IRT: {0:.2f} s&#39;.format(np.amin(IRT)))
-    print(&#39;Max IRT: {0:.2f} s&#39;.format(np.amax(IRT)))
-    print(&#39;IRTs: &#39;, np.round(IRT, decimals=2))</code></pre>
+        &#34;Most Freq. IRT Bin: {} s&#34;.format(
+            ((hist_bins[maxidx + 1] - hist_bins[maxidx]) / 2) + hist_bins[maxidx]
+        )
+    )
+    print(&#34;Median Inter-Response Time (IRT): {0:.2f} s&#34;.format(np.median(IRT)))
+    print(&#34;Min IRT: {0:.2f} s&#34;.format(np.amin(IRT)))
+    print(&#34;Max IRT: {0:.2f} s&#34;.format(np.amax(IRT)))
+    print(&#34;IRTs: &#34;, np.round(IRT, decimals=2))</code></pre>
 </details>
 </dd>
 <dt id="bvmpc.bv_analyse.split_lever_ts"><code class="name flex">
@@ -2282,13 +2750,12 @@ if [0, 0, 0, 0], start aligned.</dd>
     lever_ts = session.get_lever_ts()
     switch_ts = np.arange(5, 1830, 305)
     reward_times = session.get_rw_ts()
-    trial_type = session.get_arrays(&#39;Trial Type&#39;)
+    trial_type = session.get_arrays(&#34;Trial Type&#34;)
 
     ratio_lever_ts = []
     interval_lever_ts = []
     block_lever_ts = np.split(lever_ts, np.searchsorted(lever_ts, switch_ts))
-    block_reward_ts = np.split(reward_times,
-                               np.searchsorted(reward_times, switch_ts))
+    block_reward_ts = np.split(reward_times, np.searchsorted(reward_times, switch_ts))
     for i, (l, r) in enumerate(zip(block_lever_ts, block_reward_ts)):
         if trial_type[i] == 1:  # FR Block
             split_lever_ts = np.split(l, np.searchsorted(l, r))
@@ -2297,9 +2764,9 @@ if [0, 0, 0, 0], start aligned.</dd>
             split_lever_ts = np.split(l, np.searchsorted(l, r))
             interval_lever_ts.append(split_lever_ts)
         else:
-            print(&#39;Not Ready for analysis!&#39;)
-    print(&#39;len of ratio_l&#39; + len(ratio_lever_ts))
-    print(&#39;len of interval_l&#39; + len(interval_lever_ts))
+            print(&#34;Not Ready for analysis!&#34;)
+    print(&#34;len of ratio_l&#34; + len(ratio_lever_ts))
+    print(&#34;len of interval_l&#34; + len(interval_lever_ts))
     return ratio_lever_ts, interval_lever_ts</code></pre>
 </details>
 </dd>
@@ -2312,7 +2779,7 @@ if [0, 0, 0, 0], start aligned.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name=&#39;default.png&#39;):
+<pre><code class="python">def test_matlab_wcoherence(lfp1, lfp2, rw_ts, sch_n, reg_sel=None, name=&#34;default.png&#34;):
     try:
         import matlab.engine
     except Exception:
@@ -2331,12 +2798,11 @@ if [0, 0, 0, 0], start aligned.</dd>
 
     rw_ts = matlab.double(list(rw_ts))
     o = 7.0
-    eng.wcoherence(x_m, y_m, fs, &#39;NumOctaves&#39;, o, nargout=0)
+    eng.wcoherence(x_m, y_m, fs, &#34;NumOctaves&#34;, o, nargout=0)
     aspect_ratio = matlab.double([2, 1, 1])
     eng.pbaspect(aspect_ratio, nargout=0)
 
-    title = (&#34;{} vs {} Wavelet Coherence {}&#34;.format(
-        reg_sel[0], reg_sel[1], sch_n))
+    title = &#34;{} vs {} Wavelet Coherence {}&#34;.format(reg_sel[0], reg_sel[1], sch_n)
     eng.title(title)
     # eng.hold(&#34;on&#34;, nargout=0)
 
@@ -2360,27 +2826,30 @@ if [0, 0, 0, 0], start aligned.</dd>
 </summary>
 <pre><code class="python">def test_wct(lfp1, lfp2, sig=True):  # python CWT
     import pycwt as wavelet
+
     dt = 1 / lfp1.get_sampling_rate()
     WCT, aWCT, coi, freq, sig = wavelet.wct(
-        lfp1.get_samples(), lfp2.get_samples(), dt, sig=sig)
+        lfp1.get_samples(), lfp2.get_samples(), dt, sig=sig
+    )
     _, ax = plt.subplots()
     t = lfp1.get_timestamp()
-    ax.contourf(t, freq, WCT, 6, extend=&#39;both&#39;, cmap=&#34;viridis&#34;)
+    ax.contourf(t, freq, WCT, 6, extend=&#34;both&#34;, cmap=&#34;viridis&#34;)
     extent = [t.min(), t.max(), 0, max(freq)]
     N = lfp1.get_total_samples()
     sig95 = np.ones([1, N]) * sig[:, None]
     sig95 = WCT / sig95
-    ax.contour(t, freq, sig95, [-99, 1], colors=&#39;k&#39;, linewidths=2,
-               extent=extent)
-    ax.fill(np.concatenate([t, t[-1:] + dt, t[-1:] + dt,
-                            t[:1] - dt, t[:1] - dt]),
-            np.concatenate([coi, [1e-9], freq[-1:],
-                            freq[-1:], [1e-9]]),
-            &#39;k&#39;, alpha=0.3, hatch=&#39;x&#39;)
+    ax.contour(t, freq, sig95, [-99, 1], colors=&#34;k&#34;, linewidths=2, extent=extent)
+    ax.fill(
+        np.concatenate([t, t[-1:] + dt, t[-1:] + dt, t[:1] - dt, t[:1] - dt]),
+        np.concatenate([coi, [1e-9], freq[-1:], freq[-1:], [1e-9]]),
+        &#34;k&#34;,
+        alpha=0.3,
+        hatch=&#34;x&#34;,
+    )
 
-    ax.set_title(&#39;Wavelet Power Spectrum&#39;)
-    ax.set_ylabel(&#39;Freq (Hz)&#39;)
-    ax.set_xlabel(&#39;Time (s)&#39;)
+    ax.set_title(&#34;Wavelet Power Spectrum&#34;)
+    ax.set_ylabel(&#34;Freq (Hz)&#34;)
+    ax.set_xlabel(&#34;Time (s)&#34;)
 
     plt.show()
     exit(-1)</code></pre>
@@ -2412,7 +2881,7 @@ if [0, 0, 0, 0], start aligned.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def trial_clust_hier(s, ax=None, should_pca=True, cutoff=None):
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     Plot dendrogram for trial-based hierarchical clustering results.
 
     Parameters
@@ -2428,7 +2897,7 @@ if [0, 0, 0, 0], start aligned.</dd>
     fig : plot of first and second features
     data : pd.Dataframe of features
 
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     if ax is None:
         fig, ax = plt.subplots(1, 2, figsize=(20, 10))
     else:
@@ -2438,46 +2907,65 @@ if [0, 0, 0, 0], start aligned.</dd>
     df[&#34;Temp&#34;] = (df.index.map(str)) + &#34; &#34; + df[&#34;Schedule&#34;]
     label = df[&#34;Temp&#34;].tolist()
 
-    clust_results = s.get_cluster_results(
-        should_pca=should_pca, cutoff=cutoff)
+    clust_results = s.get_cluster_results(should_pca=should_pca, cutoff=cutoff)
     import scipy.cluster.hierarchy as shc
-    Z = clust_results[&#39;Z&#39;]
+
+    Z = clust_results[&#34;Z&#34;]
     dend = shc.dendrogram(Z, ax=ax[0], color_threshold=cutoff, count_sort=True)
-    reindex = clust_results[&#39;reindex&#39;]
+    reindex = clust_results[&#34;reindex&#34;]
     ax[0].set_xticklabels(label[x] for x in reindex)
     if cutoff is None:
         cutoff = 0.7 * max(Z[:, 2])
-        ax[0].text(ax[0].set_xlim()[1] * 0.9, cutoff,
-                   &#39;Default&#39;, ha=&#39;right&#39;, va=&#39;center&#39;, backgroundcolor=&#39;w&#39;, fontsize=8)
+        ax[0].text(
+            ax[0].set_xlim()[1] * 0.9,
+            cutoff,
+            &#34;Default&#34;,
+            ha=&#34;right&#34;,
+            va=&#34;center&#34;,
+            backgroundcolor=&#34;w&#34;,
+            fontsize=8,
+        )
     else:
-        ax[0].text(ax[0].set_xlim()[1] * 0.9, cutoff,
-                   &#39;Cutoff = {}&#39;.format(cutoff), ha=&#39;right&#39;, va=&#39;center&#39;, backgroundcolor=&#39;w&#39;, fontsize=8)
-    ax[0].axhline(y=cutoff, c=&#39;k&#39;)
+        ax[0].text(
+            ax[0].set_xlim()[1] * 0.9,
+            cutoff,
+            &#34;Cutoff = {}&#34;.format(cutoff),
+            ha=&#34;right&#34;,
+            va=&#34;center&#34;,
+            backgroundcolor=&#34;w&#34;,
+            fontsize=8,
+        )
+    ax[0].axhline(y=cutoff, c=&#34;k&#34;)
 
     # Plot cosmetics
-    date = s.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
-    sub = s.get_metadata(&#39;subject&#39;)
+    date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)
+    sub = s.get_metadata(&#34;subject&#34;)
     stage = s.get_stage()
-    plot_name = &#39;Dendrogram&#39;
-    ax[0].set_title(&#39;  {}&#39;.format(plot_name),
-                    y=1.04, ha=&#39;center&#39;, fontsize=20)
-    ax[0].text(0.5, 1.015, &#39;{} {} S{}&#39;.format(sub, date, stage),
-               ha=&#39;center&#39;, transform=ax[0].transAxes, fontsize=12)
+    plot_name = &#34;Dendrogram&#34;
+    ax[0].set_title(&#34;  {}&#34;.format(plot_name), y=1.04, ha=&#34;center&#34;, fontsize=20)
+    ax[0].text(
+        0.5,
+        1.015,
+        &#34;{} {} S{}&#34;.format(sub, date, stage),
+        ha=&#34;center&#34;,
+        transform=ax[0].transAxes,
+        fontsize=12,
+    )
     ax[0].legend(fontsize=20)
 
     leaf_colors = bv_plot.dend_leaf_colors(dend)
 
     plot_raster_trials(s, ax[1], reindex=reindex)
-    ax[1].tick_params(axis=&#39;y&#39;, labelsize=10)
+    ax[1].tick_params(axis=&#34;y&#34;, labelsize=10)
 
     for i, color in enumerate(leaf_colors):
         ax[1].get_yticklabels()[i].set_color(color)
 
     # Figure title
-    plot_title = &#39;Hierarchical Clustering&#39;
+    plot_title = &#34;Hierarchical Clustering&#34;
     if should_pca:
-        plot_title += &#39;_PCA&#39;
-    fig.suptitle(plot_title, ha=&#39;center&#39;, fontsize=25)
+        plot_title += &#34;_PCA&#34;
+    fig.suptitle(plot_title, ha=&#34;center&#34;, fontsize=25)
 
     # # Plot cluster using hier clustering results
     # from sklearn.cluster import AgglomerativeClustering
@@ -2526,7 +3014,7 @@ if [0, 0, 0, 0], start aligned.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     Plot cluster results for trials.
 
     Parameters
@@ -2547,7 +3035,7 @@ if [0, 0, 0, 0], start aligned.</dd>
     data : pd.Dataframe of features after PCA or normalization
     feat_df: pd.Dataframe of features before PCA or normalization
 
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     if ax is None:
         fig = plt.figure(figsize=(20, 10))
     else:
@@ -2556,20 +3044,27 @@ if [0, 0, 0, 0], start aligned.</dd>
     if should_pca:
         feat_df, data, pca = s.perform_pca(should_scale=True)
         if (sum(pca.explained_variance_ratio_[:3]) &lt; 0.8) and (p_2D is False):
-            xs, ys, zs = data.iloc[:, 0], data.iloc[:,
-                                                    1], data.iloc[:, 2]  # Plot PC 1-3
+            xs, ys, zs = (
+                data.iloc[:, 0],
+                data.iloc[:, 1],
+                data.iloc[:, 2],
+            )  # Plot PC 1-3
             # fig = plt.figure(figsize=plt.figaspect(0.85))
-            ax = fig.add_subplot(1, 2, 1, projection=&#39;3d&#39;)
+            ax = fig.add_subplot(1, 2, 1, projection=&#34;3d&#34;)
         else:
             ax = fig.add_subplot(1, 2, 1)
-            xs, ys, zs = data.iloc[:, 0], data.iloc[:,
-                                                    1], None  # Plot PC 1 and 2 only
-        ax.set_xlabel(&#39;PC1&#39;)
-        ax.set_ylabel(&#39;PC2&#39;)
+            xs, ys, zs = (
+                data.iloc[:, 0],
+                data.iloc[:, 1],
+                None,
+            )  # Plot PC 1 and 2 only
+        ax.set_xlabel(&#34;PC1&#34;)
+        ax.set_ylabel(&#34;PC2&#34;)
 
     else:
         data = s.extract_features(should_scale=False)
         from scipy import stats
+
         feat_df = data
         data = stats.zscore(data)
         plot_dims1, plot_dims2 = [0, 1]  # Index for dimensions to be plot
@@ -2582,58 +3077,60 @@ if [0, 0, 0, 0], start aligned.</dd>
     markers = df[&#34;Schedule&#34;]
     cmap = sns.color_palette(&#34;bright&#34;)
     if zs is None:
-        sns.scatterplot(xs, ys, ax=ax, style=markers,
-                        hue=cluster.labels_, palette=&#39;bright&#39;)
-        ax.legend(fontsize=20, loc=&#39;upper right&#39;)
+        sns.scatterplot(
+            xs, ys, ax=ax, style=markers, hue=cluster.labels_, palette=&#34;bright&#34;
+        )
+        ax.legend(fontsize=20, loc=&#34;upper right&#34;)
     else:
         # ax.scatter(xs, ys, zs, c=cluster.labels_, cmap=&#39;rainbow&#39;)
-        mask = {&#39;FR&#39;: &#39;x&#39;, &#39;FI&#39;: &#39;^&#39;}
+        mask = {&#34;FR&#34;: &#34;x&#34;, &#34;FI&#34;: &#34;^&#34;}
         PCA_colors = []
         for i in np.arange(len(xs)):
             ic = cmap[cluster.labels_[i]]
-            ax.scatter(xs[i], ys[i], zs[i],
-                       marker=mask[markers[i]], c=[ic], s=40)
+            ax.scatter(xs[i], ys[i], zs[i], marker=mask[markers[i]], c=[ic], s=40)
             PCA_colors.append(ic)
-        ax.set_zlabel(&#39;PC3&#39;)
+        ax.set_zlabel(&#34;PC3&#34;)
         ax.dist = 10
-        legend_c = [lines.Line2D([], [], color=cmap[c], ls=&#39;&#39;, marker=&#39;s&#39;, label=&#39;c{}&#39;.format(c))
-                    for c in np.unique(cluster.labels_)]
-        legend_c.append(lines.Line2D([], [], color=&#39;k&#39;,
-                                     ls=&#39;&#39;, marker=&#39;x&#39;, label=&#39;FR&#39;))
-        legend_c.append(lines.Line2D([], [], color=&#39;k&#39;,
-                                     ls=&#39;&#39;, marker=&#39;^&#39;, label=&#39;FI&#39;))
-        ax.legend(handles=legend_c, fontsize=10, loc=&#39;upper right&#39;)
+        legend_c = [
+            lines.Line2D(
+                [], [], color=cmap[c], ls=&#34;&#34;, marker=&#34;s&#34;, label=&#34;c{}&#34;.format(c)
+            )
+            for c in np.unique(cluster.labels_)
+        ]
+        legend_c.append(lines.Line2D([], [], color=&#34;k&#34;, ls=&#34;&#34;, marker=&#34;x&#34;, label=&#34;FR&#34;))
+        legend_c.append(lines.Line2D([], [], color=&#34;k&#34;, ls=&#34;&#34;, marker=&#34;^&#34;, label=&#34;FI&#34;))
+        ax.legend(handles=legend_c, fontsize=10, loc=&#34;upper right&#34;)
 
-    plt.scatter(centroids[:, 0], centroids[:, 1], c=&#39;grey&#39;, s=25)
+    plt.scatter(centroids[:, 0], centroids[:, 1], c=&#34;grey&#34;, s=25)
 
     # Plot cosmetics
-    plot_name = &#39;Clusters = {}&#39;.format(num_clusts)
-    ax.set_title(&#39;  {}&#39;.format(plot_name),
-                 y=1.04, ha=&#39;center&#39;, fontsize=20)
+    plot_name = &#34;Clusters = {}&#34;.format(num_clusts)
+    ax.set_title(&#34;  {}&#34;.format(plot_name), y=1.04, ha=&#34;center&#34;, fontsize=20)
     if zs is None:
-        ax.text(0.5, 1.015, s.get_title(),
-                ha=&#39;center&#39;, transform=ax.transAxes, fontsize=12)
+        ax.text(
+            0.5, 1.015, s.get_title(), ha=&#34;center&#34;, transform=ax.transAxes, fontsize=12,
+        )
     # plot_loc = os.path.join(&#34;PCAclust.png&#34;)
 
     # Plot raster sorted by PCA clustering
-    df[&#39;PCA_Clus&#39;] = cluster.labels_
-    df[&#39;colors&#39;] = PCA_colors
-    sorted_df = df.sort_values(&#39;PCA_Clus&#39;)
+    df[&#34;PCA_Clus&#34;] = cluster.labels_
+    df[&#34;colors&#34;] = PCA_colors
+    sorted_df = df.sort_values(&#34;PCA_Clus&#34;)
     reindex = sorted_df.index
-    leaf_colors = sorted_df[&#39;colors&#39;]
+    leaf_colors = sorted_df[&#34;colors&#34;]
 
     ax1 = fig.add_subplot(1, 2, 2)
 
     plot_raster_trials(s, ax1, reindex=reindex)
-    ax1.tick_params(axis=&#39;y&#39;, labelsize=10)
+    ax1.tick_params(axis=&#34;y&#34;, labelsize=10)
     for i, color in enumerate(leaf_colors):
         ax1.get_yticklabels()[i].set_color(color)
 
     # Figure title
-    plot_title = &#39;K-Means Clustering&#39;
+    plot_title = &#34;K-Means Clustering&#34;
     if should_pca:
-        plot_title += &#39;_PCA&#39;
-    fig.suptitle(plot_title, ha=&#39;center&#39;, fontsize=25)
+        plot_title += &#34;_PCA&#34;
+    fig.suptitle(plot_title, ha=&#34;center&#34;, fontsize=25)
 
     return fig, data, feat_df</code></pre>
 </details>
@@ -2660,7 +3157,7 @@ if [0, 0, 0, 0], start aligned.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def trial_length_hist(s, valid=True, ax=None, loop=None, sub_colors_dict=None):
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     Plot histrogram of trial durations
 
     Parameters
@@ -2674,7 +3171,7 @@ if [0, 0, 0, 0], start aligned.</dd>
     sub_colors_dict: dict, None
         dict with subject: colors, used to assign color to title
 
-    &#39;&#39;&#39;
+    &#34;&#34;&#34;
     if ax is None:
         fig, ax = plt.subplots(figsize=(10, 10))
     else:
@@ -2687,9 +3184,10 @@ if [0, 0, 0, 0], start aligned.</dd>
 
     # Trial duration in ms for FR and FI
     t_len = {
-        &#39;FI&#39;: t_df[t_df[&#39;Schedule&#39;] == &#39;FI&#39;][&#39;Reward_ts&#39;],
-        &#39;FR&#39;: t_df[t_df[&#39;Schedule&#39;] == &#39;FR&#39;][&#39;Reward_ts&#39;]}
-    gm = bv_plot.GroupManager([&#39;FI&#39;, &#39;FR&#39;])
+        &#34;FI&#34;: t_df[t_df[&#34;Schedule&#34;] == &#34;FI&#34;][&#34;Reward_ts&#34;],
+        &#34;FR&#34;: t_df[t_df[&#34;Schedule&#34;] == &#34;FR&#34;][&#34;Reward_ts&#34;],
+    }
+    gm = bv_plot.GroupManager([&#34;FI&#34;, &#34;FR&#34;])
 
     if loop:
         txt = &#34;_p&#34; + str(loop)
@@ -2701,28 +3199,36 @@ if [0, 0, 0, 0], start aligned.</dd>
         c = gm.get_next_color()
         if log:
             x = np.log(x)
-        sns.distplot(x, ax=ax, label=&#39;{}{}&#39;.format(key, txt), color=c)
+        sns.distplot(x, ax=ax, label=&#34;{}{}&#34;.format(key, txt), color=c)
 
     # Plot customization
-    date = s.get_metadata(&#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)
-    sub = s.get_metadata(&#39;subject&#39;)
+    date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)
+    sub = s.get_metadata(&#34;subject&#34;)
     stage = s.get_stage()
-    plot_name = &#39;Trial Length Hist&#39;
+    plot_name = &#34;Trial Length Hist&#34;
     if valid:
-        plot_name += &#39;_v&#39;
+        plot_name += &#34;_v&#34;
 
-    ax.tick_params(axis=&#39;both&#39;, labelsize=12)
-    ax.set_ylabel(&#39;Probability Density&#39;, fontsize=20)
-    ax.set_xlabel(&#39;Time (s)&#39;, fontsize=20)
+    ax.tick_params(axis=&#34;both&#34;, labelsize=12)
+    ax.set_ylabel(&#34;Probability Density&#34;, fontsize=20)
+    ax.set_xlabel(&#34;Time (s)&#34;, fontsize=20)
     # ax.set_ylabel(&#39;Trials&#39;, fontsize=20)
     if sub_colors_dict == None:
         color = &#34;k&#34;
     else:
         color = mycolors(sub, sub_colors_dict)
-    ax.set_title(&#39;  {}&#39;.format(plot_name),
-                 y=1.04, ha=&#39;center&#39;, fontsize=25, color=color)
-    ax.text(0.5, 1.015, &#39;{} {} S{}&#39;.format(sub, date, stage),
-            ha=&#39;center&#39;, transform=ax.transAxes, fontsize=12, color=color)
+    ax.set_title(
+        &#34;  {}&#34;.format(plot_name), y=1.04, ha=&#34;center&#34;, fontsize=25, color=color
+    )
+    ax.text(
+        0.5,
+        1.015,
+        &#34;{} {} S{}&#34;.format(sub, date, stage),
+        ha=&#34;center&#34;,
+        transform=ax.transAxes,
+        fontsize=12,
+        color=color,
+    )
     ax.legend(fontsize=20)
     return fig</code></pre>
 </details>

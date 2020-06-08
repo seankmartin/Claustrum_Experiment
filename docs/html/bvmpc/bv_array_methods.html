@@ -46,10 +46,12 @@ def split_into_blocks(array, blocks=None, block_max=None, num_blocks=None):
     if blocks is None:
         if (block_max is None) or (num_blocks is None):
             raise ValueError(
-                &#34;block_max and num_blocks must be passed to&#34; +
-                &#34;split_into_blocks if param blocks is not passed&#34;)
+                &#34;block_max and num_blocks must be passed to&#34;
+                + &#34;split_into_blocks if param blocks is not passed&#34;
+            )
         blocks = np.arange(
-            block_max + 0.001, block_max * num_blocks + 0.001, block_max + 0.001)
+            block_max + 0.001, block_max * num_blocks + 0.001, block_max + 0.001
+        )
     return np.array(np.split(array, np.searchsorted(array, blocks)))
 
 
@@ -107,12 +109,11 @@ def split_array_in_between_two(array, left, right):
 
     &#34;&#34;&#34;
     if len(left) != len(right):
-        raise(ValueError(
-            &#39;left and right must have the same number of elements&#39;))
+        raise (ValueError(&#34;left and right must have the same number of elements&#34;))
     good_idxs = []
     for i, val in enumerate(array):
-        bigger = (left &lt;= val)
-        smaller = (right &gt;= val)
+        bigger = left &lt;= val
+        smaller = right &gt;= val
         between = np.logical_and(smaller, bigger)
         if between.any():
             good_idxs.append(i)
@@ -139,8 +140,11 @@ def check_error_during_tone(presses, block_s, l_type=&#34; &#34;):
     for i, (a, b) in enumerate(zip(block_s - 5, block_s)):
         tone_errors = np.where((presses &gt; a) &amp; (presses &lt; b))
         if np.size(tone_errors) &gt; 0:
-            print(&#34;Removed {} spurious{}errors during tone {}.&#34;.format(
-                len(tone_errors), l_type, i))
+            print(
+                &#34;Removed {} spurious{}errors during tone {}.&#34;.format(
+                    len(tone_errors), l_type, i
+                )
+            )
             presses = np.delete(presses, tone_errors)
     return presses
 
@@ -204,8 +208,11 @@ if __name__ == &#34;__main__&#34;:
     for i, (a, b) in enumerate(zip(block_s - 5, block_s)):
         tone_errors = np.where((presses &gt; a) &amp; (presses &lt; b))
         if np.size(tone_errors) &gt; 0:
-            print(&#34;Removed {} spurious{}errors during tone {}.&#34;.format(
-                len(tone_errors), l_type, i))
+            print(
+                &#34;Removed {} spurious{}errors during tone {}.&#34;.format(
+                    len(tone_errors), l_type, i
+                )
+            )
             presses = np.delete(presses, tone_errors)
     return presses</code></pre>
 </details>
@@ -276,12 +283,11 @@ left and right should be the same size</p>
 
     &#34;&#34;&#34;
     if len(left) != len(right):
-        raise(ValueError(
-            &#39;left and right must have the same number of elements&#39;))
+        raise (ValueError(&#34;left and right must have the same number of elements&#34;))
     good_idxs = []
     for i, val in enumerate(array):
-        bigger = (left &lt;= val)
-        smaller = (right &gt;= val)
+        bigger = left &lt;= val
+        smaller = right &gt;= val
         between = np.logical_and(smaller, bigger)
         if between.any():
             good_idxs.append(i)
@@ -347,10 +353,12 @@ greater than the previous block.</p>
     if blocks is None:
         if (block_max is None) or (num_blocks is None):
             raise ValueError(
-                &#34;block_max and num_blocks must be passed to&#34; +
-                &#34;split_into_blocks if param blocks is not passed&#34;)
+                &#34;block_max and num_blocks must be passed to&#34;
+                + &#34;split_into_blocks if param blocks is not passed&#34;
+            )
         blocks = np.arange(
-            block_max + 0.001, block_max * num_blocks + 0.001, block_max + 0.001)
+            block_max + 0.001, block_max * num_blocks + 0.001, block_max + 0.001
+        )
     return np.array(np.split(array, np.searchsorted(array, blocks)))</code></pre>
 </details>
 </dd>

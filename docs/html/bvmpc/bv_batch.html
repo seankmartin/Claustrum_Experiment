@@ -60,19 +60,25 @@ def struc_timeline(sub_list, in_dir):
     for sub in sub_list:
         s_grp = extract_sessions(in_dir, sub)
         # Initialize column arrays
-        d_list, t_list, sub_list, s_idx_list, r_list, s_list = [], [], [], [], [], []
+        d_list, t_list, sub_list, s_idx_list, r_list, s_list = (
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
         err_FR_list, err_FI_list = [], []
         rw_FR_list, rw_FI_list, dr_list = [], [], []
         ratio_list, interval_list = [], []
         sch_list, sch_rw_list, sch_err_list, sch_dr_list = [], [], [], []
 
         for i, s in enumerate(s_grp):
-            subject = s.get_metadata(&#39;subject&#39;)
+            subject = s.get_metadata(&#34;subject&#34;)
             date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;-&#34;)[:5]
-            session_type = s.get_metadata(&#39;name&#39;)
-            time = s.get_metadata(&#39;start_time&#39;)
-            stage = session_type[:2].replace(
-                &#39;_&#39;, &#39;&#39;)  # Obtain stage number w/o _
+            session_type = s.get_metadata(&#34;name&#34;)
+            time = s.get_metadata(&#34;start_time&#34;)
+            stage = session_type[:2].replace(&#34;_&#34;, &#34;&#34;)  # Obtain stage number w/o _
             timestamps = s.get_arrays()
             pell_ts = timestamps[&#34;Reward&#34;]
             dpell_bool = np.diff(pell_ts) &lt; 0.5
@@ -80,37 +86,48 @@ def struc_timeline(sub_list, in_dir):
             reward_times = s.get_rw_ts()
 
             # Initialize variables used per session
-            ratio, interval, sch, sch_err, sch_rw, sch_dr = [], [], [], [], [], []
+            ratio, interval, sch, sch_err, sch_rw, sch_dr = (
+                [],
+                [],
+                [],
+                [],
+                [],
+                [],
+            )
             err_FI, err_FR, rw_FI, rw_FR = [], [], [], []
 
             ratio = s.get_ratio()
             interval = s.get_interval()
             # Stage specific variables
-            if stage == &#39;5a&#39;:
-                s_name = &#39;R&#39; + str(ratio)
+            if stage == &#34;5a&#34;:
+                s_name = &#34;R&#34; + str(ratio)
                 ratio = s_name
                 rw_FR = len(reward_times)
-            elif stage == &#39;5b&#39;:
-                s_name = &#39;I&#39; + str(interval)
+            elif stage == &#34;5b&#34;:
+                s_name = &#34;I&#34; + str(interval)
                 interval = s_name
                 rw_FI = len(reward_times)
             else:
-                s_name = stage.replace(&#39;_&#39;, &#39;&#39;).replace(&#39;2&#39;, &#39;M&#39;).replace(
-                    &#39;3&#39;, &#39;Lh&#39;).replace(&#39;4&#39;, &#39;Lt&#39;).replace(
-                    &#39;6&#39;, &#39;B1&#39;).replace(&#39;7&#39;, &#39;B2&#39;)
-            if &#39;B&#39; in s_name:
+                s_name = (
+                    stage.replace(&#34;_&#34;, &#34;&#34;)
+                    .replace(&#34;2&#34;, &#34;M&#34;)
+                    .replace(&#34;3&#34;, &#34;Lh&#34;)
+                    .replace(&#34;4&#34;, &#34;Lt&#34;)
+                    .replace(&#34;6&#34;, &#34;B1&#34;)
+                    .replace(&#34;7&#34;, &#34;B2&#34;)
+                )
+            if &#34;B&#34; in s_name:
                 rw_FI, rw_FR = 0, 0
-                ratio = &#39;R&#39; + str(ratio)
-                interval = &#39;I&#39; + str(interval)
-                norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = s.split_sess(
-                    all_levers=True)
-                sch_type = s.get_arrays(&#39;Trial Type&#39;)
+                ratio = &#34;R&#34; + str(ratio)
+                interval = &#34;I&#34; + str(interval)
+                norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = s.split_sess(all_levers=True)
+                sch_type = s.get_arrays(&#34;Trial Type&#34;)
                 # Error related variables
-                if s_name == &#39;B2&#39;:
+                if s_name == &#34;B2&#34;:
                     err_FI, err_FR = 0, 0
                     for i, err in enumerate(norm_err_ts):
                         if sch_type[i] == 1:
-                            err_FR = + len(err)
+                            err_FR = +len(err)
                         elif sch_type[i] == 0:
                             err_FI += len(err)
                         sch_err.append(len(err))
@@ -122,18 +139,18 @@ def struc_timeline(sub_list, in_dir):
                 for i, (rw, dr) in enumerate(zip(norm_r_ts, norm_dr_ts)):
                     if sch_type[i] == 1:
                         rw_FR += len(rw)
-                        sch.append(&#39;FR&#39;)
+                        sch.append(&#34;FR&#34;)
                         sch_dr.append([])
                     elif sch_type[i] == 0:
                         rw_FI += len(rw)
-                        sch.append(&#39;FI&#39;)
+                        sch.append(&#34;FI&#34;)
                         sch_dr.append(len(dr))
                     sch_rw.append(len(rw))
 
             # Update list arrays with new session
             d_list.append(date)
             t_list.append(time)
-            s_idx_list.append(&#39;S&#39; + stage[0])
+            s_idx_list.append(&#34;S&#34; + stage[0])
             s_list.append(s_name)
             r_list.append(len(pell_ts))
             dr_list.append(len(dpell_idx))
@@ -150,23 +167,23 @@ def struc_timeline(sub_list, in_dir):
         sub_list = np.full(len(d_list), sub, dtype=int)
 
         timeline_dict = {
-            &#39;Subject&#39;: sub_list,
-            &#39;Date&#39;: d_list,
-            &#39;Start Time&#39;: t_list,
-            &#39;Stage Idx&#39;: s_idx_list,  # eg. S2, S5, S7 ...
-            &#39;Stage&#39;: s_list,  # eg. M, Lt, R8, I30, B1
-            &#39;Total Rewards&#39;: r_list,
-            &#39;Double Rewards&#39;: dr_list,
-            &#39;Interval&#39;: interval_list,
-            &#39;Ratio&#39;: ratio_list,
-            &#39;Schedule Blocks&#39;: sch_list,
-            &#39;Schedule Rw&#39;: sch_rw_list,
-            &#39;Schedule Err&#39;: sch_err_list,
-            &#39;Schedule DRw&#39;: sch_dr_list,
-            &#39;FI Corr&#39;: rw_FI_list,
-            &#39;FR Corr&#39;: rw_FR_list,
-            &#39;FI Err&#39;: err_FI_list,
-            &#39;FR Err&#39;: err_FR_list
+            &#34;Subject&#34;: sub_list,
+            &#34;Date&#34;: d_list,
+            &#34;Start Time&#34;: t_list,
+            &#34;Stage Idx&#34;: s_idx_list,  # eg. S2, S5, S7 ...
+            &#34;Stage&#34;: s_list,  # eg. M, Lt, R8, I30, B1
+            &#34;Total Rewards&#34;: r_list,
+            &#34;Double Rewards&#34;: dr_list,
+            &#34;Interval&#34;: interval_list,
+            &#34;Ratio&#34;: ratio_list,
+            &#34;Schedule Blocks&#34;: sch_list,
+            &#34;Schedule Rw&#34;: sch_rw_list,
+            &#34;Schedule Err&#34;: sch_err_list,
+            &#34;Schedule DRw&#34;: sch_dr_list,
+            &#34;FI Corr&#34;: rw_FI_list,
+            &#34;FR Corr&#34;: rw_FR_list,
+            &#34;FI Err&#34;: err_FI_list,
+            &#34;FR Err&#34;: err_FR_list,
         }
         timeline_df = pd.DataFrame(timeline_dict)
         grp_timeline_df.append(timeline_df)
@@ -176,7 +193,8 @@ def struc_timeline(sub_list, in_dir):
 
 
 def plot_batch_sessions(
-        start_dir, sub_list, start_date, end_date, plt_flags, sub_colors_dict):
+    start_dir, sub_list, start_date, end_date, plt_flags, sub_colors_dict
+):
     &#34;&#34;&#34;
     Plot behavioural data across sessions.
 
@@ -213,7 +231,7 @@ def plot_batch_sessions(
         for single_date in bvmpc.bv_utils.daterange(start_date, end_date):
             d.append(single_date.isoformat()[-5:])
 
-        print(&#39;Extracting sessions on {} for subjects {}...&#39;.format(d, sub_list))
+        print(&#34;Extracting sessions on {} for subjects {}...&#34;.format(d, sub_list))
         s_grp = extract_sessions(in_dir, sub_list, d_list=d)
 
         # splits s_grp into groups of 4
@@ -223,7 +241,7 @@ def plot_batch_sessions(
             # Figure Initialization
             n = len(plot_grp)
             if n &gt; 4:
-                print(&#39;Too many plots&#39;)
+                print(&#34;Too many plots&#34;)
                 quit()
             elif n &gt; 2:
                 rows, cols = [4, 4 * math.ceil(n / 2)]
@@ -239,33 +257,37 @@ def plot_batch_sessions(
             #     tight_layout=False)
             # gs = gridspec.GridSpec(rows, cols, wspace=0.5, hspace=0.5)
 
-            df_sub, df_date, df_stage = [], [], []  # Initialize plot naming parameters
+            df_sub, df_date, df_stage = (
+                [],
+                [],
+                [],
+            )  # Initialize plot naming parameters
 
             plotting_sub = []
             for i, s in enumerate(plot_grp):  # Iterate through groups to plot rasters
                 # plot naming parameters
-                df_sub.append(s.get_metadata(&#39;subject&#39;))
-                df_date.append(s.get_metadata(
-                    &#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)[:5])
+                df_sub.append(s.get_metadata(&#34;subject&#34;))
+                df_date.append(s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)[:5])
                 df_stage.append(s.get_stage())
 
                 # 2x2 plotting axes
                 k = (i % 2) * 2
                 if plt_flags[&#34;raster&#34;] == 1:
                     ax = gf.get_multi_ax(
-                        k, k + 2, 4 * int(i / 2), 4 * math.ceil((i + 1) / 2))
-                    bv_an.plot_raster_trials(
-                        s, ax, sub_colors_dict, align=[0, 0, 1, 0])
-                    plot_type = &#39;Raster_&#39;  # Plot name for saving
+                        k, k + 2, 4 * int(i / 2), 4 * math.ceil((i + 1) / 2)
+                    )
+                    bv_an.plot_raster_trials(s, ax, sub_colors_dict, align=[0, 0, 1, 0])
+                    plot_type = &#34;Raster_&#34;  # Plot name for saving
 
                 if plt_flags[&#34;hist&#34;] == 1:
-                    if not plotting_sub == s.get_metadata(&#39;subject&#39;):
+                    if not plotting_sub == s.get_metadata(&#34;subject&#34;):
                         ax = gf.get_multi_ax(
-                            k, k + 2, 4 * int(i / 2), 4 * math.ceil((i + 1) / 2))
-                        plotting_sub = s.get_metadata(&#39;subject&#39;)
+                            k, k + 2, 4 * int(i / 2), 4 * math.ceil((i + 1) / 2)
+                        )
+                        plotting_sub = s.get_metadata(&#34;subject&#34;)
                         loop = 1
                     bv_an.trial_length_hist(s, ax, loop, sub_colors_dict)
-                    plot_type = &#39;Hist_&#39;  # Plot name for saving
+                    plot_type = &#34;Hist_&#34;  # Plot name for saving
                     loop += 1
 
             # Save Figure
@@ -291,8 +313,15 @@ def plot_batch_sessions(
             # plot_sessions(start_dir, d, sub, summary=True, single=True,
             #               corr_only=True, scd=sub_colors_dict)  # Single animal breakdown
             # Group with corr_only breakdown
-            plot_sessions(start_dir, d, sub_list, summary=True,
-                          single=False, corr_only=True, scd=sub_colors_dict)
+            plot_sessions(
+                start_dir,
+                d,
+                sub_list,
+                summary=True,
+                single=False,
+                corr_only=True,
+                scd=sub_colors_dict,
+            )
             # plot_sessions(start_dir, d, sub, summary=True, single=False, corr_only=False, scd=sub_colors_dict)  # Group with complete breakdown
 
         # plot all 4 timeline types
@@ -308,20 +337,50 @@ def plot_batch_sessions(
             plot_limit = 4
             sub_list = bvmpc.bv_utils.split_list(sub_list, plot_limit)
             for l in sub_list:
-                timeline_plot(l, in_dir, out_dir, single_plot=single, det_err=False, det_corr=False,
-                              recent=recent, show_date=show_date, details=details, sub_colors_dict=sub_colors_dict)
+                timeline_plot(
+                    l,
+                    in_dir,
+                    out_dir,
+                    single_plot=single,
+                    det_err=False,
+                    det_corr=False,
+                    recent=recent,
+                    show_date=show_date,
+                    details=details,
+                    sub_colors_dict=sub_colors_dict,
+                )
         else:
             # Plots timeline for specified subjects
-            timeline_plot(sub_list, in_dir, out_dir, single_plot=single, det_err=False, det_corr=False,
-                          recent=recent, show_date=show_date, details=details, sub_colors_dict=sub_colors_dict)
+            timeline_plot(
+                sub_list,
+                in_dir,
+                out_dir,
+                single_plot=single,
+                det_err=False,
+                det_corr=False,
+                recent=recent,
+                show_date=show_date,
+                details=details,
+                sub_colors_dict=sub_colors_dict,
+            )
 
 
 def plot_sessions(
-        start_dir, d_list, sub_list,
-        summary=False, single=False, timeline=False,
-        details=False, det_err=False, det_corr=False,
-        recent=False, show_date=False, int_only=False,
-        corr_only=False, scd=None):
+    start_dir,
+    d_list,
+    sub_list,
+    summary=False,
+    single=False,
+    timeline=False,
+    details=False,
+    det_err=False,
+    det_corr=False,
+    recent=False,
+    show_date=False,
+    int_only=False,
+    corr_only=False,
+    scd=None,
+):
     &#34;&#34;&#34;
     Plots session summaries.
 
@@ -350,7 +409,7 @@ def plot_sessions(
     None
 
     &#34;&#34;&#34;
-    s_list = [&#39;4&#39;, &#39;5a&#39;, &#39;5b&#39;, &#39;6&#39;, &#39;7&#39;]
+    s_list = [&#34;4&#34;, &#34;5a&#34;, &#34;5b&#34;, &#34;6&#34;, &#34;7&#34;]
 
     in_dir = os.path.join(start_dir, &#34;hdf5&#34;)
     out_dir = os.path.join(start_dir, &#34;Plots&#34;, &#34;Current&#34;)
@@ -367,8 +426,8 @@ def plot_sessions(
             j = 0
             s_grp_split = []
             s_grp_idx = np.arange(len(s_grp))
-            for i in s_grp_idx[max_plot - 1::max_plot]:
-                s_grp_split.append(s_grp[j:i + 1])
+            for i in s_grp_idx[max_plot - 1 :: max_plot]:
+                s_grp_split.append(s_grp[j : i + 1])
                 j = i + 1
 
             mv = len(s_grp) % max_plot
@@ -392,8 +451,8 @@ def plot_sessions(
             j = 0
             s_grp_split = []
             s_grp_idx = np.arange(len(s_grp))
-            for i in s_grp_idx[max_plot - 1::max_plot]:
-                s_grp_split.append(s_grp[j:i + 1])
+            for i in s_grp_idx[max_plot - 1 :: max_plot]:
+                s_grp_split.append(s_grp[j : i + 1])
                 j = i + 1
 
             mv = len(s_grp) % max_plot
@@ -415,36 +474,60 @@ def plot_sessions(
             s_passed = []
             d_passed = []
             for s in s_grp:
-                stage = s.get_metadata(&#39;name&#39;)[:2].replace(&#39;_&#39;, &#39;&#39;)
+                stage = s.get_metadata(&#34;name&#34;)[:2].replace(&#34;_&#34;, &#34;&#34;)
                 s_passed.append(stage)
                 date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;-&#34;)
                 d_passed.append(date[:5])
-                subject = s.get_metadata(&#39;subject&#39;)
-            if &#39;7&#39; in s_passed:
+                subject = s.get_metadata(&#34;subject&#34;)
+            if &#34;7&#34; in s_passed:
                 gf = bv_plot.GridFig(len(s_grp), 4)
                 fig = gf.get_fig()
                 if len(s_grp) == 1:
                     fig.tight_layout(rect=[0, 0.03, 0.8, 0.95])
                 for i, s in enumerate(s_grp):
                     ax1 = gf.get_next()
-                    bv_an.cumplot(s, out_dir, ax1, int_only,
-                                  zoom=False, zoom_sch=False)
+                    bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False, zoom_sch=False)
                     ax2 = gf.get_next()
-                    bv_an.cumplot(s, out_dir, ax2, int_only, zoom=False, zoom_sch=True,
-                                  plot_error=False, plot_all=True)
+                    bv_an.cumplot(
+                        s,
+                        out_dir,
+                        ax2,
+                        int_only,
+                        zoom=False,
+                        zoom_sch=True,
+                        plot_error=False,
+                        plot_all=True,
+                    )
                     ax3 = gf.get_next()
-                    bv_an.cumplot(s, out_dir, ax3, int_only, zoom=False, zoom_sch=True,
-                                  plot_error=False, plot_all=False)
+                    bv_an.cumplot(
+                        s,
+                        out_dir,
+                        ax3,
+                        int_only,
+                        zoom=False,
+                        zoom_sch=True,
+                        plot_error=False,
+                        plot_all=False,
+                    )
                     ax4 = gf.get_next()
-                    bv_an.cumplot(s, out_dir, ax4, int_only, zoom=False, zoom_sch=True,
-                                  plot_error=True, plot_all=False)
+                    bv_an.cumplot(
+                        s,
+                        out_dir,
+                        ax4,
+                        int_only,
+                        zoom=False,
+                        zoom_sch=True,
+                        plot_error=True,
+                        plot_all=False,
+                    )
                 plt.subplots_adjust(top=0.85)
                 if scd == None:
                     color = &#34;k&#34;
                 else:
                     color = bvmpc.bv_utils.mycolors(sub, scd)
-                fig.suptitle((&#39;Subject &#39; + subject + &#39; Performance&#39;),
-                             color=color, fontsize=30)
+                fig.suptitle(
+                    (&#34;Subject &#34; + subject + &#34; Performance&#34;), color=color, fontsize=30,
+                )
 
                 # # Seperate plots w line
                 # ax1.hlines(1.13, -0, 4.9, clip_on=False,
@@ -457,8 +540,9 @@ def plot_sessions(
                 sum_plot(s_grp, idx, out_dir, single=single)
 
 
-def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
-             int_only=False, corr_only=False):
+def sum_plot(
+    s_grp, idx, out_dir, zoom=True, single=False, int_only=False, corr_only=False,
+):
     &#34;&#34;&#34;
     Perform summary plots of a day.
 
@@ -468,7 +552,7 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
     &#34;&#34;&#34;
     # Plots summary of day
     if zoom:
-        print(&#39;zoomed&#39;)
+        print(&#34;zoomed&#34;)
         if len(s_grp) &gt; 2:
             cols = 2 * math.ceil(len(s_grp) / 2)
             rows = 2
@@ -488,8 +572,8 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
     d_passed = []
 
     for _, s in enumerate(s_grp):
-        subject = s.get_metadata(&#39;subject&#39;)
-        stage = s.get_metadata(&#39;name&#39;)[:2].replace(&#39;_&#39;, &#39;&#39;)
+        subject = s.get_metadata(&#34;subject&#34;)
+        stage = s.get_metadata(&#34;name&#34;)[:2].replace(&#34;_&#34;, &#34;&#34;)
         date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;-&#34;)
         s_passed.append(stage)
         d_passed.append(date[:5])
@@ -499,16 +583,16 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
         else:
             ax1 = gf.get_next()
 
-        if corr_only and stage == &#39;7&#39;:
-            bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False,
-                          zoom_sch=False, plot_all=False)
+        if corr_only and stage == &#34;7&#34;:
+            bv_an.cumplot(
+                s, out_dir, ax1, int_only, zoom=False, zoom_sch=False, plot_all=False,
+            )
         else:
-            bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False,
-                          zoom_sch=False)
+            bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False, zoom_sch=False)
 
-        if stage == &#39;2&#39; or stage == &#39;3&#39; or stage == &#39;4&#39;:
+        if stage == &#34;2&#34; or stage == &#34;3&#34; or stage == &#34;4&#34;:
             IRT = True
-        elif stage == &#39;5a&#39; or stage == &#39;5b&#39;:
+        elif stage == &#34;5a&#34; or stage == &#34;5b&#34;:
             IRT = True  # Change to False for zoomed plot instead of IRT
         else:
             IRT = False
@@ -518,49 +602,80 @@ def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
             bv_an.IRT(s, out_dir, ax2)
         elif zoom:
             ax2 = gf.get_next_snake()
-            if corr_only and stage == &#39;7&#39;:
-                bv_an.cumplot(s, out_dir, ax2, int_only, zoom=False, zoom_sch=True,
-                              plot_error=False, plot_all=False)
+            if corr_only and stage == &#34;7&#34;:
+                bv_an.cumplot(
+                    s,
+                    out_dir,
+                    ax2,
+                    int_only,
+                    zoom=False,
+                    zoom_sch=True,
+                    plot_error=False,
+                    plot_all=False,
+                )
             else:
-                bv_an.cumplot(s, out_dir, ax2, int_only, zoom=False, zoom_sch=True,
-                              plot_error=False, plot_all=True)
+                bv_an.cumplot(
+                    s,
+                    out_dir,
+                    ax2,
+                    int_only,
+                    zoom=False,
+                    zoom_sch=True,
+                    plot_error=False,
+                    plot_all=True,
+                )
         plt.subplots_adjust(top=0.85)
     d_print = np.array_str(np.unique(np.array(d_passed)))
     d_title = np.array2string(np.unique(np.array(d_passed)))
     s_print = np.array_str(np.unique(np.array(s_passed)))
 
     if single:
-        fig.suptitle((&#39;Subject &#39; + subject + &#39; Performance&#39;), fontsize=30)
+        fig.suptitle((&#34;Subject &#34; + subject + &#34; Performance&#34;), fontsize=30)
         out_name = &#34;Sum_&#34; + subject + &#34;_&#34; + d_print + &#34;_&#34; + s_print + &#34;.png&#34;
-    elif corr_only and stage == &#39;7&#39;:
+    elif corr_only and stage == &#34;7&#34;:
         if idx == 0:
-            fig.suptitle((&#39;Summary across animals &#39; + d_title +
-                          &#39;_Correct Only&#39;), fontsize=30)
+            fig.suptitle(
+                (&#34;Summary across animals &#34; + d_title + &#34;_Correct Only&#34;), fontsize=30,
+            )
             out_name = &#34;Sum_&#34; + d_print + &#34;_&#34; + s_print + &#34;_Corr.png&#34;
         else:
-            fig.suptitle((&#39;Summary across animals &#39; + d_title +
-                          &#39;_Correct Only&#39; + &#34; p&#34; + str(idx)), fontsize=30)
-            out_name = &#34;Sum_&#34; + d_print + &#34;_&#34; + \
-                s_print + &#34;_&#34; + str(idx) + &#34;_Corr.png&#34;
+            fig.suptitle(
+                (
+                    &#34;Summary across animals &#34;
+                    + d_title
+                    + &#34;_Correct Only&#34;
+                    + &#34; p&#34;
+                    + str(idx)
+                ),
+                fontsize=30,
+            )
+            out_name = &#34;Sum_&#34; + d_print + &#34;_&#34; + s_print + &#34;_&#34; + str(idx) + &#34;_Corr.png&#34;
     else:
         if idx == 0:
-            fig.suptitle((&#39;Summary across animals &#39; + d_title), fontsize=30)
+            fig.suptitle((&#34;Summary across animals &#34; + d_title), fontsize=30)
             out_name = &#34;Sum_&#34; + d_print + &#34;_&#34; + s_print + &#34;.png&#34;
         else:
-            fig.suptitle((&#39;Summary across animals &#39; +
-                          d_title + &#34; p&#34; + str(idx)), fontsize=30)
-            out_name = &#34;Sum_&#34; + d_print + &#34;_&#34; + \
-                s_print + &#34;_&#34; + str(idx) + &#34;.png&#34;
-    print(&#34;Saved figure to {}&#34;.format(
-        os.path.join(out_dir, out_name)))
+            fig.suptitle(
+                (&#34;Summary across animals &#34; + d_title + &#34; p&#34; + str(idx)), fontsize=30,
+            )
+            out_name = &#34;Sum_&#34; + d_print + &#34;_&#34; + s_print + &#34;_&#34; + str(idx) + &#34;.png&#34;
+    print(&#34;Saved figure to {}&#34;.format(os.path.join(out_dir, out_name)))
     bv_plot.savefig(fig, os.path.join(out_dir, out_name))
     plt.close()
 
 
 def timeline_plot(
-        sub_list, in_dir, out_dir, single_plot=False,
-        det_err=False, det_corr=False, recent=False,
-        show_date=True, details=False, sub_colors_dict=None):
+    sub_list,
+    in_dir,
+    out_dir,
+    single_plot=False,
+    det_err=False,
+    det_corr=False,
+    recent=False,
+    show_date=True,
+    details=False,
+    sub_colors_dict=None,
+):
     &#34;&#34;&#34;
     Plots total rewards from beginning of first session
 
@@ -586,21 +701,28 @@ def timeline_plot(
     rows, cols = [len(sub_list), 4]
     size_multiplier = 5
     fig = plt.figure(
-        figsize=(cols * size_multiplier, rows * size_multiplier),
-        tight_layout=False)
+        figsize=(cols * size_multiplier, rows * size_multiplier), tight_layout=False,
+    )
     gs = gridspec.GridSpec(rows, cols, wspace=0.4, hspace=0.5)
 
     for c, sub in enumerate(sub_list):
         # Plot total pellets across sessions
         s_grp = extract_sessions(in_dir, [sub])
-        s_list, r_list, type_list, d_list, box_list, time_list = [], [], [], [], [], []
+        s_list, r_list, type_list, d_list, box_list, time_list = (
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
         err_FR_list, err_FI_list = [], []
         rw_FR_list, rw_FI_list, rw_double_list = [], [], []
         changes, stage_change, dpell_change = [], [], []
         change_idx = []
         prev_ratio, prev_interval, c_ratio, c_interval = [], [], [], []
         dpell_old = []
-        prev_name = &#39;2&#39;
+        prev_name = &#34;2&#34;
         if recent:
             number_sessions_ago = -31  # change value to set number of sessions ago
             s_grp = s_grp[number_sessions_ago:]
@@ -610,19 +732,19 @@ def timeline_plot(
         for i, s in enumerate(s_grp):
             ratio = s.get_ratio()
             interval = s.get_interval()
-            s_type = s.get_metadata(&#39;name&#39;)[:2]
+            s_type = s.get_metadata(&#34;name&#34;)[:2]
             timestamps = s.get_arrays()
 
-            date = s.get_metadata(&#39;start_date&#39;)  # Display mm/dd/yy
-            date = s.get_metadata(&#39;start_date&#39;)[:-3]  # Display mm/dd only
+            date = s.get_metadata(&#34;start_date&#34;)  # Display mm/dd/yy
+            date = s.get_metadata(&#34;start_date&#34;)[:-3]  # Display mm/dd only
             # date = s.get_metadata(&#39;start_date&#39;).split(&#34;/&#34;)[1]  # Display dd only
-            subject = s.get_metadata(&#39;subject&#39;)
+            subject = s.get_metadata(&#34;subject&#34;)
             pell_ts = timestamps[&#34;Reward&#34;]
             pell_double = np.nonzero(np.diff(pell_ts) &lt; 0.5)[0]
             reward_times = s.get_rw_ts()
-            box = s.get_metadata(&#39;box&#39;)
+            box = s.get_metadata(&#34;box&#34;)
             # time format - &#34;%H:%M:%S&#34;
-            exptime = s.get_metadata(&#39;start_time&#39;)[:2]
+            exptime = s.get_metadata(&#34;start_time&#34;)[:2]
 
             d_list.append(date)
             box_list.append(box)
@@ -630,19 +752,24 @@ def timeline_plot(
 
             if len(pell_double):
                 dpell_change = 1
-            if s_type == &#39;5a&#39;:
-                s_name = &#39;R&#39; + str(ratio)
+            if s_type == &#34;5a&#34;:
+                s_name = &#34;R&#34; + str(ratio)
                 c_ratio = s_name
-            elif s_type == &#39;5b&#39;:
-                s_name = &#39;I&#39; + str(interval)
+            elif s_type == &#34;5b&#34;:
+                s_name = &#34;I&#34; + str(interval)
                 c_interval = s_name
             else:
-                s_name = s_type.replace(&#39;_&#39;, &#39;&#39;).replace(&#39;2&#39;, &#39;M&#39;).replace(
-                    &#39;3&#39;, &#39;Lh&#39;).replace(&#39;4&#39;, &#39;Lt&#39;).replace(
-                    &#39;6&#39;, &#39;B1&#39;).replace(&#39;7&#39;, &#39;B2&#39;)
-            if &#39;B&#39; in s_name:
-                c_ratio = &#39;R&#39; + str(ratio)
-                c_interval = &#39;I&#39; + str(interval)
+                s_name = (
+                    s_type.replace(&#34;_&#34;, &#34;&#34;)
+                    .replace(&#34;2&#34;, &#34;M&#34;)
+                    .replace(&#34;3&#34;, &#34;Lh&#34;)
+                    .replace(&#34;4&#34;, &#34;Lt&#34;)
+                    .replace(&#34;6&#34;, &#34;B1&#34;)
+                    .replace(&#34;7&#34;, &#34;B2&#34;)
+                )
+            if &#34;B&#34; in s_name:
+                c_ratio = &#34;R&#34; + str(ratio)
+                c_interval = &#34;I&#34; + str(interval)
             if not prev_name[0] == s_type[0]:
                 stage_change.append(1)
                 changes.append(0)
@@ -675,11 +802,10 @@ def timeline_plot(
             rw_double = 0
             err_plotted = 0
             corr_plotted = 0
-            if s_type == &#39;7_&#39; or s_type == &#39;6_&#39;:
-                norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = s.split_sess(
-                    all_levers=True)
-                sch_type = s.get_arrays(&#39;Trial Type&#39;)
-                if s_type == &#39;7_&#39;:
+            if s_type == &#34;7_&#34; or s_type == &#34;6_&#34;:
+                norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = s.split_sess(all_levers=True)
+                sch_type = s.get_arrays(&#34;Trial Type&#34;)
+                if s_type == &#34;7_&#34;:
                     for i, _ in enumerate(norm_err_ts):
                         if sch_type[i] == 1:
                             err_FR = err_FR + len(norm_err_ts[i])
@@ -694,13 +820,13 @@ def timeline_plot(
                         rw_FR = rw_FR + len(norm_r_ts[i])
                     elif sch_type[i] == 0:
                         rw_FI = rw_FI + len(norm_r_ts[i])
-            elif s_type == &#39;5a&#39;:
+            elif s_type == &#34;5a&#34;:
                 err_FI = None
                 err_FR = None
                 rw_FR = len(reward_times)
                 rw_FI = None
                 rw_double = None
-            elif s_type == &#39;5b&#39;:
+            elif s_type == &#34;5b&#34;:
                 err_FI = None
                 err_FR = None
                 rw_FR = None
@@ -721,7 +847,7 @@ def timeline_plot(
             err_FI_list.append(err_FI)
             rw_double_list.append(rw_double)
             s_list.append(s_name)
-            type_list.append(&#39;S-&#39; + s_type[0])
+            type_list.append(&#34;S-&#34; + s_type[0])
 
             # Updates current iteration variables for next loop
             dpell_old = dpell_change
@@ -734,7 +860,8 @@ def timeline_plot(
             size_multiplier = 5
             fig = plt.figure(
                 figsize=(cols * size_multiplier, rows * size_multiplier),
-                tight_layout=False)
+                tight_layout=False,
+            )
             gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
             ax = fig.add_subplot(gs[0, :])
             out_name = &#34;Timeline_&#34; + subject
@@ -747,9 +874,11 @@ def timeline_plot(
 
         s_idx = np.arange(0, len(s_list))
 
-        if details:  # Plots average sessions variables i.e. FR_corr, FI_corr, FR_err, FI_err, double_rw
-            ratio_c = plt.cm.get_cmap(&#39;Wistia&#39;)
-            interval_c = plt.cm.get_cmap(&#39;winter&#39;)
+        if (
+            details
+        ):  # Plots average sessions variables i.e. FR_corr, FI_corr, FR_err, FI_err, double_rw
+            ratio_c = plt.cm.get_cmap(&#34;Wistia&#34;)
+            interval_c = plt.cm.get_cmap(&#34;winter&#34;)
             # Change value to increase height of annotation
             # note_height = 0
             # y_axis = np.zeros((1, len(s_idx)))[0] + note_height
@@ -765,32 +894,40 @@ def timeline_plot(
             # Dict controls lines to be plot. Set keys to 1 in plot_dict to include line in plot
             if det_err:
                 plot_styles = {
-                    &#34;FR_Corr&#34;: [rw_FR_list, &#39;*-&#39;, ratio_c(3 * 45), 0],
-                    &#34;FR_Err&#34;: [err_FR_list, &#39;x-&#39;, ratio_c(10 * 45), 1],
-                    &#34;FI_Corr&#34;: [rw_FI_list, &#39;*-&#39;, interval_c(2 * 45), 0],
-                    &#34;FI_Err&#34;: [err_FI_list, &#39;x-&#39;, interval_c(4 * 45), 1],
-                    &#34;FI_DoubleR&#34;: [rw_double_list, &#39;*-&#39;, &#39;hotpink&#39;, 0]}
+                    &#34;FR_Corr&#34;: [rw_FR_list, &#34;*-&#34;, ratio_c(3 * 45), 0],
+                    &#34;FR_Err&#34;: [err_FR_list, &#34;x-&#34;, ratio_c(10 * 45), 1],
+                    &#34;FI_Corr&#34;: [rw_FI_list, &#34;*-&#34;, interval_c(2 * 45), 0],
+                    &#34;FI_Err&#34;: [err_FI_list, &#34;x-&#34;, interval_c(4 * 45), 1],
+                    &#34;FI_DoubleR&#34;: [rw_double_list, &#34;*-&#34;, &#34;hotpink&#34;, 0],
+                }
                 err_plotted = 1
             elif det_corr:
                 plot_styles = {
-                    &#34;FR_Corr&#34;: [rw_FR_list, &#39;*-&#39;, ratio_c(3 * 45), 1],
-                    &#34;FR_Err&#34;: [err_FR_list, &#39;x-&#39;, ratio_c(10 * 45), 0],
-                    &#34;FI_Corr&#34;: [rw_FI_list, &#39;*-&#39;, interval_c(2 * 45), 1],
-                    &#34;FI_Err&#34;: [err_FI_list, &#39;x-&#39;, interval_c(4 * 45), 0],
-                    &#34;FI_DoubleR&#34;: [rw_double_list, &#39;*-&#39;, &#39;hotpink&#39;, 1]}
+                    &#34;FR_Corr&#34;: [rw_FR_list, &#34;*-&#34;, ratio_c(3 * 45), 1],
+                    &#34;FR_Err&#34;: [err_FR_list, &#34;x-&#34;, ratio_c(10 * 45), 0],
+                    &#34;FI_Corr&#34;: [rw_FI_list, &#34;*-&#34;, interval_c(2 * 45), 1],
+                    &#34;FI_Err&#34;: [err_FI_list, &#34;x-&#34;, interval_c(4 * 45), 0],
+                    &#34;FI_DoubleR&#34;: [rw_double_list, &#34;*-&#34;, &#34;hotpink&#34;, 1],
+                }
                 corr_plotted = 1
             else:
                 plot_styles = {
-                    &#34;FR_Corr&#34;: [rw_FR_list, &#39;*-&#39;, ratio_c(3 * 45), 1],
-                    &#34;FR_Err&#34;: [err_FR_list, &#39;x-&#39;, ratio_c(10 * 45), 1],
-                    &#34;FI_Corr&#34;: [rw_FI_list, &#39;*-&#39;, interval_c(2 * 45), 1],
-                    &#34;FI_Err&#34;: [err_FI_list, &#39;x-&#39;, interval_c(4 * 45), 1],
-                    &#34;FI_DoubleR&#34;: [rw_double_list, &#39;*-&#39;, &#39;hotpink&#39;, 1]}
+                    &#34;FR_Corr&#34;: [rw_FR_list, &#34;*-&#34;, ratio_c(3 * 45), 1],
+                    &#34;FR_Err&#34;: [err_FR_list, &#34;x-&#34;, ratio_c(10 * 45), 1],
+                    &#34;FI_Corr&#34;: [rw_FI_list, &#34;*-&#34;, interval_c(2 * 45), 1],
+                    &#34;FI_Err&#34;: [err_FI_list, &#34;x-&#34;, interval_c(4 * 45), 1],
+                    &#34;FI_DoubleR&#34;: [rw_double_list, &#34;*-&#34;, &#34;hotpink&#34;, 1],
+                }
                 err_plotted = 1
                 corr_plotted = 1
 
-            plot_dict = {&#34;FR_Corr&#34;: 1, &#34;FR_Err&#34;: 1,
-                         &#34;FI_Corr&#34;: 1, &#34;FI_Err&#34;: 1, &#34;FI_DoubleR&#34;: 1}
+            plot_dict = {
+                &#34;FR_Corr&#34;: 1,
+                &#34;FR_Err&#34;: 1,
+                &#34;FI_Corr&#34;: 1,
+                &#34;FI_Err&#34;: 1,
+                &#34;FI_DoubleR&#34;: 1,
+            }
             ax2 = ax.twinx()
             for k, val in plot_dict.items():
                 if val:
@@ -799,23 +936,41 @@ def timeline_plot(
                         ax_used = ax2
                     else:
                         ax_used = ax
-                    h, = ax_used.plot(s_idx, s[0], s[1], label=k, linewidth=&#39;2&#39;,
-                                      markersize=10, color=s[2], alpha=s[3])
+                    (h,) = ax_used.plot(
+                        s_idx,
+                        s[0],
+                        s[1],
+                        label=k,
+                        linewidth=&#34;2&#34;,
+                        markersize=10,
+                        color=s[2],
+                        alpha=s[3],
+                    )
                     plots.append(h)
                     labels.append(h.get_label())
-            ax.set_title(&#39;\nSubject {} Timeline_Details&#39;.format(
-                subject), y=1.05, fontsize=25,
-                color=bvmpc.bv_utils.mycolors(subject, sub_colors_dict))
+            ax.set_title(
+                &#34;\nSubject {} Timeline_Details&#34;.format(subject),
+                y=1.05,
+                fontsize=25,
+                color=bvmpc.bv_utils.mycolors(subject, sub_colors_dict),
+            )
         else:
             # Only plots total rewards
             y_axis = r_list
-            h1, = plt.plot(
-                s_idx, y_axis, label=&#39;Animal&#39; + subject, linewidth=&#39;4&#39;,
-                color=bvmpc.bv_utils.mycolors(subject, sub_colors_dict))
+            (h1,) = plt.plot(
+                s_idx,
+                y_axis,
+                label=&#34;Animal&#34; + subject,
+                linewidth=&#34;4&#34;,
+                color=bvmpc.bv_utils.mycolors(subject, sub_colors_dict),
+            )
 
             ax.set_title(
-                &#39;\nSubject {} Timeline&#39;.format(subject), y=1.05, fontsize=25,
-                color=bvmpc.bv_utils.mycolors(subject, sub_colors_dict))
+                &#34;\nSubject {} Timeline&#34;.format(subject),
+                y=1.05,
+                fontsize=25,
+                color=bvmpc.bv_utils.mycolors(subject, sub_colors_dict),
+            )
 
             # # Plot experiment time w rewards
             # ax2 = ax.twinx()
@@ -830,70 +985,110 @@ def timeline_plot(
         h3 = None
         for i, c in enumerate(changes):
             if stage_change[i] == 1:
-                h2 = ax.annotate(type_list[i], xy=(s_idx[i], y_axis[i]),
-                                 ha=&#39;center&#39;, xytext=(0, (.2 * max(y_axis))),
-                                 textcoords=&#39;offset points&#39;,
-                                 arrowprops=dict(facecolor=&#39;blue&#39;, shrink=0.05), size=annotate_fontsize)
+                h2 = ax.annotate(
+                    type_list[i],
+                    xy=(s_idx[i], y_axis[i]),
+                    ha=&#34;center&#34;,
+                    xytext=(0, (0.2 * max(y_axis))),
+                    textcoords=&#34;offset points&#34;,
+                    arrowprops=dict(facecolor=&#34;blue&#34;, shrink=0.05),
+                    size=annotate_fontsize,
+                )
             elif change_idx[i] == 1:
-                h3 = ax.annotate(str(c), xy=(s_idx[i], y_axis[i]),
-                                 ha=&#39;center&#39;, xytext=(0, (.2 * max(y_axis))),
-                                 textcoords=&#39;offset points&#39;,
-                                 arrowprops=dict(facecolor=&#39;Red&#39;, shrink=0.05), size=annotate_fontsize)
+                h3 = ax.annotate(
+                    str(c),
+                    xy=(s_idx[i], y_axis[i]),
+                    ha=&#34;center&#34;,
+                    xytext=(0, (0.2 * max(y_axis))),
+                    textcoords=&#34;offset points&#34;,
+                    arrowprops=dict(facecolor=&#34;Red&#34;, shrink=0.05),
+                    size=annotate_fontsize,
+                )
         ax.set_xlim(0, len(s_idx))
         if show_date:
             # plots x-axis tics as dates
             plt.xticks(s_idx, d_list, fontsize=10)
             # plt.xticks(s_idx, box_list, fontsize=10)    # Plots x-tics as box
-            ax.set_xlabel(&#39;Sessions (Dates)&#39;, fontsize=20)
+            ax.set_xlabel(&#34;Sessions (Dates)&#34;, fontsize=20)
         else:
             # plots x-axis ticks as stages
             plt.xticks(s_idx, s_list, fontsize=13)
-            ax.set_xlabel(&#39;Sessions (Type)&#39;, fontsize=20)
-        ax.spines[&#39;top&#39;].set_visible(False)
-        ax.spines[&#39;right&#39;].set_visible(False)
-        ax.tick_params(axis=&#39;y&#39;, labelsize=15)
+            ax.set_xlabel(&#34;Sessions (Type)&#34;, fontsize=20)
+        ax.spines[&#34;top&#34;].set_visible(False)
+        ax.spines[&#34;right&#34;].set_visible(False)
+        ax.tick_params(axis=&#34;y&#34;, labelsize=15)
         if details:
-            if &#39;S-6&#39; in type_list:
-                ax.axhline(45, xmax=(type_list.index(&#39;S-6&#39;) / len(type_list)), color=interval_c(2 * 45),
-                           linestyle=&#39;-.&#39;, linewidth=&#39;.5&#39;)
-                ax.axhline(30, xmin=(type_list.index(&#39;S-6&#39;) / len(type_list)), color=interval_c(2 * 45),
-                           linestyle=&#39;-.&#39;, linewidth=&#39;.5&#39;)
-                ax.text(type_list.index(&#39;S-6&#39;), 31, &#39; Max FI&#39;, fontsize=8,
-                        color=interval_c(2 * 45), ha=&#39;left&#39;, va=&#39;bottom&#39;)
-                ax.text(s_idx[0], 46, &#39; Max FI&#39;, fontsize=8,
-                        color=interval_c(2 * 45), ha=&#39;left&#39;, va=&#39;bottom&#39;)
+            if &#34;S-6&#34; in type_list:
+                ax.axhline(
+                    45,
+                    xmax=(type_list.index(&#34;S-6&#34;) / len(type_list)),
+                    color=interval_c(2 * 45),
+                    linestyle=&#34;-.&#34;,
+                    linewidth=&#34;.5&#34;,
+                )
+                ax.axhline(
+                    30,
+                    xmin=(type_list.index(&#34;S-6&#34;) / len(type_list)),
+                    color=interval_c(2 * 45),
+                    linestyle=&#34;-.&#34;,
+                    linewidth=&#34;.5&#34;,
+                )
+                ax.text(
+                    type_list.index(&#34;S-6&#34;),
+                    31,
+                    &#34; Max FI&#34;,
+                    fontsize=8,
+                    color=interval_c(2 * 45),
+                    ha=&#34;left&#34;,
+                    va=&#34;bottom&#34;,
+                )
+                ax.text(
+                    s_idx[0],
+                    46,
+                    &#34; Max FI&#34;,
+                    fontsize=8,
+                    color=interval_c(2 * 45),
+                    ha=&#34;left&#34;,
+                    va=&#34;bottom&#34;,
+                )
             else:
-                ax.axhline(30, color=interval_c(2 * 45),
-                           linestyle=&#39;-.&#39;, linewidth=&#39;.5&#39;)
-                ax.text(s_idx[0], 31, &#39; Max FI&#39;, fontsize=8,
-                        color=interval_c(2 * 45), ha=&#39;left&#39;, va=&#39;bottom&#39;)
-            loc = &#39;top left&#39;
-            ax.set_ylabel(&#39;Correct Trials&#39;, fontsize=20)
+                ax.axhline(30, color=interval_c(2 * 45), linestyle=&#34;-.&#34;, linewidth=&#34;.5&#34;)
+                ax.text(
+                    s_idx[0],
+                    31,
+                    &#34; Max FI&#34;,
+                    fontsize=8,
+                    color=interval_c(2 * 45),
+                    ha=&#34;left&#34;,
+                    va=&#34;bottom&#34;,
+                )
+            loc = &#34;top left&#34;
+            ax.set_ylabel(&#34;Correct Trials&#34;, fontsize=20)
             # set second y-axis labels
-            ax2.tick_params(axis=&#39;y&#39;, labelsize=15)
-            ax2.set_ylabel(&#39;Error Presses&#39;, fontsize=20)
+            ax2.tick_params(axis=&#34;y&#34;, labelsize=15)
+            ax2.set_ylabel(&#34;Error Presses&#34;, fontsize=20)
         else:
             # plt.axhline(45, color=&#39;g&#39;, linestyle=&#39;-.&#39;, linewidth=&#39;.5&#39;)
-            plt.axhline(60, color=&#39;r&#39;, linestyle=&#39;-.&#39;,
-                        linewidth=&#39;.5&#39;)  # Marks max reward
-            ax.set_ylabel(&#39;Total Rewards&#39;, fontsize=20)
+            plt.axhline(
+                60, color=&#34;r&#34;, linestyle=&#34;-.&#34;, linewidth=&#34;.5&#34;
+            )  # Marks max reward
+            ax.set_ylabel(&#34;Total Rewards&#34;, fontsize=20)
             plots = [h1]
             labels = [h1.get_label()]
-            loc = &#39;lower right&#39;
+            loc = &#34;lower right&#34;
         if h2 is not None and h3 is not None:
             plots.extend([h2.arrow_patch, h3.arrow_patch])
-            labels.extend([&#39;Stage Changes&#39;, &#39;Protocol Mod.&#39;])
+            labels.extend([&#34;Stage Changes&#34;, &#34;Protocol Mod.&#34;])
         elif h2 is not None:
             plots.append(h2.arrow_patch)
-            labels.append(&#39;Stage Changes&#39;)
+            labels.append(&#34;Stage Changes&#34;)
         elif h3 is not None:
             plots.append(h3.arrow_patch)
-            labels.append(&#39;Protocol Mod.&#39;)
+            labels.append(&#34;Protocol Mod.&#34;)
         plt.legend(plots, labels, loc=loc, ncol=2)
         if single_plot:
             out_name += &#34;.png&#34;
-            print(&#34;Saved figure to {}&#34;.format(
-                os.path.join(out_dir, out_name)))
+            print(&#34;Saved figure to {}&#34;.format(os.path.join(out_dir, out_name)))
             bv_plot.savefig(fig, os.path.join(out_dir, out_name))
             plt.close()
 
@@ -910,8 +1105,7 @@ def timeline_plot(
             elif err_plotted == 1:
                 out_name += &#34;_err&#34;
         out_name += &#34;.png&#34;
-        print(&#34;Saved figure to {}&#34;.format(
-            os.path.join(out_dir, out_name)))
+        print(&#34;Saved figure to {}&#34;.format(os.path.join(out_dir, out_name)))
         bv_plot.savefig(fig, os.path.join(out_dir, out_name))
         plt.close()</code></pre>
 </details>
@@ -954,7 +1148,8 @@ Saves to Plots/Current and obtains from /hdf5.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def plot_batch_sessions(
-        start_dir, sub_list, start_date, end_date, plt_flags, sub_colors_dict):
+    start_dir, sub_list, start_date, end_date, plt_flags, sub_colors_dict
+):
     &#34;&#34;&#34;
     Plot behavioural data across sessions.
 
@@ -991,7 +1186,7 @@ Saves to Plots/Current and obtains from /hdf5.</dd>
         for single_date in bvmpc.bv_utils.daterange(start_date, end_date):
             d.append(single_date.isoformat()[-5:])
 
-        print(&#39;Extracting sessions on {} for subjects {}...&#39;.format(d, sub_list))
+        print(&#34;Extracting sessions on {} for subjects {}...&#34;.format(d, sub_list))
         s_grp = extract_sessions(in_dir, sub_list, d_list=d)
 
         # splits s_grp into groups of 4
@@ -1001,7 +1196,7 @@ Saves to Plots/Current and obtains from /hdf5.</dd>
             # Figure Initialization
             n = len(plot_grp)
             if n &gt; 4:
-                print(&#39;Too many plots&#39;)
+                print(&#34;Too many plots&#34;)
                 quit()
             elif n &gt; 2:
                 rows, cols = [4, 4 * math.ceil(n / 2)]
@@ -1017,33 +1212,37 @@ Saves to Plots/Current and obtains from /hdf5.</dd>
             #     tight_layout=False)
             # gs = gridspec.GridSpec(rows, cols, wspace=0.5, hspace=0.5)
 
-            df_sub, df_date, df_stage = [], [], []  # Initialize plot naming parameters
+            df_sub, df_date, df_stage = (
+                [],
+                [],
+                [],
+            )  # Initialize plot naming parameters
 
             plotting_sub = []
             for i, s in enumerate(plot_grp):  # Iterate through groups to plot rasters
                 # plot naming parameters
-                df_sub.append(s.get_metadata(&#39;subject&#39;))
-                df_date.append(s.get_metadata(
-                    &#39;start_date&#39;).replace(&#39;/&#39;, &#39;_&#39;)[:5])
+                df_sub.append(s.get_metadata(&#34;subject&#34;))
+                df_date.append(s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;_&#34;)[:5])
                 df_stage.append(s.get_stage())
 
                 # 2x2 plotting axes
                 k = (i % 2) * 2
                 if plt_flags[&#34;raster&#34;] == 1:
                     ax = gf.get_multi_ax(
-                        k, k + 2, 4 * int(i / 2), 4 * math.ceil((i + 1) / 2))
-                    bv_an.plot_raster_trials(
-                        s, ax, sub_colors_dict, align=[0, 0, 1, 0])
-                    plot_type = &#39;Raster_&#39;  # Plot name for saving
+                        k, k + 2, 4 * int(i / 2), 4 * math.ceil((i + 1) / 2)
+                    )
+                    bv_an.plot_raster_trials(s, ax, sub_colors_dict, align=[0, 0, 1, 0])
+                    plot_type = &#34;Raster_&#34;  # Plot name for saving
 
                 if plt_flags[&#34;hist&#34;] == 1:
-                    if not plotting_sub == s.get_metadata(&#39;subject&#39;):
+                    if not plotting_sub == s.get_metadata(&#34;subject&#34;):
                         ax = gf.get_multi_ax(
-                            k, k + 2, 4 * int(i / 2), 4 * math.ceil((i + 1) / 2))
-                        plotting_sub = s.get_metadata(&#39;subject&#39;)
+                            k, k + 2, 4 * int(i / 2), 4 * math.ceil((i + 1) / 2)
+                        )
+                        plotting_sub = s.get_metadata(&#34;subject&#34;)
                         loop = 1
                     bv_an.trial_length_hist(s, ax, loop, sub_colors_dict)
-                    plot_type = &#39;Hist_&#39;  # Plot name for saving
+                    plot_type = &#34;Hist_&#34;  # Plot name for saving
                     loop += 1
 
             # Save Figure
@@ -1069,8 +1268,15 @@ Saves to Plots/Current and obtains from /hdf5.</dd>
             # plot_sessions(start_dir, d, sub, summary=True, single=True,
             #               corr_only=True, scd=sub_colors_dict)  # Single animal breakdown
             # Group with corr_only breakdown
-            plot_sessions(start_dir, d, sub_list, summary=True,
-                          single=False, corr_only=True, scd=sub_colors_dict)
+            plot_sessions(
+                start_dir,
+                d,
+                sub_list,
+                summary=True,
+                single=False,
+                corr_only=True,
+                scd=sub_colors_dict,
+            )
             # plot_sessions(start_dir, d, sub, summary=True, single=False, corr_only=False, scd=sub_colors_dict)  # Group with complete breakdown
 
         # plot all 4 timeline types
@@ -1086,12 +1292,32 @@ Saves to Plots/Current and obtains from /hdf5.</dd>
             plot_limit = 4
             sub_list = bvmpc.bv_utils.split_list(sub_list, plot_limit)
             for l in sub_list:
-                timeline_plot(l, in_dir, out_dir, single_plot=single, det_err=False, det_corr=False,
-                              recent=recent, show_date=show_date, details=details, sub_colors_dict=sub_colors_dict)
+                timeline_plot(
+                    l,
+                    in_dir,
+                    out_dir,
+                    single_plot=single,
+                    det_err=False,
+                    det_corr=False,
+                    recent=recent,
+                    show_date=show_date,
+                    details=details,
+                    sub_colors_dict=sub_colors_dict,
+                )
         else:
             # Plots timeline for specified subjects
-            timeline_plot(sub_list, in_dir, out_dir, single_plot=single, det_err=False, det_corr=False,
-                          recent=recent, show_date=show_date, details=details, sub_colors_dict=sub_colors_dict)</code></pre>
+            timeline_plot(
+                sub_list,
+                in_dir,
+                out_dir,
+                single_plot=single,
+                det_err=False,
+                det_corr=False,
+                recent=recent,
+                show_date=show_date,
+                details=details,
+                sub_colors_dict=sub_colors_dict,
+            )</code></pre>
 </details>
 </dd>
 <dt id="bvmpc.bv_batch.plot_sessions"><code class="name flex">
@@ -1126,11 +1352,21 @@ Used to assign color to plot title.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def plot_sessions(
-        start_dir, d_list, sub_list,
-        summary=False, single=False, timeline=False,
-        details=False, det_err=False, det_corr=False,
-        recent=False, show_date=False, int_only=False,
-        corr_only=False, scd=None):
+    start_dir,
+    d_list,
+    sub_list,
+    summary=False,
+    single=False,
+    timeline=False,
+    details=False,
+    det_err=False,
+    det_corr=False,
+    recent=False,
+    show_date=False,
+    int_only=False,
+    corr_only=False,
+    scd=None,
+):
     &#34;&#34;&#34;
     Plots session summaries.
 
@@ -1159,7 +1395,7 @@ Used to assign color to plot title.</dd>
     None
 
     &#34;&#34;&#34;
-    s_list = [&#39;4&#39;, &#39;5a&#39;, &#39;5b&#39;, &#39;6&#39;, &#39;7&#39;]
+    s_list = [&#34;4&#34;, &#34;5a&#34;, &#34;5b&#34;, &#34;6&#34;, &#34;7&#34;]
 
     in_dir = os.path.join(start_dir, &#34;hdf5&#34;)
     out_dir = os.path.join(start_dir, &#34;Plots&#34;, &#34;Current&#34;)
@@ -1176,8 +1412,8 @@ Used to assign color to plot title.</dd>
             j = 0
             s_grp_split = []
             s_grp_idx = np.arange(len(s_grp))
-            for i in s_grp_idx[max_plot - 1::max_plot]:
-                s_grp_split.append(s_grp[j:i + 1])
+            for i in s_grp_idx[max_plot - 1 :: max_plot]:
+                s_grp_split.append(s_grp[j : i + 1])
                 j = i + 1
 
             mv = len(s_grp) % max_plot
@@ -1201,8 +1437,8 @@ Used to assign color to plot title.</dd>
             j = 0
             s_grp_split = []
             s_grp_idx = np.arange(len(s_grp))
-            for i in s_grp_idx[max_plot - 1::max_plot]:
-                s_grp_split.append(s_grp[j:i + 1])
+            for i in s_grp_idx[max_plot - 1 :: max_plot]:
+                s_grp_split.append(s_grp[j : i + 1])
                 j = i + 1
 
             mv = len(s_grp) % max_plot
@@ -1224,36 +1460,60 @@ Used to assign color to plot title.</dd>
             s_passed = []
             d_passed = []
             for s in s_grp:
-                stage = s.get_metadata(&#39;name&#39;)[:2].replace(&#39;_&#39;, &#39;&#39;)
+                stage = s.get_metadata(&#34;name&#34;)[:2].replace(&#34;_&#34;, &#34;&#34;)
                 s_passed.append(stage)
                 date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;-&#34;)
                 d_passed.append(date[:5])
-                subject = s.get_metadata(&#39;subject&#39;)
-            if &#39;7&#39; in s_passed:
+                subject = s.get_metadata(&#34;subject&#34;)
+            if &#34;7&#34; in s_passed:
                 gf = bv_plot.GridFig(len(s_grp), 4)
                 fig = gf.get_fig()
                 if len(s_grp) == 1:
                     fig.tight_layout(rect=[0, 0.03, 0.8, 0.95])
                 for i, s in enumerate(s_grp):
                     ax1 = gf.get_next()
-                    bv_an.cumplot(s, out_dir, ax1, int_only,
-                                  zoom=False, zoom_sch=False)
+                    bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False, zoom_sch=False)
                     ax2 = gf.get_next()
-                    bv_an.cumplot(s, out_dir, ax2, int_only, zoom=False, zoom_sch=True,
-                                  plot_error=False, plot_all=True)
+                    bv_an.cumplot(
+                        s,
+                        out_dir,
+                        ax2,
+                        int_only,
+                        zoom=False,
+                        zoom_sch=True,
+                        plot_error=False,
+                        plot_all=True,
+                    )
                     ax3 = gf.get_next()
-                    bv_an.cumplot(s, out_dir, ax3, int_only, zoom=False, zoom_sch=True,
-                                  plot_error=False, plot_all=False)
+                    bv_an.cumplot(
+                        s,
+                        out_dir,
+                        ax3,
+                        int_only,
+                        zoom=False,
+                        zoom_sch=True,
+                        plot_error=False,
+                        plot_all=False,
+                    )
                     ax4 = gf.get_next()
-                    bv_an.cumplot(s, out_dir, ax4, int_only, zoom=False, zoom_sch=True,
-                                  plot_error=True, plot_all=False)
+                    bv_an.cumplot(
+                        s,
+                        out_dir,
+                        ax4,
+                        int_only,
+                        zoom=False,
+                        zoom_sch=True,
+                        plot_error=True,
+                        plot_all=False,
+                    )
                 plt.subplots_adjust(top=0.85)
                 if scd == None:
                     color = &#34;k&#34;
                 else:
                     color = bvmpc.bv_utils.mycolors(sub, scd)
-                fig.suptitle((&#39;Subject &#39; + subject + &#39; Performance&#39;),
-                             color=color, fontsize=30)
+                fig.suptitle(
+                    (&#34;Subject &#34; + subject + &#34; Performance&#34;), color=color, fontsize=30,
+                )
 
                 # # Seperate plots w line
                 # ax1.hlines(1.13, -0, 4.9, clip_on=False,
@@ -1302,19 +1562,25 @@ denotes the subject corresponding to each df</dd>
     for sub in sub_list:
         s_grp = extract_sessions(in_dir, sub)
         # Initialize column arrays
-        d_list, t_list, sub_list, s_idx_list, r_list, s_list = [], [], [], [], [], []
+        d_list, t_list, sub_list, s_idx_list, r_list, s_list = (
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
         err_FR_list, err_FI_list = [], []
         rw_FR_list, rw_FI_list, dr_list = [], [], []
         ratio_list, interval_list = [], []
         sch_list, sch_rw_list, sch_err_list, sch_dr_list = [], [], [], []
 
         for i, s in enumerate(s_grp):
-            subject = s.get_metadata(&#39;subject&#39;)
+            subject = s.get_metadata(&#34;subject&#34;)
             date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;-&#34;)[:5]
-            session_type = s.get_metadata(&#39;name&#39;)
-            time = s.get_metadata(&#39;start_time&#39;)
-            stage = session_type[:2].replace(
-                &#39;_&#39;, &#39;&#39;)  # Obtain stage number w/o _
+            session_type = s.get_metadata(&#34;name&#34;)
+            time = s.get_metadata(&#34;start_time&#34;)
+            stage = session_type[:2].replace(&#34;_&#34;, &#34;&#34;)  # Obtain stage number w/o _
             timestamps = s.get_arrays()
             pell_ts = timestamps[&#34;Reward&#34;]
             dpell_bool = np.diff(pell_ts) &lt; 0.5
@@ -1322,37 +1588,48 @@ denotes the subject corresponding to each df</dd>
             reward_times = s.get_rw_ts()
 
             # Initialize variables used per session
-            ratio, interval, sch, sch_err, sch_rw, sch_dr = [], [], [], [], [], []
+            ratio, interval, sch, sch_err, sch_rw, sch_dr = (
+                [],
+                [],
+                [],
+                [],
+                [],
+                [],
+            )
             err_FI, err_FR, rw_FI, rw_FR = [], [], [], []
 
             ratio = s.get_ratio()
             interval = s.get_interval()
             # Stage specific variables
-            if stage == &#39;5a&#39;:
-                s_name = &#39;R&#39; + str(ratio)
+            if stage == &#34;5a&#34;:
+                s_name = &#34;R&#34; + str(ratio)
                 ratio = s_name
                 rw_FR = len(reward_times)
-            elif stage == &#39;5b&#39;:
-                s_name = &#39;I&#39; + str(interval)
+            elif stage == &#34;5b&#34;:
+                s_name = &#34;I&#34; + str(interval)
                 interval = s_name
                 rw_FI = len(reward_times)
             else:
-                s_name = stage.replace(&#39;_&#39;, &#39;&#39;).replace(&#39;2&#39;, &#39;M&#39;).replace(
-                    &#39;3&#39;, &#39;Lh&#39;).replace(&#39;4&#39;, &#39;Lt&#39;).replace(
-                    &#39;6&#39;, &#39;B1&#39;).replace(&#39;7&#39;, &#39;B2&#39;)
-            if &#39;B&#39; in s_name:
+                s_name = (
+                    stage.replace(&#34;_&#34;, &#34;&#34;)
+                    .replace(&#34;2&#34;, &#34;M&#34;)
+                    .replace(&#34;3&#34;, &#34;Lh&#34;)
+                    .replace(&#34;4&#34;, &#34;Lt&#34;)
+                    .replace(&#34;6&#34;, &#34;B1&#34;)
+                    .replace(&#34;7&#34;, &#34;B2&#34;)
+                )
+            if &#34;B&#34; in s_name:
                 rw_FI, rw_FR = 0, 0
-                ratio = &#39;R&#39; + str(ratio)
-                interval = &#39;I&#39; + str(interval)
-                norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = s.split_sess(
-                    all_levers=True)
-                sch_type = s.get_arrays(&#39;Trial Type&#39;)
+                ratio = &#34;R&#34; + str(ratio)
+                interval = &#34;I&#34; + str(interval)
+                norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = s.split_sess(all_levers=True)
+                sch_type = s.get_arrays(&#34;Trial Type&#34;)
                 # Error related variables
-                if s_name == &#39;B2&#39;:
+                if s_name == &#34;B2&#34;:
                     err_FI, err_FR = 0, 0
                     for i, err in enumerate(norm_err_ts):
                         if sch_type[i] == 1:
-                            err_FR = + len(err)
+                            err_FR = +len(err)
                         elif sch_type[i] == 0:
                             err_FI += len(err)
                         sch_err.append(len(err))
@@ -1364,18 +1641,18 @@ denotes the subject corresponding to each df</dd>
                 for i, (rw, dr) in enumerate(zip(norm_r_ts, norm_dr_ts)):
                     if sch_type[i] == 1:
                         rw_FR += len(rw)
-                        sch.append(&#39;FR&#39;)
+                        sch.append(&#34;FR&#34;)
                         sch_dr.append([])
                     elif sch_type[i] == 0:
                         rw_FI += len(rw)
-                        sch.append(&#39;FI&#39;)
+                        sch.append(&#34;FI&#34;)
                         sch_dr.append(len(dr))
                     sch_rw.append(len(rw))
 
             # Update list arrays with new session
             d_list.append(date)
             t_list.append(time)
-            s_idx_list.append(&#39;S&#39; + stage[0])
+            s_idx_list.append(&#34;S&#34; + stage[0])
             s_list.append(s_name)
             r_list.append(len(pell_ts))
             dr_list.append(len(dpell_idx))
@@ -1392,23 +1669,23 @@ denotes the subject corresponding to each df</dd>
         sub_list = np.full(len(d_list), sub, dtype=int)
 
         timeline_dict = {
-            &#39;Subject&#39;: sub_list,
-            &#39;Date&#39;: d_list,
-            &#39;Start Time&#39;: t_list,
-            &#39;Stage Idx&#39;: s_idx_list,  # eg. S2, S5, S7 ...
-            &#39;Stage&#39;: s_list,  # eg. M, Lt, R8, I30, B1
-            &#39;Total Rewards&#39;: r_list,
-            &#39;Double Rewards&#39;: dr_list,
-            &#39;Interval&#39;: interval_list,
-            &#39;Ratio&#39;: ratio_list,
-            &#39;Schedule Blocks&#39;: sch_list,
-            &#39;Schedule Rw&#39;: sch_rw_list,
-            &#39;Schedule Err&#39;: sch_err_list,
-            &#39;Schedule DRw&#39;: sch_dr_list,
-            &#39;FI Corr&#39;: rw_FI_list,
-            &#39;FR Corr&#39;: rw_FR_list,
-            &#39;FI Err&#39;: err_FI_list,
-            &#39;FR Err&#39;: err_FR_list
+            &#34;Subject&#34;: sub_list,
+            &#34;Date&#34;: d_list,
+            &#34;Start Time&#34;: t_list,
+            &#34;Stage Idx&#34;: s_idx_list,  # eg. S2, S5, S7 ...
+            &#34;Stage&#34;: s_list,  # eg. M, Lt, R8, I30, B1
+            &#34;Total Rewards&#34;: r_list,
+            &#34;Double Rewards&#34;: dr_list,
+            &#34;Interval&#34;: interval_list,
+            &#34;Ratio&#34;: ratio_list,
+            &#34;Schedule Blocks&#34;: sch_list,
+            &#34;Schedule Rw&#34;: sch_rw_list,
+            &#34;Schedule Err&#34;: sch_err_list,
+            &#34;Schedule DRw&#34;: sch_dr_list,
+            &#34;FI Corr&#34;: rw_FI_list,
+            &#34;FR Corr&#34;: rw_FR_list,
+            &#34;FI Err&#34;: err_FI_list,
+            &#34;FR Err&#34;: err_FR_list,
         }
         timeline_df = pd.DataFrame(timeline_dict)
         grp_timeline_df.append(timeline_df)
@@ -1428,8 +1705,9 @@ divides session into blocks and plots each block as individual lines.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def sum_plot(s_grp, idx, out_dir, zoom=True, single=False,
-             int_only=False, corr_only=False):
+<pre><code class="python">def sum_plot(
+    s_grp, idx, out_dir, zoom=True, single=False, int_only=False, corr_only=False,
+):
     &#34;&#34;&#34;
     Perform summary plots of a day.
 
@@ -1439,7 +1717,7 @@ divides session into blocks and plots each block as individual lines.</p></div>
     &#34;&#34;&#34;
     # Plots summary of day
     if zoom:
-        print(&#39;zoomed&#39;)
+        print(&#34;zoomed&#34;)
         if len(s_grp) &gt; 2:
             cols = 2 * math.ceil(len(s_grp) / 2)
             rows = 2
@@ -1459,8 +1737,8 @@ divides session into blocks and plots each block as individual lines.</p></div>
     d_passed = []
 
     for _, s in enumerate(s_grp):
-        subject = s.get_metadata(&#39;subject&#39;)
-        stage = s.get_metadata(&#39;name&#39;)[:2].replace(&#39;_&#39;, &#39;&#39;)
+        subject = s.get_metadata(&#34;subject&#34;)
+        stage = s.get_metadata(&#34;name&#34;)[:2].replace(&#34;_&#34;, &#34;&#34;)
         date = s.get_metadata(&#34;start_date&#34;).replace(&#34;/&#34;, &#34;-&#34;)
         s_passed.append(stage)
         d_passed.append(date[:5])
@@ -1470,16 +1748,16 @@ divides session into blocks and plots each block as individual lines.</p></div>
         else:
             ax1 = gf.get_next()
 
-        if corr_only and stage == &#39;7&#39;:
-            bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False,
-                          zoom_sch=False, plot_all=False)
+        if corr_only and stage == &#34;7&#34;:
+            bv_an.cumplot(
+                s, out_dir, ax1, int_only, zoom=False, zoom_sch=False, plot_all=False,
+            )
         else:
-            bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False,
-                          zoom_sch=False)
+            bv_an.cumplot(s, out_dir, ax1, int_only, zoom=False, zoom_sch=False)
 
-        if stage == &#39;2&#39; or stage == &#39;3&#39; or stage == &#39;4&#39;:
+        if stage == &#34;2&#34; or stage == &#34;3&#34; or stage == &#34;4&#34;:
             IRT = True
-        elif stage == &#39;5a&#39; or stage == &#39;5b&#39;:
+        elif stage == &#34;5a&#34; or stage == &#34;5b&#34;:
             IRT = True  # Change to False for zoomed plot instead of IRT
         else:
             IRT = False
@@ -1489,41 +1767,64 @@ divides session into blocks and plots each block as individual lines.</p></div>
             bv_an.IRT(s, out_dir, ax2)
         elif zoom:
             ax2 = gf.get_next_snake()
-            if corr_only and stage == &#39;7&#39;:
-                bv_an.cumplot(s, out_dir, ax2, int_only, zoom=False, zoom_sch=True,
-                              plot_error=False, plot_all=False)
+            if corr_only and stage == &#34;7&#34;:
+                bv_an.cumplot(
+                    s,
+                    out_dir,
+                    ax2,
+                    int_only,
+                    zoom=False,
+                    zoom_sch=True,
+                    plot_error=False,
+                    plot_all=False,
+                )
             else:
-                bv_an.cumplot(s, out_dir, ax2, int_only, zoom=False, zoom_sch=True,
-                              plot_error=False, plot_all=True)
+                bv_an.cumplot(
+                    s,
+                    out_dir,
+                    ax2,
+                    int_only,
+                    zoom=False,
+                    zoom_sch=True,
+                    plot_error=False,
+                    plot_all=True,
+                )
         plt.subplots_adjust(top=0.85)
     d_print = np.array_str(np.unique(np.array(d_passed)))
     d_title = np.array2string(np.unique(np.array(d_passed)))
     s_print = np.array_str(np.unique(np.array(s_passed)))
 
     if single:
-        fig.suptitle((&#39;Subject &#39; + subject + &#39; Performance&#39;), fontsize=30)
+        fig.suptitle((&#34;Subject &#34; + subject + &#34; Performance&#34;), fontsize=30)
         out_name = &#34;Sum_&#34; + subject + &#34;_&#34; + d_print + &#34;_&#34; + s_print + &#34;.png&#34;
-    elif corr_only and stage == &#39;7&#39;:
+    elif corr_only and stage == &#34;7&#34;:
         if idx == 0:
-            fig.suptitle((&#39;Summary across animals &#39; + d_title +
-                          &#39;_Correct Only&#39;), fontsize=30)
+            fig.suptitle(
+                (&#34;Summary across animals &#34; + d_title + &#34;_Correct Only&#34;), fontsize=30,
+            )
             out_name = &#34;Sum_&#34; + d_print + &#34;_&#34; + s_print + &#34;_Corr.png&#34;
         else:
-            fig.suptitle((&#39;Summary across animals &#39; + d_title +
-                          &#39;_Correct Only&#39; + &#34; p&#34; + str(idx)), fontsize=30)
-            out_name = &#34;Sum_&#34; + d_print + &#34;_&#34; + \
-                s_print + &#34;_&#34; + str(idx) + &#34;_Corr.png&#34;
+            fig.suptitle(
+                (
+                    &#34;Summary across animals &#34;
+                    + d_title
+                    + &#34;_Correct Only&#34;
+                    + &#34; p&#34;
+                    + str(idx)
+                ),
+                fontsize=30,
+            )
+            out_name = &#34;Sum_&#34; + d_print + &#34;_&#34; + s_print + &#34;_&#34; + str(idx) + &#34;_Corr.png&#34;
     else:
         if idx == 0:
-            fig.suptitle((&#39;Summary across animals &#39; + d_title), fontsize=30)
+            fig.suptitle((&#34;Summary across animals &#34; + d_title), fontsize=30)
             out_name = &#34;Sum_&#34; + d_print + &#34;_&#34; + s_print + &#34;.png&#34;
         else:
-            fig.suptitle((&#39;Summary across animals &#39; +
-                          d_title + &#34; p&#34; + str(idx)), fontsize=30)
-            out_name = &#34;Sum_&#34; + d_print + &#34;_&#34; + \
-                s_print + &#34;_&#34; + str(idx) + &#34;.png&#34;
-    print(&#34;Saved figure to {}&#34;.format(
-        os.path.join(out_dir, out_name)))
+            fig.suptitle(
+                (&#34;Summary across animals &#34; + d_title + &#34; p&#34; + str(idx)), fontsize=30,
+            )
+            out_name = &#34;Sum_&#34; + d_print + &#34;_&#34; + s_print + &#34;_&#34; + str(idx) + &#34;.png&#34;
+    print(&#34;Saved figure to {}&#34;.format(os.path.join(out_dir, out_name)))
     bv_plot.savefig(fig, os.path.join(out_dir, out_name))
     plt.close()</code></pre>
 </details>
@@ -1555,9 +1856,17 @@ divides session into blocks and plots each block as individual lines.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def timeline_plot(
-        sub_list, in_dir, out_dir, single_plot=False,
-        det_err=False, det_corr=False, recent=False,
-        show_date=True, details=False, sub_colors_dict=None):
+    sub_list,
+    in_dir,
+    out_dir,
+    single_plot=False,
+    det_err=False,
+    det_corr=False,
+    recent=False,
+    show_date=True,
+    details=False,
+    sub_colors_dict=None,
+):
     &#34;&#34;&#34;
     Plots total rewards from beginning of first session
 
@@ -1583,21 +1892,28 @@ divides session into blocks and plots each block as individual lines.</p></div>
     rows, cols = [len(sub_list), 4]
     size_multiplier = 5
     fig = plt.figure(
-        figsize=(cols * size_multiplier, rows * size_multiplier),
-        tight_layout=False)
+        figsize=(cols * size_multiplier, rows * size_multiplier), tight_layout=False,
+    )
     gs = gridspec.GridSpec(rows, cols, wspace=0.4, hspace=0.5)
 
     for c, sub in enumerate(sub_list):
         # Plot total pellets across sessions
         s_grp = extract_sessions(in_dir, [sub])
-        s_list, r_list, type_list, d_list, box_list, time_list = [], [], [], [], [], []
+        s_list, r_list, type_list, d_list, box_list, time_list = (
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
         err_FR_list, err_FI_list = [], []
         rw_FR_list, rw_FI_list, rw_double_list = [], [], []
         changes, stage_change, dpell_change = [], [], []
         change_idx = []
         prev_ratio, prev_interval, c_ratio, c_interval = [], [], [], []
         dpell_old = []
-        prev_name = &#39;2&#39;
+        prev_name = &#34;2&#34;
         if recent:
             number_sessions_ago = -31  # change value to set number of sessions ago
             s_grp = s_grp[number_sessions_ago:]
@@ -1607,19 +1923,19 @@ divides session into blocks and plots each block as individual lines.</p></div>
         for i, s in enumerate(s_grp):
             ratio = s.get_ratio()
             interval = s.get_interval()
-            s_type = s.get_metadata(&#39;name&#39;)[:2]
+            s_type = s.get_metadata(&#34;name&#34;)[:2]
             timestamps = s.get_arrays()
 
-            date = s.get_metadata(&#39;start_date&#39;)  # Display mm/dd/yy
-            date = s.get_metadata(&#39;start_date&#39;)[:-3]  # Display mm/dd only
+            date = s.get_metadata(&#34;start_date&#34;)  # Display mm/dd/yy
+            date = s.get_metadata(&#34;start_date&#34;)[:-3]  # Display mm/dd only
             # date = s.get_metadata(&#39;start_date&#39;).split(&#34;/&#34;)[1]  # Display dd only
-            subject = s.get_metadata(&#39;subject&#39;)
+            subject = s.get_metadata(&#34;subject&#34;)
             pell_ts = timestamps[&#34;Reward&#34;]
             pell_double = np.nonzero(np.diff(pell_ts) &lt; 0.5)[0]
             reward_times = s.get_rw_ts()
-            box = s.get_metadata(&#39;box&#39;)
+            box = s.get_metadata(&#34;box&#34;)
             # time format - &#34;%H:%M:%S&#34;
-            exptime = s.get_metadata(&#39;start_time&#39;)[:2]
+            exptime = s.get_metadata(&#34;start_time&#34;)[:2]
 
             d_list.append(date)
             box_list.append(box)
@@ -1627,19 +1943,24 @@ divides session into blocks and plots each block as individual lines.</p></div>
 
             if len(pell_double):
                 dpell_change = 1
-            if s_type == &#39;5a&#39;:
-                s_name = &#39;R&#39; + str(ratio)
+            if s_type == &#34;5a&#34;:
+                s_name = &#34;R&#34; + str(ratio)
                 c_ratio = s_name
-            elif s_type == &#39;5b&#39;:
-                s_name = &#39;I&#39; + str(interval)
+            elif s_type == &#34;5b&#34;:
+                s_name = &#34;I&#34; + str(interval)
                 c_interval = s_name
             else:
-                s_name = s_type.replace(&#39;_&#39;, &#39;&#39;).replace(&#39;2&#39;, &#39;M&#39;).replace(
-                    &#39;3&#39;, &#39;Lh&#39;).replace(&#39;4&#39;, &#39;Lt&#39;).replace(
-                    &#39;6&#39;, &#39;B1&#39;).replace(&#39;7&#39;, &#39;B2&#39;)
-            if &#39;B&#39; in s_name:
-                c_ratio = &#39;R&#39; + str(ratio)
-                c_interval = &#39;I&#39; + str(interval)
+                s_name = (
+                    s_type.replace(&#34;_&#34;, &#34;&#34;)
+                    .replace(&#34;2&#34;, &#34;M&#34;)
+                    .replace(&#34;3&#34;, &#34;Lh&#34;)
+                    .replace(&#34;4&#34;, &#34;Lt&#34;)
+                    .replace(&#34;6&#34;, &#34;B1&#34;)
+                    .replace(&#34;7&#34;, &#34;B2&#34;)
+                )
+            if &#34;B&#34; in s_name:
+                c_ratio = &#34;R&#34; + str(ratio)
+                c_interval = &#34;I&#34; + str(interval)
             if not prev_name[0] == s_type[0]:
                 stage_change.append(1)
                 changes.append(0)
@@ -1672,11 +1993,10 @@ divides session into blocks and plots each block as individual lines.</p></div>
             rw_double = 0
             err_plotted = 0
             corr_plotted = 0
-            if s_type == &#39;7_&#39; or s_type == &#39;6_&#39;:
-                norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = s.split_sess(
-                    all_levers=True)
-                sch_type = s.get_arrays(&#39;Trial Type&#39;)
-                if s_type == &#39;7_&#39;:
+            if s_type == &#34;7_&#34; or s_type == &#34;6_&#34;:
+                norm_r_ts, _, norm_err_ts, norm_dr_ts, _ = s.split_sess(all_levers=True)
+                sch_type = s.get_arrays(&#34;Trial Type&#34;)
+                if s_type == &#34;7_&#34;:
                     for i, _ in enumerate(norm_err_ts):
                         if sch_type[i] == 1:
                             err_FR = err_FR + len(norm_err_ts[i])
@@ -1691,13 +2011,13 @@ divides session into blocks and plots each block as individual lines.</p></div>
                         rw_FR = rw_FR + len(norm_r_ts[i])
                     elif sch_type[i] == 0:
                         rw_FI = rw_FI + len(norm_r_ts[i])
-            elif s_type == &#39;5a&#39;:
+            elif s_type == &#34;5a&#34;:
                 err_FI = None
                 err_FR = None
                 rw_FR = len(reward_times)
                 rw_FI = None
                 rw_double = None
-            elif s_type == &#39;5b&#39;:
+            elif s_type == &#34;5b&#34;:
                 err_FI = None
                 err_FR = None
                 rw_FR = None
@@ -1718,7 +2038,7 @@ divides session into blocks and plots each block as individual lines.</p></div>
             err_FI_list.append(err_FI)
             rw_double_list.append(rw_double)
             s_list.append(s_name)
-            type_list.append(&#39;S-&#39; + s_type[0])
+            type_list.append(&#34;S-&#34; + s_type[0])
 
             # Updates current iteration variables for next loop
             dpell_old = dpell_change
@@ -1731,7 +2051,8 @@ divides session into blocks and plots each block as individual lines.</p></div>
             size_multiplier = 5
             fig = plt.figure(
                 figsize=(cols * size_multiplier, rows * size_multiplier),
-                tight_layout=False)
+                tight_layout=False,
+            )
             gs = gridspec.GridSpec(rows, cols, wspace=0.2, hspace=0.3)
             ax = fig.add_subplot(gs[0, :])
             out_name = &#34;Timeline_&#34; + subject
@@ -1744,9 +2065,11 @@ divides session into blocks and plots each block as individual lines.</p></div>
 
         s_idx = np.arange(0, len(s_list))
 
-        if details:  # Plots average sessions variables i.e. FR_corr, FI_corr, FR_err, FI_err, double_rw
-            ratio_c = plt.cm.get_cmap(&#39;Wistia&#39;)
-            interval_c = plt.cm.get_cmap(&#39;winter&#39;)
+        if (
+            details
+        ):  # Plots average sessions variables i.e. FR_corr, FI_corr, FR_err, FI_err, double_rw
+            ratio_c = plt.cm.get_cmap(&#34;Wistia&#34;)
+            interval_c = plt.cm.get_cmap(&#34;winter&#34;)
             # Change value to increase height of annotation
             # note_height = 0
             # y_axis = np.zeros((1, len(s_idx)))[0] + note_height
@@ -1762,32 +2085,40 @@ divides session into blocks and plots each block as individual lines.</p></div>
             # Dict controls lines to be plot. Set keys to 1 in plot_dict to include line in plot
             if det_err:
                 plot_styles = {
-                    &#34;FR_Corr&#34;: [rw_FR_list, &#39;*-&#39;, ratio_c(3 * 45), 0],
-                    &#34;FR_Err&#34;: [err_FR_list, &#39;x-&#39;, ratio_c(10 * 45), 1],
-                    &#34;FI_Corr&#34;: [rw_FI_list, &#39;*-&#39;, interval_c(2 * 45), 0],
-                    &#34;FI_Err&#34;: [err_FI_list, &#39;x-&#39;, interval_c(4 * 45), 1],
-                    &#34;FI_DoubleR&#34;: [rw_double_list, &#39;*-&#39;, &#39;hotpink&#39;, 0]}
+                    &#34;FR_Corr&#34;: [rw_FR_list, &#34;*-&#34;, ratio_c(3 * 45), 0],
+                    &#34;FR_Err&#34;: [err_FR_list, &#34;x-&#34;, ratio_c(10 * 45), 1],
+                    &#34;FI_Corr&#34;: [rw_FI_list, &#34;*-&#34;, interval_c(2 * 45), 0],
+                    &#34;FI_Err&#34;: [err_FI_list, &#34;x-&#34;, interval_c(4 * 45), 1],
+                    &#34;FI_DoubleR&#34;: [rw_double_list, &#34;*-&#34;, &#34;hotpink&#34;, 0],
+                }
                 err_plotted = 1
             elif det_corr:
                 plot_styles = {
-                    &#34;FR_Corr&#34;: [rw_FR_list, &#39;*-&#39;, ratio_c(3 * 45), 1],
-                    &#34;FR_Err&#34;: [err_FR_list, &#39;x-&#39;, ratio_c(10 * 45), 0],
-                    &#34;FI_Corr&#34;: [rw_FI_list, &#39;*-&#39;, interval_c(2 * 45), 1],
-                    &#34;FI_Err&#34;: [err_FI_list, &#39;x-&#39;, interval_c(4 * 45), 0],
-                    &#34;FI_DoubleR&#34;: [rw_double_list, &#39;*-&#39;, &#39;hotpink&#39;, 1]}
+                    &#34;FR_Corr&#34;: [rw_FR_list, &#34;*-&#34;, ratio_c(3 * 45), 1],
+                    &#34;FR_Err&#34;: [err_FR_list, &#34;x-&#34;, ratio_c(10 * 45), 0],
+                    &#34;FI_Corr&#34;: [rw_FI_list, &#34;*-&#34;, interval_c(2 * 45), 1],
+                    &#34;FI_Err&#34;: [err_FI_list, &#34;x-&#34;, interval_c(4 * 45), 0],
+                    &#34;FI_DoubleR&#34;: [rw_double_list, &#34;*-&#34;, &#34;hotpink&#34;, 1],
+                }
                 corr_plotted = 1
             else:
                 plot_styles = {
-                    &#34;FR_Corr&#34;: [rw_FR_list, &#39;*-&#39;, ratio_c(3 * 45), 1],
-                    &#34;FR_Err&#34;: [err_FR_list, &#39;x-&#39;, ratio_c(10 * 45), 1],
-                    &#34;FI_Corr&#34;: [rw_FI_list, &#39;*-&#39;, interval_c(2 * 45), 1],
-                    &#34;FI_Err&#34;: [err_FI_list, &#39;x-&#39;, interval_c(4 * 45), 1],
-                    &#34;FI_DoubleR&#34;: [rw_double_list, &#39;*-&#39;, &#39;hotpink&#39;, 1]}
+                    &#34;FR_Corr&#34;: [rw_FR_list, &#34;*-&#34;, ratio_c(3 * 45), 1],
+                    &#34;FR_Err&#34;: [err_FR_list, &#34;x-&#34;, ratio_c(10 * 45), 1],
+                    &#34;FI_Corr&#34;: [rw_FI_list, &#34;*-&#34;, interval_c(2 * 45), 1],
+                    &#34;FI_Err&#34;: [err_FI_list, &#34;x-&#34;, interval_c(4 * 45), 1],
+                    &#34;FI_DoubleR&#34;: [rw_double_list, &#34;*-&#34;, &#34;hotpink&#34;, 1],
+                }
                 err_plotted = 1
                 corr_plotted = 1
 
-            plot_dict = {&#34;FR_Corr&#34;: 1, &#34;FR_Err&#34;: 1,
-                         &#34;FI_Corr&#34;: 1, &#34;FI_Err&#34;: 1, &#34;FI_DoubleR&#34;: 1}
+            plot_dict = {
+                &#34;FR_Corr&#34;: 1,
+                &#34;FR_Err&#34;: 1,
+                &#34;FI_Corr&#34;: 1,
+                &#34;FI_Err&#34;: 1,
+                &#34;FI_DoubleR&#34;: 1,
+            }
             ax2 = ax.twinx()
             for k, val in plot_dict.items():
                 if val:
@@ -1796,23 +2127,41 @@ divides session into blocks and plots each block as individual lines.</p></div>
                         ax_used = ax2
                     else:
                         ax_used = ax
-                    h, = ax_used.plot(s_idx, s[0], s[1], label=k, linewidth=&#39;2&#39;,
-                                      markersize=10, color=s[2], alpha=s[3])
+                    (h,) = ax_used.plot(
+                        s_idx,
+                        s[0],
+                        s[1],
+                        label=k,
+                        linewidth=&#34;2&#34;,
+                        markersize=10,
+                        color=s[2],
+                        alpha=s[3],
+                    )
                     plots.append(h)
                     labels.append(h.get_label())
-            ax.set_title(&#39;\nSubject {} Timeline_Details&#39;.format(
-                subject), y=1.05, fontsize=25,
-                color=bvmpc.bv_utils.mycolors(subject, sub_colors_dict))
+            ax.set_title(
+                &#34;\nSubject {} Timeline_Details&#34;.format(subject),
+                y=1.05,
+                fontsize=25,
+                color=bvmpc.bv_utils.mycolors(subject, sub_colors_dict),
+            )
         else:
             # Only plots total rewards
             y_axis = r_list
-            h1, = plt.plot(
-                s_idx, y_axis, label=&#39;Animal&#39; + subject, linewidth=&#39;4&#39;,
-                color=bvmpc.bv_utils.mycolors(subject, sub_colors_dict))
+            (h1,) = plt.plot(
+                s_idx,
+                y_axis,
+                label=&#34;Animal&#34; + subject,
+                linewidth=&#34;4&#34;,
+                color=bvmpc.bv_utils.mycolors(subject, sub_colors_dict),
+            )
 
             ax.set_title(
-                &#39;\nSubject {} Timeline&#39;.format(subject), y=1.05, fontsize=25,
-                color=bvmpc.bv_utils.mycolors(subject, sub_colors_dict))
+                &#34;\nSubject {} Timeline&#34;.format(subject),
+                y=1.05,
+                fontsize=25,
+                color=bvmpc.bv_utils.mycolors(subject, sub_colors_dict),
+            )
 
             # # Plot experiment time w rewards
             # ax2 = ax.twinx()
@@ -1827,70 +2176,110 @@ divides session into blocks and plots each block as individual lines.</p></div>
         h3 = None
         for i, c in enumerate(changes):
             if stage_change[i] == 1:
-                h2 = ax.annotate(type_list[i], xy=(s_idx[i], y_axis[i]),
-                                 ha=&#39;center&#39;, xytext=(0, (.2 * max(y_axis))),
-                                 textcoords=&#39;offset points&#39;,
-                                 arrowprops=dict(facecolor=&#39;blue&#39;, shrink=0.05), size=annotate_fontsize)
+                h2 = ax.annotate(
+                    type_list[i],
+                    xy=(s_idx[i], y_axis[i]),
+                    ha=&#34;center&#34;,
+                    xytext=(0, (0.2 * max(y_axis))),
+                    textcoords=&#34;offset points&#34;,
+                    arrowprops=dict(facecolor=&#34;blue&#34;, shrink=0.05),
+                    size=annotate_fontsize,
+                )
             elif change_idx[i] == 1:
-                h3 = ax.annotate(str(c), xy=(s_idx[i], y_axis[i]),
-                                 ha=&#39;center&#39;, xytext=(0, (.2 * max(y_axis))),
-                                 textcoords=&#39;offset points&#39;,
-                                 arrowprops=dict(facecolor=&#39;Red&#39;, shrink=0.05), size=annotate_fontsize)
+                h3 = ax.annotate(
+                    str(c),
+                    xy=(s_idx[i], y_axis[i]),
+                    ha=&#34;center&#34;,
+                    xytext=(0, (0.2 * max(y_axis))),
+                    textcoords=&#34;offset points&#34;,
+                    arrowprops=dict(facecolor=&#34;Red&#34;, shrink=0.05),
+                    size=annotate_fontsize,
+                )
         ax.set_xlim(0, len(s_idx))
         if show_date:
             # plots x-axis tics as dates
             plt.xticks(s_idx, d_list, fontsize=10)
             # plt.xticks(s_idx, box_list, fontsize=10)    # Plots x-tics as box
-            ax.set_xlabel(&#39;Sessions (Dates)&#39;, fontsize=20)
+            ax.set_xlabel(&#34;Sessions (Dates)&#34;, fontsize=20)
         else:
             # plots x-axis ticks as stages
             plt.xticks(s_idx, s_list, fontsize=13)
-            ax.set_xlabel(&#39;Sessions (Type)&#39;, fontsize=20)
-        ax.spines[&#39;top&#39;].set_visible(False)
-        ax.spines[&#39;right&#39;].set_visible(False)
-        ax.tick_params(axis=&#39;y&#39;, labelsize=15)
+            ax.set_xlabel(&#34;Sessions (Type)&#34;, fontsize=20)
+        ax.spines[&#34;top&#34;].set_visible(False)
+        ax.spines[&#34;right&#34;].set_visible(False)
+        ax.tick_params(axis=&#34;y&#34;, labelsize=15)
         if details:
-            if &#39;S-6&#39; in type_list:
-                ax.axhline(45, xmax=(type_list.index(&#39;S-6&#39;) / len(type_list)), color=interval_c(2 * 45),
-                           linestyle=&#39;-.&#39;, linewidth=&#39;.5&#39;)
-                ax.axhline(30, xmin=(type_list.index(&#39;S-6&#39;) / len(type_list)), color=interval_c(2 * 45),
-                           linestyle=&#39;-.&#39;, linewidth=&#39;.5&#39;)
-                ax.text(type_list.index(&#39;S-6&#39;), 31, &#39; Max FI&#39;, fontsize=8,
-                        color=interval_c(2 * 45), ha=&#39;left&#39;, va=&#39;bottom&#39;)
-                ax.text(s_idx[0], 46, &#39; Max FI&#39;, fontsize=8,
-                        color=interval_c(2 * 45), ha=&#39;left&#39;, va=&#39;bottom&#39;)
+            if &#34;S-6&#34; in type_list:
+                ax.axhline(
+                    45,
+                    xmax=(type_list.index(&#34;S-6&#34;) / len(type_list)),
+                    color=interval_c(2 * 45),
+                    linestyle=&#34;-.&#34;,
+                    linewidth=&#34;.5&#34;,
+                )
+                ax.axhline(
+                    30,
+                    xmin=(type_list.index(&#34;S-6&#34;) / len(type_list)),
+                    color=interval_c(2 * 45),
+                    linestyle=&#34;-.&#34;,
+                    linewidth=&#34;.5&#34;,
+                )
+                ax.text(
+                    type_list.index(&#34;S-6&#34;),
+                    31,
+                    &#34; Max FI&#34;,
+                    fontsize=8,
+                    color=interval_c(2 * 45),
+                    ha=&#34;left&#34;,
+                    va=&#34;bottom&#34;,
+                )
+                ax.text(
+                    s_idx[0],
+                    46,
+                    &#34; Max FI&#34;,
+                    fontsize=8,
+                    color=interval_c(2 * 45),
+                    ha=&#34;left&#34;,
+                    va=&#34;bottom&#34;,
+                )
             else:
-                ax.axhline(30, color=interval_c(2 * 45),
-                           linestyle=&#39;-.&#39;, linewidth=&#39;.5&#39;)
-                ax.text(s_idx[0], 31, &#39; Max FI&#39;, fontsize=8,
-                        color=interval_c(2 * 45), ha=&#39;left&#39;, va=&#39;bottom&#39;)
-            loc = &#39;top left&#39;
-            ax.set_ylabel(&#39;Correct Trials&#39;, fontsize=20)
+                ax.axhline(30, color=interval_c(2 * 45), linestyle=&#34;-.&#34;, linewidth=&#34;.5&#34;)
+                ax.text(
+                    s_idx[0],
+                    31,
+                    &#34; Max FI&#34;,
+                    fontsize=8,
+                    color=interval_c(2 * 45),
+                    ha=&#34;left&#34;,
+                    va=&#34;bottom&#34;,
+                )
+            loc = &#34;top left&#34;
+            ax.set_ylabel(&#34;Correct Trials&#34;, fontsize=20)
             # set second y-axis labels
-            ax2.tick_params(axis=&#39;y&#39;, labelsize=15)
-            ax2.set_ylabel(&#39;Error Presses&#39;, fontsize=20)
+            ax2.tick_params(axis=&#34;y&#34;, labelsize=15)
+            ax2.set_ylabel(&#34;Error Presses&#34;, fontsize=20)
         else:
             # plt.axhline(45, color=&#39;g&#39;, linestyle=&#39;-.&#39;, linewidth=&#39;.5&#39;)
-            plt.axhline(60, color=&#39;r&#39;, linestyle=&#39;-.&#39;,
-                        linewidth=&#39;.5&#39;)  # Marks max reward
-            ax.set_ylabel(&#39;Total Rewards&#39;, fontsize=20)
+            plt.axhline(
+                60, color=&#34;r&#34;, linestyle=&#34;-.&#34;, linewidth=&#34;.5&#34;
+            )  # Marks max reward
+            ax.set_ylabel(&#34;Total Rewards&#34;, fontsize=20)
             plots = [h1]
             labels = [h1.get_label()]
-            loc = &#39;lower right&#39;
+            loc = &#34;lower right&#34;
         if h2 is not None and h3 is not None:
             plots.extend([h2.arrow_patch, h3.arrow_patch])
-            labels.extend([&#39;Stage Changes&#39;, &#39;Protocol Mod.&#39;])
+            labels.extend([&#34;Stage Changes&#34;, &#34;Protocol Mod.&#34;])
         elif h2 is not None:
             plots.append(h2.arrow_patch)
-            labels.append(&#39;Stage Changes&#39;)
+            labels.append(&#34;Stage Changes&#34;)
         elif h3 is not None:
             plots.append(h3.arrow_patch)
-            labels.append(&#39;Protocol Mod.&#39;)
+            labels.append(&#34;Protocol Mod.&#34;)
         plt.legend(plots, labels, loc=loc, ncol=2)
         if single_plot:
             out_name += &#34;.png&#34;
-            print(&#34;Saved figure to {}&#34;.format(
-                os.path.join(out_dir, out_name)))
+            print(&#34;Saved figure to {}&#34;.format(os.path.join(out_dir, out_name)))
             bv_plot.savefig(fig, os.path.join(out_dir, out_name))
             plt.close()
 
@@ -1907,8 +2296,7 @@ divides session into blocks and plots each block as individual lines.</p></div>
             elif err_plotted == 1:
                 out_name += &#34;_err&#34;
         out_name += &#34;.png&#34;
-        print(&#34;Saved figure to {}&#34;.format(
-            os.path.join(out_dir, out_name)))
+        print(&#34;Saved figure to {}&#34;.format(os.path.join(out_dir, out_name)))
         bv_plot.savefig(fig, os.path.join(out_dir, out_name))
         plt.close()</code></pre>
 </details>

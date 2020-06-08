@@ -36,8 +36,13 @@ import bvmpc.bv_utils
 
 
 def extract_sessions(
-        in_dir, sub_list=None, s_list=None, d_list=None,
-        load_backend=&#34;neo&#34;, neo_backend=&#34;nix&#34;):
+    in_dir,
+    sub_list=None,
+    s_list=None,
+    d_list=None,
+    load_backend=&#34;neo&#34;,
+    neo_backend=&#34;nix&#34;,
+):
     &#34;&#34;&#34;Extracts specified sessions from files.&#34;&#34;&#34;
 
     def should_use(val, vlist):
@@ -50,7 +55,7 @@ def extract_sessions(
     in_files = sorted(os.listdir(in_dir))
     s_grp = []
     for file in in_files:
-        splits = file.split(&#39;_&#39;)
+        splits = file.split(&#34;_&#34;)
         subject = splits[0]
         subject = str(subject)
         # NOTE date not have year
@@ -67,12 +72,11 @@ def extract_sessions(
                 elif load_backend == &#34;hdf5&#34;:
                     session = load_hdf5(filename)
                 else:
-                    print(&#34;Backend {} invalid, using neo&#34;.format(
-                        load_backend))
+                    print(&#34;Backend {} invalid, using neo&#34;.format(load_backend))
                     session = load_neo(filename)
 
                 s_grp.append(session)
-    print(&#39;Total Files extracted: {}&#39;.format(len(s_grp)))
+    print(&#34;Total Files extracted: {}&#34;.format(len(s_grp)))
     return s_grp
 
 
@@ -83,7 +87,7 @@ def convert_to_hdf5(filename, out_dir):
     s_extractor = SessionExtractor(filename, verbose=True)
 
     for s in s_extractor:  # Batch run for file
-        stage = s.get_metadata(&#39;name&#39;)
+        stage = s.get_metadata(&#34;name&#34;)
         if stage not in s.session_info.session_info_dict.keys():
             continue
         else:
@@ -93,30 +97,25 @@ def convert_to_hdf5(filename, out_dir):
 def convert_to_neo(filename, out_dir, neo_backend=&#34;nix&#34;, remove_existing=False):
     &#34;&#34;&#34;Convert all sessions in filename to hdf5 and store in out_dir.&#34;&#34;&#34;
     bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
-    print(&#34;Converting files in {} to neo&#34;.format(
-        os.path.basename(filename)))
-    s_extractor = SessionExtractor(
-        filename, verbose=False)
+    print(&#34;Converting files in {} to neo&#34;.format(os.path.basename(filename)))
+    s_extractor = SessionExtractor(filename, verbose=False)
 
     for s in s_extractor:  # Batch run for file
-        stage = s.get_metadata(&#39;name&#39;)
+        stage = s.get_metadata(&#34;name&#34;)
         if stage not in s.session_info.session_info_dict.keys():
             continue
         else:
             s.save_to_neo(
-                out_dir, neo_backend=neo_backend,
-                remove_existing=remove_existing)
+                out_dir, neo_backend=neo_backend, remove_existing=remove_existing,
+            )
 
 
-def convert_axona_to_neo(
-        filename, out_dir, neo_backend=&#34;nix&#34;, remove_existing=False):
+def convert_axona_to_neo(filename, out_dir, neo_backend=&#34;nix&#34;, remove_existing=False):
     &#34;&#34;&#34;Convert .inp files to Sessions and store in out_dir.&#34;&#34;&#34;
     bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
     print(&#34;Converting {} to neo&#34;.format(os.path.basename(filename)))
     s = Session(axona_file=filename)
-    s.save_to_neo(
-        out_dir, neo_backend=neo_backend,
-        remove_existing=remove_existing)
+    s.save_to_neo(out_dir, neo_backend=neo_backend, remove_existing=remove_existing)
 
 
 def load_hdf5(filename, verbose=False):
@@ -172,7 +171,8 @@ def select_lfp(fname, ROI):
     for r in ROI:
         idx = [i for i, x in enumerate(regions) if x == ROI[r]]
         lfp_odict = LfpODict(
-            fname, channels=chans[idx], filt_params=(True, filt_btm, filt_top))
+            fname, channels=chans[idx], filt_params=(True, filt_btm, filt_top)
+        )
         lfp_list.append(lfp_odict)
     return lfp_list</code></pre>
 </details>
@@ -193,15 +193,12 @@ def select_lfp(fname, ROI):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def convert_axona_to_neo(
-        filename, out_dir, neo_backend=&#34;nix&#34;, remove_existing=False):
+<pre><code class="python">def convert_axona_to_neo(filename, out_dir, neo_backend=&#34;nix&#34;, remove_existing=False):
     &#34;&#34;&#34;Convert .inp files to Sessions and store in out_dir.&#34;&#34;&#34;
     bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
     print(&#34;Converting {} to neo&#34;.format(os.path.basename(filename)))
     s = Session(axona_file=filename)
-    s.save_to_neo(
-        out_dir, neo_backend=neo_backend,
-        remove_existing=remove_existing)</code></pre>
+    s.save_to_neo(out_dir, neo_backend=neo_backend, remove_existing=remove_existing)</code></pre>
 </details>
 </dd>
 <dt id="bvmpc.bv_file.convert_to_hdf5"><code class="name flex">
@@ -220,7 +217,7 @@ def select_lfp(fname, ROI):
     s_extractor = SessionExtractor(filename, verbose=True)
 
     for s in s_extractor:  # Batch run for file
-        stage = s.get_metadata(&#39;name&#39;)
+        stage = s.get_metadata(&#34;name&#34;)
         if stage not in s.session_info.session_info_dict.keys():
             continue
         else:
@@ -239,19 +236,17 @@ def select_lfp(fname, ROI):
 <pre><code class="python">def convert_to_neo(filename, out_dir, neo_backend=&#34;nix&#34;, remove_existing=False):
     &#34;&#34;&#34;Convert all sessions in filename to hdf5 and store in out_dir.&#34;&#34;&#34;
     bvmpc.bv_utils.make_dir_if_not_exists(out_dir)
-    print(&#34;Converting files in {} to neo&#34;.format(
-        os.path.basename(filename)))
-    s_extractor = SessionExtractor(
-        filename, verbose=False)
+    print(&#34;Converting files in {} to neo&#34;.format(os.path.basename(filename)))
+    s_extractor = SessionExtractor(filename, verbose=False)
 
     for s in s_extractor:  # Batch run for file
-        stage = s.get_metadata(&#39;name&#39;)
+        stage = s.get_metadata(&#34;name&#34;)
         if stage not in s.session_info.session_info_dict.keys():
             continue
         else:
             s.save_to_neo(
-                out_dir, neo_backend=neo_backend,
-                remove_existing=remove_existing)</code></pre>
+                out_dir, neo_backend=neo_backend, remove_existing=remove_existing,
+            )</code></pre>
 </details>
 </dd>
 <dt id="bvmpc.bv_file.extract_sessions"><code class="name flex">
@@ -264,8 +259,13 @@ def select_lfp(fname, ROI):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def extract_sessions(
-        in_dir, sub_list=None, s_list=None, d_list=None,
-        load_backend=&#34;neo&#34;, neo_backend=&#34;nix&#34;):
+    in_dir,
+    sub_list=None,
+    s_list=None,
+    d_list=None,
+    load_backend=&#34;neo&#34;,
+    neo_backend=&#34;nix&#34;,
+):
     &#34;&#34;&#34;Extracts specified sessions from files.&#34;&#34;&#34;
 
     def should_use(val, vlist):
@@ -278,7 +278,7 @@ def select_lfp(fname, ROI):
     in_files = sorted(os.listdir(in_dir))
     s_grp = []
     for file in in_files:
-        splits = file.split(&#39;_&#39;)
+        splits = file.split(&#34;_&#34;)
         subject = splits[0]
         subject = str(subject)
         # NOTE date not have year
@@ -295,12 +295,11 @@ def select_lfp(fname, ROI):
                 elif load_backend == &#34;hdf5&#34;:
                     session = load_hdf5(filename)
                 else:
-                    print(&#34;Backend {} invalid, using neo&#34;.format(
-                        load_backend))
+                    print(&#34;Backend {} invalid, using neo&#34;.format(load_backend))
                     session = load_neo(filename)
 
                 s_grp.append(session)
-    print(&#39;Total Files extracted: {}&#39;.format(len(s_grp)))
+    print(&#34;Total Files extracted: {}&#34;.format(len(s_grp)))
     return s_grp</code></pre>
 </details>
 </dd>
@@ -380,7 +379,8 @@ def select_lfp(fname, ROI):
     for r in ROI:
         idx = [i for i, x in enumerate(regions) if x == ROI[r]]
         lfp_odict = LfpODict(
-            fname, channels=chans[idx], filt_params=(True, filt_btm, filt_top))
+            fname, channels=chans[idx], filt_params=(True, filt_btm, filt_top)
+        )
         lfp_list.append(lfp_odict)
     return lfp_list</code></pre>
 </details>

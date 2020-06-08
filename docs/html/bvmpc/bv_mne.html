@@ -61,10 +61,11 @@ def get_eloc(ch_names, o_dir, base_name, dummy=False):
         Dictionary of electrode locations.
 
     &#34;&#34;&#34;
+
     def get_next_i(rows, cols, idx):
         &#34;&#34;&#34;Local helper function.&#34;&#34;&#34;
-        row_idx = (idx % cols)
-        col_idx = (idx // cols)
+        row_idx = idx % cols
+        col_idx = idx // cols
         return row_idx, col_idx
 
     eloc_path = os.path.join(o_dir, base_name + &#34;_eloc.csv&#34;)
@@ -104,9 +105,13 @@ def get_eloc(ch_names, o_dir, base_name, dummy=False):
                 else:
                     eloc[ch] = np.empty(3)
                     for i, axis in enumerate([&#34;x&#34;, &#34;y&#34;, &#34;z&#34;]):
-                        eloc[ch][i] = float(input(
-                            &#34;Enter {} coordinate for S{}-{}: &#34;.format(
-                                axis, s // 2, ch)))
+                        eloc[ch][i] = float(
+                            input(
+                                &#34;Enter {} coordinate for S{}-{}: &#34;.format(
+                                    axis, s // 2, ch
+                                )
+                            )
+                        )
             df = pd.DataFrame.from_dict(eloc, orient=&#34;index&#34;)
             df.to_csv(eloc_path)
         print(eloc)
@@ -130,7 +135,8 @@ def lfp_odict_to_np(lfp_odict):
 
 
 def create_mne_array(
-        lfp_odict, fname, ch_names=None, regions=None, o_dir=&#34;&#34;, plot_mon=True):
+    lfp_odict, fname, ch_names=None, regions=None, o_dir=&#34;&#34;, plot_mon=True
+):
     &#34;&#34;&#34;
     Populate a full mne raw array object with information.
 
@@ -162,8 +168,10 @@ def create_mne_array(
         if regions is None:
             ch_names = list(lfp_odict.lfp_odict.keys())
         else:
-            ch_names = [&#34;{}-{}&#34;.format(x, y) for x,
-                        y in zip(regions, lfp_odict.lfp_odict.keys())]
+            ch_names = [
+                &#34;{}-{}&#34;.format(x, y)
+                for x, y in zip(regions, lfp_odict.lfp_odict.keys())
+            ]
 
     # Read or create tetrode locations
     base_name = os.path.basename(fname)
@@ -173,10 +181,13 @@ def create_mne_array(
     # Convert LFP data into mne format
     example_lfp = lfp_odict.get_filt_signal(key=1)
     sfreq = example_lfp.get_sampling_rate()
-    ch_types = ([&#34;eeg&#34;] * len(lfp_odict)) + [&#34;stim&#34;, ]
-    ch_names = ch_names + [&#34;Events&#34;, ]
-    info = mne.create_info(
-        ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
+    ch_types = ([&#34;eeg&#34;] * len(lfp_odict)) + [
+        &#34;stim&#34;,
+    ]
+    ch_names = ch_names + [
+        &#34;Events&#34;,
+    ]
+    info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
     info.set_montage(montage)
 
     raw = mne.io.RawArray(raw_data, info)
@@ -191,12 +202,19 @@ def create_mne_array(
         # sphere = [0, 0, 0, 10]
 
         ax = fig.add_subplot(1, 1, 1)
-        raw.plot_sensors(kind=&#39;topomap&#39;, ch_type=&#39;eeg&#39;, show_names=True,
-                         axes=ax, block=False)
+        raw.plot_sensors(
+            kind=&#34;topomap&#34;, ch_type=&#34;eeg&#34;, show_names=True, axes=ax, block=False
+        )
 
-        ax = fig.add_subplot(1, 2, 1, projection=&#39;3d&#39;)
-        raw.plot_sensors(kind=&#39;3d&#39;, ch_type=&#39;eeg&#39;, show_names=True,
-                         axes=ax, block=True, to_sphere=True)
+        ax = fig.add_subplot(1, 2, 1, projection=&#34;3d&#34;)
+        raw.plot_sensors(
+            kind=&#34;3d&#34;,
+            ch_type=&#34;eeg&#34;,
+            show_names=True,
+            axes=ax,
+            block=True,
+            to_sphere=True,
+        )
 
     return raw
 
@@ -204,7 +222,7 @@ def create_mne_array(
 def set_annotations(mne_array, annotation_fname):
     &#34;&#34;&#34;Read annots from annotation_fname and store them on mne_array.&#34;&#34;&#34;
     try:
-        print(&#39;Loading mne_annotations from&#39;, annotation_fname)
+        print(&#34;Loading mne_annotations from&#34;, annotation_fname)
         annot_from_file = mne.read_annotations(annotation_fname)
         mne_array.set_annotations(annot_from_file)
     except FileNotFoundError:
@@ -231,17 +249,14 @@ def add_nc_event_to_mne(mne_array, nc_events, sample_rate=250):
 
     &#34;&#34;&#34;
     print(&#34;Adding {} events to mne&#34;.format(len(nc_events._timestamp)))
-    event_data = np.zeros(
-        shape=(len(nc_events._timestamp), 3))
-    for i, (a, b) in enumerate(
-            zip(nc_events._timestamp, nc_events._event_train)):
+    event_data = np.zeros(shape=(len(nc_events._timestamp), 3))
+    for i, (a, b) in enumerate(zip(nc_events._timestamp, nc_events._event_train)):
         sample_number = int(a * sample_rate)
         event_data[i] = np.array([sample_number, 0, b + 1])
     mne_array.add_events(event_data, stim_channel=&#34;Events&#34;)
 
     event_name_dict = {}
-    for i, (b, a) in enumerate(
-            zip(nc_events._event_names, nc_events._event_train)):
+    for i, (b, a) in enumerate(zip(nc_events._event_names, nc_events._event_train)):
         event_name_dict[b] = a + 1
     return event_name_dict
 
@@ -268,36 +283,33 @@ def get_layout(o_dir, layout_name):
     if layout_name is None:
         layout_name = &#34;SA5_topo.lout&#34;
     try:
-        lt = mne.channels.read_layout(
-            layout_name, path=layout_path, scale=False)
+        lt = mne.channels.read_layout(layout_name, path=layout_path, scale=False)
     except:
         # Generate layout of tetrodes
         # This code opens the image so you can click on it to designate tetrode positions
         from mne.viz import ClickableImage  # noqa
-        from mne.viz import (
-            plot_alignment, snapshot_brain_montage, set_3d_view)
+        from mne.viz import plot_alignment, snapshot_brain_montage, set_3d_view
+
         # The click coordinates are stored as a list of tuples
-        template_loc = r&#39;F:\!Imaging\LKC\SA5\SA5_Histology-07.tif&#39;  # template location
+        template_loc = r&#34;F:\!Imaging\LKC\SA5\SA5_Histology-07.tif&#34;  # template location
         im = plt.imread(template_loc)
         click = ClickableImage(im)
         click.plot_clicks()
 
         # Generate a layout from our clicks and normalize by the image
-        print(&#39;Generating and saving layout...&#39;)
+        print(&#34;Generating and saving layout...&#34;)
         lt = click.to_layout()
         # To save if we want
         lt.save(os.path.join(layout_path, layout_name))
-        print(&#39;Saved layout to&#39;, os.path.join(
-            layout_path, layout_name))
+        print(&#34;Saved layout to&#34;, os.path.join(layout_path, layout_name))
 
     # Load and display layout
-    lt = mne.channels.read_layout(
-        layout_name, path=layout_path, scale=False)
+    lt = mne.channels.read_layout(layout_name, path=layout_path, scale=False)
     x = lt.pos[:, 0] * float(im.shape[1])
     y = (1 - lt.pos[:, 1]) * float(im.shape[0])  # Flip the y-position
     fig, ax = plt.subplots()
     ax.imshow(im)
-    ax.scatter(x, y, s=120, color=&#39;r&#39;)
+    ax.scatter(x, y, s=120, color=&#34;r&#34;)
     plt.autoscale(tight=True)
     ax.set_axis_off()
     plt.show()
@@ -327,31 +339,38 @@ def generate_events(mne_array, session, plot=False):
 
     &#34;&#34;&#34;
     from bvmpc.bv_nc import events_from_session
+
     # Generate events
     nc_events = events_from_session(session)
     events_dict = add_nc_event_to_mne(mne_array, nc_events)
 
     mne_events = mne.find_events(
-        mne_array, stim_channel=&#39;Events&#39;,
-        shortest_event=1, min_duration=(0.1 / mne_array.info[&#39;sfreq&#39;]),
-        consecutive=True, initial_event=True)
+        mne_array,
+        stim_channel=&#34;Events&#34;,
+        shortest_event=1,
+        min_duration=(0.1 / mne_array.info[&#34;sfreq&#34;]),
+        consecutive=True,
+        initial_event=True,
+    )
 
     if plot:
         fig = mne.viz.plot_events(
-            mne_events, sfreq=mne_array.info[&#39;sfreq&#39;],
-            first_samp=mne_array.first_samp, event_id=events_dict, show=True)
+            mne_events,
+            sfreq=mne_array.info[&#34;sfreq&#34;],
+            first_samp=mne_array.first_samp,
+            event_id=events_dict,
+            show=True,
+        )
 
     # Set annotations from events
     # Swap key and values
-    events_map = {value: key[:2] + key[-1]
-                  for key, value in events_dict.items()}
-    onsets = mne_events[:, 0] / mne_array.info[&#39;sfreq&#39;]
+    events_map = {value: key[:2] + key[-1] for key, value in events_dict.items()}
+    onsets = mne_events[:, 0] / mne_array.info[&#34;sfreq&#34;]
     durations = np.zeros_like(onsets)  # assumes instantaneous events
-    descriptions = [events_map[event_id]
-                    for event_id in mne_events[:, 2]]
-    annot_from_events = mne.Annotations(onset=onsets, duration=durations,
-                                        description=descriptions,
-                                        orig_time=None)
+    descriptions = [events_map[event_id] for event_id in mne_events[:, 2]]
+    annot_from_events = mne.Annotations(
+        onset=onsets, duration=durations, description=descriptions, orig_time=None,
+    )
     return events_dict, mne_events, annot_from_events
 
 
@@ -389,18 +408,18 @@ def pick_chans(raw, sel=None):
         for s in sel:
             for ch in raw.ch_names[:-1]:
                 try:
-                    if ch.split(&#39;-&#39;)[1] == str(s):
+                    if ch.split(&#34;-&#34;)[1] == str(s):
                         picks.append(ch)
                 except:
                     pass
-        print(&#39;Picked chans:&#39;, picks)
+        print(&#34;Picked chans:&#34;, picks)
     else:
         picks = []
         for s in sel:
             for ch in raw.ch_names:
                 if s in ch:
                     picks.append(ch)
-        print(&#39;Picked chans:&#39;, picks)
+        print(&#34;Picked chans:&#34;, picks)
     return picks
 
 
@@ -431,23 +450,31 @@ def get_reg_chans(raw, regions):
     return grps
 
 
-def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name=&#34;&#34;, exclude=None, skip_plots=False):
+def ICA_pipeline(
+    mne_array, regions, chans_to_plot=20, base_name=&#34;&#34;, exclude=None, skip_plots=False,
+):
     &#34;&#34;&#34;This is example code using mne.&#34;&#34;&#34;
     raw = mne_array
 
     if not skip_plots:
         # Plot raw signal
         raw.plot(
-            n_channels=chans_to_plot, block=True, duration=25,
-            show=True, clipping=&#34;transparent&#34;,
+            n_channels=chans_to_plot,
+            block=True,
+            duration=25,
+            show=True,
+            clipping=&#34;transparent&#34;,
             title=&#34;Raw LFP Data from {}&#34;.format(base_name),
-            remove_dc=False, scalings=dict(eeg=350e-6))
+            remove_dc=False,
+            scalings=dict(eeg=350e-6),
+        )
 
     # Perform ICA using mne
     from mne.preprocessing import ICA
+
     filt_raw = raw.copy()
-    filt_raw.load_data().filter(l_freq=1., h_freq=None)
-    ica = ICA(method=&#39;fastica&#39;, random_state=97)
+    filt_raw.load_data().filter(l_freq=1.0, h_freq=None)
+    ica = ICA(method=&#34;fastica&#34;, random_state=97)
     # ica = ICA(method=&#39;picard&#39;, random_state=97)
     ica.fit(filt_raw)
 
@@ -455,11 +482,12 @@ def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name=&#34;&#34;, exc
     raw.load_data()
     if exclude is None:
         # Plot raw ICAs
-        print(&#39;Select channels to exclude using this plot...&#39;)
+        print(&#34;Select channels to exclude using this plot...&#34;)
         ica.plot_sources(
-            raw, block=False, stop=25, title=&#39;ICA from {}&#39;.format(base_name))
+            raw, block=False, stop=25, title=&#34;ICA from {}&#34;.format(base_name)
+        )
 
-        print(&#39;Click topo to get more ICA properties&#39;)
+        print(&#34;Click topo to get more ICA properties&#34;)
         ica.plot_components(inst=raw)
 
         # Overlay ICA cleaned signal over raw. Seperate plot for each region.
@@ -481,7 +509,8 @@ def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name=&#34;&#34;, exc
         ica.exclude = exclude
         if not skip_plots:
             ica.plot_sources(
-                raw, block=False, stop=25, title=&#39;ICA from {}&#39;.format(base_name))
+                raw, block=False, stop=25, title=&#34;ICA from {}&#34;.format(base_name)
+            )
             ica.plot_components(inst=raw)
     # Apply ICA exclusion
     reconst_raw = raw.copy()
@@ -498,22 +527,32 @@ def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name=&#34;&#34;, exc
         ica.apply(exclude_raw)
 
         # Plot excluded ICAs
-        exclude_raw.plot(block=True, show=True, clipping=&#34;transparent&#34;, duration=25,
-                         title=&#34;Excluded ICs from {}&#34;.format(
-                             base_name),
-                         remove_dc=False, scalings=dict(eeg=350e-6))
+        exclude_raw.plot(
+            block=True,
+            show=True,
+            clipping=&#34;transparent&#34;,
+            duration=25,
+            title=&#34;Excluded ICs from {}&#34;.format(base_name),
+            remove_dc=False,
+            scalings=dict(eeg=350e-6),
+        )
 
         # Plot reconstructed signals w/o excluded ICAs
-        reconst_raw.plot(block=True, show=True, clipping=&#34;transparent&#34;, duration=25,
-                         title=&#34;Reconstructed LFP Data from {}&#34;.format(
-                             base_name),
-                         remove_dc=False, scalings=dict(eeg=350e-6))
+        reconst_raw.plot(
+            block=True,
+            show=True,
+            clipping=&#34;transparent&#34;,
+            duration=25,
+            title=&#34;Reconstructed LFP Data from {}&#34;.format(base_name),
+            remove_dc=False,
+            scalings=dict(eeg=350e-6),
+        )
     return reconst_raw
 
 
 def viz_raw_epochs(
-        epoch_list, comp_conds, picks, sort_reg,
-        plot_reg, topo_seq, plot_image, ppros_dict):
+    epoch_list, comp_conds, picks, sort_reg, plot_reg, topo_seq, plot_image, ppros_dict,
+):
     &#34;&#34;&#34;
     Pipeline for visualizing raw epochs.
 
@@ -534,30 +573,40 @@ def viz_raw_epochs(
     &#34;&#34;&#34;
 
     # Extract variables from ppros_dict
-    base_name = ppros_dict[&#39;base_name&#39;]
-    mne_dir = ppros_dict[&#39;mne_dir&#39;]
-    ica_txt = ppros_dict[&#39;ica_txt&#39;]
-    bline_txt = ppros_dict[&#39;bline_txt&#39;]
-    combine = ppros_dict[&#39;combine&#39;]
+    base_name = ppros_dict[&#34;base_name&#34;]
+    mne_dir = ppros_dict[&#34;mne_dir&#34;]
+    ica_txt = ppros_dict[&#34;ica_txt&#34;]
+    bline_txt = ppros_dict[&#34;bline_txt&#34;]
+    combine = ppros_dict[&#34;combine&#34;]
 
     # Plot epoch.plot_image for selected tetrodes seperately
     if plot_image:
         for epoch, cond in zip(epoch_list, comp_conds):
             # epoch_fig = epoch.plot_image(picks=picks, show=False)
             for i, pick in enumerate(picks):
-                epoch_fig = epoch.plot_image(
-                    picks=pick, show=False, combine=combine)
+                epoch_fig = epoch.plot_image(picks=pick, show=False, combine=combine)
                 ax = epoch_fig[0].axes[0]
-                ax.set_title(&#34;{}\n&#39;{}&#39; {}&#34;.format(base_name, cond, pick),
-                             x=0.5, y=1.01, fontsize=10)
+                ax.set_title(
+                    &#34;{}\n&#39;{}&#39; {}&#34;.format(base_name, cond, pick),
+                    x=0.5,
+                    y=1.01,
+                    fontsize=10,
+                )
                 if plot_reg:
-                    pick_txt = &#39;gfp_&#39; + sort_reg[i]
+                    pick_txt = &#34;gfp_&#34; + sort_reg[i]
                 else:
                     pick_txt = pick
                 fig_name = os.path.join(
-                    mne_dir, &#39;{}&#39;.format(cond.replace(&#39;/&#39;, &#39;-&#39;)), bline_txt, &#39;{}_{}_{}-{}{}&#39;.format(base_name, ica_txt, cond.replace(&#39;/&#39;, &#39;-&#39;), pick_txt, bline_txt) + &#39;.png&#39;)
+                    mne_dir,
+                    &#34;{}&#34;.format(cond.replace(&#34;/&#34;, &#34;-&#34;)),
+                    bline_txt,
+                    &#34;{}_{}_{}-{}{}&#34;.format(
+                        base_name, ica_txt, cond.replace(&#34;/&#34;, &#34;-&#34;), pick_txt, bline_txt,
+                    )
+                    + &#34;.png&#34;,
+                )
                 make_path_if_not_exists(fig_name)
-                print(&#39;Saving raw-epoch to &#39; + fig_name)
+                print(&#34;Saving raw-epoch to &#34; + fig_name)
                 epoch_fig[0].savefig(fig_name)
 
             # Optional parameter to set bands displayed in topo
@@ -570,22 +619,33 @@ def viz_raw_epochs(
 
             # Plot power spectrum density of epoch
             import matplotlib.gridspec as gridspec
+
             psd_fig = plt.figure(figsize=(14, 7))
-            gs = gridspec.GridSpec(2, n_topo, hspace=0.2,
-                                   wspace=0.3, height_ratios=[2, 1])
+            gs = gridspec.GridSpec(
+                2, n_topo, hspace=0.2, wspace=0.3, height_ratios=[2, 1]
+            )
             ax = plt.subplot(gs[:-1, :])
             epoch.plot_psd(show=False, ax=ax)
             ax = psd_fig.axes[0]
-            ax.set_title(&#34;{}\n&#39;{}&#39; PSD&#34;.format(base_name, cond),
-                         x=0.5, y=1.01, fontsize=10)
+            ax.set_title(
+                &#34;{}\n&#39;{}&#39; PSD&#34;.format(base_name, cond), x=0.5, y=1.01, fontsize=10,
+            )
 
             topo_axes = [plt.subplot(gs[-1, x]) for x in range(n_topo)]
             epoch.plot_psd_topomap(
-                ch_type=&#39;eeg&#39;, normalize=True, axes=topo_axes, show=False)
+                ch_type=&#34;eeg&#34;, normalize=True, axes=topo_axes, show=False
+            )
             psd_fname = os.path.join(
-                mne_dir, &#39;{}&#39;.format(cond.replace(&#39;/&#39;, &#39;-&#39;)), bline_txt, &#39;{}_{}_psd_{}{}&#39;.format(base_name, ica_txt, cond.replace(&#39;/&#39;, &#39;-&#39;), bline_txt) + &#39;.png&#39;)
+                mne_dir,
+                &#34;{}&#34;.format(cond.replace(&#34;/&#34;, &#34;-&#34;)),
+                bline_txt,
+                &#34;{}_{}_psd_{}{}&#34;.format(
+                    base_name, ica_txt, cond.replace(&#34;/&#34;, &#34;-&#34;), bline_txt
+                )
+                + &#34;.png&#34;,
+            )
             make_path_if_not_exists(psd_fname)
-            print(&#39;Saving raw-epoch to &#39; + psd_fname)
+            print(&#34;Saving raw-epoch to &#34; + psd_fname)
             psd_fig.savefig(psd_fname)
     # exit(-1)
 
@@ -598,33 +658,82 @@ def viz_raw_epochs(
     if topo_seq:
         for cond, epoch in epoch_ave.items():
             pj_fig = epoch.plot_joint(
-                picks=&#39;eeg&#39;, show=False, times=[-0.25, -0.1, -0.025, 0, 0.025, 0.1, 0.25])
+                picks=&#34;eeg&#34;,
+                show=False,
+                times=[-0.25, -0.1, -0.025, 0, 0.025, 0.1, 0.25],
+            )
             # Joint plot title
-            pj_title = &#39;&#34;{}&#34;_{}_{}&#39;.format(
-                cond.replace(&#39;/&#39;, &#39;-&#39;), ica_txt, base_name)
+            pj_title = &#39;&#34;{}&#34;_{}_{}&#39;.format(cond.replace(&#34;/&#34;, &#34;-&#34;), ica_txt, base_name)
             pj_fig.suptitle(pj_title)
             pj_fname = os.path.join(
-                mne_dir, &#39;{}&#39;.format(cond.replace(&#39;/&#39;, &#39;-&#39;)), bline_txt, &#39;{}_{}_joint_{}{}&#39;.format(base_name, ica_txt, cond.replace(&#39;/&#39;, &#39;-&#39;), bline_txt) + &#39;.png&#39;)
+                mne_dir,
+                &#34;{}&#34;.format(cond.replace(&#34;/&#34;, &#34;-&#34;)),
+                bline_txt,
+                &#34;{}_{}_joint_{}{}&#34;.format(
+                    base_name, ica_txt, cond.replace(&#34;/&#34;, &#34;-&#34;), bline_txt
+                )
+                + &#34;.png&#34;,
+            )
             pj_fig.savefig(pj_fname)
     # plt.show()
     # exit(-1)
 
     # Compare average across session types
     if len(comp_conds) &gt; 1:
-        vs_fig, axes = plt.subplots(
-            len(picks), 1, figsize=(10, 14), sharex=True)
-        plt.rc(&#39;legend&#39;, **{&#39;fontsize&#39;: 6})
+        vs_fig, axes = plt.subplots(len(picks), 1, figsize=(10, 14), sharex=True)
+        plt.rc(&#34;legend&#34;, **{&#34;fontsize&#34;: 6})
         plt.subplots_adjust(hspace=0.3)
 
         for ax, pick in zip(axes, picks):
             mne.viz.plot_compare_evokeds(
-                epoch_ave, picks=pick, legend=&#39;upper left&#39;, show_sensors=&#39;upper right&#39;, ylim=dict(eeg=[-80, 80]), show=False, title=&#39;{} {}&#39;.format(base_name, pick), axes=ax)
-        vs_fname = os.path.join(mne_dir, &#39;{}_{}_joint_{}{}&#39;.format(
-            base_name, ica_txt, cond.split(&#39;/&#39;)[0], bline_txt) + &#39;.png&#39;)
-        print(&#39;Saving joint_plot to &#39; + vs_fname)
+                epoch_ave,
+                picks=pick,
+                legend=&#34;upper left&#34;,
+                show_sensors=&#34;upper right&#34;,
+                ylim=dict(eeg=[-80, 80]),
+                show=False,
+                title=&#34;{} {}&#34;.format(base_name, pick),
+                axes=ax,
+            )
+        vs_fname = os.path.join(
+            mne_dir,
+            &#34;{}_{}_joint_{}{}&#34;.format(base_name, ica_txt, cond.split(&#34;/&#34;)[0], bline_txt)
+            + &#34;.png&#34;,
+        )
+        print(&#34;Saving joint_plot to &#34; + vs_fname)
         vs_fig.savefig(vs_fname)
 
-    exit(-1)</code></pre>
+    exit(-1)
+
+
+def random_white_noise(epochs, channels, samples_per_epoch, mean=0, std=1):
+    &#34;&#34;&#34;
+    Generate a random white noise signal as Epochs in MNE.
+
+    Parameters
+    ----------
+    epochs : int
+    channels : int
+    samples_per_epoch : int
+    mean : float, optional
+    std : float, optional
+
+    Returns
+    -------
+    mne.Epochs
+
+    &#34;&#34;&#34;
+    num_samples = epochs * channels * samples_per_epoch
+    samples = np.random.normal(loc=mean, scale=std, size=num_samples)
+    random_data = samples.reshape(epochs, channels, samples_per_epoch)
+
+    sfreq = 250
+    ch_types = [&#34;eeg&#34;] * channels
+    ch_names = [str(i) for i in range(channels)]
+    info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
+    mne_epochs = mne.EpochsArray(random_data, info)
+
+    return mne_epochs</code></pre>
 </details>
 </section>
 <section>
@@ -643,23 +752,31 @@ def viz_raw_epochs(
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def ICA_pipeline(mne_array, regions, chans_to_plot=20, base_name=&#34;&#34;, exclude=None, skip_plots=False):
+<pre><code class="python">def ICA_pipeline(
+    mne_array, regions, chans_to_plot=20, base_name=&#34;&#34;, exclude=None, skip_plots=False,
+):
     &#34;&#34;&#34;This is example code using mne.&#34;&#34;&#34;
     raw = mne_array
 
     if not skip_plots:
         # Plot raw signal
         raw.plot(
-            n_channels=chans_to_plot, block=True, duration=25,
-            show=True, clipping=&#34;transparent&#34;,
+            n_channels=chans_to_plot,
+            block=True,
+            duration=25,
+            show=True,
+            clipping=&#34;transparent&#34;,
             title=&#34;Raw LFP Data from {}&#34;.format(base_name),
-            remove_dc=False, scalings=dict(eeg=350e-6))
+            remove_dc=False,
+            scalings=dict(eeg=350e-6),
+        )
 
     # Perform ICA using mne
     from mne.preprocessing import ICA
+
     filt_raw = raw.copy()
-    filt_raw.load_data().filter(l_freq=1., h_freq=None)
-    ica = ICA(method=&#39;fastica&#39;, random_state=97)
+    filt_raw.load_data().filter(l_freq=1.0, h_freq=None)
+    ica = ICA(method=&#34;fastica&#34;, random_state=97)
     # ica = ICA(method=&#39;picard&#39;, random_state=97)
     ica.fit(filt_raw)
 
@@ -667,11 +784,12 @@ def viz_raw_epochs(
     raw.load_data()
     if exclude is None:
         # Plot raw ICAs
-        print(&#39;Select channels to exclude using this plot...&#39;)
+        print(&#34;Select channels to exclude using this plot...&#34;)
         ica.plot_sources(
-            raw, block=False, stop=25, title=&#39;ICA from {}&#39;.format(base_name))
+            raw, block=False, stop=25, title=&#34;ICA from {}&#34;.format(base_name)
+        )
 
-        print(&#39;Click topo to get more ICA properties&#39;)
+        print(&#34;Click topo to get more ICA properties&#34;)
         ica.plot_components(inst=raw)
 
         # Overlay ICA cleaned signal over raw. Seperate plot for each region.
@@ -693,7 +811,8 @@ def viz_raw_epochs(
         ica.exclude = exclude
         if not skip_plots:
             ica.plot_sources(
-                raw, block=False, stop=25, title=&#39;ICA from {}&#39;.format(base_name))
+                raw, block=False, stop=25, title=&#34;ICA from {}&#34;.format(base_name)
+            )
             ica.plot_components(inst=raw)
     # Apply ICA exclusion
     reconst_raw = raw.copy()
@@ -710,16 +829,26 @@ def viz_raw_epochs(
         ica.apply(exclude_raw)
 
         # Plot excluded ICAs
-        exclude_raw.plot(block=True, show=True, clipping=&#34;transparent&#34;, duration=25,
-                         title=&#34;Excluded ICs from {}&#34;.format(
-                             base_name),
-                         remove_dc=False, scalings=dict(eeg=350e-6))
+        exclude_raw.plot(
+            block=True,
+            show=True,
+            clipping=&#34;transparent&#34;,
+            duration=25,
+            title=&#34;Excluded ICs from {}&#34;.format(base_name),
+            remove_dc=False,
+            scalings=dict(eeg=350e-6),
+        )
 
         # Plot reconstructed signals w/o excluded ICAs
-        reconst_raw.plot(block=True, show=True, clipping=&#34;transparent&#34;, duration=25,
-                         title=&#34;Reconstructed LFP Data from {}&#34;.format(
-                             base_name),
-                         remove_dc=False, scalings=dict(eeg=350e-6))
+        reconst_raw.plot(
+            block=True,
+            show=True,
+            clipping=&#34;transparent&#34;,
+            duration=25,
+            title=&#34;Reconstructed LFP Data from {}&#34;.format(base_name),
+            remove_dc=False,
+            scalings=dict(eeg=350e-6),
+        )
     return reconst_raw</code></pre>
 </details>
 </dd>
@@ -741,17 +870,14 @@ def viz_raw_epochs(
 
     &#34;&#34;&#34;
     print(&#34;Adding {} events to mne&#34;.format(len(nc_events._timestamp)))
-    event_data = np.zeros(
-        shape=(len(nc_events._timestamp), 3))
-    for i, (a, b) in enumerate(
-            zip(nc_events._timestamp, nc_events._event_train)):
+    event_data = np.zeros(shape=(len(nc_events._timestamp), 3))
+    for i, (a, b) in enumerate(zip(nc_events._timestamp, nc_events._event_train)):
         sample_number = int(a * sample_rate)
         event_data[i] = np.array([sample_number, 0, b + 1])
     mne_array.add_events(event_data, stim_channel=&#34;Events&#34;)
 
     event_name_dict = {}
-    for i, (b, a) in enumerate(
-            zip(nc_events._event_names, nc_events._event_train)):
+    for i, (b, a) in enumerate(zip(nc_events._event_names, nc_events._event_train)):
         event_name_dict[b] = a + 1
     return event_name_dict</code></pre>
 </details>
@@ -788,7 +914,8 @@ If ch_names and regions are both None, names are chan_idx.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_mne_array(
-        lfp_odict, fname, ch_names=None, regions=None, o_dir=&#34;&#34;, plot_mon=True):
+    lfp_odict, fname, ch_names=None, regions=None, o_dir=&#34;&#34;, plot_mon=True
+):
     &#34;&#34;&#34;
     Populate a full mne raw array object with information.
 
@@ -820,8 +947,10 @@ If ch_names and regions are both None, names are chan_idx.</dd>
         if regions is None:
             ch_names = list(lfp_odict.lfp_odict.keys())
         else:
-            ch_names = [&#34;{}-{}&#34;.format(x, y) for x,
-                        y in zip(regions, lfp_odict.lfp_odict.keys())]
+            ch_names = [
+                &#34;{}-{}&#34;.format(x, y)
+                for x, y in zip(regions, lfp_odict.lfp_odict.keys())
+            ]
 
     # Read or create tetrode locations
     base_name = os.path.basename(fname)
@@ -831,10 +960,13 @@ If ch_names and regions are both None, names are chan_idx.</dd>
     # Convert LFP data into mne format
     example_lfp = lfp_odict.get_filt_signal(key=1)
     sfreq = example_lfp.get_sampling_rate()
-    ch_types = ([&#34;eeg&#34;] * len(lfp_odict)) + [&#34;stim&#34;, ]
-    ch_names = ch_names + [&#34;Events&#34;, ]
-    info = mne.create_info(
-        ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
+    ch_types = ([&#34;eeg&#34;] * len(lfp_odict)) + [
+        &#34;stim&#34;,
+    ]
+    ch_names = ch_names + [
+        &#34;Events&#34;,
+    ]
+    info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
     info.set_montage(montage)
 
     raw = mne.io.RawArray(raw_data, info)
@@ -849,12 +981,19 @@ If ch_names and regions are both None, names are chan_idx.</dd>
         # sphere = [0, 0, 0, 10]
 
         ax = fig.add_subplot(1, 1, 1)
-        raw.plot_sensors(kind=&#39;topomap&#39;, ch_type=&#39;eeg&#39;, show_names=True,
-                         axes=ax, block=False)
+        raw.plot_sensors(
+            kind=&#34;topomap&#34;, ch_type=&#34;eeg&#34;, show_names=True, axes=ax, block=False
+        )
 
-        ax = fig.add_subplot(1, 2, 1, projection=&#39;3d&#39;)
-        raw.plot_sensors(kind=&#39;3d&#39;, ch_type=&#39;eeg&#39;, show_names=True,
-                         axes=ax, block=True, to_sphere=True)
+        ax = fig.add_subplot(1, 2, 1, projection=&#34;3d&#34;)
+        raw.plot_sensors(
+            kind=&#34;3d&#34;,
+            ch_type=&#34;eeg&#34;,
+            show_names=True,
+            axes=ax,
+            block=True,
+            to_sphere=True,
+        )
 
     return raw</code></pre>
 </details>
@@ -909,31 +1048,38 @@ If ch_names and regions are both None, names are chan_idx.</dd>
 
     &#34;&#34;&#34;
     from bvmpc.bv_nc import events_from_session
+
     # Generate events
     nc_events = events_from_session(session)
     events_dict = add_nc_event_to_mne(mne_array, nc_events)
 
     mne_events = mne.find_events(
-        mne_array, stim_channel=&#39;Events&#39;,
-        shortest_event=1, min_duration=(0.1 / mne_array.info[&#39;sfreq&#39;]),
-        consecutive=True, initial_event=True)
+        mne_array,
+        stim_channel=&#34;Events&#34;,
+        shortest_event=1,
+        min_duration=(0.1 / mne_array.info[&#34;sfreq&#34;]),
+        consecutive=True,
+        initial_event=True,
+    )
 
     if plot:
         fig = mne.viz.plot_events(
-            mne_events, sfreq=mne_array.info[&#39;sfreq&#39;],
-            first_samp=mne_array.first_samp, event_id=events_dict, show=True)
+            mne_events,
+            sfreq=mne_array.info[&#34;sfreq&#34;],
+            first_samp=mne_array.first_samp,
+            event_id=events_dict,
+            show=True,
+        )
 
     # Set annotations from events
     # Swap key and values
-    events_map = {value: key[:2] + key[-1]
-                  for key, value in events_dict.items()}
-    onsets = mne_events[:, 0] / mne_array.info[&#39;sfreq&#39;]
+    events_map = {value: key[:2] + key[-1] for key, value in events_dict.items()}
+    onsets = mne_events[:, 0] / mne_array.info[&#34;sfreq&#34;]
     durations = np.zeros_like(onsets)  # assumes instantaneous events
-    descriptions = [events_map[event_id]
-                    for event_id in mne_events[:, 2]]
-    annot_from_events = mne.Annotations(onset=onsets, duration=durations,
-                                        description=descriptions,
-                                        orig_time=None)
+    descriptions = [events_map[event_id] for event_id in mne_events[:, 2]]
+    annot_from_events = mne.Annotations(
+        onset=onsets, duration=durations, description=descriptions, orig_time=None,
+    )
     return events_dict, mne_events, annot_from_events</code></pre>
 </details>
 </dd>
@@ -989,10 +1135,11 @@ Used in naming of eloc output - helps to track session, date, subject.</dd>
         Dictionary of electrode locations.
 
     &#34;&#34;&#34;
+
     def get_next_i(rows, cols, idx):
         &#34;&#34;&#34;Local helper function.&#34;&#34;&#34;
-        row_idx = (idx % cols)
-        col_idx = (idx // cols)
+        row_idx = idx % cols
+        col_idx = idx // cols
         return row_idx, col_idx
 
     eloc_path = os.path.join(o_dir, base_name + &#34;_eloc.csv&#34;)
@@ -1032,9 +1179,13 @@ Used in naming of eloc output - helps to track session, date, subject.</dd>
                 else:
                     eloc[ch] = np.empty(3)
                     for i, axis in enumerate([&#34;x&#34;, &#34;y&#34;, &#34;z&#34;]):
-                        eloc[ch][i] = float(input(
-                            &#34;Enter {} coordinate for S{}-{}: &#34;.format(
-                                axis, s // 2, ch)))
+                        eloc[ch][i] = float(
+                            input(
+                                &#34;Enter {} coordinate for S{}-{}: &#34;.format(
+                                    axis, s // 2, ch
+                                )
+                            )
+                        )
             df = pd.DataFrame.from_dict(eloc, orient=&#34;index&#34;)
             df.to_csv(eloc_path)
         print(eloc)
@@ -1085,36 +1236,33 @@ Read or generate layout. Layout generated by clicking on input image.</p>
     if layout_name is None:
         layout_name = &#34;SA5_topo.lout&#34;
     try:
-        lt = mne.channels.read_layout(
-            layout_name, path=layout_path, scale=False)
+        lt = mne.channels.read_layout(layout_name, path=layout_path, scale=False)
     except:
         # Generate layout of tetrodes
         # This code opens the image so you can click on it to designate tetrode positions
         from mne.viz import ClickableImage  # noqa
-        from mne.viz import (
-            plot_alignment, snapshot_brain_montage, set_3d_view)
+        from mne.viz import plot_alignment, snapshot_brain_montage, set_3d_view
+
         # The click coordinates are stored as a list of tuples
-        template_loc = r&#39;F:\!Imaging\LKC\SA5\SA5_Histology-07.tif&#39;  # template location
+        template_loc = r&#34;F:\!Imaging\LKC\SA5\SA5_Histology-07.tif&#34;  # template location
         im = plt.imread(template_loc)
         click = ClickableImage(im)
         click.plot_clicks()
 
         # Generate a layout from our clicks and normalize by the image
-        print(&#39;Generating and saving layout...&#39;)
+        print(&#34;Generating and saving layout...&#34;)
         lt = click.to_layout()
         # To save if we want
         lt.save(os.path.join(layout_path, layout_name))
-        print(&#39;Saved layout to&#39;, os.path.join(
-            layout_path, layout_name))
+        print(&#34;Saved layout to&#34;, os.path.join(layout_path, layout_name))
 
     # Load and display layout
-    lt = mne.channels.read_layout(
-        layout_name, path=layout_path, scale=False)
+    lt = mne.channels.read_layout(layout_name, path=layout_path, scale=False)
     x = lt.pos[:, 0] * float(im.shape[1])
     y = (1 - lt.pos[:, 1]) * float(im.shape[0])  # Flip the y-position
     fig, ax = plt.subplots()
     ax.imshow(im)
-    ax.scatter(x, y, s=120, color=&#39;r&#39;)
+    ax.scatter(x, y, s=120, color=&#34;r&#34;)
     plt.autoscale(tight=True)
     ax.set_axis_off()
     plt.show()
@@ -1260,19 +1408,76 @@ if list of int, channel number will be used to select channels.</dd>
         for s in sel:
             for ch in raw.ch_names[:-1]:
                 try:
-                    if ch.split(&#39;-&#39;)[1] == str(s):
+                    if ch.split(&#34;-&#34;)[1] == str(s):
                         picks.append(ch)
                 except:
                     pass
-        print(&#39;Picked chans:&#39;, picks)
+        print(&#34;Picked chans:&#34;, picks)
     else:
         picks = []
         for s in sel:
             for ch in raw.ch_names:
                 if s in ch:
                     picks.append(ch)
-        print(&#39;Picked chans:&#39;, picks)
+        print(&#34;Picked chans:&#34;, picks)
     return picks</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_mne.random_white_noise"><code class="name flex">
+<span>def <span class="ident">random_white_noise</span></span>(<span>epochs, channels, samples_per_epoch, mean=0, std=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate a random white noise signal as Epochs in MNE.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>epochs</code></strong> :&ensp;<code>int</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>channels</code></strong> :&ensp;<code>int</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>samples_per_epoch</code></strong> :&ensp;<code>int</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>mean</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>std</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>mne.Epochs</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def random_white_noise(epochs, channels, samples_per_epoch, mean=0, std=1):
+    &#34;&#34;&#34;
+    Generate a random white noise signal as Epochs in MNE.
+
+    Parameters
+    ----------
+    epochs : int
+    channels : int
+    samples_per_epoch : int
+    mean : float, optional
+    std : float, optional
+
+    Returns
+    -------
+    mne.Epochs
+
+    &#34;&#34;&#34;
+    num_samples = epochs * channels * samples_per_epoch
+    samples = np.random.normal(loc=mean, scale=std, size=num_samples)
+    random_data = samples.reshape(epochs, channels, samples_per_epoch)
+
+    sfreq = 250
+    ch_types = [&#34;eeg&#34;] * channels
+    ch_names = [str(i) for i in range(channels)]
+    info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
+    mne_epochs = mne.EpochsArray(random_data, info)
+
+    return mne_epochs</code></pre>
 </details>
 </dd>
 <dt id="bvmpc.bv_mne.save_annotations"><code class="name flex">
@@ -1305,7 +1510,7 @@ if list of int, channel number will be used to select channels.</dd>
 <pre><code class="python">def set_annotations(mne_array, annotation_fname):
     &#34;&#34;&#34;Read annots from annotation_fname and store them on mne_array.&#34;&#34;&#34;
     try:
-        print(&#39;Loading mne_annotations from&#39;, annotation_fname)
+        print(&#34;Loading mne_annotations from&#34;, annotation_fname)
         annot_from_file = mne.read_annotations(annotation_fname)
         mne_array.set_annotations(annot_from_file)
     except FileNotFoundError:
@@ -1336,8 +1541,8 @@ Used to label image files.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def viz_raw_epochs(
-        epoch_list, comp_conds, picks, sort_reg,
-        plot_reg, topo_seq, plot_image, ppros_dict):
+    epoch_list, comp_conds, picks, sort_reg, plot_reg, topo_seq, plot_image, ppros_dict,
+):
     &#34;&#34;&#34;
     Pipeline for visualizing raw epochs.
 
@@ -1358,30 +1563,40 @@ Used to label image files.</dd>
     &#34;&#34;&#34;
 
     # Extract variables from ppros_dict
-    base_name = ppros_dict[&#39;base_name&#39;]
-    mne_dir = ppros_dict[&#39;mne_dir&#39;]
-    ica_txt = ppros_dict[&#39;ica_txt&#39;]
-    bline_txt = ppros_dict[&#39;bline_txt&#39;]
-    combine = ppros_dict[&#39;combine&#39;]
+    base_name = ppros_dict[&#34;base_name&#34;]
+    mne_dir = ppros_dict[&#34;mne_dir&#34;]
+    ica_txt = ppros_dict[&#34;ica_txt&#34;]
+    bline_txt = ppros_dict[&#34;bline_txt&#34;]
+    combine = ppros_dict[&#34;combine&#34;]
 
     # Plot epoch.plot_image for selected tetrodes seperately
     if plot_image:
         for epoch, cond in zip(epoch_list, comp_conds):
             # epoch_fig = epoch.plot_image(picks=picks, show=False)
             for i, pick in enumerate(picks):
-                epoch_fig = epoch.plot_image(
-                    picks=pick, show=False, combine=combine)
+                epoch_fig = epoch.plot_image(picks=pick, show=False, combine=combine)
                 ax = epoch_fig[0].axes[0]
-                ax.set_title(&#34;{}\n&#39;{}&#39; {}&#34;.format(base_name, cond, pick),
-                             x=0.5, y=1.01, fontsize=10)
+                ax.set_title(
+                    &#34;{}\n&#39;{}&#39; {}&#34;.format(base_name, cond, pick),
+                    x=0.5,
+                    y=1.01,
+                    fontsize=10,
+                )
                 if plot_reg:
-                    pick_txt = &#39;gfp_&#39; + sort_reg[i]
+                    pick_txt = &#34;gfp_&#34; + sort_reg[i]
                 else:
                     pick_txt = pick
                 fig_name = os.path.join(
-                    mne_dir, &#39;{}&#39;.format(cond.replace(&#39;/&#39;, &#39;-&#39;)), bline_txt, &#39;{}_{}_{}-{}{}&#39;.format(base_name, ica_txt, cond.replace(&#39;/&#39;, &#39;-&#39;), pick_txt, bline_txt) + &#39;.png&#39;)
+                    mne_dir,
+                    &#34;{}&#34;.format(cond.replace(&#34;/&#34;, &#34;-&#34;)),
+                    bline_txt,
+                    &#34;{}_{}_{}-{}{}&#34;.format(
+                        base_name, ica_txt, cond.replace(&#34;/&#34;, &#34;-&#34;), pick_txt, bline_txt,
+                    )
+                    + &#34;.png&#34;,
+                )
                 make_path_if_not_exists(fig_name)
-                print(&#39;Saving raw-epoch to &#39; + fig_name)
+                print(&#34;Saving raw-epoch to &#34; + fig_name)
                 epoch_fig[0].savefig(fig_name)
 
             # Optional parameter to set bands displayed in topo
@@ -1394,22 +1609,33 @@ Used to label image files.</dd>
 
             # Plot power spectrum density of epoch
             import matplotlib.gridspec as gridspec
+
             psd_fig = plt.figure(figsize=(14, 7))
-            gs = gridspec.GridSpec(2, n_topo, hspace=0.2,
-                                   wspace=0.3, height_ratios=[2, 1])
+            gs = gridspec.GridSpec(
+                2, n_topo, hspace=0.2, wspace=0.3, height_ratios=[2, 1]
+            )
             ax = plt.subplot(gs[:-1, :])
             epoch.plot_psd(show=False, ax=ax)
             ax = psd_fig.axes[0]
-            ax.set_title(&#34;{}\n&#39;{}&#39; PSD&#34;.format(base_name, cond),
-                         x=0.5, y=1.01, fontsize=10)
+            ax.set_title(
+                &#34;{}\n&#39;{}&#39; PSD&#34;.format(base_name, cond), x=0.5, y=1.01, fontsize=10,
+            )
 
             topo_axes = [plt.subplot(gs[-1, x]) for x in range(n_topo)]
             epoch.plot_psd_topomap(
-                ch_type=&#39;eeg&#39;, normalize=True, axes=topo_axes, show=False)
+                ch_type=&#34;eeg&#34;, normalize=True, axes=topo_axes, show=False
+            )
             psd_fname = os.path.join(
-                mne_dir, &#39;{}&#39;.format(cond.replace(&#39;/&#39;, &#39;-&#39;)), bline_txt, &#39;{}_{}_psd_{}{}&#39;.format(base_name, ica_txt, cond.replace(&#39;/&#39;, &#39;-&#39;), bline_txt) + &#39;.png&#39;)
+                mne_dir,
+                &#34;{}&#34;.format(cond.replace(&#34;/&#34;, &#34;-&#34;)),
+                bline_txt,
+                &#34;{}_{}_psd_{}{}&#34;.format(
+                    base_name, ica_txt, cond.replace(&#34;/&#34;, &#34;-&#34;), bline_txt
+                )
+                + &#34;.png&#34;,
+            )
             make_path_if_not_exists(psd_fname)
-            print(&#39;Saving raw-epoch to &#39; + psd_fname)
+            print(&#34;Saving raw-epoch to &#34; + psd_fname)
             psd_fig.savefig(psd_fname)
     # exit(-1)
 
@@ -1422,30 +1648,49 @@ Used to label image files.</dd>
     if topo_seq:
         for cond, epoch in epoch_ave.items():
             pj_fig = epoch.plot_joint(
-                picks=&#39;eeg&#39;, show=False, times=[-0.25, -0.1, -0.025, 0, 0.025, 0.1, 0.25])
+                picks=&#34;eeg&#34;,
+                show=False,
+                times=[-0.25, -0.1, -0.025, 0, 0.025, 0.1, 0.25],
+            )
             # Joint plot title
-            pj_title = &#39;&#34;{}&#34;_{}_{}&#39;.format(
-                cond.replace(&#39;/&#39;, &#39;-&#39;), ica_txt, base_name)
+            pj_title = &#39;&#34;{}&#34;_{}_{}&#39;.format(cond.replace(&#34;/&#34;, &#34;-&#34;), ica_txt, base_name)
             pj_fig.suptitle(pj_title)
             pj_fname = os.path.join(
-                mne_dir, &#39;{}&#39;.format(cond.replace(&#39;/&#39;, &#39;-&#39;)), bline_txt, &#39;{}_{}_joint_{}{}&#39;.format(base_name, ica_txt, cond.replace(&#39;/&#39;, &#39;-&#39;), bline_txt) + &#39;.png&#39;)
+                mne_dir,
+                &#34;{}&#34;.format(cond.replace(&#34;/&#34;, &#34;-&#34;)),
+                bline_txt,
+                &#34;{}_{}_joint_{}{}&#34;.format(
+                    base_name, ica_txt, cond.replace(&#34;/&#34;, &#34;-&#34;), bline_txt
+                )
+                + &#34;.png&#34;,
+            )
             pj_fig.savefig(pj_fname)
     # plt.show()
     # exit(-1)
 
     # Compare average across session types
     if len(comp_conds) &gt; 1:
-        vs_fig, axes = plt.subplots(
-            len(picks), 1, figsize=(10, 14), sharex=True)
-        plt.rc(&#39;legend&#39;, **{&#39;fontsize&#39;: 6})
+        vs_fig, axes = plt.subplots(len(picks), 1, figsize=(10, 14), sharex=True)
+        plt.rc(&#34;legend&#34;, **{&#34;fontsize&#34;: 6})
         plt.subplots_adjust(hspace=0.3)
 
         for ax, pick in zip(axes, picks):
             mne.viz.plot_compare_evokeds(
-                epoch_ave, picks=pick, legend=&#39;upper left&#39;, show_sensors=&#39;upper right&#39;, ylim=dict(eeg=[-80, 80]), show=False, title=&#39;{} {}&#39;.format(base_name, pick), axes=ax)
-        vs_fname = os.path.join(mne_dir, &#39;{}_{}_joint_{}{}&#39;.format(
-            base_name, ica_txt, cond.split(&#39;/&#39;)[0], bline_txt) + &#39;.png&#39;)
-        print(&#39;Saving joint_plot to &#39; + vs_fname)
+                epoch_ave,
+                picks=pick,
+                legend=&#34;upper left&#34;,
+                show_sensors=&#34;upper right&#34;,
+                ylim=dict(eeg=[-80, 80]),
+                show=False,
+                title=&#34;{} {}&#34;.format(base_name, pick),
+                axes=ax,
+            )
+        vs_fname = os.path.join(
+            mne_dir,
+            &#34;{}_{}_joint_{}{}&#34;.format(base_name, ica_txt, cond.split(&#34;/&#34;)[0], bline_txt)
+            + &#34;.png&#34;,
+        )
+        print(&#34;Saving joint_plot to &#34; + vs_fname)
         vs_fig.savefig(vs_fname)
 
     exit(-1)</code></pre>
@@ -1478,6 +1723,7 @@ Used to label image files.</dd>
 <li><code><a title="bvmpc.bv_mne.get_reg_chans" href="#bvmpc.bv_mne.get_reg_chans">get_reg_chans</a></code></li>
 <li><code><a title="bvmpc.bv_mne.lfp_odict_to_np" href="#bvmpc.bv_mne.lfp_odict_to_np">lfp_odict_to_np</a></code></li>
 <li><code><a title="bvmpc.bv_mne.pick_chans" href="#bvmpc.bv_mne.pick_chans">pick_chans</a></code></li>
+<li><code><a title="bvmpc.bv_mne.random_white_noise" href="#bvmpc.bv_mne.random_white_noise">random_white_noise</a></code></li>
 <li><code><a title="bvmpc.bv_mne.save_annotations" href="#bvmpc.bv_mne.save_annotations">save_annotations</a></code></li>
 <li><code><a title="bvmpc.bv_mne.set_annotations" href="#bvmpc.bv_mne.set_annotations">set_annotations</a></code></li>
 <li><code><a title="bvmpc.bv_mne.viz_raw_epochs" href="#bvmpc.bv_mne.viz_raw_epochs">viz_raw_epochs</a></code></li>

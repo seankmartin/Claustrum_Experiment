@@ -1,0 +1,1175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>bvmpc.bv_decoding API documentation</title>
+<meta name="description" content="This module handles decoding routines." />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>bvmpc.bv_decoding</code></h1>
+</header>
+<section id="section-intro">
+<p>This module handles decoding routines.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;This module handles decoding routines.&#34;&#34;&#34;
+
+import numpy as np
+import scipy.stats
+
+
+class LFPDecoder(object):
+    &#34;&#34;&#34;
+    Decode a dependent var x from indep LFP features.
+
+    In general, this should be performed as
+    1. Compute features from LFP
+    2. Select the dependent variable (e.g. trial type)
+    3. Perform classification or regression.
+
+    See cross_val_decoding function for a full pipeline.
+
+    Attributes
+    ----------
+    mne_epochs : mne.Epochs
+        Epochs of LFP data.
+        There should be an epoch for each dependent var.
+        This is used to get
+        a 3D array of shape (n_epochs, n_channels, n_times)
+        For calculations.
+    labels : np.ndarray
+        The tag of each epoch, or what is decoded.
+    label_names : list of str
+        The name of each label.
+    selected_data : str | list | slice | None
+        See mne.Epochs.get_data
+        This is the picks argument
+    sample_rate : int
+        The sampling rate of the lfp data.
+
+    TODO
+    ----
+    Perhaps reorganise so that the class sets up decoding
+    parameters on init, such as the classifier to be used.
+
+    &#34;&#34;&#34;
+
+    def __init__(
+        self,
+        mne_epochs=None,
+        labels=None,
+        label_names=None,
+        selected_data=None,
+        sample_rate=250,
+    ):
+        self.mne_epochs = mne_epochs
+        self.labels = labels
+        self.label_names = label_names
+        self.selected_data = selected_data
+        self.sample_rate = sample_rate
+
+    def get_labels(self):
+        &#34;&#34;&#34;Return the labels of each epoch as a numpy array.&#34;&#34;&#34;
+        return self.labels
+
+    def get_data(self):
+        &#34;&#34;&#34;
+        Return a 3D numpy array of the LFP data.
+
+        This array is in the shape (epochs, chans, times).
+
+        &#34;&#34;&#34;
+        return self.mne_epochs.get_data(picks=self.selected_data)
+
+    def get_features(self, feature_type=&#34;window&#34;, feature_params={}):
+        &#34;&#34;&#34;Get a set of features matching feature_type and pass feature_params to it.&#34;&#34;&#34;
+        if feature_type == &#34;window&#34;:
+            features = self.window_features(**feature_params)
+        else:
+            raise ValueError(&#34;Unrecognised feature type {}&#34;.format(feature_type))
+
+        return features
+
+    def get_classifier(
+        self, class_type=&#34;nn&#34;, classifier_params={}, return_param_dist=False
+    ):
+        &#34;&#34;&#34;
+        Get a classifier matching class_type and pass classifier_params to it.
+
+        If return_param_dist is True, also returns a sensible distribution of
+        hyperparameters to search over for that classifier.
+
+        &#34;&#34;&#34;
+        if class_type == &#34;nn&#34;:
+            from sklearn import neighbors
+
+            classifier_params.setdefault(&#34;weights&#34;, &#34;distance&#34;)
+            classifier_params.setdefault(&#34;n_neighbors&#34;, 10)
+            clf = neighbors.KNeighborsClassifier(**classifier_params)
+
+            param_dist = {
+                &#34;n_neighbors&#34;: scipy.stats.randint(3, 12),
+                &#34;weights&#34;: (&#34;uniform&#34;, &#34;distance&#34;),
+            }
+
+        elif class_type == &#34;pipeline&#34;:
+            from sklearn import preprocessing
+            from sklearn.pipeline import make_pipeline
+            from sklearn import svm
+
+            clf = make_pipeline(preprocessing.StandardScaler(), svm.SVC(C=1))
+
+        else:
+            raise ValueError(&#34;Unrecognised classifier type {}&#34;.format(class_type))
+
+        if return_param_dist:
+            return clf, param_dist
+        else:
+            return clf
+
+    def get_cross_val_set(self, strategy=&#34;shuffle&#34;, cross_val_params={}):
+        &#34;&#34;&#34;Get a split of the data into cross validation sets.&#34;&#34;&#34;
+        if strategy == &#34;shuffle&#34;:
+            from sklearn.model_selection import StratifiedShuffleSplit
+
+            cross_val_params.setdefault(&#34;n_splits&#34;, 10)
+            cross_val_params.setdefault(&#34;test_size&#34;, 0.2)
+            cross_val_params.setdefault(&#34;random_state&#34;, 0)
+            shuffle = StratifiedShuffleSplit(**cross_val_params)
+        else:
+            raise ValueError(&#34;Unrecognised cross validation {}&#34;.format(strategy))
+        return shuffle
+
+    def window_features(self, window_sample_len=10, step=8):
+        &#34;&#34;&#34;Compute features from LFP in windows.&#34;&#34;&#34;
+        from skimage.util import view_as_windows
+
+        data = self.get_data()
+
+        # For now I&#39;m just going to use non overlapping windows
+        # And take the average of the power in that window
+        # But you could use overlapping windows or other things
+        if (data.shape[2] - window_sample_len) % step != 0:
+            print(
+                &#34;WARNING: {} is not divisible by {} in window_features&#34;.format(
+                    data.shape[2] - window_sample_len, step
+                )
+            )
+        n_features = ((data.shape[2] - window_sample_len) // np.array(step)) + 1
+        features = np.zeros(shape=(data.shape[0], n_features), dtype=np.float64)
+
+        # For now, I&#39;m going to take the average over the channels
+        squished_data = np.mean(data, axis=1)
+
+        # Performed overlapping windowing
+        windowed_data = view_as_windows(
+            squished_data, [1, window_sample_len], step=[1, step]
+        ).squeeze()
+
+        # For now I&#39;ll simply sum the window, but many things could be applied
+        np.mean(windowed_data, axis=-1, out=features)
+
+        return features
+
+    def decode(self, class_type=&#34;nn&#34;, test_size=0.2):
+        &#34;&#34;&#34;Decode by fitting with default parameters.&#34;&#34;&#34;
+        # TODO this needs to be updated to match cross val functions.
+        from sklearn.model_selection import train_test_split
+
+        features = self.get_features()
+        clf = self.get_classifier(class_type)
+        to_predict = self.get_labels()
+
+        train_features, test_features, train_labels, test_labels = train_test_split(
+            features, to_predict, test_size=test_size, shuffle=True
+        )
+        clf.fit(train_features, train_labels)
+        output = clf.predict(test_features)
+        return clf, output, test_labels
+
+    def cross_val_decoding(
+        self,
+        class_type=&#34;nn&#34;,
+        classifier_params={},
+        cv_strategy=&#34;shuffle&#34;,
+        cross_val_params={&#34;n_splits&#34;: 10, &#34;test_size&#34;: 0.2, &#34;random_state&#34;: 0},
+        feature_type=&#34;window&#34;,
+        feature_params={},
+        scoring=[&#34;accuracy&#34;, &#34;balanced_accuracy&#34;],
+        verbose=False,
+    ):
+        &#34;&#34;&#34;
+        Perform decoding with cross-validation.
+
+        &#34;&#34;&#34;
+        from sklearn.model_selection import cross_validate
+
+        clf = self.get_classifier(
+            class_type=class_type, classifier_params=classifier_params
+        )
+        cv = self.get_cross_val_set(
+            strategy=&#34;shuffle&#34;, cross_val_params=cross_val_params
+        )
+        features = self.get_features(
+            feature_type=feature_type, feature_params=feature_params
+        )
+        labels = self.get_labels()
+        print(
+            &#34;Running cross val on\n{}\nwith cv\n{}\nusing features: {}&#34;.format(
+                clf, cv, feature_type
+            )
+        )
+        return cross_validate(
+            clf, features, labels, return_train_score=True, scoring=scoring, cv=cv
+        )
+
+    def hyper_param_search(
+        self,
+        n_top=3,
+        class_type=&#34;nn&#34;,
+        classifier_params={},
+        cv_strategy=&#34;shuffle&#34;,
+        cross_val_params={&#34;n_splits&#34;: 10, &#34;test_size&#34;: 0.2, &#34;random_state&#34;: 0},
+        feature_type=&#34;window&#34;,
+        feature_params={},
+        scoring=[&#34;accuracy&#34;, &#34;balanced_accuracy&#34;],
+        verbose=False,
+    ):
+        &#34;&#34;&#34;
+        Perform hyper-param searching.
+        &#34;&#34;&#34;
+        from sklearn.model_selection import RandomizedSearchCV
+
+        def report(results, n_top=n_top):
+            for i in range(1, n_top + 1):
+                candidates = np.flatnonzero(results[&#34;rank_test_score&#34;] == i)
+                for candidate in candidates:
+                    print(&#34;Model with rank: {0}&#34;.format(i))
+                    print(
+                        &#34;Mean validation score: {0:.3f} (std: {1:.3f})&#34;.format(
+                            results[&#34;mean_test_score&#34;][candidate],
+                            results[&#34;std_test_score&#34;][candidate],
+                        )
+                    )
+                    print(&#34;Parameters: {0}&#34;.format(results[&#34;params&#34;][candidate]))
+                    print(&#34;&#34;)
+
+        clf, param_dist = self.get_classifier(
+            class_type=class_type,
+            classifier_params=classifier_params,
+            return_param_dist=True,
+        )
+        cv = self.get_cross_val_set(
+            strategy=&#34;shuffle&#34;, cross_val_params=cross_val_params
+        )
+        features = self.get_features(
+            feature_type=feature_type, feature_params=feature_params
+        )
+        labels = self.get_labels()
+        random_search = RandomizedSearchCV(
+            clf, param_distributions=param_dist, n_iter=30, cv=cv
+        )
+        random_search.fit(features, labels)
+
+        if verbose:
+            report(random_search.cv_results_)
+
+        # clf.set_params(**random_search.best_params_)
+        return random_search
+
+        # You can set the params on a classifier using
+
+    def decoding_accuracy(self, true, predicted, as_dict=False):
+        &#34;&#34;&#34;
+        A report on decoding accuracy from true and predicted.
+
+        Target names indicates the name of the labels (usually 0, 1, 2...)
+        &#34;&#34;&#34;
+        from sklearn.metrics import classification_report
+
+        labels = []
+        for val in self.labels:
+            if val not in labels:
+                labels.append(val)
+
+        print(&#34;Actual   :&#34;, true)
+        print(&#34;Predicted:&#34;, predicted)
+        return classification_report(
+            true,
+            predicted,
+            labels=labels,
+            target_names=self.label_names,
+            output_dict=as_dict,
+        )
+
+    @staticmethod
+    def confidence_interval_estimate(cross_val_result, key):
+        &#34;&#34;&#34;Returns 95% confidence interval estimates from cross_val results.&#34;&#34;&#34;
+        test_key = &#34;test_&#34; + key
+        train_key = &#34;train_&#34; + key
+        test_scores = cross_val_result[test_key]
+        train_scores = cross_val_result[train_key]
+
+        test_str = &#34;Test {}: {:.2f} (+/- {:.2f})&#34;.format(
+            key, test_scores.mean(), test_scores.std() * 1.96
+        )
+        train_str = &#34;Train {}: {:.2f} (+/- {:.2f})&#34;.format(
+            key, train_scores.mean(), train_scores.std() * 1.96
+        )
+        return test_str, train_str
+
+
+def random_decoding():
+    &#34;&#34;&#34;Perform a full decoding pipeline from random white noise.&#34;&#34;&#34;
+    from bvmpc.bv_mne import random_white_noise
+    from pprint import pprint
+
+    # Just random white noise signal
+    random_epochs = random_white_noise(100, 4, 500)
+
+    # Random one or zero labels for now
+    labels = np.random.randint(low=0, high=2, size=100)
+    target_names = [&#34;Random OFF&#34;, &#34;Random ON&#34;]
+
+    decoder = LFPDecoder(
+        mne_epochs=random_epochs, labels=labels, label_names=target_names
+    )
+    out = decoder.decode()
+    print(decoder.decoding_accuracy(out[2], out[1]))
+
+    print(&#34;\n----------Cross Validation-------------&#34;)
+
+    cv_result = decoder.cross_val_decoding(
+        cross_val_params={&#34;n_splits&#34;: 100, &#34;test_size&#34;: 0.2, &#34;random_state&#34;: 0},
+        verbose=True,
+    )
+    pprint(cv_result)
+    pprint(decoder.confidence_interval_estimate(cv_result, &#34;accuracy&#34;))
+
+    random_search = decoder.hyper_param_search(verbose=True)
+    print(&#34;Best params:&#34;, random_search.best_params_)
+
+
+if __name__ == &#34;__main__&#34;:
+    random_decoding()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="bvmpc.bv_decoding.random_decoding"><code class="name flex">
+<span>def <span class="ident">random_decoding</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Perform a full decoding pipeline from random white noise.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def random_decoding():
+    &#34;&#34;&#34;Perform a full decoding pipeline from random white noise.&#34;&#34;&#34;
+    from bvmpc.bv_mne import random_white_noise
+    from pprint import pprint
+
+    # Just random white noise signal
+    random_epochs = random_white_noise(100, 4, 500)
+
+    # Random one or zero labels for now
+    labels = np.random.randint(low=0, high=2, size=100)
+    target_names = [&#34;Random OFF&#34;, &#34;Random ON&#34;]
+
+    decoder = LFPDecoder(
+        mne_epochs=random_epochs, labels=labels, label_names=target_names
+    )
+    out = decoder.decode()
+    print(decoder.decoding_accuracy(out[2], out[1]))
+
+    print(&#34;\n----------Cross Validation-------------&#34;)
+
+    cv_result = decoder.cross_val_decoding(
+        cross_val_params={&#34;n_splits&#34;: 100, &#34;test_size&#34;: 0.2, &#34;random_state&#34;: 0},
+        verbose=True,
+    )
+    pprint(cv_result)
+    pprint(decoder.confidence_interval_estimate(cv_result, &#34;accuracy&#34;))
+
+    random_search = decoder.hyper_param_search(verbose=True)
+    print(&#34;Best params:&#34;, random_search.best_params_)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="bvmpc.bv_decoding.LFPDecoder"><code class="flex name class">
+<span>class <span class="ident">LFPDecoder</span></span>
+<span>(</span><span>mne_epochs=None, labels=None, label_names=None, selected_data=None, sample_rate=250)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Decode a dependent var x from indep LFP features.</p>
+<p>In general, this should be performed as
+1. Compute features from LFP
+2. Select the dependent variable (e.g. trial type)
+3. Perform classification or regression.</p>
+<p>See cross_val_decoding function for a full pipeline.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>mne_epochs</code></strong> :&ensp;<code>mne.Epochs</code></dt>
+<dd>Epochs of LFP data.
+There should be an epoch for each dependent var.
+This is used to get
+a 3D array of shape (n_epochs, n_channels, n_times)
+For calculations.</dd>
+<dt><strong><code>labels</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The tag of each epoch, or what is decoded.</dd>
+<dt><strong><code>label_names</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
+<dd>The name of each label.</dd>
+<dt><strong><code>selected_data</code></strong> :&ensp;<code>str | list | slice | None</code></dt>
+<dd>See mne.Epochs.get_data
+This is the picks argument</dd>
+<dt><strong><code>sample_rate</code></strong> :&ensp;<code>int</code></dt>
+<dd>The sampling rate of the lfp data.</dd>
+</dl>
+<h2 id="todo">Todo</h2>
+<p>Perhaps reorganise so that the class sets up decoding
+parameters on init, such as the classifier to be used.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LFPDecoder(object):
+    &#34;&#34;&#34;
+    Decode a dependent var x from indep LFP features.
+
+    In general, this should be performed as
+    1. Compute features from LFP
+    2. Select the dependent variable (e.g. trial type)
+    3. Perform classification or regression.
+
+    See cross_val_decoding function for a full pipeline.
+
+    Attributes
+    ----------
+    mne_epochs : mne.Epochs
+        Epochs of LFP data.
+        There should be an epoch for each dependent var.
+        This is used to get
+        a 3D array of shape (n_epochs, n_channels, n_times)
+        For calculations.
+    labels : np.ndarray
+        The tag of each epoch, or what is decoded.
+    label_names : list of str
+        The name of each label.
+    selected_data : str | list | slice | None
+        See mne.Epochs.get_data
+        This is the picks argument
+    sample_rate : int
+        The sampling rate of the lfp data.
+
+    TODO
+    ----
+    Perhaps reorganise so that the class sets up decoding
+    parameters on init, such as the classifier to be used.
+
+    &#34;&#34;&#34;
+
+    def __init__(
+        self,
+        mne_epochs=None,
+        labels=None,
+        label_names=None,
+        selected_data=None,
+        sample_rate=250,
+    ):
+        self.mne_epochs = mne_epochs
+        self.labels = labels
+        self.label_names = label_names
+        self.selected_data = selected_data
+        self.sample_rate = sample_rate
+
+    def get_labels(self):
+        &#34;&#34;&#34;Return the labels of each epoch as a numpy array.&#34;&#34;&#34;
+        return self.labels
+
+    def get_data(self):
+        &#34;&#34;&#34;
+        Return a 3D numpy array of the LFP data.
+
+        This array is in the shape (epochs, chans, times).
+
+        &#34;&#34;&#34;
+        return self.mne_epochs.get_data(picks=self.selected_data)
+
+    def get_features(self, feature_type=&#34;window&#34;, feature_params={}):
+        &#34;&#34;&#34;Get a set of features matching feature_type and pass feature_params to it.&#34;&#34;&#34;
+        if feature_type == &#34;window&#34;:
+            features = self.window_features(**feature_params)
+        else:
+            raise ValueError(&#34;Unrecognised feature type {}&#34;.format(feature_type))
+
+        return features
+
+    def get_classifier(
+        self, class_type=&#34;nn&#34;, classifier_params={}, return_param_dist=False
+    ):
+        &#34;&#34;&#34;
+        Get a classifier matching class_type and pass classifier_params to it.
+
+        If return_param_dist is True, also returns a sensible distribution of
+        hyperparameters to search over for that classifier.
+
+        &#34;&#34;&#34;
+        if class_type == &#34;nn&#34;:
+            from sklearn import neighbors
+
+            classifier_params.setdefault(&#34;weights&#34;, &#34;distance&#34;)
+            classifier_params.setdefault(&#34;n_neighbors&#34;, 10)
+            clf = neighbors.KNeighborsClassifier(**classifier_params)
+
+            param_dist = {
+                &#34;n_neighbors&#34;: scipy.stats.randint(3, 12),
+                &#34;weights&#34;: (&#34;uniform&#34;, &#34;distance&#34;),
+            }
+
+        elif class_type == &#34;pipeline&#34;:
+            from sklearn import preprocessing
+            from sklearn.pipeline import make_pipeline
+            from sklearn import svm
+
+            clf = make_pipeline(preprocessing.StandardScaler(), svm.SVC(C=1))
+
+        else:
+            raise ValueError(&#34;Unrecognised classifier type {}&#34;.format(class_type))
+
+        if return_param_dist:
+            return clf, param_dist
+        else:
+            return clf
+
+    def get_cross_val_set(self, strategy=&#34;shuffle&#34;, cross_val_params={}):
+        &#34;&#34;&#34;Get a split of the data into cross validation sets.&#34;&#34;&#34;
+        if strategy == &#34;shuffle&#34;:
+            from sklearn.model_selection import StratifiedShuffleSplit
+
+            cross_val_params.setdefault(&#34;n_splits&#34;, 10)
+            cross_val_params.setdefault(&#34;test_size&#34;, 0.2)
+            cross_val_params.setdefault(&#34;random_state&#34;, 0)
+            shuffle = StratifiedShuffleSplit(**cross_val_params)
+        else:
+            raise ValueError(&#34;Unrecognised cross validation {}&#34;.format(strategy))
+        return shuffle
+
+    def window_features(self, window_sample_len=10, step=8):
+        &#34;&#34;&#34;Compute features from LFP in windows.&#34;&#34;&#34;
+        from skimage.util import view_as_windows
+
+        data = self.get_data()
+
+        # For now I&#39;m just going to use non overlapping windows
+        # And take the average of the power in that window
+        # But you could use overlapping windows or other things
+        if (data.shape[2] - window_sample_len) % step != 0:
+            print(
+                &#34;WARNING: {} is not divisible by {} in window_features&#34;.format(
+                    data.shape[2] - window_sample_len, step
+                )
+            )
+        n_features = ((data.shape[2] - window_sample_len) // np.array(step)) + 1
+        features = np.zeros(shape=(data.shape[0], n_features), dtype=np.float64)
+
+        # For now, I&#39;m going to take the average over the channels
+        squished_data = np.mean(data, axis=1)
+
+        # Performed overlapping windowing
+        windowed_data = view_as_windows(
+            squished_data, [1, window_sample_len], step=[1, step]
+        ).squeeze()
+
+        # For now I&#39;ll simply sum the window, but many things could be applied
+        np.mean(windowed_data, axis=-1, out=features)
+
+        return features
+
+    def decode(self, class_type=&#34;nn&#34;, test_size=0.2):
+        &#34;&#34;&#34;Decode by fitting with default parameters.&#34;&#34;&#34;
+        # TODO this needs to be updated to match cross val functions.
+        from sklearn.model_selection import train_test_split
+
+        features = self.get_features()
+        clf = self.get_classifier(class_type)
+        to_predict = self.get_labels()
+
+        train_features, test_features, train_labels, test_labels = train_test_split(
+            features, to_predict, test_size=test_size, shuffle=True
+        )
+        clf.fit(train_features, train_labels)
+        output = clf.predict(test_features)
+        return clf, output, test_labels
+
+    def cross_val_decoding(
+        self,
+        class_type=&#34;nn&#34;,
+        classifier_params={},
+        cv_strategy=&#34;shuffle&#34;,
+        cross_val_params={&#34;n_splits&#34;: 10, &#34;test_size&#34;: 0.2, &#34;random_state&#34;: 0},
+        feature_type=&#34;window&#34;,
+        feature_params={},
+        scoring=[&#34;accuracy&#34;, &#34;balanced_accuracy&#34;],
+        verbose=False,
+    ):
+        &#34;&#34;&#34;
+        Perform decoding with cross-validation.
+
+        &#34;&#34;&#34;
+        from sklearn.model_selection import cross_validate
+
+        clf = self.get_classifier(
+            class_type=class_type, classifier_params=classifier_params
+        )
+        cv = self.get_cross_val_set(
+            strategy=&#34;shuffle&#34;, cross_val_params=cross_val_params
+        )
+        features = self.get_features(
+            feature_type=feature_type, feature_params=feature_params
+        )
+        labels = self.get_labels()
+        print(
+            &#34;Running cross val on\n{}\nwith cv\n{}\nusing features: {}&#34;.format(
+                clf, cv, feature_type
+            )
+        )
+        return cross_validate(
+            clf, features, labels, return_train_score=True, scoring=scoring, cv=cv
+        )
+
+    def hyper_param_search(
+        self,
+        n_top=3,
+        class_type=&#34;nn&#34;,
+        classifier_params={},
+        cv_strategy=&#34;shuffle&#34;,
+        cross_val_params={&#34;n_splits&#34;: 10, &#34;test_size&#34;: 0.2, &#34;random_state&#34;: 0},
+        feature_type=&#34;window&#34;,
+        feature_params={},
+        scoring=[&#34;accuracy&#34;, &#34;balanced_accuracy&#34;],
+        verbose=False,
+    ):
+        &#34;&#34;&#34;
+        Perform hyper-param searching.
+        &#34;&#34;&#34;
+        from sklearn.model_selection import RandomizedSearchCV
+
+        def report(results, n_top=n_top):
+            for i in range(1, n_top + 1):
+                candidates = np.flatnonzero(results[&#34;rank_test_score&#34;] == i)
+                for candidate in candidates:
+                    print(&#34;Model with rank: {0}&#34;.format(i))
+                    print(
+                        &#34;Mean validation score: {0:.3f} (std: {1:.3f})&#34;.format(
+                            results[&#34;mean_test_score&#34;][candidate],
+                            results[&#34;std_test_score&#34;][candidate],
+                        )
+                    )
+                    print(&#34;Parameters: {0}&#34;.format(results[&#34;params&#34;][candidate]))
+                    print(&#34;&#34;)
+
+        clf, param_dist = self.get_classifier(
+            class_type=class_type,
+            classifier_params=classifier_params,
+            return_param_dist=True,
+        )
+        cv = self.get_cross_val_set(
+            strategy=&#34;shuffle&#34;, cross_val_params=cross_val_params
+        )
+        features = self.get_features(
+            feature_type=feature_type, feature_params=feature_params
+        )
+        labels = self.get_labels()
+        random_search = RandomizedSearchCV(
+            clf, param_distributions=param_dist, n_iter=30, cv=cv
+        )
+        random_search.fit(features, labels)
+
+        if verbose:
+            report(random_search.cv_results_)
+
+        # clf.set_params(**random_search.best_params_)
+        return random_search
+
+        # You can set the params on a classifier using
+
+    def decoding_accuracy(self, true, predicted, as_dict=False):
+        &#34;&#34;&#34;
+        A report on decoding accuracy from true and predicted.
+
+        Target names indicates the name of the labels (usually 0, 1, 2...)
+        &#34;&#34;&#34;
+        from sklearn.metrics import classification_report
+
+        labels = []
+        for val in self.labels:
+            if val not in labels:
+                labels.append(val)
+
+        print(&#34;Actual   :&#34;, true)
+        print(&#34;Predicted:&#34;, predicted)
+        return classification_report(
+            true,
+            predicted,
+            labels=labels,
+            target_names=self.label_names,
+            output_dict=as_dict,
+        )
+
+    @staticmethod
+    def confidence_interval_estimate(cross_val_result, key):
+        &#34;&#34;&#34;Returns 95% confidence interval estimates from cross_val results.&#34;&#34;&#34;
+        test_key = &#34;test_&#34; + key
+        train_key = &#34;train_&#34; + key
+        test_scores = cross_val_result[test_key]
+        train_scores = cross_val_result[train_key]
+
+        test_str = &#34;Test {}: {:.2f} (+/- {:.2f})&#34;.format(
+            key, test_scores.mean(), test_scores.std() * 1.96
+        )
+        train_str = &#34;Train {}: {:.2f} (+/- {:.2f})&#34;.format(
+            key, train_scores.mean(), train_scores.std() * 1.96
+        )
+        return test_str, train_str</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="bvmpc.bv_decoding.LFPDecoder.confidence_interval_estimate"><code class="name flex">
+<span>def <span class="ident">confidence_interval_estimate</span></span>(<span>cross_val_result, key)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns 95% confidence interval estimates from cross_val results.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def confidence_interval_estimate(cross_val_result, key):
+    &#34;&#34;&#34;Returns 95% confidence interval estimates from cross_val results.&#34;&#34;&#34;
+    test_key = &#34;test_&#34; + key
+    train_key = &#34;train_&#34; + key
+    test_scores = cross_val_result[test_key]
+    train_scores = cross_val_result[train_key]
+
+    test_str = &#34;Test {}: {:.2f} (+/- {:.2f})&#34;.format(
+        key, test_scores.mean(), test_scores.std() * 1.96
+    )
+    train_str = &#34;Train {}: {:.2f} (+/- {:.2f})&#34;.format(
+        key, train_scores.mean(), train_scores.std() * 1.96
+    )
+    return test_str, train_str</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="bvmpc.bv_decoding.LFPDecoder.cross_val_decoding"><code class="name flex">
+<span>def <span class="ident">cross_val_decoding</span></span>(<span>self, class_type='nn', classifier_params={}, cv_strategy='shuffle', cross_val_params={'n_splits': 10, 'test_size': 0.2, 'random_state': 0}, feature_type='window', feature_params={}, scoring=['accuracy', 'balanced_accuracy'], verbose=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Perform decoding with cross-validation.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cross_val_decoding(
+    self,
+    class_type=&#34;nn&#34;,
+    classifier_params={},
+    cv_strategy=&#34;shuffle&#34;,
+    cross_val_params={&#34;n_splits&#34;: 10, &#34;test_size&#34;: 0.2, &#34;random_state&#34;: 0},
+    feature_type=&#34;window&#34;,
+    feature_params={},
+    scoring=[&#34;accuracy&#34;, &#34;balanced_accuracy&#34;],
+    verbose=False,
+):
+    &#34;&#34;&#34;
+    Perform decoding with cross-validation.
+
+    &#34;&#34;&#34;
+    from sklearn.model_selection import cross_validate
+
+    clf = self.get_classifier(
+        class_type=class_type, classifier_params=classifier_params
+    )
+    cv = self.get_cross_val_set(
+        strategy=&#34;shuffle&#34;, cross_val_params=cross_val_params
+    )
+    features = self.get_features(
+        feature_type=feature_type, feature_params=feature_params
+    )
+    labels = self.get_labels()
+    print(
+        &#34;Running cross val on\n{}\nwith cv\n{}\nusing features: {}&#34;.format(
+            clf, cv, feature_type
+        )
+    )
+    return cross_validate(
+        clf, features, labels, return_train_score=True, scoring=scoring, cv=cv
+    )</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_decoding.LFPDecoder.decode"><code class="name flex">
+<span>def <span class="ident">decode</span></span>(<span>self, class_type='nn', test_size=0.2)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Decode by fitting with default parameters.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def decode(self, class_type=&#34;nn&#34;, test_size=0.2):
+    &#34;&#34;&#34;Decode by fitting with default parameters.&#34;&#34;&#34;
+    # TODO this needs to be updated to match cross val functions.
+    from sklearn.model_selection import train_test_split
+
+    features = self.get_features()
+    clf = self.get_classifier(class_type)
+    to_predict = self.get_labels()
+
+    train_features, test_features, train_labels, test_labels = train_test_split(
+        features, to_predict, test_size=test_size, shuffle=True
+    )
+    clf.fit(train_features, train_labels)
+    output = clf.predict(test_features)
+    return clf, output, test_labels</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_decoding.LFPDecoder.decoding_accuracy"><code class="name flex">
+<span>def <span class="ident">decoding_accuracy</span></span>(<span>self, true, predicted, as_dict=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A report on decoding accuracy from true and predicted.</p>
+<p>Target names indicates the name of the labels (usually 0, 1, 2&hellip;)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def decoding_accuracy(self, true, predicted, as_dict=False):
+    &#34;&#34;&#34;
+    A report on decoding accuracy from true and predicted.
+
+    Target names indicates the name of the labels (usually 0, 1, 2...)
+    &#34;&#34;&#34;
+    from sklearn.metrics import classification_report
+
+    labels = []
+    for val in self.labels:
+        if val not in labels:
+            labels.append(val)
+
+    print(&#34;Actual   :&#34;, true)
+    print(&#34;Predicted:&#34;, predicted)
+    return classification_report(
+        true,
+        predicted,
+        labels=labels,
+        target_names=self.label_names,
+        output_dict=as_dict,
+    )</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_decoding.LFPDecoder.get_classifier"><code class="name flex">
+<span>def <span class="ident">get_classifier</span></span>(<span>self, class_type='nn', classifier_params={}, return_param_dist=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get a classifier matching class_type and pass classifier_params to it.</p>
+<p>If return_param_dist is True, also returns a sensible distribution of
+hyperparameters to search over for that classifier.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_classifier(
+    self, class_type=&#34;nn&#34;, classifier_params={}, return_param_dist=False
+):
+    &#34;&#34;&#34;
+    Get a classifier matching class_type and pass classifier_params to it.
+
+    If return_param_dist is True, also returns a sensible distribution of
+    hyperparameters to search over for that classifier.
+
+    &#34;&#34;&#34;
+    if class_type == &#34;nn&#34;:
+        from sklearn import neighbors
+
+        classifier_params.setdefault(&#34;weights&#34;, &#34;distance&#34;)
+        classifier_params.setdefault(&#34;n_neighbors&#34;, 10)
+        clf = neighbors.KNeighborsClassifier(**classifier_params)
+
+        param_dist = {
+            &#34;n_neighbors&#34;: scipy.stats.randint(3, 12),
+            &#34;weights&#34;: (&#34;uniform&#34;, &#34;distance&#34;),
+        }
+
+    elif class_type == &#34;pipeline&#34;:
+        from sklearn import preprocessing
+        from sklearn.pipeline import make_pipeline
+        from sklearn import svm
+
+        clf = make_pipeline(preprocessing.StandardScaler(), svm.SVC(C=1))
+
+    else:
+        raise ValueError(&#34;Unrecognised classifier type {}&#34;.format(class_type))
+
+    if return_param_dist:
+        return clf, param_dist
+    else:
+        return clf</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_decoding.LFPDecoder.get_cross_val_set"><code class="name flex">
+<span>def <span class="ident">get_cross_val_set</span></span>(<span>self, strategy='shuffle', cross_val_params={})</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get a split of the data into cross validation sets.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_cross_val_set(self, strategy=&#34;shuffle&#34;, cross_val_params={}):
+    &#34;&#34;&#34;Get a split of the data into cross validation sets.&#34;&#34;&#34;
+    if strategy == &#34;shuffle&#34;:
+        from sklearn.model_selection import StratifiedShuffleSplit
+
+        cross_val_params.setdefault(&#34;n_splits&#34;, 10)
+        cross_val_params.setdefault(&#34;test_size&#34;, 0.2)
+        cross_val_params.setdefault(&#34;random_state&#34;, 0)
+        shuffle = StratifiedShuffleSplit(**cross_val_params)
+    else:
+        raise ValueError(&#34;Unrecognised cross validation {}&#34;.format(strategy))
+    return shuffle</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_decoding.LFPDecoder.get_data"><code class="name flex">
+<span>def <span class="ident">get_data</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a 3D numpy array of the LFP data.</p>
+<p>This array is in the shape (epochs, chans, times).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_data(self):
+    &#34;&#34;&#34;
+    Return a 3D numpy array of the LFP data.
+
+    This array is in the shape (epochs, chans, times).
+
+    &#34;&#34;&#34;
+    return self.mne_epochs.get_data(picks=self.selected_data)</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_decoding.LFPDecoder.get_features"><code class="name flex">
+<span>def <span class="ident">get_features</span></span>(<span>self, feature_type='window', feature_params={})</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get a set of features matching feature_type and pass feature_params to it.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_features(self, feature_type=&#34;window&#34;, feature_params={}):
+    &#34;&#34;&#34;Get a set of features matching feature_type and pass feature_params to it.&#34;&#34;&#34;
+    if feature_type == &#34;window&#34;:
+        features = self.window_features(**feature_params)
+    else:
+        raise ValueError(&#34;Unrecognised feature type {}&#34;.format(feature_type))
+
+    return features</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_decoding.LFPDecoder.get_labels"><code class="name flex">
+<span>def <span class="ident">get_labels</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the labels of each epoch as a numpy array.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_labels(self):
+    &#34;&#34;&#34;Return the labels of each epoch as a numpy array.&#34;&#34;&#34;
+    return self.labels</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_decoding.LFPDecoder.hyper_param_search"><code class="name flex">
+<span>def <span class="ident">hyper_param_search</span></span>(<span>self, n_top=3, class_type='nn', classifier_params={}, cv_strategy='shuffle', cross_val_params={'n_splits': 10, 'test_size': 0.2, 'random_state': 0}, feature_type='window', feature_params={}, scoring=['accuracy', 'balanced_accuracy'], verbose=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Perform hyper-param searching.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def hyper_param_search(
+    self,
+    n_top=3,
+    class_type=&#34;nn&#34;,
+    classifier_params={},
+    cv_strategy=&#34;shuffle&#34;,
+    cross_val_params={&#34;n_splits&#34;: 10, &#34;test_size&#34;: 0.2, &#34;random_state&#34;: 0},
+    feature_type=&#34;window&#34;,
+    feature_params={},
+    scoring=[&#34;accuracy&#34;, &#34;balanced_accuracy&#34;],
+    verbose=False,
+):
+    &#34;&#34;&#34;
+    Perform hyper-param searching.
+    &#34;&#34;&#34;
+    from sklearn.model_selection import RandomizedSearchCV
+
+    def report(results, n_top=n_top):
+        for i in range(1, n_top + 1):
+            candidates = np.flatnonzero(results[&#34;rank_test_score&#34;] == i)
+            for candidate in candidates:
+                print(&#34;Model with rank: {0}&#34;.format(i))
+                print(
+                    &#34;Mean validation score: {0:.3f} (std: {1:.3f})&#34;.format(
+                        results[&#34;mean_test_score&#34;][candidate],
+                        results[&#34;std_test_score&#34;][candidate],
+                    )
+                )
+                print(&#34;Parameters: {0}&#34;.format(results[&#34;params&#34;][candidate]))
+                print(&#34;&#34;)
+
+    clf, param_dist = self.get_classifier(
+        class_type=class_type,
+        classifier_params=classifier_params,
+        return_param_dist=True,
+    )
+    cv = self.get_cross_val_set(
+        strategy=&#34;shuffle&#34;, cross_val_params=cross_val_params
+    )
+    features = self.get_features(
+        feature_type=feature_type, feature_params=feature_params
+    )
+    labels = self.get_labels()
+    random_search = RandomizedSearchCV(
+        clf, param_distributions=param_dist, n_iter=30, cv=cv
+    )
+    random_search.fit(features, labels)
+
+    if verbose:
+        report(random_search.cv_results_)
+
+    # clf.set_params(**random_search.best_params_)
+    return random_search</code></pre>
+</details>
+</dd>
+<dt id="bvmpc.bv_decoding.LFPDecoder.window_features"><code class="name flex">
+<span>def <span class="ident">window_features</span></span>(<span>self, window_sample_len=10, step=8)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute features from LFP in windows.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def window_features(self, window_sample_len=10, step=8):
+    &#34;&#34;&#34;Compute features from LFP in windows.&#34;&#34;&#34;
+    from skimage.util import view_as_windows
+
+    data = self.get_data()
+
+    # For now I&#39;m just going to use non overlapping windows
+    # And take the average of the power in that window
+    # But you could use overlapping windows or other things
+    if (data.shape[2] - window_sample_len) % step != 0:
+        print(
+            &#34;WARNING: {} is not divisible by {} in window_features&#34;.format(
+                data.shape[2] - window_sample_len, step
+            )
+        )
+    n_features = ((data.shape[2] - window_sample_len) // np.array(step)) + 1
+    features = np.zeros(shape=(data.shape[0], n_features), dtype=np.float64)
+
+    # For now, I&#39;m going to take the average over the channels
+    squished_data = np.mean(data, axis=1)
+
+    # Performed overlapping windowing
+    windowed_data = view_as_windows(
+        squished_data, [1, window_sample_len], step=[1, step]
+    ).squeeze()
+
+    # For now I&#39;ll simply sum the window, but many things could be applied
+    np.mean(windowed_data, axis=-1, out=features)
+
+    return features</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="bvmpc" href="index.html">bvmpc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="bvmpc.bv_decoding.random_decoding" href="#bvmpc.bv_decoding.random_decoding">random_decoding</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="bvmpc.bv_decoding.LFPDecoder" href="#bvmpc.bv_decoding.LFPDecoder">LFPDecoder</a></code></h4>
+<ul class="">
+<li><code><a title="bvmpc.bv_decoding.LFPDecoder.confidence_interval_estimate" href="#bvmpc.bv_decoding.LFPDecoder.confidence_interval_estimate">confidence_interval_estimate</a></code></li>
+<li><code><a title="bvmpc.bv_decoding.LFPDecoder.cross_val_decoding" href="#bvmpc.bv_decoding.LFPDecoder.cross_val_decoding">cross_val_decoding</a></code></li>
+<li><code><a title="bvmpc.bv_decoding.LFPDecoder.decode" href="#bvmpc.bv_decoding.LFPDecoder.decode">decode</a></code></li>
+<li><code><a title="bvmpc.bv_decoding.LFPDecoder.decoding_accuracy" href="#bvmpc.bv_decoding.LFPDecoder.decoding_accuracy">decoding_accuracy</a></code></li>
+<li><code><a title="bvmpc.bv_decoding.LFPDecoder.get_classifier" href="#bvmpc.bv_decoding.LFPDecoder.get_classifier">get_classifier</a></code></li>
+<li><code><a title="bvmpc.bv_decoding.LFPDecoder.get_cross_val_set" href="#bvmpc.bv_decoding.LFPDecoder.get_cross_val_set">get_cross_val_set</a></code></li>
+<li><code><a title="bvmpc.bv_decoding.LFPDecoder.get_data" href="#bvmpc.bv_decoding.LFPDecoder.get_data">get_data</a></code></li>
+<li><code><a title="bvmpc.bv_decoding.LFPDecoder.get_features" href="#bvmpc.bv_decoding.LFPDecoder.get_features">get_features</a></code></li>
+<li><code><a title="bvmpc.bv_decoding.LFPDecoder.get_labels" href="#bvmpc.bv_decoding.LFPDecoder.get_labels">get_labels</a></code></li>
+<li><code><a title="bvmpc.bv_decoding.LFPDecoder.hyper_param_search" href="#bvmpc.bv_decoding.LFPDecoder.hyper_param_search">hyper_param_search</a></code></li>
+<li><code><a title="bvmpc.bv_decoding.LFPDecoder.window_features" href="#bvmpc.bv_decoding.LFPDecoder.window_features">window_features</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

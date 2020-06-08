@@ -89,7 +89,8 @@ class AxonaInput:
                 header = &#34;{},Ch{}&#34;.format(header, i + 1)
             file.write(header + &#34;\n&#34;)
             for (i, (t, c, p)) in enumerate(
-                    zip(self.timestamps, self.channels, self.pins)):
+                zip(self.timestamps, self.channels, self.pins)
+            ):
                 if c in inp_types:
                     out_str = &#34;{:2f},{}&#34;.format(t, c)
                     for bit in p:
@@ -117,9 +118,12 @@ class AxonaInput:
         &#34;&#34;&#34;
         self.timestamps = t_arr
         self.channels = c_arr
-        self.pins = np.array([
-            np.unpackbits(p_arr[2 * i:2 * i + 2])[::-1]
-            for i in range(len(p_arr) // 2)])
+        self.pins = np.array(
+            [
+                np.unpackbits(p_arr[2 * i : 2 * i + 2])[::-1]
+                for i in range(len(p_arr) // 2)
+            ]
+        )
 
     def get_times(self, channel, pin, inverted=False):
         &#34;&#34;&#34;
@@ -177,11 +181,10 @@ class AxonaInpReader:
 
         &#34;&#34;&#34;
         counter = 0
-        with open(in_location, &#39;rb&#39;) as file:
+        with open(in_location, &#34;rb&#34;) as file:
             header = cls._parse_header(file)
             if header[&#34;samples&#34;] == 0:
-                raise ValueError(&#34;No input/output samples in {}&#34;.format(
-                    in_location))
+                raise ValueError(&#34;No input/output samples in {}&#34;.format(in_location))
 
             time_arr = np.zeros(header[&#34;samples&#34;], np.float32)
             char_arr = np.zeros(header[&#34;samples&#34;], str)
@@ -192,7 +195,7 @@ class AxonaInpReader:
                 info = cls._info_from_chunk(chunk, header[&#34;timebase&#34;])
                 time_arr[counter] = info[0]
                 char_arr[counter] = info[1]
-                inp_arr[2 * counter:2 * counter + 2] = info[2]
+                inp_arr[2 * counter : 2 * counter + 2] = info[2]
                 counter = counter + 1
                 chunk = file.read(header[&#34;sample_bytes&#34;])
 
@@ -202,10 +205,8 @@ class AxonaInpReader:
     def _info_from_chunk(chunk, timebase):
         &#34;&#34;&#34;Extract the info from a 7 byte chunk.&#34;&#34;&#34;
         time_val = (
-            16777216 * chunk[0] +
-            65536 * chunk[1] +
-            256 * chunk[2] +
-            chunk[3]) / timebase
+            16777216 * chunk[0] + 65536 * chunk[1] + 256 * chunk[2] + chunk[3]
+        ) / timebase
 
         input_type = chr(chunk[4])
 
@@ -268,20 +269,21 @@ class AxonaSet:
         &#34;&#34;&#34;Calculate and store how long the Session took in mins.&#34;&#34;&#34;
         dur = int(self.get_val(&#34;duration&#34;))
         start_time = self.get_val(&#34;trial_time&#34;)
-        fmt = &#39;%H:%M:%S&#39;
+        fmt = &#34;%H:%M:%S&#34;
         start_fmt = datetime.datetime.strptime(start_time, fmt)
         final_time = start_fmt + datetime.timedelta(seconds=dur)
         out_str = &#34;{}:{}:{}&#34;.format(
-            final_time.hour, final_time.minute, final_time.second)
+            final_time.hour, final_time.minute, final_time.second
+        )
         self.data[&#34;end_time&#34;] = out_str
 
     def load(self, location):
         &#34;&#34;&#34;Load and parse a .set file specified by location.&#34;&#34;&#34;
-        with open(location, &#39;r&#39;, encoding=&#39;latin-1&#39;) as f_set:
+        with open(location, &#34;r&#34;, encoding=&#34;latin-1&#34;) as f_set:
             lines = f_set.readlines()
             for line in lines:
                 split = line.index(&#34; &#34;)
-                key, val = line[:split], line[split + 1:].strip()
+                key, val = line[:split], line[split + 1 :].strip()
                 # if key in list(self.data.keys()):
                 #     print((&#34;Duplicate Key found {}&#34;.format(key)))
                 if key in list(self.change_dict.keys()):
@@ -312,7 +314,7 @@ class AxonaSet:
     def change_date(date):
         &#34;&#34;&#34;Convert an Axona date into a standard format.&#34;&#34;&#34;
         change = {v: k for k, v in enumerate(calendar.month_abbr)}
-        rest = date[date.index(&#34; &#34;) + 1:]
+        rest = date[date.index(&#34; &#34;) + 1 :]
         day, month, year = rest.split(&#34; &#34;)
         month = change[month]
         month = &#34;0&#34; + str(month) if month &lt; 10 else month
@@ -325,7 +327,9 @@ if __name__ == &#34;__main__&#34;:
     in_location = r&#34;C:\Users\smartin5\Recordings\CLA1_2019-09-28.inp&#34;
     ai = AxonaInput(in_location)
     ai.save_to_file()
-    in_location = r&#34;C:\Users\smartin5\Recordings\ER\29082019-nt2\29082019-nt2-LFP-2nd-Saline.set&#34;
+    in_location = (
+        r&#34;C:\Users\smartin5\Recordings\ER\29082019-nt2\29082019-nt2-LFP-2nd-Saline.set&#34;
+    )
     set_info = AxonaSet(in_location)
     print(set_info.get_val(&#34;trial_date&#34;))
     print(set_info.get_val(&#34;end_time&#34;))</code></pre>
@@ -370,11 +374,10 @@ if __name__ == &#34;__main__&#34;:
 
         &#34;&#34;&#34;
         counter = 0
-        with open(in_location, &#39;rb&#39;) as file:
+        with open(in_location, &#34;rb&#34;) as file:
             header = cls._parse_header(file)
             if header[&#34;samples&#34;] == 0:
-                raise ValueError(&#34;No input/output samples in {}&#34;.format(
-                    in_location))
+                raise ValueError(&#34;No input/output samples in {}&#34;.format(in_location))
 
             time_arr = np.zeros(header[&#34;samples&#34;], np.float32)
             char_arr = np.zeros(header[&#34;samples&#34;], str)
@@ -385,7 +388,7 @@ if __name__ == &#34;__main__&#34;:
                 info = cls._info_from_chunk(chunk, header[&#34;timebase&#34;])
                 time_arr[counter] = info[0]
                 char_arr[counter] = info[1]
-                inp_arr[2 * counter:2 * counter + 2] = info[2]
+                inp_arr[2 * counter : 2 * counter + 2] = info[2]
                 counter = counter + 1
                 chunk = file.read(header[&#34;sample_bytes&#34;])
 
@@ -395,10 +398,8 @@ if __name__ == &#34;__main__&#34;:
     def _info_from_chunk(chunk, timebase):
         &#34;&#34;&#34;Extract the info from a 7 byte chunk.&#34;&#34;&#34;
         time_val = (
-            16777216 * chunk[0] +
-            65536 * chunk[1] +
-            256 * chunk[2] +
-            chunk[3]) / timebase
+            16777216 * chunk[0] + 65536 * chunk[1] + 256 * chunk[2] + chunk[3]
+        ) / timebase
 
         input_type = chr(chunk[4])
 
@@ -470,11 +471,10 @@ def load(cls, in_location, axona_input):
 
     &#34;&#34;&#34;
     counter = 0
-    with open(in_location, &#39;rb&#39;) as file:
+    with open(in_location, &#34;rb&#34;) as file:
         header = cls._parse_header(file)
         if header[&#34;samples&#34;] == 0:
-            raise ValueError(&#34;No input/output samples in {}&#34;.format(
-                in_location))
+            raise ValueError(&#34;No input/output samples in {}&#34;.format(in_location))
 
         time_arr = np.zeros(header[&#34;samples&#34;], np.float32)
         char_arr = np.zeros(header[&#34;samples&#34;], str)
@@ -485,7 +485,7 @@ def load(cls, in_location, axona_input):
             info = cls._info_from_chunk(chunk, header[&#34;timebase&#34;])
             time_arr[counter] = info[0]
             char_arr[counter] = info[1]
-            inp_arr[2 * counter:2 * counter + 2] = info[2]
+            inp_arr[2 * counter : 2 * counter + 2] = info[2]
             counter = counter + 1
             chunk = file.read(header[&#34;sample_bytes&#34;])
 
@@ -569,7 +569,8 @@ def load(cls, in_location, axona_input):
                 header = &#34;{},Ch{}&#34;.format(header, i + 1)
             file.write(header + &#34;\n&#34;)
             for (i, (t, c, p)) in enumerate(
-                    zip(self.timestamps, self.channels, self.pins)):
+                zip(self.timestamps, self.channels, self.pins)
+            ):
                 if c in inp_types:
                     out_str = &#34;{:2f},{}&#34;.format(t, c)
                     for bit in p:
@@ -597,9 +598,12 @@ def load(cls, in_location, axona_input):
         &#34;&#34;&#34;
         self.timestamps = t_arr
         self.channels = c_arr
-        self.pins = np.array([
-            np.unpackbits(p_arr[2 * i:2 * i + 2])[::-1]
-            for i in range(len(p_arr) // 2)])
+        self.pins = np.array(
+            [
+                np.unpackbits(p_arr[2 * i : 2 * i + 2])[::-1]
+                for i in range(len(p_arr) // 2)
+            ]
+        )
 
     def get_times(self, channel, pin, inverted=False):
         &#34;&#34;&#34;
@@ -740,9 +744,12 @@ represented as a little endian 16 bit unsigned int</dd>
     &#34;&#34;&#34;
     self.timestamps = t_arr
     self.channels = c_arr
-    self.pins = np.array([
-        np.unpackbits(p_arr[2 * i:2 * i + 2])[::-1]
-        for i in range(len(p_arr) // 2)])</code></pre>
+    self.pins = np.array(
+        [
+            np.unpackbits(p_arr[2 * i : 2 * i + 2])[::-1]
+            for i in range(len(p_arr) // 2)
+        ]
+    )</code></pre>
 </details>
 </dd>
 <dt id="bvmpc.bv_axona.AxonaInput.save_to_file"><code class="name flex">
@@ -797,7 +804,8 @@ if None, determines the name from input file</dd>
             header = &#34;{},Ch{}&#34;.format(header, i + 1)
         file.write(header + &#34;\n&#34;)
         for (i, (t, c, p)) in enumerate(
-                zip(self.timestamps, self.channels, self.pins)):
+            zip(self.timestamps, self.channels, self.pins)
+        ):
             if c in inp_types:
                 out_str = &#34;{:2f},{}&#34;.format(t, c)
                 for bit in p:
@@ -860,20 +868,21 @@ data[k] = v(data[k])</dd>
         &#34;&#34;&#34;Calculate and store how long the Session took in mins.&#34;&#34;&#34;
         dur = int(self.get_val(&#34;duration&#34;))
         start_time = self.get_val(&#34;trial_time&#34;)
-        fmt = &#39;%H:%M:%S&#39;
+        fmt = &#34;%H:%M:%S&#34;
         start_fmt = datetime.datetime.strptime(start_time, fmt)
         final_time = start_fmt + datetime.timedelta(seconds=dur)
         out_str = &#34;{}:{}:{}&#34;.format(
-            final_time.hour, final_time.minute, final_time.second)
+            final_time.hour, final_time.minute, final_time.second
+        )
         self.data[&#34;end_time&#34;] = out_str
 
     def load(self, location):
         &#34;&#34;&#34;Load and parse a .set file specified by location.&#34;&#34;&#34;
-        with open(location, &#39;r&#39;, encoding=&#39;latin-1&#39;) as f_set:
+        with open(location, &#34;r&#34;, encoding=&#34;latin-1&#34;) as f_set:
             lines = f_set.readlines()
             for line in lines:
                 split = line.index(&#34; &#34;)
-                key, val = line[:split], line[split + 1:].strip()
+                key, val = line[:split], line[split + 1 :].strip()
                 # if key in list(self.data.keys()):
                 #     print((&#34;Duplicate Key found {}&#34;.format(key)))
                 if key in list(self.change_dict.keys()):
@@ -904,7 +913,7 @@ data[k] = v(data[k])</dd>
     def change_date(date):
         &#34;&#34;&#34;Convert an Axona date into a standard format.&#34;&#34;&#34;
         change = {v: k for k, v in enumerate(calendar.month_abbr)}
-        rest = date[date.index(&#34; &#34;) + 1:]
+        rest = date[date.index(&#34; &#34;) + 1 :]
         day, month, year = rest.split(&#34; &#34;)
         month = change[month]
         month = &#34;0&#34; + str(month) if month &lt; 10 else month
@@ -927,7 +936,7 @@ data[k] = v(data[k])</dd>
 def change_date(date):
     &#34;&#34;&#34;Convert an Axona date into a standard format.&#34;&#34;&#34;
     change = {v: k for k, v in enumerate(calendar.month_abbr)}
-    rest = date[date.index(&#34; &#34;) + 1:]
+    rest = date[date.index(&#34; &#34;) + 1 :]
     day, month, year = rest.split(&#34; &#34;)
     month = change[month]
     month = &#34;0&#34; + str(month) if month &lt; 10 else month
@@ -990,11 +999,11 @@ If None, returns the whole data from the set file.</dd>
 </summary>
 <pre><code class="python">def load(self, location):
     &#34;&#34;&#34;Load and parse a .set file specified by location.&#34;&#34;&#34;
-    with open(location, &#39;r&#39;, encoding=&#39;latin-1&#39;) as f_set:
+    with open(location, &#34;r&#34;, encoding=&#34;latin-1&#34;) as f_set:
         lines = f_set.readlines()
         for line in lines:
             split = line.index(&#34; &#34;)
-            key, val = line[:split], line[split + 1:].strip()
+            key, val = line[:split], line[split + 1 :].strip()
             # if key in list(self.data.keys()):
             #     print((&#34;Duplicate Key found {}&#34;.format(key)))
             if key in list(self.change_dict.keys()):
@@ -1016,11 +1025,12 @@ If None, returns the whole data from the set file.</dd>
     &#34;&#34;&#34;Calculate and store how long the Session took in mins.&#34;&#34;&#34;
     dur = int(self.get_val(&#34;duration&#34;))
     start_time = self.get_val(&#34;trial_time&#34;)
-    fmt = &#39;%H:%M:%S&#39;
+    fmt = &#34;%H:%M:%S&#34;
     start_fmt = datetime.datetime.strptime(start_time, fmt)
     final_time = start_fmt + datetime.timedelta(seconds=dur)
     out_str = &#34;{}:{}:{}&#34;.format(
-        final_time.hour, final_time.minute, final_time.second)
+        final_time.hour, final_time.minute, final_time.second
+    )
     self.data[&#34;end_time&#34;] = out_str</code></pre>
 </details>
 </dd>

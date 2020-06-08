@@ -40,7 +40,12 @@ class LfpODict:
     &#34;&#34;&#34;This class holds LFP files over multiple channels in a recording.&#34;&#34;&#34;
 
     def __init__(
-            self, filename, channels=&#34;all&#34;, filt_params=(False, None, None), artf_params=(False, None, None, None, False)):
+        self,
+        filename,
+        channels=&#34;all&#34;,
+        filt_params=(False, None, None),
+        artf_params=(False, None, None, None, False),
+    ):
         &#34;&#34;&#34;
         Load the channels from filename.
 
@@ -72,8 +77,7 @@ class LfpODict:
             self.lfp_filt_odict = self.lfp_odict
 
         if artf_params[0]:
-            self.lfp_clean_odict = self.deartf(
-                *artf_params[1:])
+            self.lfp_clean_odict = self.deartf(*artf_params[1:])
         else:
             self.lfp_clean_odict = self.lfp_filt_odict
 
@@ -122,15 +126,17 @@ class LfpODict:
             # t1, t2, step = 0, 3, 4  # DR btwn tetrodes from the same region but different shuttle
             # t1, t2, step = 0, 4, 2  # DR btwn tetrodes from the same region but different shuttle
             self.lfp_dr_odict = OrderedDict()
-            for (key1, lfp1), (key2, lfp2) in zip(list(self.lfp_odict.items())[t1::step], list(self.lfp_odict.items())[t2::step]):
+            for (key1, lfp1), (key2, lfp2) in zip(
+                list(self.lfp_odict.items())[t1::step],
+                list(self.lfp_odict.items())[t2::step],
+            ):
                 dr_key = &#34;{}_{}&#34;.format(key1, key2)
                 dr_lfp = deepcopy(lfp1)
                 dr_lfp.set_channel_id(channel_id=dr_key)
                 dr_lfp._set_samples(lfp1.get_samples() - lfp2.get_samples())
                 self.lfp_dr_odict[dr_key] = dr_lfp
             if self.artf_params[0]:
-                self.lfp_clean_odict = self.deartf(
-                    *self.artf_params[1:], dr_mode=True)
+                self.lfp_clean_odict = self.deartf(*self.artf_params[1:], dr_mode=True)
 
         return self.lfp_dr_odict
 
@@ -154,8 +160,8 @@ class LfpODict:
             filt_lfp = deepcopy(lfp)
             fs = filt_lfp.get_sampling_rate()
             filtered_lfp_samples = butter_filter(
-                filt_lfp.get_samples(), fs, 10,
-                lower, upper, &#39;bandpass&#39;)
+                filt_lfp.get_samples(), fs, 10, lower, upper, &#34;bandpass&#34;
+            )
             filt_lfp._set_samples(filtered_lfp_samples)
             lfp_filt_odict[key] = filt_lfp
         return lfp_filt_odict
@@ -251,8 +257,9 @@ class LfpODict:
 
         for key, lfp in lfp_dict_s.items():
             # info is mean, sd, thr_locs, thr_vals, thr_time
-            mean, std, thr_locs, thr_vals, thr_time, per_removed = lfp.find_artf(
-                sd, min_artf_freq)
+            (mean, std, thr_locs, thr_vals, thr_time, per_removed,) = lfp.find_artf(
+                sd, min_artf_freq
+            )
             add_info(key, mean, &#34;mean&#34;)
             add_info(key, std, &#34;std&#34;)
             add_info(key, thr_locs, &#34;thr_locs&#34;)
@@ -281,7 +288,7 @@ class LfpODict:
         lfp_clean_odict = OrderedDict()
 
         if dr_mode:
-            print(&#39;Removing artf from DR&#39;)
+            print(&#34;Removing artf from DR&#34;)
             signal_used = self.get_dr_signals()
         else:
             signal_used = self.lfp_filt_odict
@@ -294,8 +301,7 @@ class LfpODict:
                 thr_locs = self.get_info(key, &#34;thr_locs&#34;)
 
             if rep_freq is None:
-                clean_lfp._samples[thr_locs] = np.mean(
-                    clean_lfp._samples)
+                clean_lfp._samples[thr_locs] = np.mean(clean_lfp._samples)
             else:
                 times = lfp.get_timestamp()
                 rep_sig = 0.5 * np.sin(2 * np.pi * rep_freq * times)
@@ -353,7 +359,12 @@ Defaults to (False, None, None, None, False)
     &#34;&#34;&#34;This class holds LFP files over multiple channels in a recording.&#34;&#34;&#34;
 
     def __init__(
-            self, filename, channels=&#34;all&#34;, filt_params=(False, None, None), artf_params=(False, None, None, None, False)):
+        self,
+        filename,
+        channels=&#34;all&#34;,
+        filt_params=(False, None, None),
+        artf_params=(False, None, None, None, False),
+    ):
         &#34;&#34;&#34;
         Load the channels from filename.
 
@@ -385,8 +396,7 @@ Defaults to (False, None, None, None, False)
             self.lfp_filt_odict = self.lfp_odict
 
         if artf_params[0]:
-            self.lfp_clean_odict = self.deartf(
-                *artf_params[1:])
+            self.lfp_clean_odict = self.deartf(*artf_params[1:])
         else:
             self.lfp_clean_odict = self.lfp_filt_odict
 
@@ -435,15 +445,17 @@ Defaults to (False, None, None, None, False)
             # t1, t2, step = 0, 3, 4  # DR btwn tetrodes from the same region but different shuttle
             # t1, t2, step = 0, 4, 2  # DR btwn tetrodes from the same region but different shuttle
             self.lfp_dr_odict = OrderedDict()
-            for (key1, lfp1), (key2, lfp2) in zip(list(self.lfp_odict.items())[t1::step], list(self.lfp_odict.items())[t2::step]):
+            for (key1, lfp1), (key2, lfp2) in zip(
+                list(self.lfp_odict.items())[t1::step],
+                list(self.lfp_odict.items())[t2::step],
+            ):
                 dr_key = &#34;{}_{}&#34;.format(key1, key2)
                 dr_lfp = deepcopy(lfp1)
                 dr_lfp.set_channel_id(channel_id=dr_key)
                 dr_lfp._set_samples(lfp1.get_samples() - lfp2.get_samples())
                 self.lfp_dr_odict[dr_key] = dr_lfp
             if self.artf_params[0]:
-                self.lfp_clean_odict = self.deartf(
-                    *self.artf_params[1:], dr_mode=True)
+                self.lfp_clean_odict = self.deartf(*self.artf_params[1:], dr_mode=True)
 
         return self.lfp_dr_odict
 
@@ -467,8 +479,8 @@ Defaults to (False, None, None, None, False)
             filt_lfp = deepcopy(lfp)
             fs = filt_lfp.get_sampling_rate()
             filtered_lfp_samples = butter_filter(
-                filt_lfp.get_samples(), fs, 10,
-                lower, upper, &#39;bandpass&#39;)
+                filt_lfp.get_samples(), fs, 10, lower, upper, &#34;bandpass&#34;
+            )
             filt_lfp._set_samples(filtered_lfp_samples)
             lfp_filt_odict[key] = filt_lfp
         return lfp_filt_odict
@@ -564,8 +576,9 @@ Defaults to (False, None, None, None, False)
 
         for key, lfp in lfp_dict_s.items():
             # info is mean, sd, thr_locs, thr_vals, thr_time
-            mean, std, thr_locs, thr_vals, thr_time, per_removed = lfp.find_artf(
-                sd, min_artf_freq)
+            (mean, std, thr_locs, thr_vals, thr_time, per_removed,) = lfp.find_artf(
+                sd, min_artf_freq
+            )
             add_info(key, mean, &#34;mean&#34;)
             add_info(key, std, &#34;std&#34;)
             add_info(key, thr_locs, &#34;thr_locs&#34;)
@@ -594,7 +607,7 @@ Defaults to (False, None, None, None, False)
         lfp_clean_odict = OrderedDict()
 
         if dr_mode:
-            print(&#39;Removing artf from DR&#39;)
+            print(&#34;Removing artf from DR&#34;)
             signal_used = self.get_dr_signals()
         else:
             signal_used = self.lfp_filt_odict
@@ -607,8 +620,7 @@ Defaults to (False, None, None, None, False)
                 thr_locs = self.get_info(key, &#34;thr_locs&#34;)
 
             if rep_freq is None:
-                clean_lfp._samples[thr_locs] = np.mean(
-                    clean_lfp._samples)
+                clean_lfp._samples[thr_locs] = np.mean(clean_lfp._samples)
             else:
                 times = lfp.get_timestamp()
                 rep_sig = 0.5 * np.sin(2 * np.pi * rep_freq * times)
@@ -695,7 +707,7 @@ replaces artefacts with sin wave of this freq</p>
     lfp_clean_odict = OrderedDict()
 
     if dr_mode:
-        print(&#39;Removing artf from DR&#39;)
+        print(&#34;Removing artf from DR&#34;)
         signal_used = self.get_dr_signals()
     else:
         signal_used = self.lfp_filt_odict
@@ -708,8 +720,7 @@ replaces artefacts with sin wave of this freq</p>
             thr_locs = self.get_info(key, &#34;thr_locs&#34;)
 
         if rep_freq is None:
-            clean_lfp._samples[thr_locs] = np.mean(
-                clean_lfp._samples)
+            clean_lfp._samples[thr_locs] = np.mean(clean_lfp._samples)
         else:
             times = lfp.get_timestamp()
             rep_sig = 0.5 * np.sin(2 * np.pi * rep_freq * times)
@@ -788,8 +799,8 @@ lower and upper bands of the lfp signal in Hz</p>
         filt_lfp = deepcopy(lfp)
         fs = filt_lfp.get_sampling_rate()
         filtered_lfp_samples = butter_filter(
-            filt_lfp.get_samples(), fs, 10,
-            lower, upper, &#39;bandpass&#39;)
+            filt_lfp.get_samples(), fs, 10, lower, upper, &#34;bandpass&#34;
+        )
         filt_lfp._set_samples(filtered_lfp_samples)
         lfp_filt_odict[key] = filt_lfp
     return lfp_filt_odict</code></pre>
@@ -824,8 +835,9 @@ lower and upper bands of the lfp signal in Hz</p>
 
     for key, lfp in lfp_dict_s.items():
         # info is mean, sd, thr_locs, thr_vals, thr_time
-        mean, std, thr_locs, thr_vals, thr_time, per_removed = lfp.find_artf(
-            sd, min_artf_freq)
+        (mean, std, thr_locs, thr_vals, thr_time, per_removed,) = lfp.find_artf(
+            sd, min_artf_freq
+        )
         add_info(key, mean, &#34;mean&#34;)
         add_info(key, std, &#34;std&#34;)
         add_info(key, thr_locs, &#34;thr_locs&#34;)
@@ -888,15 +900,17 @@ Returns n/2 signals in a dict, with each being the signal difference between pai
         # t1, t2, step = 0, 3, 4  # DR btwn tetrodes from the same region but different shuttle
         # t1, t2, step = 0, 4, 2  # DR btwn tetrodes from the same region but different shuttle
         self.lfp_dr_odict = OrderedDict()
-        for (key1, lfp1), (key2, lfp2) in zip(list(self.lfp_odict.items())[t1::step], list(self.lfp_odict.items())[t2::step]):
+        for (key1, lfp1), (key2, lfp2) in zip(
+            list(self.lfp_odict.items())[t1::step],
+            list(self.lfp_odict.items())[t2::step],
+        ):
             dr_key = &#34;{}_{}&#34;.format(key1, key2)
             dr_lfp = deepcopy(lfp1)
             dr_lfp.set_channel_id(channel_id=dr_key)
             dr_lfp._set_samples(lfp1.get_samples() - lfp2.get_samples())
             self.lfp_dr_odict[dr_key] = dr_lfp
         if self.artf_params[0]:
-            self.lfp_clean_odict = self.deartf(
-                *self.artf_params[1:], dr_mode=True)
+            self.lfp_clean_odict = self.deartf(*self.artf_params[1:], dr_mode=True)
 
     return self.lfp_dr_odict</code></pre>
 </details>

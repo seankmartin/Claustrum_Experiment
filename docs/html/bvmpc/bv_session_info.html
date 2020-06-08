@@ -43,9 +43,16 @@ class SessionInfo:
 
     def _init_metadata_info(self):
         self.metadata_info = [
-            &#34;start_date&#34;, &#34;end_date&#34;, &#34;subject&#34;,
-            &#34;experiment&#34;, &#34;group&#34;,
-            &#34;box&#34;, &#34;start_time&#34;, &#34;end_time&#34;, &#34;name&#34;]
+            &#34;start_date&#34;,
+            &#34;end_date&#34;,
+            &#34;subject&#34;,
+            &#34;experiment&#34;,
+            &#34;group&#34;,
+            &#34;box&#34;,
+            &#34;start_time&#34;,
+            &#34;end_time&#34;,
+            &#34;name&#34;,
+        ]
 
         self.metadata_start_idx = [
             len(&#34;Start Date: &#34;),
@@ -56,7 +63,7 @@ class SessionInfo:
             len(&#34;Box: &#34;),
             len(&#34;Start Time: &#34;),
             len(&#34;End Time: &#34;),
-            len(&#34;MSN: &#34;)
+            len(&#34;MSN: &#34;),
         ]
 
     def _init_session_info(self):
@@ -72,126 +79,147 @@ class SessionInfo:
         # self.session_info_dict[&#39;Match_to_sample_0_delay&#39;] = (
         #     self.session_info_dict[&#39;DNMTS_0_delay&#39;])
 
-        self.session_info_dict[&#39;2_MagazineHabituation_p&#39;] = (
-            np.array([
-                [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-                [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-                [&#39;E:&#39;, &#39;END&#39;, &#39;Nosepoke&#39;]
-            ]))
+        self.session_info_dict[&#34;2_MagazineHabituation_p&#34;] = np.array(
+            [
+                [&#34;A:&#34;, &#34;B:&#34;, &#34;Experiment Variables&#34;],
+                [&#34;D:&#34;, &#34;E:&#34;, &#34;Reward&#34;],
+                [&#34;E:&#34;, &#34;END&#34;, &#34;Nosepoke&#34;],
+            ]
+        )
 
-        self.session_info_dict[&#39;3_LeverHabituation_p&#39;] = (
-            np.array([
-                [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-                [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-                [&#39;E:&#39;, &#39;L:&#39;, &#39;Nosepoke&#39;],
-                [&#39;L:&#39;, &#39;M:&#39;, &#39;L&#39;],
-                [&#39;M:&#39;, &#39;N:&#39;, &#39;Un_L&#39;],
-                [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-                [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-                [&#39;R:&#39;, &#39;END&#39;, &#39;R&#39;]
-            ]))
+        self.session_info_dict[&#34;3_LeverHabituation_p&#34;] = np.array(
+            [
+                [&#34;A:&#34;, &#34;B:&#34;, &#34;Experiment Variables&#34;],
+                [&#34;D:&#34;, &#34;E:&#34;, &#34;Reward&#34;],
+                [&#34;E:&#34;, &#34;L:&#34;, &#34;Nosepoke&#34;],
+                [&#34;L:&#34;, &#34;M:&#34;, &#34;L&#34;],
+                [&#34;M:&#34;, &#34;N:&#34;, &#34;Un_L&#34;],
+                [&#34;N:&#34;, &#34;O:&#34;, &#34;Un_R&#34;],
+                [&#34;O:&#34;, &#34;R:&#34;, &#34;Un_Nosepoke&#34;],
+                [&#34;R:&#34;, &#34;END&#34;, &#34;R&#34;],
+            ]
+        )
 
-        self.session_info_dict[&#39;4_LeverTraining_p&#39;] = (
-            np.array([
-                [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-                [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-                [&#39;E:&#39;, &#39;L:&#39;, &#39;Nosepoke&#39;],
-                [&#39;L:&#39;, &#39;M:&#39;, &#39;L&#39;],
-                [&#39;M:&#39;, &#39;N:&#39;, &#39;Un_L&#39;],
-                [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-                [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-                [&#39;R:&#39;, &#39;END&#39;, &#39;R&#39;]
-            ]))
+        self.session_info_dict[&#34;4_LeverTraining_p&#34;] = np.array(
+            [
+                [&#34;A:&#34;, &#34;B:&#34;, &#34;Experiment Variables&#34;],
+                [&#34;D:&#34;, &#34;E:&#34;, &#34;Reward&#34;],
+                [&#34;E:&#34;, &#34;L:&#34;, &#34;Nosepoke&#34;],
+                [&#34;L:&#34;, &#34;M:&#34;, &#34;L&#34;],
+                [&#34;M:&#34;, &#34;N:&#34;, &#34;Un_L&#34;],
+                [&#34;N:&#34;, &#34;O:&#34;, &#34;Un_R&#34;],
+                [&#34;O:&#34;, &#34;R:&#34;, &#34;Un_Nosepoke&#34;],
+                [&#34;R:&#34;, &#34;END&#34;, &#34;R&#34;],
+            ]
+        )
 
-        self.session_info_dict[&#39;5a_FixedRatio_p&#39;] = (
-            np.array([
-                [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-                [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-                [&#39;E:&#39;, &#39;M:&#39;, &#39;Nosepoke&#39;],
-                [&#39;M:&#39;, &#39;N:&#39;, &#39;FR Changes&#39;],
-                [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-                [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-                [&#39;R:&#39;, &#39;END&#39;, &#39;R&#39;]
-            ]))
+        self.session_info_dict[&#34;5a_FixedRatio_p&#34;] = np.array(
+            [
+                [&#34;A:&#34;, &#34;B:&#34;, &#34;Experiment Variables&#34;],
+                [&#34;D:&#34;, &#34;E:&#34;, &#34;Reward&#34;],
+                [&#34;E:&#34;, &#34;M:&#34;, &#34;Nosepoke&#34;],
+                [&#34;M:&#34;, &#34;N:&#34;, &#34;FR Changes&#34;],
+                [&#34;N:&#34;, &#34;O:&#34;, &#34;Un_R&#34;],
+                [&#34;O:&#34;, &#34;R:&#34;, &#34;Un_Nosepoke&#34;],
+                [&#34;R:&#34;, &#34;END&#34;, &#34;R&#34;],
+            ]
+        )
 
-        self.session_info_dict[&#39;5b_FixedInterval_p&#39;] = (
-            np.array([
-                [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-                [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-                [&#39;E:&#39;, &#39;N:&#39;, &#39;Nosepoke&#39;],
-                [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_L&#39;],
-                [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-                [&#39;R:&#39;, &#39;END&#39;, &#39;L&#39;]
-            ]))
+        self.session_info_dict[&#34;5b_FixedInterval_p&#34;] = np.array(
+            [
+                [&#34;A:&#34;, &#34;B:&#34;, &#34;Experiment Variables&#34;],
+                [&#34;D:&#34;, &#34;E:&#34;, &#34;Reward&#34;],
+                [&#34;E:&#34;, &#34;N:&#34;, &#34;Nosepoke&#34;],
+                [&#34;N:&#34;, &#34;O:&#34;, &#34;Un_L&#34;],
+                [&#34;O:&#34;, &#34;R:&#34;, &#34;Un_Nosepoke&#34;],
+                [&#34;R:&#34;, &#34;END&#34;, &#34;L&#34;],
+            ]
+        )
 
-        self.session_info_dict[&#39;6_RandomisedBlocks_p&#39;] = (
-            np.array([
-                [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-                [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-                [&#39;E:&#39;, &#39;L:&#39;, &#39;Nosepoke&#39;],
-                [&#39;L:&#39;, &#39;M:&#39;, &#39;L&#39;],
-                [&#39;M:&#39;, &#39;N:&#39;, &#39;Un_L&#39;],
-                [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-                [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-                [&#39;R:&#39;, &#39;U:&#39;, &#39;R&#39;],
-                [&#39;U:&#39;, &#39;V:&#39;, &#39;Trial Type&#39;],  # 1 is FR, 0 is FI
+        self.session_info_dict[&#34;6_RandomisedBlocks_p&#34;] = np.array(
+            [
+                [&#34;A:&#34;, &#34;B:&#34;, &#34;Experiment Variables&#34;],
+                [&#34;D:&#34;, &#34;E:&#34;, &#34;Reward&#34;],
+                [&#34;E:&#34;, &#34;L:&#34;, &#34;Nosepoke&#34;],
+                [&#34;L:&#34;, &#34;M:&#34;, &#34;L&#34;],
+                [&#34;M:&#34;, &#34;N:&#34;, &#34;Un_L&#34;],
+                [&#34;N:&#34;, &#34;O:&#34;, &#34;Un_R&#34;],
+                [&#34;O:&#34;, &#34;R:&#34;, &#34;Un_Nosepoke&#34;],
+                [&#34;R:&#34;, &#34;U:&#34;, &#34;R&#34;],
+                [&#34;U:&#34;, &#34;V:&#34;, &#34;Trial Type&#34;],  # 1 is FR, 0 is FI
                 # [&#39;V:&#39;, &#39;END&#39;, &#39;Per Trial Pellets&#39;]
-            ]))
+            ]
+        )
 
-        self.session_info_dict[&#39;7_RandomisedBlocksExtended_p&#39;] = (
-            np.array([
-                [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-                [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-                [&#39;E:&#39;, &#39;F:&#39;, &#39;Nosepoke&#39;],
+        self.session_info_dict[&#34;7_RandomisedBlocksExtended_p&#34;] = np.array(
+            [
+                [&#34;A:&#34;, &#34;B:&#34;, &#34;Experiment Variables&#34;],
+                [&#34;D:&#34;, &#34;E:&#34;, &#34;Reward&#34;],
+                [&#34;E:&#34;, &#34;F:&#34;, &#34;Nosepoke&#34;],
                 # L during FR Trial; L when R available
-                [&#39;F:&#39;, &#39;G:&#39;, &#39;FR_Err&#39;],
+                [&#34;F:&#34;, &#34;G:&#34;, &#34;FR_Err&#34;],
                 # R during FI Trial; R when L available
-                [&#39;G:&#39;, &#39;H:&#39;, &#39;FI_Err&#39;],
+                [&#34;G:&#34;, &#34;H:&#34;, &#34;FI_Err&#34;],
                 # L during FR Trial_Un; L before reward collection
-                [&#39;H:&#39;, &#39;I:&#39;, &#39;Un_FR_Err&#39;],
+                [&#34;H:&#34;, &#34;I:&#34;, &#34;Un_FR_Err&#34;],
                 # R during FI Trial_Un; R during waiting time
-                [&#39;I:&#39;, &#39;L:&#39;, &#39;Un_FI_Err&#39;],
-                [&#39;L:&#39;, &#39;M:&#39;, &#39;L&#39;],
-                [&#39;M:&#39;, &#39;N:&#39;, &#39;Un_L&#39;],
-                [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-                [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-                [&#39;R:&#39;, &#39;U:&#39;, &#39;R&#39;],
-                [&#39;U:&#39;, &#39;V:&#39;, &#39;Trial Type&#39;],
+                [&#34;I:&#34;, &#34;L:&#34;, &#34;Un_FI_Err&#34;],
+                [&#34;L:&#34;, &#34;M:&#34;, &#34;L&#34;],
+                [&#34;M:&#34;, &#34;N:&#34;, &#34;Un_L&#34;],
+                [&#34;N:&#34;, &#34;O:&#34;, &#34;Un_R&#34;],
+                [&#34;O:&#34;, &#34;R:&#34;, &#34;Un_Nosepoke&#34;],
+                [&#34;R:&#34;, &#34;U:&#34;, &#34;R&#34;],
+                [&#34;U:&#34;, &#34;V:&#34;, &#34;Trial Type&#34;],
                 # [&#39;V:&#39;, &#39;END&#39;, &#39;Per Trial Pellets&#39;]
-            ]))
+            ]
+        )
 
     def _init_experiment_vars(self):
         # Note, ticks (10ms) are converted to seconds when parsing the file.
         base_exp_list = [
-            &#34;trial_length (mins)&#34;, &#34;max_pellets&#34;, &#34;advancement_pellets&#34;,
-            &#34;fixed_ratio&#34;, &#34;fast_inter_response_time (secs)&#34;,
-            &#34;fixed_interval (ticks)&#34;, &#34;double_reward_window (ticks)&#34;
+            &#34;trial_length (mins)&#34;,
+            &#34;max_pellets&#34;,
+            &#34;advancement_pellets&#34;,
+            &#34;fixed_ratio&#34;,
+            &#34;fast_inter_response_time (secs)&#34;,
+            &#34;fixed_interval (ticks)&#34;,
+            &#34;double_reward_window (ticks)&#34;,
         ]
 
         self.experiment_var_dict = {}
 
-        self.experiment_var_dict[&#39;2_MagazineHabituation_p&#39;] = [
-            base_exp_list[0], &#34;drop_rate (secs)&#34;]
+        self.experiment_var_dict[&#34;2_MagazineHabituation_p&#34;] = [
+            base_exp_list[0],
+            &#34;drop_rate (secs)&#34;,
+        ]
 
-        self.experiment_var_dict[&#39;3_LeverHabituation_p&#39;] = [
-            base_exp_list[0], &#34;drop_rate (secs)&#34;, base_exp_list[1],
-            &#34;lever_presses_required&#34;]
+        self.experiment_var_dict[&#34;3_LeverHabituation_p&#34;] = [
+            base_exp_list[0],
+            &#34;drop_rate (secs)&#34;,
+            base_exp_list[1],
+            &#34;lever_presses_required&#34;,
+        ]
 
-        self.experiment_var_dict[&#39;4_LeverTraining_p&#39;] = (
-            self.experiment_var_dict[&#39;3_LeverHabituation_p&#39;])
+        self.experiment_var_dict[&#34;4_LeverTraining_p&#34;] = self.experiment_var_dict[
+            &#34;3_LeverHabituation_p&#34;
+        ]
 
-        self.experiment_var_dict[&#39;5a_FixedRatio_p&#39;] = (
-            base_exp_list[:3] +
-            [&#34;fixed_ratio&#34;, &#34;ending_ratio&#34;, &#34;ratio_increment&#34;,
-             &#34;max_ratio&#34;, base_exp_list[4], &#34;fast_trials_to_advance&#34;])
+        self.experiment_var_dict[&#34;5a_FixedRatio_p&#34;] = base_exp_list[:3] + [
+            &#34;fixed_ratio&#34;,
+            &#34;ending_ratio&#34;,
+            &#34;ratio_increment&#34;,
+            &#34;max_ratio&#34;,
+            base_exp_list[4],
+            &#34;fast_trials_to_advance&#34;,
+        ]
 
-        self.experiment_var_dict[&#39;5b_FixedInterval_p&#39;] = (
-            base_exp_list[:3] + [base_exp_list[5]])
+        self.experiment_var_dict[&#34;5b_FixedInterval_p&#34;] = base_exp_list[:3] + [
+            base_exp_list[5]
+        ]
 
-        self.experiment_var_dict[&#39;6_RandomisedBlocks_p&#39;] = base_exp_list
+        self.experiment_var_dict[&#34;6_RandomisedBlocks_p&#34;] = base_exp_list
 
-        self.experiment_var_dict[&#39;7_RandomisedBlocksExtended_p&#39;] = (
-            base_exp_list)
+        self.experiment_var_dict[&#34;7_RandomisedBlocksExtended_p&#34;] = base_exp_list
 
     def _init_io_channels(self):
         self.io_channel_map = {}
@@ -200,17 +228,18 @@ class SessionInfo:
         input_dict = {
             &#34;left_lever&#34;: (1, True),
             &#34;right_lever&#34;: (3, True),
-            &#34;all_nosepokes&#34;: (7, True)}
+            &#34;all_nosepokes&#34;: (7, True),
+        }
         output_dict = {
             &#34;Reward&#34;: (9, False),
             &#34;left_out&#34;: (1, False),
             &#34;right_out&#34;: (2, False),
             &#34;left_light&#34;: (4, False),
             &#34;right_light&#34;: (5, False),
-            &#34;sound&#34;: (8, True)}  # ts when sound is turned OFF
+            &#34;sound&#34;: (8, True),
+        }  # ts when sound is turned OFF
 
-        self.io_channel_map[&#34;6&#34;] = {
-            &#34;i&#34;: input_dict, &#34;o&#34;: output_dict}
+        self.io_channel_map[&#34;6&#34;] = {&#34;i&#34;: input_dict, &#34;o&#34;: output_dict}
         self.io_channel_map[&#34;7&#34;] = self.io_channel_map[&#34;6&#34;]
 
     def _init_axona_metadata_map(self):
@@ -219,7 +248,8 @@ class SessionInfo:
             &#34;end_date&#34;: &#34;trial_date&#34;,
             &#34;start_time&#34;: &#34;trial_time&#34;,
             &#34;end_time&#34;: &#34;end_time&#34;,
-            &#34;name&#34;: &#34;script&#34;}
+            &#34;name&#34;: &#34;script&#34;,
+        }
 
     def get_session_type_info(self, key=None):
         &#34;&#34;&#34;
@@ -347,10 +377,8 @@ class SessionInfo:
     def _get_channel(self, io, s_type, key=None):
         &#34;&#34;&#34;Intended private function to help channel retrieval.&#34;&#34;&#34;
         if key is not None:
-            return self.io_channel_map.get(
-                s_type, None).get(io, None).get(key, None)
-        return self.io_channel_map.get(
-            s_type, None).get(io, None)</code></pre>
+            return self.io_channel_map.get(s_type, None).get(io, None).get(key, None)
+        return self.io_channel_map.get(s_type, None).get(io, None)</code></pre>
 </details>
 </section>
 <section>
@@ -385,9 +413,16 @@ class SessionInfo:
 
     def _init_metadata_info(self):
         self.metadata_info = [
-            &#34;start_date&#34;, &#34;end_date&#34;, &#34;subject&#34;,
-            &#34;experiment&#34;, &#34;group&#34;,
-            &#34;box&#34;, &#34;start_time&#34;, &#34;end_time&#34;, &#34;name&#34;]
+            &#34;start_date&#34;,
+            &#34;end_date&#34;,
+            &#34;subject&#34;,
+            &#34;experiment&#34;,
+            &#34;group&#34;,
+            &#34;box&#34;,
+            &#34;start_time&#34;,
+            &#34;end_time&#34;,
+            &#34;name&#34;,
+        ]
 
         self.metadata_start_idx = [
             len(&#34;Start Date: &#34;),
@@ -398,7 +433,7 @@ class SessionInfo:
             len(&#34;Box: &#34;),
             len(&#34;Start Time: &#34;),
             len(&#34;End Time: &#34;),
-            len(&#34;MSN: &#34;)
+            len(&#34;MSN: &#34;),
         ]
 
     def _init_session_info(self):
@@ -414,126 +449,147 @@ class SessionInfo:
         # self.session_info_dict[&#39;Match_to_sample_0_delay&#39;] = (
         #     self.session_info_dict[&#39;DNMTS_0_delay&#39;])
 
-        self.session_info_dict[&#39;2_MagazineHabituation_p&#39;] = (
-            np.array([
-                [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-                [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-                [&#39;E:&#39;, &#39;END&#39;, &#39;Nosepoke&#39;]
-            ]))
+        self.session_info_dict[&#34;2_MagazineHabituation_p&#34;] = np.array(
+            [
+                [&#34;A:&#34;, &#34;B:&#34;, &#34;Experiment Variables&#34;],
+                [&#34;D:&#34;, &#34;E:&#34;, &#34;Reward&#34;],
+                [&#34;E:&#34;, &#34;END&#34;, &#34;Nosepoke&#34;],
+            ]
+        )
 
-        self.session_info_dict[&#39;3_LeverHabituation_p&#39;] = (
-            np.array([
-                [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-                [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-                [&#39;E:&#39;, &#39;L:&#39;, &#39;Nosepoke&#39;],
-                [&#39;L:&#39;, &#39;M:&#39;, &#39;L&#39;],
-                [&#39;M:&#39;, &#39;N:&#39;, &#39;Un_L&#39;],
-                [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-                [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-                [&#39;R:&#39;, &#39;END&#39;, &#39;R&#39;]
-            ]))
+        self.session_info_dict[&#34;3_LeverHabituation_p&#34;] = np.array(
+            [
+                [&#34;A:&#34;, &#34;B:&#34;, &#34;Experiment Variables&#34;],
+                [&#34;D:&#34;, &#34;E:&#34;, &#34;Reward&#34;],
+                [&#34;E:&#34;, &#34;L:&#34;, &#34;Nosepoke&#34;],
+                [&#34;L:&#34;, &#34;M:&#34;, &#34;L&#34;],
+                [&#34;M:&#34;, &#34;N:&#34;, &#34;Un_L&#34;],
+                [&#34;N:&#34;, &#34;O:&#34;, &#34;Un_R&#34;],
+                [&#34;O:&#34;, &#34;R:&#34;, &#34;Un_Nosepoke&#34;],
+                [&#34;R:&#34;, &#34;END&#34;, &#34;R&#34;],
+            ]
+        )
 
-        self.session_info_dict[&#39;4_LeverTraining_p&#39;] = (
-            np.array([
-                [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-                [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-                [&#39;E:&#39;, &#39;L:&#39;, &#39;Nosepoke&#39;],
-                [&#39;L:&#39;, &#39;M:&#39;, &#39;L&#39;],
-                [&#39;M:&#39;, &#39;N:&#39;, &#39;Un_L&#39;],
-                [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-                [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-                [&#39;R:&#39;, &#39;END&#39;, &#39;R&#39;]
-            ]))
+        self.session_info_dict[&#34;4_LeverTraining_p&#34;] = np.array(
+            [
+                [&#34;A:&#34;, &#34;B:&#34;, &#34;Experiment Variables&#34;],
+                [&#34;D:&#34;, &#34;E:&#34;, &#34;Reward&#34;],
+                [&#34;E:&#34;, &#34;L:&#34;, &#34;Nosepoke&#34;],
+                [&#34;L:&#34;, &#34;M:&#34;, &#34;L&#34;],
+                [&#34;M:&#34;, &#34;N:&#34;, &#34;Un_L&#34;],
+                [&#34;N:&#34;, &#34;O:&#34;, &#34;Un_R&#34;],
+                [&#34;O:&#34;, &#34;R:&#34;, &#34;Un_Nosepoke&#34;],
+                [&#34;R:&#34;, &#34;END&#34;, &#34;R&#34;],
+            ]
+        )
 
-        self.session_info_dict[&#39;5a_FixedRatio_p&#39;] = (
-            np.array([
-                [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-                [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-                [&#39;E:&#39;, &#39;M:&#39;, &#39;Nosepoke&#39;],
-                [&#39;M:&#39;, &#39;N:&#39;, &#39;FR Changes&#39;],
-                [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-                [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-                [&#39;R:&#39;, &#39;END&#39;, &#39;R&#39;]
-            ]))
+        self.session_info_dict[&#34;5a_FixedRatio_p&#34;] = np.array(
+            [
+                [&#34;A:&#34;, &#34;B:&#34;, &#34;Experiment Variables&#34;],
+                [&#34;D:&#34;, &#34;E:&#34;, &#34;Reward&#34;],
+                [&#34;E:&#34;, &#34;M:&#34;, &#34;Nosepoke&#34;],
+                [&#34;M:&#34;, &#34;N:&#34;, &#34;FR Changes&#34;],
+                [&#34;N:&#34;, &#34;O:&#34;, &#34;Un_R&#34;],
+                [&#34;O:&#34;, &#34;R:&#34;, &#34;Un_Nosepoke&#34;],
+                [&#34;R:&#34;, &#34;END&#34;, &#34;R&#34;],
+            ]
+        )
 
-        self.session_info_dict[&#39;5b_FixedInterval_p&#39;] = (
-            np.array([
-                [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-                [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-                [&#39;E:&#39;, &#39;N:&#39;, &#39;Nosepoke&#39;],
-                [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_L&#39;],
-                [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-                [&#39;R:&#39;, &#39;END&#39;, &#39;L&#39;]
-            ]))
+        self.session_info_dict[&#34;5b_FixedInterval_p&#34;] = np.array(
+            [
+                [&#34;A:&#34;, &#34;B:&#34;, &#34;Experiment Variables&#34;],
+                [&#34;D:&#34;, &#34;E:&#34;, &#34;Reward&#34;],
+                [&#34;E:&#34;, &#34;N:&#34;, &#34;Nosepoke&#34;],
+                [&#34;N:&#34;, &#34;O:&#34;, &#34;Un_L&#34;],
+                [&#34;O:&#34;, &#34;R:&#34;, &#34;Un_Nosepoke&#34;],
+                [&#34;R:&#34;, &#34;END&#34;, &#34;L&#34;],
+            ]
+        )
 
-        self.session_info_dict[&#39;6_RandomisedBlocks_p&#39;] = (
-            np.array([
-                [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-                [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-                [&#39;E:&#39;, &#39;L:&#39;, &#39;Nosepoke&#39;],
-                [&#39;L:&#39;, &#39;M:&#39;, &#39;L&#39;],
-                [&#39;M:&#39;, &#39;N:&#39;, &#39;Un_L&#39;],
-                [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-                [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-                [&#39;R:&#39;, &#39;U:&#39;, &#39;R&#39;],
-                [&#39;U:&#39;, &#39;V:&#39;, &#39;Trial Type&#39;],  # 1 is FR, 0 is FI
+        self.session_info_dict[&#34;6_RandomisedBlocks_p&#34;] = np.array(
+            [
+                [&#34;A:&#34;, &#34;B:&#34;, &#34;Experiment Variables&#34;],
+                [&#34;D:&#34;, &#34;E:&#34;, &#34;Reward&#34;],
+                [&#34;E:&#34;, &#34;L:&#34;, &#34;Nosepoke&#34;],
+                [&#34;L:&#34;, &#34;M:&#34;, &#34;L&#34;],
+                [&#34;M:&#34;, &#34;N:&#34;, &#34;Un_L&#34;],
+                [&#34;N:&#34;, &#34;O:&#34;, &#34;Un_R&#34;],
+                [&#34;O:&#34;, &#34;R:&#34;, &#34;Un_Nosepoke&#34;],
+                [&#34;R:&#34;, &#34;U:&#34;, &#34;R&#34;],
+                [&#34;U:&#34;, &#34;V:&#34;, &#34;Trial Type&#34;],  # 1 is FR, 0 is FI
                 # [&#39;V:&#39;, &#39;END&#39;, &#39;Per Trial Pellets&#39;]
-            ]))
+            ]
+        )
 
-        self.session_info_dict[&#39;7_RandomisedBlocksExtended_p&#39;] = (
-            np.array([
-                [&#39;A:&#39;, &#39;B:&#39;, &#39;Experiment Variables&#39;],
-                [&#39;D:&#39;, &#39;E:&#39;, &#39;Reward&#39;],
-                [&#39;E:&#39;, &#39;F:&#39;, &#39;Nosepoke&#39;],
+        self.session_info_dict[&#34;7_RandomisedBlocksExtended_p&#34;] = np.array(
+            [
+                [&#34;A:&#34;, &#34;B:&#34;, &#34;Experiment Variables&#34;],
+                [&#34;D:&#34;, &#34;E:&#34;, &#34;Reward&#34;],
+                [&#34;E:&#34;, &#34;F:&#34;, &#34;Nosepoke&#34;],
                 # L during FR Trial; L when R available
-                [&#39;F:&#39;, &#39;G:&#39;, &#39;FR_Err&#39;],
+                [&#34;F:&#34;, &#34;G:&#34;, &#34;FR_Err&#34;],
                 # R during FI Trial; R when L available
-                [&#39;G:&#39;, &#39;H:&#39;, &#39;FI_Err&#39;],
+                [&#34;G:&#34;, &#34;H:&#34;, &#34;FI_Err&#34;],
                 # L during FR Trial_Un; L before reward collection
-                [&#39;H:&#39;, &#39;I:&#39;, &#39;Un_FR_Err&#39;],
+                [&#34;H:&#34;, &#34;I:&#34;, &#34;Un_FR_Err&#34;],
                 # R during FI Trial_Un; R during waiting time
-                [&#39;I:&#39;, &#39;L:&#39;, &#39;Un_FI_Err&#39;],
-                [&#39;L:&#39;, &#39;M:&#39;, &#39;L&#39;],
-                [&#39;M:&#39;, &#39;N:&#39;, &#39;Un_L&#39;],
-                [&#39;N:&#39;, &#39;O:&#39;, &#39;Un_R&#39;],
-                [&#39;O:&#39;, &#39;R:&#39;, &#39;Un_Nosepoke&#39;],
-                [&#39;R:&#39;, &#39;U:&#39;, &#39;R&#39;],
-                [&#39;U:&#39;, &#39;V:&#39;, &#39;Trial Type&#39;],
+                [&#34;I:&#34;, &#34;L:&#34;, &#34;Un_FI_Err&#34;],
+                [&#34;L:&#34;, &#34;M:&#34;, &#34;L&#34;],
+                [&#34;M:&#34;, &#34;N:&#34;, &#34;Un_L&#34;],
+                [&#34;N:&#34;, &#34;O:&#34;, &#34;Un_R&#34;],
+                [&#34;O:&#34;, &#34;R:&#34;, &#34;Un_Nosepoke&#34;],
+                [&#34;R:&#34;, &#34;U:&#34;, &#34;R&#34;],
+                [&#34;U:&#34;, &#34;V:&#34;, &#34;Trial Type&#34;],
                 # [&#39;V:&#39;, &#39;END&#39;, &#39;Per Trial Pellets&#39;]
-            ]))
+            ]
+        )
 
     def _init_experiment_vars(self):
         # Note, ticks (10ms) are converted to seconds when parsing the file.
         base_exp_list = [
-            &#34;trial_length (mins)&#34;, &#34;max_pellets&#34;, &#34;advancement_pellets&#34;,
-            &#34;fixed_ratio&#34;, &#34;fast_inter_response_time (secs)&#34;,
-            &#34;fixed_interval (ticks)&#34;, &#34;double_reward_window (ticks)&#34;
+            &#34;trial_length (mins)&#34;,
+            &#34;max_pellets&#34;,
+            &#34;advancement_pellets&#34;,
+            &#34;fixed_ratio&#34;,
+            &#34;fast_inter_response_time (secs)&#34;,
+            &#34;fixed_interval (ticks)&#34;,
+            &#34;double_reward_window (ticks)&#34;,
         ]
 
         self.experiment_var_dict = {}
 
-        self.experiment_var_dict[&#39;2_MagazineHabituation_p&#39;] = [
-            base_exp_list[0], &#34;drop_rate (secs)&#34;]
+        self.experiment_var_dict[&#34;2_MagazineHabituation_p&#34;] = [
+            base_exp_list[0],
+            &#34;drop_rate (secs)&#34;,
+        ]
 
-        self.experiment_var_dict[&#39;3_LeverHabituation_p&#39;] = [
-            base_exp_list[0], &#34;drop_rate (secs)&#34;, base_exp_list[1],
-            &#34;lever_presses_required&#34;]
+        self.experiment_var_dict[&#34;3_LeverHabituation_p&#34;] = [
+            base_exp_list[0],
+            &#34;drop_rate (secs)&#34;,
+            base_exp_list[1],
+            &#34;lever_presses_required&#34;,
+        ]
 
-        self.experiment_var_dict[&#39;4_LeverTraining_p&#39;] = (
-            self.experiment_var_dict[&#39;3_LeverHabituation_p&#39;])
+        self.experiment_var_dict[&#34;4_LeverTraining_p&#34;] = self.experiment_var_dict[
+            &#34;3_LeverHabituation_p&#34;
+        ]
 
-        self.experiment_var_dict[&#39;5a_FixedRatio_p&#39;] = (
-            base_exp_list[:3] +
-            [&#34;fixed_ratio&#34;, &#34;ending_ratio&#34;, &#34;ratio_increment&#34;,
-             &#34;max_ratio&#34;, base_exp_list[4], &#34;fast_trials_to_advance&#34;])
+        self.experiment_var_dict[&#34;5a_FixedRatio_p&#34;] = base_exp_list[:3] + [
+            &#34;fixed_ratio&#34;,
+            &#34;ending_ratio&#34;,
+            &#34;ratio_increment&#34;,
+            &#34;max_ratio&#34;,
+            base_exp_list[4],
+            &#34;fast_trials_to_advance&#34;,
+        ]
 
-        self.experiment_var_dict[&#39;5b_FixedInterval_p&#39;] = (
-            base_exp_list[:3] + [base_exp_list[5]])
+        self.experiment_var_dict[&#34;5b_FixedInterval_p&#34;] = base_exp_list[:3] + [
+            base_exp_list[5]
+        ]
 
-        self.experiment_var_dict[&#39;6_RandomisedBlocks_p&#39;] = base_exp_list
+        self.experiment_var_dict[&#34;6_RandomisedBlocks_p&#34;] = base_exp_list
 
-        self.experiment_var_dict[&#39;7_RandomisedBlocksExtended_p&#39;] = (
-            base_exp_list)
+        self.experiment_var_dict[&#34;7_RandomisedBlocksExtended_p&#34;] = base_exp_list
 
     def _init_io_channels(self):
         self.io_channel_map = {}
@@ -542,17 +598,18 @@ class SessionInfo:
         input_dict = {
             &#34;left_lever&#34;: (1, True),
             &#34;right_lever&#34;: (3, True),
-            &#34;all_nosepokes&#34;: (7, True)}
+            &#34;all_nosepokes&#34;: (7, True),
+        }
         output_dict = {
             &#34;Reward&#34;: (9, False),
             &#34;left_out&#34;: (1, False),
             &#34;right_out&#34;: (2, False),
             &#34;left_light&#34;: (4, False),
             &#34;right_light&#34;: (5, False),
-            &#34;sound&#34;: (8, True)}  # ts when sound is turned OFF
+            &#34;sound&#34;: (8, True),
+        }  # ts when sound is turned OFF
 
-        self.io_channel_map[&#34;6&#34;] = {
-            &#34;i&#34;: input_dict, &#34;o&#34;: output_dict}
+        self.io_channel_map[&#34;6&#34;] = {&#34;i&#34;: input_dict, &#34;o&#34;: output_dict}
         self.io_channel_map[&#34;7&#34;] = self.io_channel_map[&#34;6&#34;]
 
     def _init_axona_metadata_map(self):
@@ -561,7 +618,8 @@ class SessionInfo:
             &#34;end_date&#34;: &#34;trial_date&#34;,
             &#34;start_time&#34;: &#34;trial_time&#34;,
             &#34;end_time&#34;: &#34;end_time&#34;,
-            &#34;name&#34;: &#34;script&#34;}
+            &#34;name&#34;: &#34;script&#34;,
+        }
 
     def get_session_type_info(self, key=None):
         &#34;&#34;&#34;
@@ -689,10 +747,8 @@ class SessionInfo:
     def _get_channel(self, io, s_type, key=None):
         &#34;&#34;&#34;Intended private function to help channel retrieval.&#34;&#34;&#34;
         if key is not None:
-            return self.io_channel_map.get(
-                s_type, None).get(io, None).get(key, None)
-        return self.io_channel_map.get(
-            s_type, None).get(io, None)</code></pre>
+            return self.io_channel_map.get(s_type, None).get(io, None).get(key, None)
+        return self.io_channel_map.get(s_type, None).get(io, None)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>

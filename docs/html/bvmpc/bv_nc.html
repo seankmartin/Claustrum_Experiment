@@ -31,6 +31,7 @@ import matplotlib.pyplot as plt
 
 from neurochat.nc_spike import NSpike
 from neurochat.nc_event import NEvent
+
 # import spikeinterface.spiketoolkit as st
 
 
@@ -46,25 +47,27 @@ def events_from_session(session):
     tone_starts = session.get_tone_starts()
     r_light = session.get_arrays(&#34;right_light&#34;)
     l_light = session.get_arrays(&#34;left_light&#34;)
-    sch_type = session.get_arrays(&#39;Trial Type&#39;)
+    sch_type = session.get_arrays(&#34;Trial Type&#34;)
     # Split pells into blocks
-    pell_blocks = np.split(pell_ts_exdouble, np.searchsorted(
-        pell_ts_exdouble, tone_starts[1:]))
-    col_blocks = np.split(collection_times, np.searchsorted(
-        collection_times, tone_starts[1:]))
+    pell_blocks = np.split(
+        pell_ts_exdouble, np.searchsorted(pell_ts_exdouble, tone_starts[1:])
+    )
+    col_blocks = np.split(
+        collection_times, np.searchsorted(collection_times, tone_starts[1:])
+    )
 
     # Split pell and collection into schedules
     FR_pell, FR_coll, FI_pell, FI_coll, sch_block = [], [], [], [], []
     for i, (sch, pell, coll) in enumerate(zip(sch_type, pell_blocks, col_blocks)):
         if sch == 1:
-            b_type = &#39;FR&#39;
+            b_type = &#34;FR&#34;
             FR_pell = np.concatenate((FR_pell, pell))
             FR_coll = np.concatenate((FR_coll, coll))
         elif sch == 0:
-            b_type = &#39;FI&#39;
+            b_type = &#34;FI&#34;
             FI_pell = np.concatenate((FI_pell, pell))
             FI_coll = np.concatenate((FI_coll, coll))
-        sch_block.append(b_type + &#39;-{}&#39;.format(i))
+        sch_block.append(b_type + &#34;-{}&#34;.format(i))
 
     # event_dict[&#39;FR/Pellet&#39;] = FR_pell
     # event_dict[&#39;FI/Pellet&#39;] = FI_pell
@@ -78,11 +81,11 @@ def events_from_session(session):
         &#34;Lever/R&#34;: right_presses,
         &#34;Lever/L&#34;: left_presses,
         # &#34;Pellet&#34;: pell_ts_exdouble,
-        &#39;Pellet/FR&#39;: FR_pell,
-        &#39;Pellet/FI&#39;: FI_pell,
+        &#34;Pellet/FR&#34;: FR_pell,
+        &#34;Pellet/FI&#34;: FI_pell,
         # &#34;Collection&#34;: collection_times,
-        &#39;Collection/FR&#39;: FR_coll,
-        &#39;Collection/FI&#39;: FI_coll
+        &#34;Collection/FR&#34;: FR_coll,
+        &#34;Collection/FI&#34;: FI_coll,
     }
 
     nc_events = NEvent()
@@ -119,24 +122,26 @@ def events_from_session(session):
 def load_phy(folder_name):
     &#34;&#34;&#34;Use spikeinterface to load a phy clustering.&#34;&#34;&#34;
     import spikeinterface.extractors as se
+
     to_exclude = [&#34;mua&#34;, &#34;noise&#34;]
     return se.PhySortingExtractor(
-        folder_name, exclude_cluster_groups=to_exclude, load_waveforms=True,
-        verbose=True)
+        folder_name,
+        exclude_cluster_groups=to_exclude,
+        load_waveforms=True,
+        verbose=True,
+    )
 
 
 def plot_all_forms(sorting, out_loc, channels_per_group=4):
     &#34;&#34;&#34;Plot all waveforms from a spikeinterface sorting object.&#34;&#34;&#34;
     unit_ids = sorting.get_unit_ids()
-    wf_by_group = [
-        sorting.get_unit_spike_features(u, &#34;waveforms&#34;) for u in unit_ids]
+    wf_by_group = [sorting.get_unit_spike_features(u, &#34;waveforms&#34;) for u in unit_ids]
     for i, wf in enumerate(wf_by_group):
         try:
             tetrode = sorting.get_unit_property(unit_ids[i], &#34;group&#34;)
         except Exception:
             try:
-                tetrode = sorting.get_unit_property(
-                    unit_ids[i], &#34;ch_group&#34;)
+                tetrode = sorting.get_unit_property(unit_ids[i], &#34;ch_group&#34;)
             except Exception:
                 print(&#34;Unable to find cluster group or group in units&#34;)
                 print(sorting.get_shared_unit_property_names())
@@ -150,17 +155,16 @@ def plot_all_forms(sorting, out_loc, channels_per_group=4):
                 wave = wf[j, :]
             axes[j].plot(wave.T, color=&#34;k&#34;, lw=0.3)
         o_loc = os.path.join(
-            out_loc, &#34;tet{}_unit{}_forms.png&#34;.format(
-                tetrode, unit_ids[i]))
-        print(&#34;Saving waveform {} on tetrode {} to {}&#34;.format(
-            i, tetrode, o_loc))
+            out_loc, &#34;tet{}_unit{}_forms.png&#34;.format(tetrode, unit_ids[i])
+        )
+        print(&#34;Saving waveform {} on tetrode {} to {}&#34;.format(i, tetrode, o_loc))
         fig.savefig(o_loc, dpi=200)
         plt.close(&#34;all&#34;)
 
 
 def extract_sorting_info(sorting):
     &#34;&#34;&#34;Extract timestamps, tags, and waveforms from a sorting object.&#34;&#34;&#34;
-    sample_rate = sorting.params[&#39;sample_rate&#39;]
+    sample_rate = sorting.params[&#34;sample_rate&#34;]
     all_unit_trains = sorting.get_units_spike_train()
     timestamps = np.concatenate(all_unit_trains) / float(sample_rate)
     unit_tags = np.zeros(len(timestamps))
@@ -236,25 +240,27 @@ if __name__ == &#34;__main__&#34;:
     tone_starts = session.get_tone_starts()
     r_light = session.get_arrays(&#34;right_light&#34;)
     l_light = session.get_arrays(&#34;left_light&#34;)
-    sch_type = session.get_arrays(&#39;Trial Type&#39;)
+    sch_type = session.get_arrays(&#34;Trial Type&#34;)
     # Split pells into blocks
-    pell_blocks = np.split(pell_ts_exdouble, np.searchsorted(
-        pell_ts_exdouble, tone_starts[1:]))
-    col_blocks = np.split(collection_times, np.searchsorted(
-        collection_times, tone_starts[1:]))
+    pell_blocks = np.split(
+        pell_ts_exdouble, np.searchsorted(pell_ts_exdouble, tone_starts[1:])
+    )
+    col_blocks = np.split(
+        collection_times, np.searchsorted(collection_times, tone_starts[1:])
+    )
 
     # Split pell and collection into schedules
     FR_pell, FR_coll, FI_pell, FI_coll, sch_block = [], [], [], [], []
     for i, (sch, pell, coll) in enumerate(zip(sch_type, pell_blocks, col_blocks)):
         if sch == 1:
-            b_type = &#39;FR&#39;
+            b_type = &#34;FR&#34;
             FR_pell = np.concatenate((FR_pell, pell))
             FR_coll = np.concatenate((FR_coll, coll))
         elif sch == 0:
-            b_type = &#39;FI&#39;
+            b_type = &#34;FI&#34;
             FI_pell = np.concatenate((FI_pell, pell))
             FI_coll = np.concatenate((FI_coll, coll))
-        sch_block.append(b_type + &#39;-{}&#39;.format(i))
+        sch_block.append(b_type + &#34;-{}&#34;.format(i))
 
     # event_dict[&#39;FR/Pellet&#39;] = FR_pell
     # event_dict[&#39;FI/Pellet&#39;] = FI_pell
@@ -268,11 +274,11 @@ if __name__ == &#34;__main__&#34;:
         &#34;Lever/R&#34;: right_presses,
         &#34;Lever/L&#34;: left_presses,
         # &#34;Pellet&#34;: pell_ts_exdouble,
-        &#39;Pellet/FR&#39;: FR_pell,
-        &#39;Pellet/FI&#39;: FI_pell,
+        &#34;Pellet/FR&#34;: FR_pell,
+        &#34;Pellet/FI&#34;: FI_pell,
         # &#34;Collection&#34;: collection_times,
-        &#39;Collection/FR&#39;: FR_coll,
-        &#39;Collection/FI&#39;: FI_coll
+        &#34;Collection/FR&#34;: FR_coll,
+        &#34;Collection/FI&#34;: FI_coll,
     }
 
     nc_events = NEvent()
@@ -317,7 +323,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def extract_sorting_info(sorting):
     &#34;&#34;&#34;Extract timestamps, tags, and waveforms from a sorting object.&#34;&#34;&#34;
-    sample_rate = sorting.params[&#39;sample_rate&#39;]
+    sample_rate = sorting.params[&#34;sample_rate&#34;]
     all_unit_trains = sorting.get_units_spike_train()
     timestamps = np.concatenate(all_unit_trains) / float(sample_rate)
     unit_tags = np.zeros(len(timestamps))
@@ -352,10 +358,14 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def load_phy(folder_name):
     &#34;&#34;&#34;Use spikeinterface to load a phy clustering.&#34;&#34;&#34;
     import spikeinterface.extractors as se
+
     to_exclude = [&#34;mua&#34;, &#34;noise&#34;]
     return se.PhySortingExtractor(
-        folder_name, exclude_cluster_groups=to_exclude, load_waveforms=True,
-        verbose=True)</code></pre>
+        folder_name,
+        exclude_cluster_groups=to_exclude,
+        load_waveforms=True,
+        verbose=True,
+    )</code></pre>
 </details>
 </dd>
 <dt id="bvmpc.bv_nc.load_spike_phy"><code class="name flex">
@@ -394,15 +404,13 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def plot_all_forms(sorting, out_loc, channels_per_group=4):
     &#34;&#34;&#34;Plot all waveforms from a spikeinterface sorting object.&#34;&#34;&#34;
     unit_ids = sorting.get_unit_ids()
-    wf_by_group = [
-        sorting.get_unit_spike_features(u, &#34;waveforms&#34;) for u in unit_ids]
+    wf_by_group = [sorting.get_unit_spike_features(u, &#34;waveforms&#34;) for u in unit_ids]
     for i, wf in enumerate(wf_by_group):
         try:
             tetrode = sorting.get_unit_property(unit_ids[i], &#34;group&#34;)
         except Exception:
             try:
-                tetrode = sorting.get_unit_property(
-                    unit_ids[i], &#34;ch_group&#34;)
+                tetrode = sorting.get_unit_property(unit_ids[i], &#34;ch_group&#34;)
             except Exception:
                 print(&#34;Unable to find cluster group or group in units&#34;)
                 print(sorting.get_shared_unit_property_names())
@@ -416,10 +424,9 @@ if __name__ == &#34;__main__&#34;:
                 wave = wf[j, :]
             axes[j].plot(wave.T, color=&#34;k&#34;, lw=0.3)
         o_loc = os.path.join(
-            out_loc, &#34;tet{}_unit{}_forms.png&#34;.format(
-                tetrode, unit_ids[i]))
-        print(&#34;Saving waveform {} on tetrode {} to {}&#34;.format(
-            i, tetrode, o_loc))
+            out_loc, &#34;tet{}_unit{}_forms.png&#34;.format(tetrode, unit_ids[i])
+        )
+        print(&#34;Saving waveform {} on tetrode {} to {}&#34;.format(i, tetrode, o_loc))
         fig.savefig(o_loc, dpi=200)
         plt.close(&#34;all&#34;)</code></pre>
 </details>
