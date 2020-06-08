@@ -23,12 +23,37 @@ from bvmpc.bv_file import load_bv_from_set
 
 def main(fname, out_main_dir, config):
     """
+    Perform analysis specified in config.
+
+    Saves plots in a !LFP folder inside out_main_dir.
+
+    Currently, this does the following:
+    1. Parse the config file and load in LFPs.
+    2. Optional, ICA processing using FastICA.
+    3. Optional, MNE analysis:
+        a. Set up MNE array and epoch objects using config.
+           Also Add events and annotations to these.
+        b. Optional, Do ICA in MNE.
+        c. Plot MNE power spectrum and epoch info.
+    4. Optional, Plot behavioural responses.
+    5. Optional, Plot Trial based clustering using lever presses.
+        This can be used to identify if FR trial is acted like FI for example.
+    6. Plot Raw LFP signals
+    7. Differential Recording plots.
+    8. Optional, Plot periodograms for each tetrode.
+    9. Optional, Compile graphs per session into one single png.
+    10. Optional, Compare periodograms from FR and FI on specific channels.
+    11. Optional, Compare coherence in terms of frequency between pairs of arenas.
+    12. Optional, Calculate Coherence and plot based on trials.
+
     Parameters
     ----------
     fname : str
         filenames to be analysed
-
-    Saves plots in a !LFP folder inside out_main_dir
+    out_main_dir : str
+        path to save files to (saves to !LFP in this folder)
+    config : configparser.ConfigParser
+        config file containing parameters and analysis selections
 
     """
     # Setup output directory
