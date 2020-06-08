@@ -1,6 +1,7 @@
 import os
 import json
 import argparse
+from pprint import pprint
 
 import numpy as np
 import seaborn as sns
@@ -57,6 +58,7 @@ def main(fname, out_main_dir, config):
 
     """
     # Setup output directory
+    print("\n---------Loading data----------")
     o_dir = os.path.join(out_main_dir, "!LFP")
     make_dir_if_not_exists(o_dir)
 
@@ -196,6 +198,7 @@ def main(fname, out_main_dir, config):
     # TODO temporary location to test MNE
     do_mne = True
     if do_mne:
+        print("\n----------Creating MNE Array----------")
         import mne
         import bvmpc.bv_mne
 
@@ -246,8 +249,6 @@ def main(fname, out_main_dir, config):
         )
 
         base_name = os.path.basename(fname)[4:]
-        # print(base_name)
-        # exit(-1)
 
         mne_dir = os.path.join(o_dir, "MNE")
         make_dir_if_not_exists(mne_dir)
@@ -300,6 +301,7 @@ def main(fname, out_main_dir, config):
         skip_plots = bool(int(config.get("MNE", "skip_plots")))
 
         if do_mne_ICA:
+            print("\n----------Doing ICA in MNE----------")
             ica_txt = "ICA"  # Used for file naming
             # Do ICA artefact removal on the mne object
             recon_raw = bvmpc.bv_mne.ICA_pipeline(
@@ -341,6 +343,7 @@ def main(fname, out_main_dir, config):
         # sel = [int(x) for x in config.get("Wavelet", "wchans").split(", ")]
         picks = bvmpc.bv_mne.pick_chans(recon_raw, sel=sel)
 
+        print("\n----------Establishing MNE Epochs----------")
         epochs = mne.Epochs(
             recon_raw,
             mne_events,
@@ -370,6 +373,43 @@ def main(fname, out_main_dir, config):
 
         # exit(-1)
 
+        mne_decoding = True
+        if mne_decoding:
+            from bvmpc.bv_decoding import LFPDecoder
+
+            print("\n----------Decoding LFP from MNE Epochs----------")
+            # NOTE this could also be full trials, doing presses for now as easier
+            lever_epochs = epochs["Lever"]
+            labels = []
+            label_names = []
+            for i in range(len(lever_epochs)):
+                e = lever_epochs[i]
+                for k, v in e.event_id.items():
+                    labels.append(v)
+                    if k not in label_names:
+                        label_names.append(k)
+            labels = np.array(labels)
+            decoder = LFPDecoder(
+                mne_epochs=lever_epochs, labels=labels, label_names=label_names,
+            )
+
+            # Cross validation decoding
+            cv_result = decoder.cross_val_decoding(
+                cross_val_params={
+                    "n_splits": 100,
+                    "test_size": 0.2,
+                    "random_state": None,
+                }
+            )
+            pprint(cv_result)
+            print(decoder.confidence_interval_estimate(cv_result, "accuracy"))
+
+            # One example decoding
+            clf, predicted, true = decoder.decode()
+            print(decoder.decoding_accuracy(true, predicted))
+            exit(-1)
+
+        print("\n----------Visualising MNE----------")
         comp_conds = json.loads(config.get("MNE", "comp_conds"))
         print("Analysing epochs for :", comp_conds)
         # # Manually curate events to exclude
@@ -1810,6 +1850,7 @@ def main_entry(config_name, base_dir=None, dummy=False, interactive=False):
         regex_filter = config.get("Setup", "regex_filter")
         regex_filter = None if regex_filter == "None" else regex_filter
 
+    print("----------Searching for files and starting main loop----------")
     print(
         "Automatically obtaining {} files from {} matching {}".format(
             ".eeg", in_dir, regex_filter
