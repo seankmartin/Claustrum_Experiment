@@ -394,15 +394,9 @@ def main(fname, out_main_dir, config):
             )
 
             # Cross validation decoding
-            cv_result = decoder.cross_val_decoding(
-                cross_val_params={
-                    "n_splits": 100,
-                    "test_size": 0.2,
-                    "random_state": None,
-                }
-            )
-            pprint(cv_result)
-            print(decoder.confidence_interval_estimate(cv_result, "accuracy"))
+            decoder.cross_val_decode()
+            pprint(decoder.cross_val_result)
+            print(decoder.confidence_interval_estimate("accuracy"))
 
             # One example decoding
             clf, predicted, true = decoder.decode()
