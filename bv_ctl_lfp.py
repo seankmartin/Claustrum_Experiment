@@ -395,12 +395,18 @@ def main(fname, out_main_dir, config):
 
             # Cross validation decoding
             decoder.cross_val_decode()
-            pprint(decoder.cross_val_result)
+            # pprint(decoder.cross_val_result)
             print(decoder.confidence_interval_estimate("accuracy"))
 
             # One example decoding
             clf, predicted, true = decoder.decode()
             print(decoder.decoding_accuracy(true, predicted))
+
+            print("As a control, performing decoding with shuffled labels")
+            decoder.cross_val_decode(shuffle=True)
+            # pprint(decoder.cross_val_result)
+            print(decoder.confidence_interval_estimate("accuracy"))
+
             exit(-1)
 
         print("\n----------Visualising MNE----------")
