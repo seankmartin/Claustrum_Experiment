@@ -53,7 +53,7 @@ class LFPDecoder(object):
         clf="nn",
         param_dist=None,
         clf_params={},
-        cv=None,
+        cv="shuffle",
         cv_params={},
         features="window",
         feature_params={},
@@ -389,7 +389,7 @@ def random_decoding():
 
     print("\n----------Cross Validation-------------")
 
-    decoder.cross_val_decode(verbose=True)
+    decoder.cross_val_decode()
     pprint(decoder.cross_val_result)
     pprint(decoder.confidence_interval_estimate("accuracy"))
 
