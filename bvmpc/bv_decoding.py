@@ -1,4 +1,5 @@
 """This module handles decoding routines."""
+import os
 
 import numpy as np
 import scipy.stats
@@ -51,7 +52,7 @@ class LFPDecoder(object):
         selected_data=None,
         sample_rate=250,
         clf="nn",
-        param_dist=None,
+        param_dist=[],
         clf_params={},
         cv="shuffle",
         cv_params={},
@@ -72,6 +73,18 @@ class LFPDecoder(object):
     def get_labels(self):
         """Return the labels of each epoch as a numpy array."""
         return self.labels
+
+    def get_labels_as_str(self):
+        """Return the friendly name version of the labels."""
+        label_dict = {}
+        output = []
+        idx = 0
+        for val in self.get_labels():
+            if val not in label_dict:
+                label_dict[val] = self.label_names[idx]
+                idx += 1
+            output.append(label_dict[val])
+        return output
 
     def get_data(self):
         """
@@ -272,6 +285,42 @@ class LFPDecoder(object):
     def confidence_interval_estimate(self, key):
         return confidence_interval_estimate(self.cross_val_result, key)
 
+    def visualise_features(self, output_folder, dpi=300):
+        from sklearn.decomposition import PCA
+        from sklearn.preprocessing import StandardScaler
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        import pandas as pd
+
+        from bvmpc.bv_utils import make_dir_if_not_exists
+
+        features = self.get_features()
+        labels = self.get_labels_as_str()
+        label_sort_args = np.argsort(labels)
+
+        make_dir_if_not_exists(output_folder)
+        # PCA plot
+        fig, ax = plt.subplots(figsize=(10, 8))
+        out_loc = os.path.join(output_folder, "2d_pca.png")
+        pca = PCA(n_components=2)
+        scaler = StandardScaler()
+        std_data = scaler.fit_transform(features)
+        after_pca = pca.fit_transform(features)
+        sns.scatterplot(
+            after_pca[:, 0], after_pca[:, 1], style=labels, hue=labels, ax=ax
+        )
+        fig.savefig(out_loc, dpi=dpi)
+
+        # Heatmap of raw features sorted by label
+        fig, ax = plt.subplots()
+        out_loc = os.path.join(output_folder, "feature_heatmap.png")
+        sorted_features = features[label_sort_args]
+        sorted_labels = np.array(labels)[label_sort_args]
+        columns = [str(i) for i in range(len(features[0]))]
+        df = pd.DataFrame(data=sorted_features, index=sorted_labels, columns=columns)
+        sns.heatmap(df, ax=ax)
+        fig.savefig(out_loc, dpi=dpi)
+
 
 def confidence_interval_estimate(cross_val_result, key):
     """Returns 95% confidence interval estimates from cross_val results."""
@@ -369,7 +418,7 @@ def window_features(data, window_sample_len=10, step=8):
     return features
 
 
-def random_decoding():
+def random_decoding(output_folder):
     """Perform a full decoding pipeline from random white noise."""
     from bvmpc.bv_mne import random_white_noise
     from pprint import pprint
@@ -396,6 +445,9 @@ def random_decoding():
     random_search = decoder.hyper_param_search(verbose=True, set_params=False)
     print("Best params:", random_search.best_params_)
 
+    decoder.visualise_features(output_folder=output_folder)
+
 
 if __name__ == "__main__":
-    random_decoding()
+    output_folder_main = "LFP"
+    random_decoding(output_folder_main)
