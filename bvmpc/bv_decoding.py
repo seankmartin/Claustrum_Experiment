@@ -40,10 +40,6 @@ class LFPDecoder(object):
         Array to use to predict labels
     cross_val_result : dict
         The result of cross validation
-    TODO
-    ----
-    Perhaps reorganise so that the class sets up decoding
-    parameters on init, such as the classifier to be used.
 
     """
 
@@ -87,17 +83,18 @@ class LFPDecoder(object):
         return self.mne_epochs.get_data(picks=self.selected_data)
 
     def get_classifier(self):
+        """Return the classifier used for decoding."""
         return self.clf
 
     def set_classifier(self, clf, param_dist, clf_params={}):
+        """Either set or make a classifier."""
         if isinstance(clf, str):
-            clf, param_dist = make_classifier(
-                clf, clf_params, return_param_dist=True)
+            clf, param_dist = make_classifier(clf, clf_params, return_param_dist=True)
         self.clf = clf
         self.param_dist = param_dist
 
     def set_features(self, features, feature_params={}):
-        """features can be either an array or a string."""
+        """Features can be either an array or a string, in which case it is made."""
         if features == "window":
             features = window_features(self.get_data(), **feature_params)
         elif isinstance(features, np.ndarray):
@@ -108,23 +105,43 @@ class LFPDecoder(object):
                     )
                 )
         else:
-            raise ValueError(
-                "Unrecognised feature type {}".format(feature_type))
+            raise ValueError("Unrecognised feature type {}".format(feature_type))
         self.features = features
 
     def get_features(self):
+        """Return the features used for decoding."""
         return self.features
 
     def set_cross_val_set(self, cv, cv_params={}):
+        """Set the cross validation set to be used or make one."""
         if isinstance(cv, str):
             cv = make_cross_val_set(cv, cv_params)
         self.cv = cv
 
     def get_cross_val_set(self):
+        """Get the cross validation set to be used."""
         return self.cv
 
+    def set_all_data(self, mne_epochs, labels, label_names, selected_data=None):
+        self.mne_epochs = mne_epochs
+        self.labels = labels
+        self.label_names = label_names
+        self.selected_data = selected_data
+
     def decode(self, test_size=0.2):
-        """Decode by fitting with default parameters."""
+        """
+        Decode by fitting with default parameters.
+
+        Parameters
+        ----------
+        test_size : float
+            The ratio of the random test set to use for decoding.
+
+        Returns
+        -------
+        (clf, output, test_labels)
+
+        """
         from sklearn.model_selection import train_test_split
 
         features = self.get_features()
@@ -138,11 +155,18 @@ class LFPDecoder(object):
         output = clf.predict(test_features)
         return clf, output, test_labels
 
-    def cross_val_decode(
-        self, scoring=["accuracy", "balanced_accuracy"], verbose=False,
-    ):
+    def cross_val_decode(self, scoring=["accuracy", "balanced_accuracy"]):
         """
         Perform decoding with cross-validation.
+
+        Parameters
+        ----------
+        scoring : list of strings
+            Scikit compatible scoring function names.
+
+        Returns
+        -------
+        dict
 
         """
         from sklearn.model_selection import cross_validate
@@ -167,6 +191,26 @@ class LFPDecoder(object):
     ):
         """
         Perform hyper-param searching.
+
+        Parameters
+        ----------
+        n_top : int, optional. 
+            Defaults to 3.
+            The number of top parameter results to return.
+        scoring : list of str, optional. 
+            Defaults to ["accuracy", "balanced_accuracy"]
+            Sklearn compatible list of function names.
+        set_params : bool, optional.
+            Defaults to True.
+            Whether to set the best parameters found on the classifier.
+        verbose : bool, optional.
+            Defaults to False.
+            Whether to print extra information about the search.
+
+        Returns
+        -------
+        dict
+
         """
         from sklearn.model_selection import RandomizedSearchCV
 
@@ -181,8 +225,7 @@ class LFPDecoder(object):
                             results["std_test_score"][candidate],
                         )
                     )
-                    print("Parameters: {0}".format(
-                        results["params"][candidate]))
+                    print("Parameters: {0}".format(results["params"][candidate]))
                     print("")
 
         clf = self.get_classifier()
