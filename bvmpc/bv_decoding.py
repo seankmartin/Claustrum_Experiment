@@ -60,7 +60,7 @@ class LFPDecoder(object):
         feature_params={},
     ):
         self.mne_epochs = mne_epochs
-        self.labels = labels
+        self.labels = np.array(labels)
         self.label_names = label_names
         self.selected_data = selected_data
         self.sample_rate = sample_rate
@@ -168,7 +168,9 @@ class LFPDecoder(object):
         output = clf.predict(test_features)
         return clf, output, test_labels
 
-    def cross_val_decode(self, scoring=["accuracy", "balanced_accuracy"]):
+    def cross_val_decode(
+        self, scoring=["accuracy", "balanced_accuracy"], shuffle=False
+    ):
         """
         Perform decoding with cross-validation.
 
@@ -176,6 +178,9 @@ class LFPDecoder(object):
         ----------
         scoring : list of strings
             Scikit compatible scoring function names.
+        shuffle : bool, optional.
+            Defaults to True.
+            If true, labels shuffled - should remove patterns in the data.
 
         Returns
         -------
@@ -188,6 +193,8 @@ class LFPDecoder(object):
         cv = self.get_cross_val_set()
         features = self.get_features()
         labels = self.get_labels()
+        if shuffle:
+            np.random.shuffle(labels)
         print("Running cross val on {} with cv {}".format(clf, cv))
         result = cross_validate(
             clf, features, labels, return_train_score=True, scoring=scoring, cv=cv
@@ -283,9 +290,11 @@ class LFPDecoder(object):
         )
 
     def confidence_interval_estimate(self, key):
+        """Give mean +- 1.96 vals for a key in cross val result."""
         return confidence_interval_estimate(self.cross_val_result, key)
 
     def visualise_features(self, output_folder, dpi=300):
+        """Plot 2d PCA and heatmap of features."""
         from sklearn.decomposition import PCA
         from sklearn.preprocessing import StandardScaler
         import seaborn as sns
@@ -431,14 +440,17 @@ def random_decoding(output_folder):
     target_names = ["Random OFF", "Random ON"]
 
     decoder = LFPDecoder(
-        mne_epochs=random_epochs, labels=labels, label_names=target_names
+        mne_epochs=random_epochs,
+        labels=labels,
+        label_names=target_names,
+        cv_params={"n_splits": 100},
     )
     out = decoder.decode()
     print(decoder.decoding_accuracy(out[2], out[1]))
 
     print("\n----------Cross Validation-------------")
 
-    decoder.cross_val_decode()
+    decoder.cross_val_decode(shuffle=True)
     pprint(decoder.cross_val_result)
     pprint(decoder.confidence_interval_estimate("accuracy"))
 
