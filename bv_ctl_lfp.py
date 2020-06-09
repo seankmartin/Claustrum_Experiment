@@ -393,12 +393,16 @@ def main(fname, out_main_dir, config):
                 mne_epochs=lever_epochs, labels=labels, label_names=label_names,
             )
 
+            print("Plotting decoding features to {}".format(o_dir))
+            decoder.visualise_features(output_folder=o_dir)
+
             # Cross validation decoding
             decoder.cross_val_decode()
             # pprint(decoder.cross_val_result)
             print(decoder.confidence_interval_estimate("accuracy"))
 
             # One example decoding
+            print("Doing one example decoding on a random test set.")
             clf, predicted, true = decoder.decode()
             print(decoder.decoding_accuracy(true, predicted))
 

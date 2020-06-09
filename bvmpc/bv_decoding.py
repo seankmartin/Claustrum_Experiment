@@ -141,7 +141,7 @@ class LFPDecoder(object):
         self.label_names = label_names
         self.selected_data = selected_data
 
-    def decode(self, test_size=0.2):
+    def decode(self, test_size=0.25):
         """
         Decode by fitting with default parameters.
 
@@ -314,7 +314,7 @@ class LFPDecoder(object):
         pca = PCA(n_components=2)
         scaler = StandardScaler()
         std_data = scaler.fit_transform(features)
-        after_pca = pca.fit_transform(features)
+        after_pca = pca.fit_transform(std_data)
         sns.scatterplot(
             after_pca[:, 0], after_pca[:, 1], style=labels, hue=labels, ax=ax
         )
@@ -388,8 +388,8 @@ def make_cross_val_set(strategy="shuffle", cross_val_params={}):
     if strategy == "shuffle":
         from sklearn.model_selection import StratifiedShuffleSplit
 
-        cross_val_params.setdefault("n_splits", 10)
-        cross_val_params.setdefault("test_size", 0.2)
+        cross_val_params.setdefault("n_splits", 100)
+        cross_val_params.setdefault("test_size", 0.25)
         cross_val_params.setdefault("random_state", 0)
         shuffle = StratifiedShuffleSplit(**cross_val_params)
     else:
