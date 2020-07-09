@@ -73,7 +73,8 @@ def plot_lfp(
     session=None,
     splits=None,
     x_pad=60,
-    return_figs=False
+    return_figs=False,
+    verbose=False
 ):
     """
     Create a number of figures to display lfp signal on multiple channels.
@@ -131,7 +132,8 @@ def plot_lfp(
     # print(seg_splits[:5])
     # exit(-1)
     max_split_len = max(np.diff(seg_splits))
-    print("Longest segment is {:.2f}s".format(max_split_len))
+    if verbose:
+        print("Longest segment is {:.2f}s".format(max_split_len))
     if max_split_len < x_pad:
         x_pad = max_split_len
 
