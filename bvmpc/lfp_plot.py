@@ -73,6 +73,7 @@ def plot_lfp(
     session=None,
     splits=None,
     x_pad=60,
+    return_figs=False
 ):
     """
     Create a number of figures to display lfp signal on multiple channels.
@@ -133,6 +134,9 @@ def plot_lfp(
     print("Longest segment is {:.2f}s".format(max_split_len))
     if max_split_len < x_pad:
         x_pad = max_split_len
+
+    if return_figs:
+        figures = []
 
     for j, split in enumerate(seg_splits[:-1]):
         fig, axes = plt.subplots(
@@ -207,8 +211,14 @@ def plot_lfp(
                 x_pad = seg_len
             axes[i].set_xlim(a, a + x_pad)
 
-        bv_plot.savefig(fig, out_name)
+        if not return_figs:
+            bv_plot.savefig(fig, out_name)
+        else:
+            figures.append((fig, out_name))
         plt.close("all")
+    
+    if return_figs:
+        return figures
 
 
 def lfp_csv(fname, out_dir, lfp_odict, sd, min_artf_freq, shuttles, filt=False):
