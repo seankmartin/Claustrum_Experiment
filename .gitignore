@@ -6,3 +6,4 @@ ControlScripts/ExampleScripts
 bvmpc.egg-info/
 MedPCBinCount/target/*
 *.log
+.idea/
