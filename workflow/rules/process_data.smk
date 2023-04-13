@@ -4,7 +4,7 @@ rule index_files:
     log:
         "logs/axona_file_index.log"
     conda:
-        "../../envs/axona.yaml"
+        "../../envs/nwb.yaml"
     script:
         "../scripts/index_files.py"
 
@@ -16,7 +16,7 @@ rule process_metadata:
     log:
         "logs/metadata_parsed.log"
     conda:
-        "../../envs/axona.yaml"
+        "../../envs/nwb.yaml"
     script:
         "../scripts/parse_metadata.py"
     
@@ -28,6 +28,6 @@ rule convert_from_axona:
     log:
         "logs/converted_data.log"
     conda:
-        "../../envs/axona.yaml"
+        "../../envs/nwb.yaml"
     script:
         "../scripts/convert_from_axona.py"

@@ -1,0 +1,5 @@
+cfg_base_dir: H:\Ham_Data
+loader: neurochat
+loader_kwargs:
+  system: Axona
+  pos_extension: [.txt, .pos]

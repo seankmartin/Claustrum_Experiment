@@ -1,1 +1,3 @@
 data_directory: H:\Ham_Data
+overwrite_nwb: false
+simuran_config: config\params.yaml

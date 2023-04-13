@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING
+import pandas as pd
 
 import logging
 from configparser import ConfigParser
@@ -62,7 +63,10 @@ def parse_metadata(df: "DataFrame") -> "DataFrame":
     df_to_use.loc[:, "rat_id"] = df_to_use.apply(find_rat_id, axis=1)
     df_to_use = df_to_use.dropna(subset=["rat_id"])
     df_to_use.loc[:, "maze_type"] = df_to_use.apply(find_maze_type, axis=1)
-    df_to_use.loc[:, "brain_regions"] = df_to_use.apply(find_brain_regions, axis=1)
+    df_new = df_to_use.apply(
+        find_brain_regions, axis="columns", result_type="expand"
+    )
+    df_to_use = pd.concat([df_to_use, df_new], axis="columns")
     return df_to_use
 
 
@@ -132,16 +136,32 @@ def find_maze_type(row: "Series") -> str:
 
 def find_brain_regions(row):
     rat_id = row["rat_id"]
-    config_location = os.path.abspath(
-        os.path.join("..", "..", "configs", "LFP", f"{rat_id}.cfg")
-    )
+    config_location = os.path.abspath(os.path.join("configs", "LFP", f"{rat_id}.cfg"))
     if os.path.exists(config_location):
         config = ConfigParser()
         config.read(config_location)
-        brain_regions = config["Regions"]
-        return brain_regions
+        chan_amount = int(config.get("Setup", "chans"))
+        region_dict = config._sections["Regions"]
+        regions = []
+        for _, val in region_dict.items():
+            to_add = val.split(" * ")
+            adding = [to_add[0]] * int(to_add[1])
+            regions += adding
+
+        shuttle_dict = config._sections["Shuttles"]
+        shuttles = []
+        for _, val in shuttle_dict.items():
+            to_add = val.split(" * ")
+            adding = [to_add[0]] * int(to_add[1])
+            shuttles += adding
+
+        return {
+            "number_of_channels": chan_amount,
+            "brain_regions": regions,
+            "shuttles": shuttles,
+        }
     else:
-        logging.warning(f"{rat_id} not found in ../../configs/LFP/{rat_id}.cfg")
+        logging.warning(f"{rat_id} not found in configs/LFP/{rat_id}.cfg")
         return None
 
 
