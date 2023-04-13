@@ -1,7 +1,10 @@
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING
-j
+
+import logging
+from configparser import ConfigParser
+
 import numpy as np
 import simuran
 from skm_pyutils.path import get_all_files_in_dir
@@ -11,7 +14,7 @@ if TYPE_CHECKING:
     from pandas import DataFrame, Series
 
 
-def find_only_data(df : "DataFrame") -> "DataFrame":
+def find_only_data(df: "DataFrame") -> "DataFrame":
     """
     Find only data rows in the metadata file.
 
@@ -23,7 +26,9 @@ def find_only_data(df : "DataFrame") -> "DataFrame":
     -------
         DataFrame: The data rows.
     """
-    behaviour_rows = (df["filename"].str.contains("Behav") | df["comments"].str.contains("Behaviour only"))
+    behaviour_rows = df["filename"].str.contains("Behav") | df["comments"].str.contains(
+        "Behaviour only"
+    )
     no_behaviour_df = df.loc[~behaviour_rows]
 
     has_data = []
@@ -41,14 +46,14 @@ def find_only_data(df : "DataFrame") -> "DataFrame":
     return df_with_data
 
 
-def parse_metadata(df : "DataFrame") -> "DataFrame":
+def parse_metadata(df: "DataFrame") -> "DataFrame":
     """
     Parse the metadata file.
-    
+
     Parameters
     ----------
         df (DataFrame): The metadata file.
-    
+
     Returns
     -------
         DataFrame: The parsed metadata file.
@@ -56,10 +61,12 @@ def parse_metadata(df : "DataFrame") -> "DataFrame":
     df_to_use = df.copy()
     df_to_use.loc[:, "rat_id"] = df_to_use.apply(find_rat_id, axis=1)
     df_to_use = df_to_use.dropna(subset=["rat_id"])
-    df_to_use[:, "maze_type"] = df_to_use.apply(find_maze_type, axis=1)
+    df_to_use.loc[:, "maze_type"] = df_to_use.apply(find_maze_type, axis=1)
+    df_to_use.loc[:, "brain_regions"] = df_to_use.apply(find_brain_regions, axis=1)
     return df_to_use
 
-def find_rat_id(row : "Series") -> str:
+
+def find_rat_id(row: "Series") -> str:
     """
     Find the rat id from the filename.
 
@@ -91,14 +98,15 @@ def find_rat_id(row : "Series") -> str:
         name = "CLA1"
     return name
 
-def find_maze_type(row : "Series") -> str:
+
+def find_maze_type(row: "Series") -> str:
     """
     Find the maze type from the filename.
-    
+
     Parameters
     ----------
         row (Series): The row to find the maze type for.
-    
+
     Returns
     -------
         str: The maze type.
@@ -107,6 +115,8 @@ def find_maze_type(row : "Series") -> str:
     if "Pre" in row["filename"]:
         return "Pre box"
     if "Open" in row["filename"] or ("Open" in row["directory"]):
+        return "Open field"
+    if "OF" in row["filename"] or ("OF" in row["directory"]):
         return "Open field"
     else:
         set_file_location = os.path.join(row["directory"], row["filename"])
@@ -119,11 +129,28 @@ def find_maze_type(row : "Series") -> str:
             script = Path(script).name[2:-4]
         return script
 
+
+def find_brain_regions(row):
+    rat_id = row["rat_id"]
+    config_location = os.path.abspath(
+        os.path.join("..", "..", "configs", "LFP", f"{rat_id}.cfg")
+    )
+    if os.path.exists(config_location):
+        config = ConfigParser()
+        config.read(config_location)
+        brain_regions = config["Regions"]
+        return brain_regions
+    else:
+        logging.warning(f"{rat_id} not found in ../../configs/LFP/{rat_id}.cfg")
+        return None
+
+
 def main(df_location, df_out_location):
     df = df_from_file(df_location)
     df = find_only_data(df)
     df = parse_metadata(df)
     df_to_file(df, df_out_location)
+
 
 if __name__ == "__main__":
     try:
@@ -136,4 +163,7 @@ if __name__ == "__main__":
         simuran.set_only_log_to_file(snakemake.log[0])
         main(snakemake.input[0], snakemake.output[0])
     else:
-        main("metadata.csv", "metadata_parsed.csv")
+        main(
+            os.path.join("results", "axona_file_index.csv"),
+            os.path.join("results", "metadata_parsed.csv"),
+        )
