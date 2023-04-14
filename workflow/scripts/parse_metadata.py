@@ -37,13 +37,11 @@ def find_only_data(df: "DataFrame") -> "DataFrame":
         files_in_folder = get_all_files_in_dir(row["directory"])
         found = False
         for f in files_in_folder:
-            if f.endswith(".bin") or f.endswith(".eeg2"):
+            if f.endswith(".bin"):
                 found = True
-                break
         has_data.append(found)
 
     df_with_data = no_behaviour_df.loc[has_data]
-
     return df_with_data
 
 
@@ -67,8 +65,36 @@ def parse_metadata(df: "DataFrame") -> "DataFrame":
         find_brain_regions, axis="columns", result_type="expand"
     )
     df_to_use = pd.concat([df_to_use, df_new], axis="columns")
+    df_to_use.loc[:, "converted"] = check_converted(df_to_use)
     return df_to_use
 
+def check_converted(df: "DataFrame") -> "DataFrame":
+    """
+    Check if the data has been converted.
+
+    Parameters
+    ----------
+        df (DataFrame): The metadata file.
+
+    Returns
+    -------
+        DataFrame: The metadata file with a new column for converted.
+    """
+    converted_list = []
+    for i, row in df.iterrows():
+        files = get_all_files_in_dir(row["directory"])
+        found = [False, False, False, False]
+        for f in files:
+            if f.endswith(".eeg2"):
+                found[0] = True
+            if f.endswith(".1"):
+                found[1] = True
+            if f.endswith(".pos"):
+                found[2] = True
+            if f.endswith(".5"):
+                found[3] = True
+        converted_list.append(all(found))
+    return converted_list
 
 def find_rat_id(row: "Series") -> str:
     """

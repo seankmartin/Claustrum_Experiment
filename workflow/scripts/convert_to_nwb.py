@@ -3,6 +3,7 @@
 import logging
 import os
 from pathlib import Path
+from ast import literal_eval
 
 import numpy as np
 import pandas as pd
@@ -19,6 +20,24 @@ from pynwb.file import Subject
 from scipy.signal import decimate
 from skm_pyutils.table import df_from_file, df_to_file, list_to_df
 
+def describe_columns():
+    return [
+        {
+            "name": "tetrode_chan_id",
+            "type": str,
+            "doc": "label of tetrode_label of channel",
+        },
+        {
+            "name": "num_spikes",
+            "type": int,
+            "doc": "the number of spikes identified",
+        },
+        {
+            "name": "timestamps",
+            "type": np.ndarray,
+            "doc": "identified spike times in seconds",
+        },
+    ]
 
 def describe_columns_waves():
     return [
@@ -54,6 +73,7 @@ def main(
     except_errors=False,
 ):
     table = table[table["converted"]]
+    table = table[table["number_of_channels"] != np.nan]
     loader = smr.loader(config["loader"], **config["loader_kwargs"])
     rc = smr.RecordingContainer.from_table(table, loader)
     used = []
@@ -279,7 +299,7 @@ def add_lfp_data_to_nwb(recording, nwbfile, num_electrodes):
     ]
     if egf_files := [f for f in egf_files if f is not None]:
         data = []
-        for f in egf_files:
+        for f in egf_files[:num_electrodes]:
             lfp = NLfp()
             lfp.load(f, system="Axona")
             data.append(lfp.get_samples())
@@ -294,7 +314,9 @@ def add_lfp_data_to_nwb(recording, nwbfile, num_electrodes):
         )
     else:
         module_logger.warning(f"No egf files found for {recording.source_file}")
-    lfp_data = np.transpose(np.array([s.samples for s in recording.data["signals"]]))
+    lfp_data = np.transpose(
+        np.array([s.samples for s in recording.data["signals"] if len(s.samples) != 0])
+    )
     add_lfp_array_to_nwb(
         nwbfile, num_electrodes, lfp_data.astype(np.float32), rate=250.0
     )
@@ -308,6 +330,8 @@ def add_electrodes_to_nwb(recording, nwbfile, piw_device):
 
 
 def add_tetrodes(recording, nwbfile, piw_device):
+    num_channels = recording.attrs["number_of_channels"]
+
     def add_nwb_electrode(nwbfile, brain_region, electrode_group, label):
         nwbfile.add_electrode(
             x=np.nan,
@@ -328,13 +352,14 @@ def add_tetrodes(recording, nwbfile, piw_device):
             location=brain_region,
             description=f"Tetrode {i} electrodes placed in {brain_region}",
         )
-        for j in range(4):
+        for j in range(int(num_channels // 16)):
             add_nwb_electrode(nwbfile, brain_region, electrode_group, f"TT{i}_E{j}")
-    return 64
+    return int(num_channels)
 
 
 def get_brain_region_for_tetrode(recording, i):
-    brain_region = recording.data["signals"][i * 4].region
+    num_signals = recording.attrs["number_of_channels"]
+    brain_region = literal_eval(recording.attrs["brain_regions"])[i * int((num_signals // 16))]
     return brain_region
 
 
@@ -361,7 +386,7 @@ def create_nwbfile_with_metadata(recording, name):
     nwbfile.subject = Subject(
         species="Lister Hooded rat",
         sex="M",
-        subject_id=recording.attrs["rat"],
+        subject_id=recording.attrs["rat_id"],
         weight=0.330,
     )
 
@@ -407,9 +432,9 @@ if __name__ == "__main__":
     else:
         module_logger.setLevel(logging.DEBUG)
         convert_listed_data_to_nwb(
-            here.parent.parent / "results" / "converted_data.csv",
-            here.parent.parent / "config"/ "params.yaml",
-            here / "results" / "nwbfiles", 
+            here.parent.parent / "results" / "metadata_parsed.csv",
+            here.parent.parent / "config" / "params.yaml",
+            here / "results" / "nwbfiles",
             overwrite=True,
             except_errors=False,
         )

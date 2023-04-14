@@ -26,8 +26,8 @@ rule convert_from_axona:
     output:
         "results/converted_data.csv"
     log:
-        "logs/converted_data.log"
+        "logs/convert_to_nwb.log"
     conda:
         "../../envs/nwb.yaml"
     script:
-        "../scripts/convert_from_axona.py"
+        "../scripts/convert_to_nwb.py"
