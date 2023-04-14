@@ -19,6 +19,7 @@ from pynwb.ecephys import LFP, ElectricalSeries
 from pynwb.file import Subject
 from scipy.signal import decimate
 from skm_pyutils.table import df_from_file, df_to_file, list_to_df
+from bvmpc.bv_session import Session
 
 def describe_columns():
     return [
@@ -73,7 +74,7 @@ def main(
     except_errors=False,
 ):
     table = table[table["converted"]]
-    table = table[table["number_of_channels"] != np.nan]
+    table = table[table["number_of_channels"].notnull()]
     loader = smr.loader(config["loader"], **config["loader_kwargs"])
     rc = smr.RecordingContainer.from_table(table, loader)
     used = []
@@ -144,12 +145,31 @@ def convert_recording_to_nwb(recording, rel_dir=None):
     piw_device = add_devices_to_nwb(nwbfile)
     num_electrodes = add_electrodes_to_nwb(recording, nwbfile, piw_device)
 
+    add_behavior(recording, nwbfile)
     add_lfp_data_to_nwb(recording, nwbfile, num_electrodes)
     add_waveforms_and_times_to_nwb(recording, nwbfile)
     add_position_data_to_nwb(recording, nwbfile)
 
     return nwbfile
 
+def add_behavior(recording, nwbfile):
+    set_file = recording.source_file
+    session_type = recording.attrs["maze_type"]
+    if session_type == "RandomisedBlocks":
+        session_number = "6"
+    if session_type == "RandomisedBlocksFlipped":
+        session_number = "6"
+    if session_type == "RandomisedBlocksExtended":
+        session_number = "7"
+    else:
+        return
+    
+    session = Session(axona_file=set_file, s_type=session_number)
+    metadata = session.get_metadata()
+    array_info = session.get_arrays()
+    print(metadata)
+    print(array_info)
+    exit(-1)
 
 def add_position_data_to_nwb(recording, nwbfile):
     filename = os.path.join(recording.attrs["directory"], recording.attrs["filename"])
