@@ -153,13 +153,13 @@ def convert_recording_to_nwb(recording, rel_dir=None):
     return nwbfile
 
 def add_behavior(recording, nwbfile):
-    set_file = recording.source_file
+    set_file = str(recording.source_file)
     session_type = recording.attrs["maze_type"]
     if session_type == "RandomisedBlocks":
         session_number = "6"
-    if session_type == "RandomisedBlocksFlipped":
+    elif session_type == "RandomisedBlocksFlipped":
         session_number = "6"
-    if session_type == "RandomisedBlocksExtended":
+    elif session_type == "RandomisedBlocksExtended":
         session_number = "7"
     else:
         return
