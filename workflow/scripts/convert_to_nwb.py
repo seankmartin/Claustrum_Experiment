@@ -196,12 +196,12 @@ def main(
         else:
             print(f"Error with recording {rc[i].source_file}, check logs")
 
-    if len(used) != len(filtered_table):
-        missed = len(filtered_table) - len(used)
+    if len(used) != len(table):
+        missed = len(table) - len(used)
         print(f"WARNING: unable to convert all files, missed {missed}")
-    filtered_table = filtered_table.iloc[used, :]
-    filtered_table["nwb_file"] = filenames
-    df_to_file(filtered_table, output_directory / "converted_data.csv")
+    table = table.iloc[used, :]
+    table["nwb_file"] = filenames
+    df_to_file(table, output_directory / "converted_data.csv")
     return filenames
 
 
