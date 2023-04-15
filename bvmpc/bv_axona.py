@@ -150,6 +150,7 @@ class AxonaInpReader:
 
         """
         counter = 0
+        timeout = 10000000000
         with open(in_location, 'rb') as file:
             header = cls._parse_header(file)
             if header["samples"] == 0:
@@ -161,13 +162,15 @@ class AxonaInpReader:
             inp_arr = np.zeros(header["samples"] * 2, np.uint8)
 
             chunk = file.read(header["sample_bytes"])
-            while counter != header["samples"]:
+            while counter != header["samples"] and counter < timeout:
                 info = cls._info_from_chunk(chunk, header["timebase"])
                 time_arr[counter] = info[0]
                 char_arr[counter] = info[1]
                 inp_arr[2 * counter:2 * counter + 2] = info[2]
                 counter = counter + 1
                 chunk = file.read(header["sample_bytes"])
+        if counter == timeout:
+            raise RuntimeError("Timeout reached, something went wrong")
 
         axona_input.link_info(time_arr, char_arr, inp_arr)
 
