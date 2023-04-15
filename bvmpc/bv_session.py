@@ -161,7 +161,7 @@ class Session:
 
         dpell_bool = np.diff(pell_ts) < 0.8
         # Provides index of double pell in pell_ts
-        dpell_idx = np.nonzero(dpell_bool)[0] + 1
+        dpell_idx = np.flatnonzero(dpell_bool) + 1
         dpell = pell_ts[dpell_idx]
 
         # pell drop ts excluding double ts
@@ -198,7 +198,7 @@ class Session:
         timestamps = self.get_arrays()
         lever_ts = self.get_lever_ts()
         pell_ts = timestamps["Reward"]
-        pell_double = np.nonzero(np.diff(pell_ts) < 0.8)
+        pell_double = np.flatnonzero(np.diff(pell_ts) < 0.8)
         # returns reward ts after d_pell
         reward_double = reward_times[
             np.searchsorted(
@@ -1125,12 +1125,12 @@ class Session:
         split_left_presses = split_into_blocks(
             left_presses, blocks=block_ends)
         left_presses_fi = np.concatenate(
-            split_left_presses[np.nonzero(trial_types == 0)])
+            split_left_presses[np.flatnonzero(trial_types == 0)])
         left_presses_fr = np.concatenate(
-            split_left_presses[np.nonzero(trial_types == 1)])
+            split_left_presses[np.flatnonzero(trial_types == 1)])
         good_nosepokes_fi = np.concatenate(
             split_into_blocks(good_nosepokes, blocks=block_ends)[
-                np.nonzero(trial_types == 0)])
+                np.flatnonzero(trial_types == 0)])
 
         fi_allow_times = np.add(good_nosepokes_fi, fi)
         good_left_presses, un_left_presses = split_array_with_another(
@@ -1147,9 +1147,9 @@ class Session:
         split_right_presses = split_into_blocks(
             right_presses, blocks=block_ends)
         right_presses_fr = np.concatenate(
-            split_right_presses[np.nonzero(trial_types == 1)])
+            split_right_presses[np.flatnonzero(trial_types == 1)])
         right_presses_fi = np.concatenate(
-            split_right_presses[np.nonzero(trial_types == 0)])
+            split_right_presses[np.flatnonzero(trial_types == 0)])
 
         un_right_presses, good_right_presses = split_array_in_between_two(
             right_presses_fr, pell_ts_exdouble, good_nosepokes)

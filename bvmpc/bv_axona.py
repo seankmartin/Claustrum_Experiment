@@ -242,7 +242,7 @@ class AxonaSet:
 
     def set_end_time(self):
         """Calculate and store how long the Session took in mins."""
-        dur = int(self.get_val("duration"))
+        dur = int(float(self.get_val("duration")))
         start_time = self.get_val("trial_time")
         fmt = '%H:%M:%S'
         start_fmt = datetime.datetime.strptime(start_time, fmt)

@@ -21,6 +21,7 @@ from scipy.signal import decimate
 from skm_pyutils.table import df_from_file, df_to_file, list_to_df
 from bvmpc.bv_session import Session
 
+
 def describe_columns():
     return [
         {
@@ -40,6 +41,7 @@ def describe_columns():
         },
     ]
 
+
 def describe_columns_waves():
     return [
         {
@@ -56,6 +58,106 @@ def describe_columns_waves():
             "name": "waveforms",
             "type": np.ndarray,
             "doc": "Flattened sample values around the spike time on each of the four channels, unflattened has shape (X, 50)",
+        },
+    ]
+
+
+def describe_columns_behaviour():
+    return [
+        {
+            "name": "left_lever",
+            "type": np.ndarray,
+            "doc": "left lever press timestamps",
+        },
+        {
+            "name": "right_lever",
+            "type": np.ndarray,
+            "doc": "right lever press timestamps",
+        },
+        {
+            "name": "all_nosepokes",
+            "type": np.ndarray,
+            "doc": "all nosepoke timestamps",
+        },
+        {
+            "name": "Reward",
+            "type": np.ndarray,
+            "doc": "reward timestamps",
+        },
+        {
+            "name": "left_out",
+            "type": np.ndarray,
+            "doc": "when the left lever was pushed out and light (indicating trial change to FI)",
+        },
+        {
+            "name": "right_out",
+            "type": np.ndarray,
+            "doc": "when the right lever was pushed out and light (indicating trial change to FR)",
+        },
+        {
+            "name": "sound",
+            "type": np.ndarray,
+            "doc": "sound timestamps",
+        },
+        {
+            "name": "Nosepoke",
+            "type": np.ndarray,
+            "doc": "nosepoke timestamps for rewards",
+        },
+        {
+            "name": "Un_Nosepoke",
+            "type": np.ndarray,
+            "doc": "nosepoke timestamps for no rewards",
+        },
+        {
+            "name": "Trial Type",
+            "type": np.ndarray,
+            "doc": "trial type for each trial",
+        },
+        {
+            "name": "L",
+            "type": np.ndarray,
+            "doc": "left lever press timestamps that were necessary for reward",
+        },
+        {
+            "name": "R",
+            "type": np.ndarray,
+            "doc": "right lever press timestamps that were necessary for reward",
+        },
+        {
+            "name": "Un_L",
+            "type": np.ndarray,
+            "doc": "left lever press timestamps that were not necessary for reward",
+        },
+        {
+            "name": "Un_R",
+            "type": np.ndarray,
+            "doc": "right lever press timestamps that were not necessary for reward",
+        },
+        {
+            "name": "Un_FR_Err",
+            "type": np.ndarray,
+            "doc": "left lever press timestamps that were not necessary for reward during FR",
+        },
+        {
+            "name": "Un_FI_Err",
+            "type": np.ndarray,
+            "doc": "right lever press timestamps that were not necessary for reward during FI",
+        },
+        {
+            "name": "FR_Err",
+            "type": np.ndarray,
+            "doc": "left lever press timestamps that were necessary for reward during FR",
+        },
+        {
+            "name": "FI_Err",
+            "type": np.ndarray,
+            "doc": "right lever press timestamps that were necessary for reward during FI",
+        },
+        {
+            "name": "Trial_Start",
+            "type": np.ndarray,
+            "doc": "trial start timestamps",
         },
     ]
 
@@ -153,6 +255,7 @@ def convert_recording_to_nwb(recording, rel_dir=None):
 
     return nwbfile
 
+
 def add_behavior(recording, nwbfile):
     set_file = str(recording.source_file)[:-3] + "inp"
     session_type = recording.attrs["maze_type"]
@@ -164,14 +267,19 @@ def add_behavior(recording, nwbfile):
         session_number = "7"
     else:
         return
-    
+
     if recording.attrs["has_behaviour"]:
         session = Session(axona_file=set_file, s_type=session_number)
-        metadata = session.get_metadata()
         array_info = session.get_arrays()
-        print(metadata)
-        print(array_info)
-        exit(-1)
+        df = pd.DataFrame.from_dict(array_info, orient="index")
+        df = df.T
+        columns = describe_columns_behaviour()
+        hdmf_table = DynamicTable.from_dataframe(df=df, name="times", columns=columns)
+        mod = nwbfile.create_processing_module(
+            "operant_behaviour", "Store operant times (NaN padded)"
+        )
+        mod.add(hdmf_table)
+
 
 def add_position_data_to_nwb(recording, nwbfile):
     filename = os.path.join(recording.attrs["directory"], recording.attrs["filename"])
@@ -381,7 +489,9 @@ def add_tetrodes(recording, nwbfile, piw_device):
 
 def get_brain_region_for_tetrode(recording, i):
     num_signals = recording.attrs["number_of_channels"]
-    brain_region = literal_eval(recording.attrs["brain_regions"])[i * int((num_signals // 16))]
+    brain_region = literal_eval(recording.attrs["brain_regions"])[
+        i * int((num_signals // 16))
+    ]
     return brain_region
 
 

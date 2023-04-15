@@ -10,6 +10,7 @@ import numpy as np
 import simuran
 from skm_pyutils.path import get_all_files_in_dir
 from skm_pyutils.table import df_from_file, df_to_file
+from bvmpc.bv_session import Session
 
 if TYPE_CHECKING:
     from pandas import DataFrame, Series
@@ -67,7 +68,43 @@ def parse_metadata(df: "DataFrame") -> "DataFrame":
     df_to_use = pd.concat([df_to_use, df_new], axis="columns")
     df_to_use.loc[:, "converted"] = check_converted(df_to_use)
     df_to_use.loc[:, "has_behaviour"] = check_has_behaviour(df_to_use)
+    df_new = df_to_use.apply(
+        parse_behaviour_metadata, axis="columns", result_type="expand"
+    )
+    df_to_use = pd.concat([df_to_use, df_new], axis="columns")
     return df_to_use
+
+def parse_behaviour_metadata(row: "Series"):
+    output_dict = {
+        "fixed_ratio": np.nan,
+        "double_reward_window (secs)": np.nan,
+        "fixed_interval (secs)": np.nan,
+        "num_trials": np.nan,
+        "trial_length (mins)": np.nan,
+    }
+    if row["has_behaviour"]:
+        inp_file = os.path.join(row["directory"], row["filename"])[:-4] + ".inp"
+        session_type = row["maze_type"]
+        if session_type == "RandomisedBlocks":
+            session_number = "6"
+        elif session_type == "RandomisedBlocksFlipped":
+            session_number = "6"
+        elif session_type == "RandomisedBlocksExtended":
+            session_number = "7"
+        else:
+            return output_dict
+        session = Session(axona_file=inp_file, s_type=session_number)
+        metadata = session.get_metadata()
+        output_dict["fixed_ratio"] = metadata["fixed_ratio"]
+        output_dict["double_reward_window (secs)"] = metadata[
+            "double_reward_window (secs)"
+        ]
+        output_dict["fixed_interval (secs)"] = metadata["fixed_interval (secs)"]
+        output_dict["num_trials"] = metadata["num_trials"]
+        output_dict["trial_length (mins)"] = metadata["trial_length (mins)"]
+    return output_dict
+
+
 
 def check_has_behaviour(df: "DataFrame") -> "DataFrame":
     """
@@ -83,11 +120,8 @@ def check_has_behaviour(df: "DataFrame") -> "DataFrame":
     """
     has_behaviour = []
     for i, row in df.iterrows():
-        files = get_all_files_in_dir(row["directory"])
-        found = False
-        for f in files:
-            if f.endswith(".inp"):
-                found = True
+        source_file = os.path.join(row["directory"], row["filename"])[:-4] + ".inp"
+        found = os.path.exists(source_file)
         has_behaviour.append(found)
     return has_behaviour
 

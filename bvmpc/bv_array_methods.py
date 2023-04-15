@@ -23,7 +23,7 @@ def split_into_blocks(array, blocks=None, block_max=None, num_blocks=None):
                 "split_into_blocks if param blocks is not passed")
         blocks = np.arange(
             block_max + 0.001, block_max * num_blocks + 0.001, block_max + 0.001)
-    return np.array(np.split(array, np.searchsorted(array, blocks)))
+    return np.array(np.split(array, np.searchsorted(array, blocks)), dtype=object)
 
 
 def split_array(array, idxs):
