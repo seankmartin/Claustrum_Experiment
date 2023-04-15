@@ -75,6 +75,7 @@ def main(
 ):
     table = table[table["converted"]]
     table = table[table["number_of_channels"].notnull()]
+
     loader = smr.loader(config["loader"], **config["loader_kwargs"])
     rc = smr.RecordingContainer.from_table(table, loader)
     used = []
@@ -153,7 +154,7 @@ def convert_recording_to_nwb(recording, rel_dir=None):
     return nwbfile
 
 def add_behavior(recording, nwbfile):
-    set_file = str(recording.source_file)
+    set_file = str(recording.source_file)[:-3] + "inp"
     session_type = recording.attrs["maze_type"]
     if session_type == "RandomisedBlocks":
         session_number = "6"
@@ -164,12 +165,13 @@ def add_behavior(recording, nwbfile):
     else:
         return
     
-    session = Session(axona_file=set_file, s_type=session_number)
-    metadata = session.get_metadata()
-    array_info = session.get_arrays()
-    print(metadata)
-    print(array_info)
-    exit(-1)
+    if recording.attrs["has_behaviour"]:
+        session = Session(axona_file=set_file, s_type=session_number)
+        metadata = session.get_metadata()
+        array_info = session.get_arrays()
+        print(metadata)
+        print(array_info)
+        exit(-1)
 
 def add_position_data_to_nwb(recording, nwbfile):
     filename = os.path.join(recording.attrs["directory"], recording.attrs["filename"])

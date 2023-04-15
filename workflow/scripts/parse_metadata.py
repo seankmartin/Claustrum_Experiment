@@ -66,7 +66,30 @@ def parse_metadata(df: "DataFrame") -> "DataFrame":
     )
     df_to_use = pd.concat([df_to_use, df_new], axis="columns")
     df_to_use.loc[:, "converted"] = check_converted(df_to_use)
+    df_to_use.loc[:, "has_behaviour"] = check_has_behaviour(df_to_use)
     return df_to_use
+
+def check_has_behaviour(df: "DataFrame") -> "DataFrame":
+    """
+    Check if the data has behaviour.
+
+    Parameters
+    ----------
+        df (DataFrame): The metadata file.
+
+    Returns
+    -------
+        DataFrame: The metadata file with a new column for converted.
+    """
+    has_behaviour = []
+    for i, row in df.iterrows():
+        files = get_all_files_in_dir(row["directory"])
+        found = False
+        for f in files:
+            if f.endswith(".inp"):
+                found = True
+        has_behaviour.append(found)
+    return has_behaviour
 
 def check_converted(df: "DataFrame") -> "DataFrame":
     """
