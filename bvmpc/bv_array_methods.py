@@ -36,7 +36,7 @@ def split_array(array, idxs):
 
     """
     if len(idxs) == 0:
-        return [], []
+        return [], array
     left = array[idxs]
     ia = np.indices(array.shape)
     not_indices = np.setxor1d(ia, idxs)
