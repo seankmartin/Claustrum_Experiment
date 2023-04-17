@@ -48,9 +48,9 @@ def split_lever_ts(session):
 
     ratio_lever_ts = []
     interval_lever_ts = []
-    block_lever_ts = np.split(lever_ts, np.searchsorted(lever_ts, switch_ts))
+    block_lever_ts = np.split(lever_ts, np.searchsorted(lever_ts, switch_ts))[1:]
     block_reward_ts = np.split(reward_times,
-                               np.searchsorted(reward_times, switch_ts))
+                               np.searchsorted(reward_times, switch_ts))[1:]
     for i, (l, r) in enumerate(zip(block_lever_ts, block_reward_ts)):
         if trial_type[i] == 1:  # FR Block
             split_lever_ts = np.split(l, np.searchsorted(l, r))
@@ -60,8 +60,6 @@ def split_lever_ts(session):
             interval_lever_ts.append(split_lever_ts)
         else:
             print('Not Ready for analysis!')
-    print('len of ratio_l' + len(ratio_lever_ts))
-    print('len of interval_l' + len(interval_lever_ts))
     return ratio_lever_ts, interval_lever_ts
 
 
@@ -209,14 +207,14 @@ def cumplot_axona(s, ax=None, p_errors=False, p_all=False):
 
 
 def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
-            zoom_sch=False, plot_error=False, plot_all=False):
+            zoom_sch=False, plot_error=False, plot_all=False, subject=None):
     """Perform a cumulative plot for a Session."""
     date = session.get_metadata('start_date').replace('/', '_')
     timestamps = session.get_arrays()
     lever_ts = session.get_lever_ts()
     session_type = session.get_metadata('name')
     stage = session_type[:2].replace('_', '')
-    subject = session.get_metadata('subject')
+    subject = session.get_metadata('subject') if subject is None else subject
     reward_times = session.get_rw_ts()
     pell_ts = timestamps["Reward"]
     pell_double = np.nonzero(np.diff(pell_ts) < 0.5)
@@ -380,7 +378,7 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         lever_times = np.insert(lever_ts, 0, 0, axis=0)
         ax.step(lever_times, np.arange(
             lever_times.size), c=mycolors(subject),
-            where="post", label='Animal' + subject, zorder=1)
+            where="post", label='Animal' + str(subject), zorder=1)
         if stage == '7':  # plots error press in red
             ax.scatter(err_lever_ts, np.isin(
                 lever_times, err_lever_ts).nonzero()[0],
@@ -428,9 +426,10 @@ def cumplot(session, out_dir, ax=None, int_only=False, zoom=False,
         err_print = ""
 
     if single_plot:
-        out_name = (subject.zfill(3) + "_CumulativeHist_" + date +
+        out_name = (str(subject) + "_CumulativeHist_" + date +
                     "_" + session_type[:-2] + ".png")
         out_name = os.path.join(out_dir, out_name)
+        os.makedirs(os.path.dirname(out_name), exist_ok=True)
         print("Saved figure to {}".format(out_name))
         # Text Display on Graph
         if stage == '6' or stage == '7':
@@ -498,10 +497,6 @@ def IRT(session, out_dir, ax=None, showIRT=False):
         # Ended session w nosepoke
         IRT = last_lever_ts[1:] - good_rewards[:-1]
 
-    hist_count, hist_bins, _ = ax.hist(
-        IRT, bins=math.ceil(np.amax(IRT)),
-        range=(0, math.ceil(np.amax(IRT))), color=mycolors(subject))
-
     # Plotting of IRT Graphs
     if ax is None:
         single_plot = True
@@ -524,6 +519,10 @@ def IRT(session, out_dir, ax=None, showIRT=False):
             subject, stage), color=mycolors(subject),
             fontsize=10, y=1, x=.51)
 
+    hist_count, hist_bins, _ = ax.hist(
+        IRT, bins=math.ceil(np.amax(IRT)),
+        range=(0, math.ceil(np.amax(IRT))), color=mycolors(subject))
+
     ax.set_xlabel('IRT (s)')
     ax.set_ylabel('Counts')
     maxidx = np.argmax(np.array(hist_count))
@@ -536,11 +535,6 @@ def IRT(session, out_dir, ax=None, showIRT=False):
         show_IRT_details(IRT, maxidx, hist_bins)
     if single_plot:
         # Text Display on Graph
-        text = (
-            'Session Duration: ' +
-            '{} mins\nMost Freq. IRT Bin: {} s'.format(
-                time_taken, maxval))
-        ax.text(0.55, 0.8, text, transform=ax.transAxes)
         out_name = (subject.zfill(3) + "_IRT_Hist_" +
                     session_type[:-2] + "_" + date + ".png")
         print("Saved figure to {}".format(

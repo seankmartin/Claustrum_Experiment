@@ -46,19 +46,19 @@ def make_dir_if_not_exists(location):
 
 def mycolors(subject, colors_dict=None):
     """Colour options for subject based on number."""
+    if colors_dict is not None:
+        color = colors_dict[subject]
+        return color
     try:
         i = int(subject)
+    except ValueError:
+        i = 1
         if i > 10:
             i = i % 4
         mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange',
                     'tab:brown', 'deeppink', 'tab:olive', 'tab:pink',
                     'steelblue', 'firebrick', 'mediumseagreen']
         color = mycolors[i]
-    except ValueError:
-        if colors_dict == None:
-            print('Color input for required')
-            exit(-1)
-        color = colors_dict[subject]
     return color
 
 

@@ -7,7 +7,7 @@ from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import cophenet
 import os
 from copy import copy
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
@@ -116,9 +116,14 @@ class Session:
         elif recording is not None:
             data = recording.data
             self.metadata = copy(recording.attrs)
+            print(list(recording.attrs.keys()))
             self.metadata["start_date"] = self.metadata["date"]
             self.metadata["end_date"] = self.metadata["date"]
             self.metadata["subject"] = self.metadata["rat_id"]
+            self.metadata["start_time"] = self.metadata["time"]
+            self.metadata["end_time"] = str(
+                datetime.strptime(self.metadata["time"], "%H:%M:%S") +
+                timedelta(seconds=self.metadata["duration"])).split(" ")[1]
 
             session_type = recording.attrs["maze_type"]
             if session_type == "RandomisedBlocks":
