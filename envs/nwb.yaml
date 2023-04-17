@@ -11,6 +11,3 @@ dependencies:
       - pynwb==2.1.0
       - snakemake==7.19.1
       - neurochat==1.2.0
-      - pycwt
-      - neo>=0.8.0
-      - nixio>=1.5.0b1

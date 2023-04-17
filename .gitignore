@@ -10,3 +10,4 @@ MedPCBinCount/target/*
 .vscode/
 .snakemake/
 results/
+build/

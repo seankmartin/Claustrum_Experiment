@@ -22,7 +22,7 @@ INSTALL_REQUIRES = [
     'matplotlib',
     'seaborn',
     'scipy',
-    'sklearn'
+    'scikit-learn'
     # 'neo >= 0.8.0',
     # 'nixio >= 1.5.0b1'
 ]
