@@ -6,6 +6,7 @@ Written by Sean Martin and Gao Xiang Ham
 from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import cophenet
 import os
+from copy import copy
 from datetime import datetime
 
 import numpy as np
@@ -58,7 +59,7 @@ class Session:
 
     def __init__(
             self, h5_file=None, lines=None, neo_file=None,
-            axona_file=None, s_type="6",
+            axona_file=None, recording=None, s_type="6",
             neo_backend="nix", verbose=False, file_origin=None):
         """See help(Session) for more info."""
         self.session_info = SessionInfo()
@@ -79,10 +80,11 @@ class Session:
         b = 0 if h5_file is None else 1
         c = 0 if neo_file is None else 1
         d = 0 if axona_file is None else 1
-        if (a + b + c + d != 1):
+        e = 0 if recording is None else 1
+        if (a + b + c + d + e != 1):
             print(
                 "Error: Session takes one of" +
-                "h5_file, lines, neo_file, and axona_file")
+                "h5_file, lines, neo_file, recording, and axona_file")
             return
 
         if lines is not None:
@@ -110,6 +112,26 @@ class Session:
             self.axona_file = axona_file
             self.fname = axona_file[:-3]
             self._extract_axona_info()
+        
+        elif recording is not None:
+            data = recording.data
+            self.metadata = copy(recording.attrs)
+            self.metadata["start_date"] = self.metadata["date"]
+            self.metadata["end_date"] = self.metadata["date"]
+            self.metadata["subject"] = self.metadata["rat_id"]
+
+            session_type = recording.attrs["maze_type"]
+            if session_type == "RandomisedBlocks":
+                session_number = "6_RandomisedBlocks_p"
+            elif session_type == "RandomisedBlocksFlipped":
+                session_number = "6_RandomisedBlocks_p"
+            elif session_type == "RandomisedBlocksExtended":
+                session_number = "7_RandomisedBlocksExtended_p"
+            self.metadata["name"] = session_number
+
+            df = data.processing["operant_behaviour"]["times"].to_dataframe()
+            for (column_name, column_data) in df.items():
+                self.info_arrays[column_name] = column_data.values[~np.isnan(column_data.values)]
 
         else:
             print("Error: Unknown situation in Session init")
