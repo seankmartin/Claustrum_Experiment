@@ -31,3 +31,15 @@ rule convert_from_axona:
         "../../envs/nwb.yaml"
     script:
         "../scripts/convert_to_nwb.py"
+
+rule process_nwb:
+    input:
+        "results/converted_data.csv"
+    output:
+        "results/processed_data.csv"
+    log:
+        "logs/process_nwb.log"
+    conda:
+        "../../envs/nwb.yaml"
+    script:
+        "../scripts/process_nwb.py"
