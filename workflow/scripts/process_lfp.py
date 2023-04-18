@@ -188,8 +188,6 @@ def store_normalised_lfp(ss, results_all, nwb_proc):
             lfp_array[indices[idx]] = sig
             electrode_type[indices[idx]] = "Outlier"
 
-    print(nwb_proc.processing["ecephys"]["LFP"]["ElectricalSeries"].data[:].shape)
-    print(electrode_type)
     nwb_proc.add_electrode_column(
         name="clean",
         description="The LFP signal matches others from this brain region or is an outlier",
@@ -250,8 +248,12 @@ def main(table_path, config_path, output_path, num_cpus, overwrite=False):
         if not fname.is_file() or overwrite:
             module_logger.debug(f"Processing {rc[i].source_file}")
             r = rc.load(i)
-            nwbfile, _ = add_lfp_info(r, config)
-            export_nwbfile(fname, r, nwbfile, r._nwb_io, debug=True)
+            try:
+                nwbfile, _ = add_lfp_info(r, config)
+                export_nwbfile(fname, r, nwbfile, r._nwb_io, debug=True)
+            except Exception as e:
+                module_logger.error(f"Failed to process {rc[i].source_file}")
+                module_logger.error(e)
         else:
             module_logger.debug(f"Already processed {rc[i].source_file}")
         row_idx = datatable.index[i]
