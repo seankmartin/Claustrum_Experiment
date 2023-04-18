@@ -242,6 +242,23 @@ def write_nwbfile(filename, r, nwbfile, manager=None):
         return None, e
 
 
+def export_nwbfile(filename, r, nwbfile, src_io, debug=False):
+    filename.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with NWBHDF5IO(filename, "w") as io:
+            io.export(src_io=src_io, nwbfile=nwbfile)
+        return filename, None
+    except Exception as e:
+        module_logger.error(
+            f"Could not write nwbfile from {r.source_file} out to {filename}"
+        )
+        if debug:
+            breakpoint()
+        if filename.is_file():
+            filename.unlink()
+        return None, e
+
+
 def convert_recording_to_nwb(recording, rel_dir=None):
     name = recording.get_name_for_save(rel_dir=rel_dir)
     nwbfile = create_nwbfile_with_metadata(recording, name)
@@ -382,40 +399,39 @@ def add_waveforms_and_times_to_nwb(recording, nwbfile):
     mod.add(hdmf_table)
 
 
+def add_lfp_array_to_nwb(
+    nwbfile,
+    num_electrodes,
+    lfp_data,
+    module=None,
+    conversion=0.001,
+    rate=250.0,
+):
+    all_table_region = nwbfile.create_electrode_table_region(
+        region=list(range(num_electrodes)), description="all electrodes"
+    )
+
+    compressed_data = H5DataIO(data=lfp_data, compression="gzip", compression_opts=9)
+    lfp_electrical_series = ElectricalSeries(
+        name="ElectricalSeries",
+        data=compressed_data,
+        electrodes=all_table_region,
+        starting_time=0.0,
+        rate=rate,
+        conversion=conversion,
+        filtering="Notch filter at 50Hz",
+    )
+    lfp = LFP(electrical_series=lfp_electrical_series)
+
+    if module is None:
+        module = nwbfile.create_processing_module(
+            name="ecephys",
+            description="Processed extracellular electrophysiology data",
+        )
+    module.add(lfp)
+
+
 def add_lfp_data_to_nwb(recording, nwbfile, num_electrodes):
-    def add_lfp_array_to_nwb(
-        nwbfile,
-        num_electrodes,
-        lfp_data,
-        module=None,
-        conversion=0.001,
-        rate=250.0,
-    ):
-        all_table_region = nwbfile.create_electrode_table_region(
-            region=list(range(num_electrodes)), description="all electrodes"
-        )
-
-        compressed_data = H5DataIO(
-            data=lfp_data, compression="gzip", compression_opts=9
-        )
-        lfp_electrical_series = ElectricalSeries(
-            name="ElectricalSeries",
-            data=compressed_data,
-            electrodes=all_table_region,
-            starting_time=0.0,
-            rate=rate,
-            conversion=conversion,
-            filtering="Notch filter at 50Hz",
-        )
-        lfp = LFP(electrical_series=lfp_electrical_series)
-
-        if module is None:
-            module = nwbfile.create_processing_module(
-                name="ecephys",
-                description="Processed extracellular electrophysiology data",
-            )
-        module.add(lfp)
-
     def convert_eeg_path_to_egf(p):
         p = Path(p)
         p = p.with_suffix(f".egf{p.suffix[4:]}")

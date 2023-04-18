@@ -42,4 +42,4 @@ rule process_nwb:
     conda:
         "../../envs/nwb.yaml"
     script:
-        "../scripts/process_nwb.py"
+        "../scripts/process_lfp.py"
