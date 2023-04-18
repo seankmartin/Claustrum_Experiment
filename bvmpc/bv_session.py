@@ -116,7 +116,6 @@ class Session:
         elif recording is not None:
             data = recording.data
             self.metadata = copy(recording.attrs)
-            print(list(recording.attrs.keys()))
             self.metadata["start_date"] = self.metadata["date"]
             self.metadata["end_date"] = self.metadata["date"]
             self.metadata["subject"] = self.metadata["rat_id"]
