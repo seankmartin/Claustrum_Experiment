@@ -80,11 +80,7 @@ def process_lfp(ss, config, type_):
 def add_lfp_info(recording, config):
     ss = NWBSignalSeries(recording)
     ss.filter(config["fmin"], config["fmax"], **config["filter_kwargs"])
-    canulated = recording.data.subject.fields["subject_id"][:8] in [
-        "CanCSRCa",
-        "CanCSCaR",
-    ]
-    type_ = "can_clean_kwargs" if canulated else "clean_kwargs"
+    type_ = "clean_kwargs"
     results_all, results_picked = process_lfp(ss, config, type_)
 
     nwbfile = recording.data
@@ -192,6 +188,8 @@ def store_normalised_lfp(ss, results_all, nwb_proc):
             lfp_array[indices[idx]] = sig
             electrode_type[indices[idx]] = "Outlier"
 
+    print(nwb_proc.processing["ecephys"]["LFP"]["ElectricalSeries"].data[:].shape)
+    print(electrode_type)
     nwb_proc.add_electrode_column(
         name="clean",
         description="The LFP signal matches others from this brain region or is an outlier",

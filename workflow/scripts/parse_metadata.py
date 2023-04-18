@@ -140,7 +140,7 @@ def check_converted(df: "DataFrame") -> "DataFrame":
     converted_list = []
     for i, row in df.iterrows():
         files = get_all_files_in_dir(row["directory"])
-        found = [False, False, False, False]
+        found = [False, False, False,]
         for f in files:
             if f.endswith(".eeg2"):
                 found[0] = True
@@ -148,8 +148,6 @@ def check_converted(df: "DataFrame") -> "DataFrame":
                 found[1] = True
             if f.endswith(".pos"):
                 found[2] = True
-            if f.endswith(".5"):
-                found[3] = True
         converted_list.append(all(found))
     return converted_list
 

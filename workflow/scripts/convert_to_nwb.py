@@ -241,7 +241,6 @@ def write_nwbfile(filename, r, nwbfile, manager=None):
             filename.unlink()
         return None, e
 
-
 def export_nwbfile(filename, r, nwbfile, src_io, debug=False):
     filename.parent.mkdir(parents=True, exist_ok=True)
     try:
@@ -257,7 +256,6 @@ def export_nwbfile(filename, r, nwbfile, src_io, debug=False):
         if filename.is_file():
             filename.unlink()
         return None, e
-
 
 def convert_recording_to_nwb(recording, rel_dir=None):
     name = recording.get_name_for_save(rel_dir=rel_dir)
@@ -411,7 +409,9 @@ def add_lfp_array_to_nwb(
         region=list(range(num_electrodes)), description="all electrodes"
     )
 
-    compressed_data = H5DataIO(data=lfp_data, compression="gzip", compression_opts=9)
+    compressed_data = H5DataIO(
+        data=lfp_data, compression="gzip", compression_opts=9
+    )
     lfp_electrical_series = ElectricalSeries(
         name="ElectricalSeries",
         data=compressed_data,
@@ -432,6 +432,7 @@ def add_lfp_array_to_nwb(
 
 
 def add_lfp_data_to_nwb(recording, nwbfile, num_electrodes):
+
     def convert_eeg_path_to_egf(p):
         p = Path(p)
         p = p.with_suffix(f".egf{p.suffix[4:]}")
