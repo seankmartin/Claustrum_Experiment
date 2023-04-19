@@ -8,7 +8,7 @@ from scipy import signal
 import pandas as pd
 
 from bvmpc.bv_session import Session
-from behaviour_detect import full_trial_info, extract_trial_info
+from behaviour_detect import full_trial_info
 
 
 def main(input_table_path, out_file, config, overwrite=False):
@@ -37,7 +37,6 @@ def analyse_lfp_coherence(recording_container, out_file: str, config, overwrite=
         ):
             continue
         recording.load()
-        session = Session(recording=recording)
         coherence_df = perform_coherence_in_block(recording)
         coherence_df = add_bands_to_df(coherence_df, config)
         overall_df = pd.concat([overall_df, coherence_df])
@@ -49,7 +48,7 @@ def analyse_lfp_coherence(recording_container, out_file: str, config, overwrite=
 
 
 def convert_time_to_idx(times, sr):
-    return np.round(times * sr).astype(int)
+    return np.around((times.astype(float)) * sr, 0).astype(int)
 
 
 def add_bands_to_df(coherence_df, config):
@@ -82,7 +81,7 @@ def find_coherence_in_bands(Cxy, f, bands):
 def perform_coherence_in_block(recording):
     nwbfile = recording.data
     session = Session(recording=recording)
-    trial_df = extract_trial_info(session)
+    trial_df = full_trial_info(session)
     trial_times = np.array(trial_df[["Trial start", "Trial end"]])
     trial_types = np.array(trial_df["Trial type"])
     estimated = np.array(trial_df["Estimated trial type"])
