@@ -230,7 +230,6 @@ def store_coherence(nwb_proc, flims=None):
 
 
 def main(table_path, config_path, output_path, num_cpus, overwrite=False):
-    output_dfs = []
     config = smr.ParamHandler(source_file=config_path)
     config["num_cpus"] = num_cpus
    
@@ -242,6 +241,7 @@ def main(table_path, config_path, output_path, num_cpus, overwrite=False):
     rc = smr.RecordingContainer.from_table(datatable, loader)
     out_df = datatable.copy()
 
+    could_not_process = []
     for i in range(len(rc)):
         fname = Path(rc[i].source_file)
         fname = fname.parent.parent / "processed" / fname.name
@@ -254,11 +254,12 @@ def main(table_path, config_path, output_path, num_cpus, overwrite=False):
             except Exception as e:
                 module_logger.error(f"Failed to process {rc[i].source_file}")
                 module_logger.error(e)
+                could_not_process.append(i)
         else:
             module_logger.debug(f"Already processed {rc[i].source_file}")
         row_idx = datatable.index[i]
         out_df.at[row_idx, "nwb_file"] = str(fname)
-    output_dfs.append(out_df)
+    out_df = out_df.drop(out_df.index[could_not_process])
     df_to_file(out_df, output_path)
 
 if __name__ == "__main__":
