@@ -1,7 +1,6 @@
 import os
+from matplotlib import pyplot as plt
 import numpy as np
-from typing import TYPE_CHECKING
-from pathlib import Path
 
 from skm_pyutils.table import df_from_file, list_to_df, df_to_file
 import simuran as smr
@@ -9,9 +8,8 @@ from scipy import signal
 import pandas as pd
 
 from bvmpc.bv_session import Session
+from behaviour_detect import full_trial_info, extract_trial_info
 
-if TYPE_CHECKING:
-    from simuran import Recording
 
 def main(input_table_path, out_file, config, overwrite=False):
     """Run the main analysis."""
@@ -20,6 +18,7 @@ def main(input_table_path, out_file, config, overwrite=False):
     df = df[~df["directory"].str.contains("Batch_1")]
     df = df[df["brain_regions"].str.contains(r"^(?=.*CLA)(?=.*RSC)(?=.*ACC)")]
     rc = smr.RecordingContainer.from_table(df, loader=smr.loader("NWB"))
+    config = smr.load_config(config)
 
     analyse_lfp_coherence(rc, out_file, config, overwrite=overwrite)
 
@@ -29,16 +28,24 @@ def analyse_lfp_coherence(recording_container, out_file: str, config, overwrite=
     overall_df = None
     if os.path.exists(out_file):
         overall_df = df_from_file(out_file)
-    try:
-        for recording in recording_container:
-            if (overall_df is not None) and (not overwrite) and (recording.source_file in list(coherence_df["source_file"])):
-                continue
-            coherence_df = perform_coherence_in_block(recording)
-            coherence_df = add_bands_to_df(coherence_df, config)
-            overall_df = pd.concat([overall_df, coherence_df])
-    except Exception as e:
-        print(f"Failed due to {e}, saving what we have")
-        df_to_file(overall_df, out_file)
+    # try:
+    for recording in recording_container:
+        if (
+            (overall_df is not None)
+            and (not overwrite)
+            and (recording.source_file in list(coherence_df["source_file"]))
+        ):
+            continue
+        recording.load()
+        session = Session(recording=recording)
+        coherence_df = perform_coherence_in_block(recording)
+        coherence_df = add_bands_to_df(coherence_df, config)
+        overall_df = pd.concat([overall_df, coherence_df])
+        recording.unload()
+    # except Exception as e:
+    #     print(f"Failed due to {e}, saving what we have")
+    #     if overall_df is not None:
+    #         df_to_file(overall_df, out_file)
 
 
 def convert_time_to_idx(times, sr):
@@ -55,11 +62,12 @@ def add_bands_to_df(coherence_df, config):
     ]
     band_names = ["Delta", "Theta", "Beta", "Low gamma", "High gamma"]
 
-    for row in coherence_df.iterrows():
-        band_values = find_coherence_in_bands(row["Cxy"], row["f"], bands)
+    for j, row in coherence_df.iterrows():
+        band_values = find_coherence_in_bands(
+            row["Coherence"], row["Frequency (Hz)"], bands
+        )
         for i, band in enumerate(bands):
             coherence_df.loc[row[0], band_names[i]] = band_values[i]
-    band_values = find_coherence_in_bands()
 
     return coherence_df
 
@@ -74,7 +82,11 @@ def find_coherence_in_bands(Cxy, f, bands):
 def perform_coherence_in_block(recording):
     nwbfile = recording.data
     session = Session(recording=recording)
-    trial_times, trial_types = extract_trial_info(session)
+    trial_df = extract_trial_info(session)
+    trial_times = np.array(trial_df[["Trial start", "Trial end"]])
+    trial_types = np.array(trial_df["Trial type"])
+    estimated = np.array(trial_df["Estimated trial type"])
+    lever_presses = np.array(trial_df["Lever presses"])
     brain_regions = set(list(nwbfile.electrodes.to_dataframe()["location"]))
     info = []
     region_pairs = [("CLA", "RSC"), ("CLA", "ACC"), ("RSC", "ACC")]
@@ -82,7 +94,7 @@ def perform_coherence_in_block(recording):
         region_pairs = [("CLA-DI", "RSC"), ("CLA/DI", "ACC"), ("RSC", "ACC")]
     for pair in region_pairs:
         region1, region2 = pair
-        pair_name = f"{region1}-{region2}"
+        pair_name = f"{region1} {region2}"
         lfp1 = nwbfile.processing["average_lfp"][f"{region1}_avg"].data[:]
         lfp1_sr = nwbfile.processing["average_lfp"][f"{region1}_avg"].rate
         lfp2 = nwbfile.processing["average_lfp"][f"{region2}_avg"].data[:]
@@ -97,50 +109,58 @@ def perform_coherence_in_block(recording):
                 lfp_subset1, lfp_subset2, lfp1_sr, nperseg=2 * lfp1_sr
             )
             info.append(
-                [pair_name, Cxy, f, trial_types[i], t[0], t[1], recording.source_file]
+                [
+                    pair_name,
+                    Cxy,
+                    f,
+                    trial_types[i],
+                    estimated[i],
+                    t[0],
+                    t[1],
+                    recording.attrs["maze_type"],
+                    recording.source_file,
+                    lever_presses[i],
+                ]
             )
 
     headers = [
-        "region_pair",
-        "coherence",
-        "freq",
-        "trial_type",
-        "start",
-        "end",
-        "source_file",
+        "Brain regions",
+        "Coherence",
+        "Frequency (Hz)",
+        "Trial type",
+        "Estimated trial type",
+        "Start",
+        "End",
+        "Task type",
+        "Source file",
+        "Lever presses",
     ]
 
     return list_to_df(info, headers)
 
 
-def extract_trial_info(session: "Session"):
-    trial_ends = session.get_rw_ts()
-    trial_types = session.info_arrays["Trial Type"]
-    block_types = ["FR" if x == 1 else "FI" for x in trial_types]
-    block_times = session.get_block_ends()
-    trial_types = []
-    for t in trial_ends:
-        for i, b in enumerate(block_times):
-            if t < b:
-                trial_types.append(block_types[i])
-                break
-    trial_start_ends = []
-    first_trials_after_block = np.searchsorted(trial_ends, block_times)
-    block_trial_types = []
-    for i, t in enumerate(trial_ends):
-        if i in first_trials_after_block:
-            continue
-        trial_start_ends.append((trial_ends[i - 1], t))
-        block_trial_types.append(trial_types[i - 1])
-
-    return np.array(trial_start_ends), np.array(block_trial_types)
-
-
 if __name__ == "__main__":
-    smr.set_only_log_to_file(snakemake.log[0])
-    main(
-        snakemake.input[0],
-        snakemake.config["simuran_config"],
-        snakemake.output[0],
-        snakemake.threads,
-    )
+    try:
+        snakemake
+    except NameError:
+        use_snakemake = False
+    else:
+        use_snakemake = True
+    if use_snakemake:
+        smr.set_only_log_to_file(snakemake.log[0])
+        main(
+            snakemake.input[0],
+            snakemake.output[0],
+            snakemake.config["simuran_config"],
+            snakemake.threads,
+        )
+    else:
+        from pathlib import Path
+
+        here = Path(__file__).parent.parent.parent
+        main(
+            here / "results" / "processed_data.csv",
+            here / "results" / "coherence.csv",
+            here / "config" / "params.yaml",
+            1,
+        )

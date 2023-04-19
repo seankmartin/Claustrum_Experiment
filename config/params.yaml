@@ -24,3 +24,4 @@ high_gamma_max: 120
 beta_min: 15
 beta_max: 30
 psd_scale: decibels
+notch_freqs: [50, 60, 100]

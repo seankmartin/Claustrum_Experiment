@@ -1,9 +1,10 @@
 configfile: "config/config.yaml"
 
 include: "rules/process_data.smk"
+include: "rules/analyse_data.smk"
 
 rule all:
     input:
         [
-            "results/axona_file_index.csv"
+            "results/coherence.csv",
         ]
