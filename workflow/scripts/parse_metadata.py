@@ -226,6 +226,7 @@ def find_brain_regions(row):
         regions = []
         for _, val in region_dict.items():
             to_add = val.split(" * ")
+            to_add[0].replace("/", "-")
             adding = [to_add[0]] * int(to_add[1])
             regions += adding
 
@@ -233,6 +234,7 @@ def find_brain_regions(row):
         shuttles = []
         for _, val in shuttle_dict.items():
             to_add = val.split(" * ")
+            to_add[0].replace("/", "-")
             adding = [to_add[0]] * int(to_add[1])
             shuttles += adding
 

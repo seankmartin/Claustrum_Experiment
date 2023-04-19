@@ -79,7 +79,7 @@ def perform_coherence_in_block(recording):
     info = []
     region_pairs = [("CLA", "RSC"), ("CLA", "ACC"), ("RSC", "ACC")]
     if "CLA" not in brain_regions:
-        region_pairs = [("CLA/DI", "RSC"), ("CLA/DI", "ACC"), ("RSC", "ACC")]
+        region_pairs = [("CLA-DI", "RSC"), ("CLA/DI", "ACC"), ("RSC", "ACC")]
     for pair in region_pairs:
         region1, region2 = pair
         pair_name = f"{region1}-{region2}"
