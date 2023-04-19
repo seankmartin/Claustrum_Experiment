@@ -1,6 +1,6 @@
 import os
-from matplotlib import pyplot as plt
 import numpy as np
+import logging
 
 from skm_pyutils.table import df_from_file, list_to_df, df_to_file
 import simuran as smr
@@ -10,6 +10,7 @@ import pandas as pd
 from bvmpc.bv_session import Session
 from behaviour_detect import full_trial_info
 
+module_logger = logging.getLogger("simuran.custom.analyse_lfp_coherence")
 
 def main(input_table_path, out_file, config, overwrite=False):
     """Run the main analysis."""
@@ -28,23 +29,23 @@ def analyse_lfp_coherence(recording_container, out_file: str, config, overwrite=
     overall_df = None
     if os.path.exists(out_file):
         overall_df = df_from_file(out_file)
-    # try:
-    for recording in recording_container:
-        if (
-            (overall_df is not None)
-            and (not overwrite)
-            and (recording.source_file in list(coherence_df["source_file"]))
-        ):
-            continue
-        recording.load()
-        coherence_df = perform_coherence_in_block(recording)
-        coherence_df = add_bands_to_df(coherence_df, config)
-        overall_df = pd.concat([overall_df, coherence_df])
-        recording.unload()
-    # except Exception as e:
-    #     print(f"Failed due to {e}, saving what we have")
-    #     if overall_df is not None:
-    #         df_to_file(overall_df, out_file)
+    try:
+        for recording in recording_container:
+            if (
+                (overall_df is not None)
+                and (not overwrite)
+                and (recording.source_file in list(coherence_df["source_file"]))
+            ):
+                continue
+            recording.load()
+            coherence_df = perform_coherence_in_block(recording)
+            coherence_df = add_bands_to_df(coherence_df, config)
+            overall_df = pd.concat([overall_df, coherence_df])
+            recording.unload()
+    except Exception as e:
+        module_logger.error(f"Failed to analyse {recording.source_file} due to {e}")
+    if overall_df is not None:
+        df_to_file(overall_df, out_file)
 
 
 def convert_time_to_idx(times, sr):

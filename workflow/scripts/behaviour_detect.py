@@ -8,6 +8,12 @@ def extract_trial_info(session: "Session"):
     trial_types = session.info_arrays["Trial Type"]
     block_types = ["FR" if x == 1 else "FI" for x in trial_types]
     block_times = session.get_block_ends()
+    if len(block_times) != len(block_types):
+        raise ValueError(
+            "Block times and types don't match, {} != {}".format(
+                block_times, block_types
+            )
+        )
     trial_types = []
     for t in trial_ends:
         for i, b in enumerate(block_times):

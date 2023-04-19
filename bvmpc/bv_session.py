@@ -883,6 +883,8 @@ class Session:
         if len(sound) != 0:
             # Axona
             block_ends = np.concatenate([sound[1:], [sound[-1] + 305]])
+            if len(block_ends) > 6:
+                block_ends = block_ends[:6]
         else:
             # MED-PC
             trial_len = self.get_metadata("trial_length (mins)") * 60

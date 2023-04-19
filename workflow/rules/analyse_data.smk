@@ -4,7 +4,7 @@ rule analyse_coherence:
     output:
         "results/coherence.csv"
     log:
-        "logs/metadata_parsed.log"
+        "logs/coherence_analysis.log"
     conda:
         "../../envs/nwb.yaml"
     script:
