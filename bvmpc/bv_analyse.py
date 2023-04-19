@@ -971,14 +971,17 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     df = s.get_trial_df_norm()
     markers = df["Schedule"]
     cmap = sns.color_palette("bright")
+    PCA_colors = []
     if zs is None:
-        sns.scatterplot(xs, ys, ax=ax, style=markers,
+        sns.scatterplot(x=xs, y=ys, ax=ax, style=markers,
                         hue=cluster.labels_, palette='bright')
         ax.legend(fontsize=20, loc='upper right')
+        for i in np.arange(len(xs)):
+            ic = cmap[cluster.labels_[i]]
+            PCA_colors.append(ic)
     else:
         # ax.scatter(xs, ys, zs, c=cluster.labels_, cmap='rainbow')
         mask = {'FR': 'x', 'FI': '^'}
-        PCA_colors = []
         for i in np.arange(len(xs)):
             ic = cmap[cluster.labels_[i]]
             ax.scatter(xs[i], ys[i], zs[i],
@@ -1012,12 +1015,12 @@ def trial_clustering(s, ax=None, should_pca=False, num_clusts=2, p_2D=False):
     reindex = sorted_df.index
     leaf_colors = sorted_df['colors']
 
-    ax1 = fig.add_subplot(1, 2, 2)
+    # ax1 = fig.add_subplot(1, 2, 2)
 
-    plot_raster_trials(s, ax1, reindex=reindex)
-    ax1.tick_params(axis='y', labelsize=10)
-    for i, color in enumerate(leaf_colors):
-        ax1.get_yticklabels()[i].set_color(color)
+    # plot_raster_trials(s, ax1, reindex=reindex)
+    # ax1.tick_params(axis='y', labelsize=10)
+    # for i, color in enumerate(leaf_colors):
+    #     ax1.get_yticklabels()[i].set_color(color)
 
     # Figure title
     plot_title = 'K-Means Clustering'

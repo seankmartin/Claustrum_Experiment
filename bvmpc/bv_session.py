@@ -407,6 +407,9 @@ class Session:
         for row in df.itertuples():
             index = row.Index
 
+            if len(row.Reward_ts) == 0:
+                continue
+
             # Trial duration
             features[index, 0] = row.Reward_ts
 
@@ -1245,7 +1248,7 @@ class Session:
         """ Generates pandas dataframe based on trials per row. """
 
         session_type = self.get_metadata('name')
-        stage = session_type[:2].replace('_', '')  # Obtain stage number w/o _
+        stage = session_type[:2].replace('_', '')
 
         pell_ts_exdouble, dpell = self.split_pell_ts()
         reward_times = self.get_rw_ts()
@@ -1352,7 +1355,10 @@ class Session:
             lever_arr[i, :l_end] = l[:]
             err_end = len(err)
             err_arr[i, :err_end] = err[:]
-            first_response_arr.append(np.array([l[0]]))
+            if len(l) > 0:
+                first_response_arr.append(np.array([l[0]]))
+            else:
+                first_response_arr.append(np.array([0.0]))
 
         # Splits lever ts in each trial into np.arrs for handling in pandas
         # lever_arr = np.vsplit(lever_arr, i+1)
