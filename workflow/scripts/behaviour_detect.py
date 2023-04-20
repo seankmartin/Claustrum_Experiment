@@ -42,7 +42,6 @@ def full_trial_info(session: "Session"):
             np.logical_and(lever_presses > trial_time[0], lever_presses < trial_time[1])
         ]
         lever_splits.append(lever_times)
-        trial_length = trial_time[1] - trial_time[0]
         if len(lever_times) == 0:
             estimated_trial_types.append("Fail")
             continue
@@ -50,10 +49,19 @@ def full_trial_info(session: "Session"):
             estimated_trial_types.append("FI")
             continue
         first_press = lever_times[0]
-        if first_press > trial_time[0] + 25:
+        if first_press > trial_time[0] + 30:
             estimated_trial_types.append("FI")
             continue
-        average_press_rate = len(lever_times) / trial_length
+        diffs = np.diff(lever_times)
+        first_press_without_large_gap = lever_times[np.argmax(diffs < 8)]
+        if first_press_without_large_gap > trial_time[0] + 30:
+            estimated_trial_types.append("FI")
+            continue
+        lever_time_diff = lever_times[-1] - first_press_without_large_gap
+        if lever_time_diff < 0.5:
+            estimated_trial_types.append("FI")
+            continue
+        average_press_rate = len(lever_times) / lever_time_diff
         if average_press_rate > 0.2:
             estimated_trial_types.append("FR")
             continue
