@@ -159,7 +159,7 @@ if __name__ == "__main__":
 
         here = Path(__file__).parent.parent.parent
         main(
-            here / "results" / "processed_data.csv",
+            here / "results" / "index.csv",
             here / "results" / "coherence.csv",
             here / "config" / "params.yaml",
             1,

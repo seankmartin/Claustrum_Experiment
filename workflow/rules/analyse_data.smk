@@ -1,6 +1,6 @@
 rule analyse_coherence:
     input:
-        "results/processed_data.csv"
+        "results/index.csv"
     output:
         "results/coherence.csv"
     log:

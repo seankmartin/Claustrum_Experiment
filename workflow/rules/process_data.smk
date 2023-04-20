@@ -36,7 +36,7 @@ rule process_nwb:
     input:
         "results/converted_data.csv"
     output:
-        "results/processed_data.csv"
+        "results/index.csv"
     log:
         "logs/process_nwb.log"
     conda:

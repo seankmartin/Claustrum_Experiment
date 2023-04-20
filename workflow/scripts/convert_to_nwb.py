@@ -4,6 +4,7 @@ import logging
 import os
 from pathlib import Path
 from ast import literal_eval
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -177,6 +178,7 @@ def main(
 ):
     table = table[table["converted"]]
     table = table[table["number_of_channels"].notnull()]
+    table = table[~table["directory"].str.contains("Batch_1")]
 
     loader = smr.loader(config["loader"], **config["loader_kwargs"])
     rc = smr.RecordingContainer.from_table(table, loader)
@@ -188,6 +190,16 @@ def main(
             rc, i, output_directory, config["cfg_base_dir"], overwrite
         )
         if fname is not None:
+            if rc[i].attrs["has_video"]:
+                source_file = os.path.join(
+                    rc[i].attrs["directory"], rc[i].attrs["video_file"]
+                )
+                name_for_save = rc[i].get_name_for_save(rel_dir=config["cfg_base_dir"])
+                dest_file = os.path.join(
+                    output_directory, "nwbfiles", name_for_save + ".avi"
+                )
+                if not os.path.exists(dest_file):
+                    shutil.copyfile(source_file, dest_file)
             filenames.append(fname)
             used.append(i)
         elif not except_errors:
@@ -201,6 +213,7 @@ def main(
         print(f"WARNING: unable to convert all files, missed {missed}")
     table = table.iloc[used, :]
     table["nwb_file"] = filenames
+    table.drop(columns=["directory", "filename", "video_file", "comments", "converted"], inplace=True)
     df_to_file(table, output_directory / "converted_data.csv")
     return filenames
 
@@ -241,6 +254,7 @@ def write_nwbfile(filename, r, nwbfile, manager=None):
             filename.unlink()
         return None, e
 
+
 def export_nwbfile(filename, r, nwbfile, src_io, debug=False):
     filename.parent.mkdir(parents=True, exist_ok=True)
     try:
@@ -256,6 +270,7 @@ def export_nwbfile(filename, r, nwbfile, src_io, debug=False):
         if filename.is_file():
             filename.unlink()
         return None, e
+
 
 def convert_recording_to_nwb(recording, rel_dir=None):
     name = recording.get_name_for_save(rel_dir=rel_dir)
@@ -409,9 +424,7 @@ def add_lfp_array_to_nwb(
         region=list(range(num_electrodes)), description="all electrodes"
     )
 
-    compressed_data = H5DataIO(
-        data=lfp_data, compression="gzip", compression_opts=9
-    )
+    compressed_data = H5DataIO(data=lfp_data, compression="gzip", compression_opts=9)
     lfp_electrical_series = ElectricalSeries(
         name="ElectricalSeries",
         data=compressed_data,
@@ -432,7 +445,6 @@ def add_lfp_array_to_nwb(
 
 
 def add_lfp_data_to_nwb(recording, nwbfile, num_electrodes):
-
     def convert_eeg_path_to_egf(p):
         p = Path(p)
         p = p.with_suffix(f".egf{p.suffix[4:]}")

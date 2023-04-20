@@ -3,6 +3,7 @@ import itertools
 import logging
 from math import ceil, floor
 from pathlib import Path
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -251,6 +252,11 @@ def main(table_path, config_path, output_path, num_cpus, overwrite=False):
             try:
                 nwbfile, _ = add_lfp_info(r, config)
                 export_nwbfile(fname, r, nwbfile, r._nwb_io, debug=True)
+                if r.attrs["has_video"]:
+                    source_file = str(fname[:-3] + "avi")
+                    dest_file = str(fname.parent.parent / "processed" / fname.name[:-3] + "avi")
+                    if not Path(dest_file).is_file() or overwrite:
+                        shutil.copyfile(source_file, dest_file)
             except Exception as e:
                 module_logger.error(f"Failed to process {rc[i].source_file}")
                 module_logger.error(e)
