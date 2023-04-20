@@ -1,5 +1,4 @@
 from pathlib import Path
-import itertools
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -62,7 +61,7 @@ def plot_coherence(df, out_dir, max_frequency=40):
         x="Frequency (Hz)",
         y="Coherence",
         style="Trial Type",
-        hue="Trial Type",
+        hue="Brain regions",
         # estimator="median",
         estimator="mean",
         errorbar=("ci", 95),
@@ -72,12 +71,12 @@ def plot_coherence(df, out_dir, max_frequency=40):
 
     plt.ylim(0, 1)
     smr.despine()
-    filename = out_dir / "coherence_on_target"
+    filename = out_dir / "coherence"
     fig = smr.SimuranFigure(fig, filename)
     fig.save()
 
 
-def plot_band_coherence(input_df, output_dir, config):
+def plot_band_coherence(input_df, output_dir):
     smr.set_plot_style()
 
     new_list = []
