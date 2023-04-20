@@ -2,9 +2,11 @@ configfile: "config/config.yaml"
 
 include: "rules/process_data.smk"
 include: "rules/analyse_data.smk"
+include: "rules/plot_data.smk"
 
 rule all:
     input:
         [
             "results/coherence.csv",
+            "results/png/coherence.png"
         ]
