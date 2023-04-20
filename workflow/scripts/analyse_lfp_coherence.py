@@ -67,7 +67,7 @@ def add_bands_to_df(coherence_df, config):
             row["Coherence"], row["Frequency (Hz)"], bands
         )
         for i, band in enumerate(bands):
-            coherence_df.loc[row[0], band_names[i]] = band_values[i]
+            coherence_df.at[j, band_names[i]] = band_values[i]
 
     return coherence_df
 
