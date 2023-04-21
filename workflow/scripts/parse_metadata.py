@@ -122,7 +122,8 @@ def check_has_behaviour(df: "DataFrame") -> "DataFrame":
     for i, row in df.iterrows():
         source_file = os.path.join(row["directory"], row["filename"])[:-4] + ".inp"
         found = os.path.exists(source_file)
-        has_behaviour.append(found)
+        is_pre_box = "Pre" in row["filename"]
+        has_behaviour.append(found and not is_pre_box)
     return has_behaviour
 
 def check_converted(df: "DataFrame") -> "DataFrame":

@@ -2,7 +2,7 @@ rule plot_coherence:
     input: 
         "results/coherence.csv"
     output:
-        "results/png/coherence.png"
+        directory("results/coherence")
     log:
         "logs/plot_coherence.log"
     conda:
@@ -15,7 +15,7 @@ rule plot_behaviour:
         "results/behaviour.csv",
         "results/levers.csv"
     output: 
-        "results/png/trial_length.png"
+        directory("results/behaviour")
     log:
         "logs/plot_behaviour.log"
     conda:

@@ -47,6 +47,7 @@ def convert_to_long_form(df, max_frequency=40):
     ]
     new_df = list_to_df(new_res, headers)
     new_df = new_df[new_df["Trial type"] != "Fail"]
+    new_df = new_df[new_df["Estimated trial type"] != "Fail"]
     return new_df
 
 
@@ -180,13 +181,13 @@ def main(input_df_path, out_dir, config_path):
     long_df = convert_to_long_form(coherence_df, config["max_psd_freq"])
     # fix_notch_freqs(long_df, config["notch_freqs"])
     plot_coherence(long_df, out_dir, config["max_psd_freq"])
-    # plot_band_coherence(coherence_df, out_dir)
+    plot_band_coherence(coherence_df, out_dir)
 
 
 if __name__ == "__main__":
     smr.set_only_log_to_file(snakemake.log[0])
     main(
         snakemake.input[0],
-        Path(snakemake.output[0]).parent.parent,
+        Path(snakemake.output[0]),
         snakemake.config["simuran_config"],
     )

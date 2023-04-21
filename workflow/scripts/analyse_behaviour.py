@@ -1,4 +1,5 @@
 import simuran as smr
+import numpy as np
 import pandas as pd
 
 from behaviour_detect import full_trial_info
@@ -19,21 +20,30 @@ def collate_behaviour(recording_container, out_file1, out_file2):
     full_info = []
     lever_presses = []
     for recording in recording_container.load_iter():
-        session = Session(recording=recording)
-        trial_info = full_trial_info(session)
+        try:
+            session = Session(recording=recording)
+            trial_info = full_trial_info(session)
+        except Exception as e:
+            print(e)
+            continue
         for i, row in trial_info.iterrows():
             full_info.append(
-                [row["Trial type"], row["Estimated trial type"]],
-                row["Trial end"] - row["Trial start"],
-                len(row["Lever presses"]),
-            )
-            lever_presses.append(
                 [
                     row["Trial type"],
                     row["Estimated trial type"],
-                    row["Lever presses"] - row["Trial start"],
+                    max(0, row["Trial end"] - row["Trial start"]),
+                    len(row["Lever presses"]),
                 ]
             )
+            presses = (row["Lever presses"] - row["Trial start"],)
+            for p in presses:
+                lever_presses.append(
+                    [
+                        row["Trial type"],
+                        row["Estimated trial type"],
+                        p,
+                    ]
+                )
 
     full_info = pd.DataFrame(
         full_info,

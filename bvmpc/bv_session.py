@@ -131,6 +131,8 @@ class Session:
                 session_number = "6_RandomisedBlocks_p"
             elif session_type == "RandomisedBlocksExtended":
                 session_number = "7_RandomisedBlocksExtended_p"
+            else:
+                raise ValueError("Unknown session type: {}".format(session_type))
             self.metadata["name"] = session_number
 
             df = data.processing["operant_behaviour"]["times"].to_dataframe()
