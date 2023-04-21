@@ -1,4 +1,6 @@
 from pathlib import Path
+import ast
+import re
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,31 +8,52 @@ import seaborn as sns
 import simuran as smr
 from skm_pyutils.table import df_from_file, list_to_df
 
+TO_PLOT = "Trial type"
 
-def convert_to_long_form(df):
+
+def convert_to_long_form(df, max_frequency=40):
     new_res = []
     columns = df.columns
     for i, row in df.iterrows():
         coherence = row["Coherence"]
+        coherence = re.sub(" +", ",", coherence[1:-1].strip())
+        coherence = f"[{coherence}]"
+        coherence = np.array(ast.literal_eval(coherence))
         freqs = row["Frequency (Hz)"]
-        for f, c in zip(freqs, coherence):
-            new_res.append(f)
-            new_res.append(c)
+        freqs = re.sub(" +", ",", freqs[1:-1].strip())
+        freqs = f"[{freqs}]"
+        freqs = np.array(ast.literal_eval(freqs))
+        for f, c in zip(freqs[freqs < max_frequency], coherence[freqs < max_frequency]):
+            res2 = []
+            res2.append(f)
+            res2.append(c)
             for col in columns:
-                if col not in ["Coherence", "Frequency (Hz)"]:
-                    new_res.append(row[col])
+                if col in [
+                    "Trial type",
+                    "Estimated trial type",
+                    "Brain regions",
+                    "Source file",
+                ]:
+                    res2.append(row[col])
+            new_res.append(res2)
 
-    headers = ["Frequency (Hz)", "Coherence"] + [
-        c for c in columns if c not in ["Coherence", "Frequency (Hz)"]
+    headers = [
+        "Frequency (Hz)",
+        "Coherence",
+        "Brain regions",
+        "Trial type",
+        "Estimated trial type",
+        "Source file",
     ]
     new_df = list_to_df(new_res, headers)
+    new_df = new_df[new_df["Trial type"] != "Fail"]
     return new_df
 
 
 def fix_notch_freqs(df, freqs_to_fix):
-    fnames = sorted(list(set(df["Fname"])))
+    fnames = sorted(list(set(df["Source file"])))
     for fname in fnames:
-        fname_bit = df["Fname"] == fname
+        fname_bit = df["Source file"] == fname
         df_bit = df[fname_bit]
         if len(df_bit) == 0:
             continue
@@ -60,12 +83,11 @@ def plot_coherence(df, out_dir, max_frequency=40):
         data=df[df["Frequency (Hz)"] <= max_frequency],
         x="Frequency (Hz)",
         y="Coherence",
-        style="Trial Type",
+        style=TO_PLOT,
         hue="Brain regions",
         # estimator="median",
         estimator="mean",
         errorbar=("ci", 95),
-        n_boot=10000,
         ax=ax,
     )
 
@@ -75,15 +97,47 @@ def plot_coherence(df, out_dir, max_frequency=40):
     fig = smr.SimuranFigure(fig, filename)
     fig.save()
 
+    sns.lineplot(
+        data=df[df["Frequency (Hz)"] <= max_frequency],
+        x="Frequency (Hz)",
+        y="Coherence",
+        style="Estimated trial type",
+        hue="Brain regions",
+        # estimator="median",
+        estimator="mean",
+        errorbar=("ci", 95),
+        ax=ax,
+    )
+
+    plt.ylim(0, 1)
+    smr.despine()
+    filename = out_dir / "coherence_estimated"
+    fig = smr.SimuranFigure(fig, filename)
+    fig.save()
+
 
 def plot_band_coherence(input_df, output_dir):
     smr.set_plot_style()
 
     new_list = []
     for i, row in input_df.iterrows():
-        for val in ["Delta", "Theta", "Beta", "Low Gamma", "High Gamma"]:
-            new_list.append(row[val], row["Brain regions"], row["Trial type"], val)
-    headers = ["Coherence", "Brain regions", "Trial type", "Band"]
+        for val in ["Delta", "Theta", "Beta", "Low gamma", "High gamma"]:
+            new_list.append(
+                [
+                    row[val],
+                    row["Brain regions"],
+                    row["Trial type"],
+                    val,
+                    row["Estimated trial type"],
+                ]
+            )
+    headers = [
+        "Coherence",
+        "Brain regions",
+        "Trial type",
+        "Band",
+        "Estimated trial type",
+    ]
     new_df = list_to_df(new_list, headers)
 
     for br in ["CLA RSC", "CLA ACC", "RSC ACC"]:
@@ -93,7 +147,7 @@ def plot_band_coherence(input_df, output_dir):
             data=sub_df,
             y="Coherence",
             x="Band",
-            hue="Trial type",
+            hue=TO_PLOT,
             palette="pastel",
             ax=ax,
             showfliers=False,
@@ -104,7 +158,7 @@ def plot_band_coherence(input_df, output_dir):
             data=sub_df,
             y="Coherence",
             x="Band",
-            hue="Trial type",
+            hue=TO_PLOT,
             ax=ax,
             # palette="dark:grey",
             palette=["0.4", "0.75"],
@@ -123,9 +177,10 @@ def plot_band_coherence(input_df, output_dir):
 def main(input_df_path, out_dir, config_path):
     config = smr.config_from_file(config_path)
     coherence_df = df_from_file(input_df_path)
-    coherence_df = convert_to_long_form(coherence_df)
-    fix_notch_freqs(coherence_df, config["notch_freqs"])
-    plot_coherence(coherence_df, out_dir, config["max_psd_freq"])
+    long_df = convert_to_long_form(coherence_df, config["max_psd_freq"])
+    # fix_notch_freqs(long_df, config["notch_freqs"])
+    plot_coherence(long_df, out_dir, config["max_psd_freq"])
+    # plot_band_coherence(coherence_df, out_dir)
 
 
 if __name__ == "__main__":

@@ -16,7 +16,6 @@ def main(input_table_path, out_file, config, overwrite=False):
     """Run the main analysis."""
     df = df_from_file(input_table_path)
     df = df[df["has_behaviour"]]
-    df = df[~df["directory"].str.contains("Batch_1")]
     df = df[df["brain_regions"].str.contains(r"^(?=.*CLA)(?=.*RSC)(?=.*ACC)")]
     rc = smr.RecordingContainer.from_table(df, loader=smr.loader("NWB"))
     config = smr.load_config(config)
