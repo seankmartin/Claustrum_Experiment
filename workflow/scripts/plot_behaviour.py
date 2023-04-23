@@ -24,7 +24,7 @@ def plot_trial_length(coherence_df, out_dir):
     for t in ["Trial type", "Estimated trial type"]:
         fig, ax = plt.subplots()
         sns.histplot(
-            data=coherence_df,
+            data=coherence_df[coherence_df["Trial length (s)"] < 100],
             x="Trial length (s)",
             ax=ax,
             hue=t,
@@ -43,11 +43,10 @@ def plot_trial_press_number(coherence_df, out_dir):
     for t in ["Trial type", "Estimated trial type"]:
         fig, ax = plt.subplots()
         sns.histplot(
-            data=coherence_df,
+            data=coherence_df[coherence_df["Number of lever presses"] < 10],
             x="Number of lever presses",
             ax=ax,
             hue=t,
-            kde=True,
         )
         smr.despine()
         filename = out_dir / f"trial_press_number_{t}"
@@ -58,16 +57,11 @@ def plot_trial_press_number(coherence_df, out_dir):
 def plot_trial_press_dist(dist_df, out_dir):
     smr.set_plot_style()
     dist_df = dist_df[dist_df["Trial type"] != "Fail"]
+    dist_df = dist_df[dist_df["Lever press time (s)"] < 100]
 
     for t in ["Trial type", "Estimated trial type"]:
         fig, ax = plt.subplots()
-        sns.histplot(
-            data=dist_df,
-            x="Lever press time (s)",
-            ax=ax,
-            hue=t,
-            kde=True,
-        )
+        sns.histplot(data=dist_df, x="Lever press time (s)", ax=ax, hue=t, kde=True)
         smr.despine()
         filename = out_dir / f"trial_press_dist_{t}"
         fig = smr.SimuranFigure(fig, filename)

@@ -35,7 +35,7 @@ def collate_behaviour(recording_container, out_file1, out_file2):
                     len(row["Lever presses"]),
                 ]
             )
-            presses = (row["Lever presses"] - row["Trial start"],)
+            presses = row["Lever presses"] - row["Trial start"]
             for p in presses:
                 lever_presses.append(
                     [
