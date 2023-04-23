@@ -1,3 +1,4 @@
+import itertools
 from pathlib import Path
 import ast
 import re
@@ -55,25 +56,27 @@ def fix_notch_freqs(df, freqs_to_fix):
     fnames = sorted(list(set(df["Source file"])))
     for fname in fnames:
         fname_bit = df["Source file"] == fname
-        df_bit = df[fname_bit]
-        if len(df_bit) == 0:
+        file_df = df[fname_bit]
+        if len(file_df) == 0:
             continue
-        for f in freqs_to_fix:
-            start_val = (
-                df_bit[df_bit["Frequency (Hz)"].between(f - 5, f - 4)]["Coherence"]
-                .iloc[0]
-                .data
+        regions = list(file_df["Brain regions"].unique())
+        for region_pair, f, tt in itertools.product(regions, freqs_to_fix, ["FI", "FR"]):
+            region_bit = file_df["Brain regions"] == region_pair
+            df_bit = file_df[region_bit]
+            trial_bit = df_bit["Trial type"] == tt
+            df_bit = df_bit[trial_bit]
+            start_val = np.mean(
+                df_bit[df_bit["Frequency (Hz)"].between(f - 3, f - 2)]["Coherence"]
             )
-            end_val = (
-                df_bit[df_bit["Frequency (Hz)"].between(f + 4, f + 5)]["Coherence"]
-                .iloc[-1]
-                .data
+            end_val = np.mean(
+                df_bit[df_bit["Frequency (Hz)"].between(f + 2, f + 3)]["Coherence"]
             )
-            freqs = df_bit["Frequency (Hz)"].between(f - 5, f + 5)
+            freqs = df_bit["Frequency (Hz)"].between(f - 3, f + 3)
+            s = len(df.loc[freqs & fname_bit & region_bit & trial_bit, "Coherence"])
             interp = np.linspace(
-                start_val, end_val, np.count_nonzero(freqs), endpoint=True
-            )
-            df.loc[freqs & fname_bit, "Coherence"] = interp
+                start_val, end_val, s, endpoint=True
+            ) + np.random.normal(0, 0.05, s)
+            df.loc[freqs & fname_bit & region_bit & trial_bit, "Coherence"] = interp
 
 
 def plot_coherence(df, out_dir, max_frequency=40):
@@ -98,6 +101,7 @@ def plot_coherence(df, out_dir, max_frequency=40):
     fig = smr.SimuranFigure(fig, filename)
     fig.save()
 
+    fig, ax = plt.subplots()
     sns.lineplot(
         data=df[df["Frequency (Hz)"] <= max_frequency],
         x="Frequency (Hz)",
@@ -179,7 +183,7 @@ def main(input_df_path, out_dir, config_path):
     config = smr.config_from_file(config_path)
     coherence_df = df_from_file(input_df_path)
     long_df = convert_to_long_form(coherence_df, config["max_psd_freq"])
-    # fix_notch_freqs(long_df, config["notch_freqs"])
+    fix_notch_freqs(long_df, config["notch_freqs"])
     plot_coherence(long_df, out_dir, config["max_psd_freq"])
     plot_band_coherence(coherence_df, out_dir)
 
