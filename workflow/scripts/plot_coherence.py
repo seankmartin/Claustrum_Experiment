@@ -82,43 +82,44 @@ def fix_notch_freqs(df, freqs_to_fix):
 def plot_coherence(df, out_dir, max_frequency=40):
     smr.set_plot_style()
 
-    fig, ax = plt.subplots()
-    sns.lineplot(
-        data=df[df["Frequency (Hz)"] <= max_frequency],
-        x="Frequency (Hz)",
-        y="Coherence",
-        style=TO_PLOT,
-        hue="Brain regions",
-        # estimator="median",
-        estimator="mean",
-        errorbar=("ci", 95),
-        ax=ax,
-    )
+    df = df[df["Frequency (Hz)"] <= max_frequency]
+    regions = df["Brain regions"].unique()
+    for r in regions:
+        fig, ax = plt.subplots()
+        sns.lineplot(
+            data=df[df["Brain regions"] == r],
+            x="Frequency (Hz)",
+            y="Coherence",
+            style=TO_PLOT,
+            # hue="Brain regions",
+            estimator="median",
+            # estimator="mean",
+            errorbar=("ci", 95),
+            ax=ax,
+        )
 
-    plt.ylim(0, 1)
-    smr.despine()
-    filename = out_dir / "coherence"
-    fig = smr.SimuranFigure(fig, filename)
-    fig.save()
+        smr.despine()
+        filename = out_dir / f"coherence_{r}"
+        fig = smr.SimuranFigure(fig, filename)
+        fig.save()
 
-    fig, ax = plt.subplots()
-    sns.lineplot(
-        data=df[df["Frequency (Hz)"] <= max_frequency],
-        x="Frequency (Hz)",
-        y="Coherence",
-        style="Estimated trial type",
-        hue="Brain regions",
-        # estimator="median",
-        estimator="mean",
-        errorbar=("ci", 95),
-        ax=ax,
-    )
+        fig, ax = plt.subplots()
+        sns.lineplot(
+            data=df[df["Brain regions"] == r],
+            x="Frequency (Hz)",
+            y="Coherence",
+            style="Estimated trial type",
+            # hue="Brain regions",
+            estimator="median",
+            # estimator="mean",
+            errorbar=("ci", 95),
+            ax=ax,
+        )
 
-    plt.ylim(0, 1)
-    smr.despine()
-    filename = out_dir / "coherence_estimated"
-    fig = smr.SimuranFigure(fig, filename)
-    fig.save()
+        smr.despine()
+        filename = out_dir / f"coherence_estimated_{r}"
+        fig = smr.SimuranFigure(fig, filename)
+        fig.save()
 
 
 def plot_band_coherence(input_df, output_dir):

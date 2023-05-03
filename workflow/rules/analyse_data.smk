@@ -22,3 +22,15 @@ rule analyse_behaviour:
         "../../envs/nwb.yaml"
     script:
         "../scripts/analyse_behaviour.py"
+
+rule split_coherence:
+    input:
+        "results/coherence.csv"
+    output:
+        "results/coherence_CLA RSC.csv"
+    log:
+        "logs/split_coherence.log"
+    conda:
+        "../../envs/nwb.yaml"
+    script:
+        "../scripts/split_coherence.py"
