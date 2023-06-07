@@ -7,6 +7,6 @@ include: "rules/plot_data.smk"
 rule all:
     input:
         [
-            "results/coherence.csv",
-            "results/png/coherence.png"
+            "results/behaviour",
+            "results/coherence",
         ]
