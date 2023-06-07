@@ -181,6 +181,7 @@ def plot_band_coherence(input_df, output_dir):
 def main(input_df_path, out_dir, config_path):
     config = smr.config_from_file(config_path)
     coherence_df = df_from_file(input_df_path)
+    coherence_df = coherence_df[coherence_df["Estimated trial type"] != "Fail"]
     long_df = convert_to_long_form(coherence_df, config["max_psd_freq"])
     long_df = long_df[long_df["Estimated trial type"] != "Fail"]
     fix_notch_freqs(long_df, config["notch_freqs"])
