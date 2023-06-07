@@ -94,6 +94,7 @@ def plot_coherence(df, out_dir, max_frequency=40):
             errorbar=("ci", 95),
             ax=ax,
         )
+        ax.set_ylim(0, 1)
 
         smr.despine()
         filename = out_dir / f"coherence_{r}"
@@ -112,6 +113,7 @@ def plot_coherence(df, out_dir, max_frequency=40):
             errorbar=("ci", 95),
             ax=ax,
         )
+        ax.set_ylim(0, 1)
 
         smr.despine()
         filename = out_dir / f"coherence_estimated_{r}"
@@ -173,6 +175,7 @@ def plot_band_coherence(input_df, output_dir):
                 size=4.5,
                 legend=False,
             )
+            ax.set_ylim(0, 1)
             smr.despine()
             smr_fig = smr.SimuranFigure(fig, output_dir / f"coherence_{br}_{n}")
             smr_fig.save()
