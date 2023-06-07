@@ -8,14 +8,19 @@ import simuran as smr
 def main(input_df_path, input_df_path2, out_dir, config_path):
     config = smr.config_from_file(config_path)
     coherence_df = smr.load_table(input_df_path)
-    coherence_df = coherence_df[coherence_df["Trial type"] != "Fail"]
     coherence_df = coherence_df[coherence_df["Estimated trial type"] != "Fail"]
     press_df = smr.load_table(input_df_path2)
-    press_df = press_df[press_df["Trial type"] != "Fail"]
     press_df = press_df[press_df["Estimated trial type"] != "Fail"]
     plot_trial_length(coherence_df, out_dir)
     plot_trial_press_number(coherence_df, out_dir)
     plot_trial_press_dist(press_df, out_dir)
+
+    trial_types = coherence_df["Trial type"]
+    estimated_types = coherence_df["Estimated trial type"]
+    number_of_matches = sum(trial_types == estimated_types)
+    number_of_trials = len(trial_types)
+    with open(out_dir / "trial_type_matches.txt", "w") as f:
+        f.write(f"{number_of_matches} / {number_of_trials} matches")
 
 
 def plot_trial_length(coherence_df, out_dir):

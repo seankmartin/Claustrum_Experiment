@@ -49,12 +49,12 @@ def full_trial_info(session: "Session"):
             estimated_trial_types.append("FI")
             continue
         first_press = lever_times[0]
-        if first_press > trial_time[0] + 30:
+        if first_press > trial_time[0] + 25:
             estimated_trial_types.append("FI")
             continue
         diffs = np.diff(lever_times)
         first_press_without_large_gap = lever_times[np.argmax(diffs < 8)]
-        if first_press_without_large_gap > trial_time[0] + 30:
+        if first_press_without_large_gap > trial_time[0] + 25:
             estimated_trial_types.append("FI")
             continue
         lever_time_diff = lever_times[-1] - first_press_without_large_gap
