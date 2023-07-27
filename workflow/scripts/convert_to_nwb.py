@@ -17,6 +17,7 @@ from neurochat.nc_utils import RecPos
 from pynwb import NWBHDF5IO, NWBFile, TimeSeries
 from pynwb.behavior import CompassDirection, Position, SpatialSeries
 from pynwb.ecephys import LFP, ElectricalSeries
+from pynwb.image import ImageSeries
 from pynwb.file import Subject
 from scipy.signal import decimate
 from skm_pyutils.table import df_from_file, df_to_file, list_to_df
@@ -190,16 +191,6 @@ def main(
             rc, i, output_directory, config["cfg_base_dir"], overwrite
         )
         if fname is not None:
-            if rc[i].attrs["has_video"]:
-                source_file = os.path.join(
-                    rc[i].attrs["directory"], rc[i].attrs["video_file"]
-                )
-                name_for_save = rc[i].get_name_for_save(rel_dir=config["cfg_base_dir"])
-                dest_file = os.path.join(
-                    output_directory, "nwbfiles", name_for_save + ".avi"
-                )
-                if not os.path.exists(dest_file):
-                    shutil.copyfile(source_file, dest_file)
             filenames.append(fname)
             used.append(i)
         elif not except_errors:
@@ -213,7 +204,10 @@ def main(
         print(f"WARNING: unable to convert all files, missed {missed}")
     table = table.iloc[used, :]
     table["nwb_file"] = filenames
-    table.drop(columns=["directory", "filename", "video_file", "comments", "converted"], inplace=True)
+    table.drop(
+        columns=["directory", "filename", "video_file", "comments", "converted"],
+        inplace=True,
+    )
     df_to_file(table, output_directory / "converted_data.csv")
     return filenames
 
@@ -237,6 +231,18 @@ def convert_to_nwb_and_save(rc, i, output_directory, rel_dir=None, overwrite=Fal
     except Exception as e:
         module_logger.error(f"Could not convert {rc[i].source_file} due to {e}")
         return None, e
+    if rc[i].attrs["has_video"]:
+        source_file = os.path.join(rc[i].attrs["directory"], rc[i].attrs["video_file"])
+        dest_file = os.path.join(output_directory, "nwbfiles", save_name + ".avi")
+        if not os.path.exists(dest_file):
+            shutil.copyfile(source_file, dest_file)
+        image = ImageSeries(
+            name="behaviour_video",
+            external_file=dest_file,
+            format="external",
+            description="Video of rat in operant chamber",
+        )
+        nwbfile.processing["behavior"].add(image)
     return write_nwbfile(filename, r, nwbfile)
 
 

@@ -43,3 +43,16 @@ rule process_nwb:
         "../../envs/nwb.yaml"
     script:
         "../scripts/process_lfp.py"
+
+rule fix_nwb:
+    input:
+        "results/index.csv",
+        "results/axona_file_index.csv"
+    output:
+        "results/nwb_file_list.csv"
+    log:
+        "logs/fix_nwb.log"
+    conda:
+        "../../envs/nwb.yaml"
+    script:
+        "../scripts/fix_nwbfiles.py"
