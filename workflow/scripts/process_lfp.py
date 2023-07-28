@@ -128,9 +128,11 @@ def calculate_and_store_lfp_power(config, nwb_proc):
     results_df = list_to_df(
         results_list, headers=["label", "region", "frequency", "power", "max_psd"]
     )
-    results_df.index.name = "Index"
+    results_df.index.name = "id"
     hdmf_table = DynamicTable.from_dataframe(
-        df=results_df, name="power_spectra", columns=describe_columns()
+        df=results_df,
+        name="power_spectra",
+        columns=describe_columns(),
     )
     mod = nwb_proc.create_processing_module(
         "lfp_power", "Store power spectra and spectograms"
@@ -224,7 +226,9 @@ def store_coherence(nwb_proc, flims=None):
     headers = ["label", "frequency", "coherence"]
     results_df = list_to_df(coherence_list, headers=headers)
     hdmf_table = DynamicTable.from_dataframe(
-        df=results_df, name="coherence_table", columns=describe_coherence_columns()
+        df=results_df,
+        name="coherence_table",
+        columns=describe_coherence_columns(),
     )
     mod = nwb_proc.create_processing_module("lfp_coherence", "Store coherence")
     mod.add(hdmf_table)
@@ -252,13 +256,13 @@ def main(table_path, config_path, output_path, num_cpus, overwrite=False):
             try:
                 nwbfile, _ = add_lfp_info(r, config)
                 export_nwbfile(fname, r, nwbfile, r._nwb_io, debug=True)
-                if r.attrs["has_video"]:
-                    source_file = str(fname[:-3]) + "avi"
-                    dest_file = (
-                        str(fname.parent.parent / "processed" / fname.name)[:-3] + "avi"
-                    )
-                    if not Path(dest_file).is_file() or overwrite:
-                        shutil.copyfile(source_file, dest_file)
+                # if r.attrs["has_video"]:
+                #     source_file = str(fname[:-3]) + "avi"
+                #     dest_file = (
+                #         str(fname.parent.parent / "processed" / fname.name)[:-3] + "avi"
+                #     )
+                #     if not Path(dest_file).is_file() or overwrite:
+                #         shutil.copyfile(source_file, dest_file)
             except Exception as e:
                 module_logger.error(f"Failed to process {rc[i].source_file}")
                 module_logger.error(e)

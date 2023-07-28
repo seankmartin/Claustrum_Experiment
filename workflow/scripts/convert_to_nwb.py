@@ -1,5 +1,6 @@
 """Process openfield LFP into power spectra etc. saved to NWB"""
 
+import datetime
 import logging
 import os
 from pathlib import Path
@@ -227,20 +228,25 @@ def convert_to_nwb_and_save(rc, i, output_directory, rel_dir=None, overwrite=Fal
         module_logger.error(f"Could not load {rc[i].source_file} due to {e}")
         return None, e
     try:
-        nwbfile = convert_recording_to_nwb(r, rel_dir)
+        nwbfile = convert_recording_to_nwb(r, rc.table, rel_dir)
     except Exception as e:
         module_logger.error(f"Could not convert {rc[i].source_file} due to {e}")
         return None, e
     if rc[i].attrs["has_video"]:
         source_file = os.path.join(rc[i].attrs["directory"], rc[i].attrs["video_file"])
-        dest_file = os.path.join(output_directory, "nwbfiles", save_name + ".avi")
+        dest_file = os.path.join(output_directory, "videos", save_name + ".avi")
         if not os.path.exists(dest_file):
+            os.makedirs(os.path.dirname(dest_file), exist_ok=True)
             shutil.copyfile(source_file, dest_file)
+        parts = dest_file.split(os.sep)
+        for_save = os.sep.join(parts[1:])
+        for_save = ".." + os.sep + for_save
         image = ImageSeries(
             name="behaviour_video",
-            external_file=dest_file,
+            external_file=(for_save,),
             format="external",
             description="Video of rat in operant chamber",
+            rate=30.0,
         )
         nwbfile.processing["behavior"].add(image)
     return write_nwbfile(filename, r, nwbfile)
@@ -278,9 +284,9 @@ def export_nwbfile(filename, r, nwbfile, src_io, debug=False):
         return None, e
 
 
-def convert_recording_to_nwb(recording, rel_dir=None):
+def convert_recording_to_nwb(recording, axona_table, rel_dir=None):
     name = recording.get_name_for_save(rel_dir=rel_dir)
-    nwbfile = create_nwbfile_with_metadata(recording, name)
+    nwbfile = create_nwbfile_with_metadata(recording, name, axona_table)
     piw_device = add_devices_to_nwb(nwbfile)
     num_electrodes = add_electrodes_to_nwb(recording, nwbfile, piw_device)
 
@@ -540,24 +546,35 @@ def add_devices_to_nwb(nwbfile):
     return piw_device
 
 
-def create_nwbfile_with_metadata(recording, name):
-    nwbfile = NWBFile(
+def create_nwbfile_with_metadata(recording, name, axona_table):
+    parts = name.split("--")
+    part = parts[-1] + ".set"
+    matching_row = axona_table[axona_table["filename"] == part]
+    date = matching_row["date"].values[0]
+    time = matching_row["time"].values[0]
+    session_start_time = datetime.datetime.strptime(
+        f"{date} {time}", "%A, %d %b %Y %H:%M:%S"
+    ).replace(tzinfo=datetime.timezone.utc)
+    new_nwbfile = NWBFile(
         session_description=f"Recording {name}",
         identifier=f"CLA--{name}",
-        session_start_time=recording.datetime,
-        experiment_description="CLA, RSC, and related areas during Operant box task",
-        experimenter="Gao Xiang Ham",
+        session_start_time=session_start_time,
+        experiment_description="CLA, RSC, ACC, and related areas - Operant box task",
+        experimenter="Gao Xiang, Ham",
         lab="O'Mara lab",
         institution="TCD",
     )
-    nwbfile.subject = Subject(
-        species="Lister Hooded rat",
+    new_subject = Subject(
+        species="Rattus norvegicus",
+        strain="Lister Hooded",
+        age="P30D/P120D",
         sex="M",
         subject_id=recording.attrs["rat_id"],
         weight=0.330,
     )
+    new_nwbfile.subject = new_subject
 
-    return nwbfile
+    return new_nwbfile
 
 
 def convert_listed_data_to_nwb(
