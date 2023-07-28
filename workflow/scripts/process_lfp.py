@@ -105,7 +105,7 @@ def calculate_and_store_lfp_power(config, nwb_proc):
         return False
     signals = nwb_proc.processing["normalised_lfp"]["LFP"]["ElectricalSeries"].data[:].T
     brain_regions = sorted(list(set(nwb_proc.electrodes.to_dataframe()["location"])))
-    br_avg = [f"{br}_avg" for br in brain_regions]
+    br_avg = [f"{br}_avg".replace("/", "_") for br in brain_regions]
     average_signals = np.array(
         [nwb_proc.processing["average_lfp"][br].data[:] for br in br_avg]
     )
@@ -154,7 +154,7 @@ def store_average_lfp(results_picked, results_all, nwb_proc):
         else:
             signal = result["average_signal"]
         ts = TimeSeries(
-            name=f"{brain_region}_avg",
+            name=f"{brain_region}_avg".replace("/", "_"),
             data=0.001 * signal,
             unit="V",
             conversion=1.0,
