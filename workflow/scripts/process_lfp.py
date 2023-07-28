@@ -115,7 +115,7 @@ def calculate_and_store_lfp_power(config, nwb_proc):
     labels = list(nwb_proc.electrodes.to_dataframe()["label"])
     labels.extend(br_avg)
     results_list = []
-    for (sig, region, label) in zip(all_sigs, regions, labels):
+    for sig, region, label in zip(all_sigs, regions, labels):
         warn = bool(label.endswith("_avg"))
         f, Pxx, max_psd = calculate_psd(
             sig,
@@ -233,7 +233,7 @@ def store_coherence(nwb_proc, flims=None):
 def main(table_path, config_path, output_path, num_cpus, overwrite=False):
     config = smr.ParamHandler(source_file=config_path)
     config["num_cpus"] = num_cpus
-   
+
     if isinstance(table_path, pd.DataFrame):
         datatable = table_path
     else:
@@ -253,8 +253,10 @@ def main(table_path, config_path, output_path, num_cpus, overwrite=False):
                 nwbfile, _ = add_lfp_info(r, config)
                 export_nwbfile(fname, r, nwbfile, r._nwb_io, debug=True)
                 if r.attrs["has_video"]:
-                    source_file = str(fname[:-3] + "avi")
-                    dest_file = str(fname.parent.parent / "processed" / fname.name[:-3] + "avi")
+                    source_file = str(fname[:-3]) + "avi"
+                    dest_file = (
+                        str(fname.parent.parent / "processed" / fname.name)[:-3] + "avi"
+                    )
                     if not Path(dest_file).is_file() or overwrite:
                         shutil.copyfile(source_file, dest_file)
             except Exception as e:
@@ -267,6 +269,7 @@ def main(table_path, config_path, output_path, num_cpus, overwrite=False):
         out_df.at[row_idx, "nwb_file"] = str(fname)
     out_df = out_df.drop(out_df.index[could_not_process])
     df_to_file(out_df, output_path)
+
 
 if __name__ == "__main__":
     smr.set_only_log_to_file(snakemake.log[0])
