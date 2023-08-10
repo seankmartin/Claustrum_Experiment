@@ -128,7 +128,6 @@ def calculate_and_store_lfp_power(config, nwb_proc):
     results_df = list_to_df(
         results_list, headers=["label", "region", "frequency", "power", "max_psd"]
     )
-    results_df.index.name = "id"
     hdmf_table = DynamicTable.from_dataframe(
         df=results_df,
         name="power_spectra",
